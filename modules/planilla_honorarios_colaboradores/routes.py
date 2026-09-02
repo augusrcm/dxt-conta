@@ -29,6 +29,21 @@ from modules.planilla_honorarios_colaboradores import planilla_honorarios_colabo
 from modules.reportes_rapidos.core.utils import logo_path, usuario_actual
 from utils.decorators import login_required, roles_required
 from utils.planillas_security import assert_gestion_abierta, mensaje_error_operacion
+from utils.intercompania import (
+    CUENTA_CXC_RELACIONADA,
+    CUENTA_CXP_RELACIONADA,
+    auxiliar_canonico_unidad,
+    crear_asiento as crear_asiento_intercompania,
+    operaciones_por_origen,
+    registrar_operacion,
+    revertir_operacion,
+)
+from utils.planillas_prestamos import (
+    aplicar_cuotas_planilla,
+    recuperos_planilla_por_unidad,
+    sincronizar_prestamos_borrador,
+    vincular_aplicacion_asiento,
+)
 
 
 ROLES_LECTURA = [9, 10, 11]
@@ -153,7 +168,6 @@ def _parse_date(value: Any, field_name: str, required: bool = True) -> date | No
         raise ValueError(f'El campo "{field_name}" no tiene una fecha válida.') from exc
 
 
-
 def _fecha_contable_devengamiento(data: dict[str, Any], planilla: dict[str, Any]) -> date:
     valor = _clean(data.get('fecha_contabilizacion') or data.get('fecha_contable'))
     if not valor:
@@ -165,6 +179,7 @@ def _fecha_contable_devengamiento(data: dict[str, Any], planilla: dict[str, Any]
     if fecha.year != gestion:
         raise ValueError(f'La fecha contable debe pertenecer a la gestión {gestion}.')
     return fecha
+
 
 
 def _limit_text(value: Any, field_name: str, max_len: int, required: bool = False) -> str | None:
@@ -572,6 +587,17 @@ def _recalcular_planilla(db: DatabaseManager, planilla_id: int):
             row_decimal(rows, 'pendiente'), planilla_id
         )
     )
+
+
+def _sincronizar_prestamos_borrador(db: DatabaseManager, planilla: dict[str, Any]):
+    return sincronizar_prestamos_borrador(
+        db,
+        planilla=planilla,
+        tipo_persona=TIPO_PERSONA,
+        recalcular_detalle=_recalcular_detalle,
+        recalcular_planilla=_recalcular_planilla,
+    )
+
 
 
 def row_decimal(row: dict[str, Any], key: str) -> Decimal:
@@ -1387,13 +1413,17 @@ def consolidar(planilla_id: int):
             assert_gestion_abierta(db, int(planilla['gestion']), 'consolidar la planilla')
             if planilla['estado'] != 'BORRADOR':
                 return _json_error('Solo se puede consolidar una planilla en BORRADOR.')
+
+            fecha_contable = _fecha_contable_devengamiento(data, planilla)
+            _sincronizar_prestamos_borrador(db, planilla)
+            planilla = _obtener_planilla(db, planilla_id)
             detalles = db.execute_query(
                 """
                 SELECT id, nombre_completo, liquido_pagable
                 FROM contabilidad.planilla_detalle
                 WHERE planilla_periodo_id = %s AND estado <> 'EXCLUIDO'
                 """,
-                (planilla_id,)
+                (planilla_id,),
             )
             if not detalles:
                 return _json_error('La planilla no tiene filas activas.')
@@ -1403,9 +1433,10 @@ def consolidar(planilla_id: int):
 
             parametros = _parametros_gestion(db, int(planilla['gestion']))
             _validar_parametros_contables(db, planilla_id, parametros)
-            fecha_contable = _fecha_contable_devengamiento(data, planilla)
-            _aplicar_cuotas_prestamo_planilla(db, planilla_id, planilla)
-            asientos = _crear_asientos_devengamiento(db, planilla_id, planilla, parametros, justificativo, fecha_contable)
+            _aplicar_cuotas_prestamo_planilla(db, planilla_id, planilla, fecha_contable)
+            asientos = _crear_asientos_devengamiento(
+                db, planilla_id, planilla, parametros, justificativo, fecha_contable
+            )
             asiento_principal = asientos[0] if asientos else None
             db.execute_update(
                 """
@@ -1420,13 +1451,15 @@ def consolidar(planilla_id: int):
                     actualizado_en = CURRENT_TIMESTAMP
                 WHERE id = %s
                 """,
-                (fecha_contable, _usuario_actual(), _usuario_actual(), asiento_principal, f'Consolidación/devengamiento: {justificativo} | Fecha contable: {fecha_contable.isoformat()}', planilla_id)
+                (fecha_contable, _usuario_actual(), _usuario_actual(), asiento_principal,
+                 f'Consolidación/devengamiento: {justificativo} | Fecha contable: {fecha_contable.isoformat()}', planilla_id),
             )
         return _json_ok('Planilla consolidada y devengada contablemente.')
     except ValueError as exc:
         return _json_error(str(exc))
     except Exception as exc:
         return _json_error(mensaje_error_operacion('consolidar la planilla'), 500)
+
 
 
 @planilla_honorarios_colaboradores_bp.route('/api/<int:planilla_id>/revertir', methods=['POST'])
@@ -1445,28 +1478,24 @@ def revertir(planilla_id: int):
                 return _json_error('Solo se puede revertir una planilla CONSOLIDADA.')
             if _planilla_tiene_pagos(db, planilla_id):
                 return _json_error('No se puede revertir una planilla con pagos registrados.')
-            _crear_asientos_reversion(db, planilla_id, planilla, justificativo)
-            _revertir_cuotas_prestamo_planilla(db, planilla_id)
+            reversos_map = _crear_asientos_reversion(db, planilla_id, planilla, justificativo)
+            _revertir_cuotas_prestamo_planilla(db, planilla_id, justificativo, reversos_map)
             db.execute_update(
                 """
                 UPDATE contabilidad.planilla_periodo
-                SET estado = 'BORRADOR',
-                    fecha_consolidacion = NULL,
-                    fecha_contabilizacion = NULL,
-                    consolidado_por = NULL,
-                    contabilizado_por = NULL,
-                    asiento_devengamiento_id = NULL,
-                    observacion = COALESCE(observacion || E'\n', '') || %s,
-                    actualizado_en = CURRENT_TIMESTAMP
+                SET estado = 'BORRADOR', fecha_consolidacion = NULL, fecha_contabilizacion = NULL,
+                    consolidado_por = NULL, contabilizado_por = NULL, asiento_devengamiento_id = NULL,
+                    observacion = COALESCE(observacion || E'\n', '') || %s, actualizado_en = CURRENT_TIMESTAMP
                 WHERE id = %s
                 """,
-                (f'Reversión a BORRADOR: {justificativo}', planilla_id)
+                (f'Reversión a BORRADOR: {justificativo}', planilla_id),
             )
-        return _json_ok('Planilla revertida a BORRADOR. El asiento de devengamiento fue reversado si correspondía.')
+        return _json_ok('Planilla revertida a BORRADOR. Se reversaron sus efectos contables y de préstamos.')
     except ValueError as exc:
         return _json_error(str(exc))
     except Exception as exc:
         return _json_error(mensaje_error_operacion('revertir la planilla'), 500)
+
 
 
 @planilla_honorarios_colaboradores_bp.route('/api/<int:planilla_id>/eliminar', methods=['POST'])
@@ -1497,95 +1526,16 @@ def eliminar(planilla_id: int):
         return _json_error(mensaje_error_operacion('eliminar la planilla'), 500)
 
 
-def _aplicar_cuotas_prestamo_planilla(db: DatabaseManager, planilla_id: int, planilla: dict[str, Any]):
-    conceptos = db.execute_query(
-        """
-        SELECT dc.id, dc.planilla_detalle_id, dc.monto, dc.atributos, pd.persona_id
-        FROM contabilidad.planilla_detalle_concepto dc
-        JOIN contabilidad.planilla_detalle pd ON pd.id = dc.planilla_detalle_id
-        WHERE dc.planilla_periodo_id = %s
-          AND dc.codigo_concepto = 'ANTICIPO_PRESTAMO'
-          AND dc.monto > 0
-          AND COALESCE(dc.atributos->>'origen','') = 'ANTICIPO_PRESTAMO_PROGRAMADO'
-        """,
-        (planilla_id,)
+def _aplicar_cuotas_prestamo_planilla(db: DatabaseManager, planilla_id: int, planilla: dict[str, Any], fecha_operacion: date):
+    if int(planilla_id) != int(planilla['id']):
+        raise ValueError('La planilla indicada no coincide con su identificador.')
+    return aplicar_cuotas_planilla(
+        db,
+        planilla=planilla,
+        fecha_operacion=fecha_operacion,
+        usuario=_usuario_actual(),
     )
-    for concepto in conceptos:
-        monto_disponible = Decimal(str(concepto['monto'] or 0)).quantize(CUANTIA)
-        atributos = concepto.get('atributos') or {}
-        cuotas = atributos.get('prestamo_cuotas') or []
-        for cuota in cuotas:
-            if monto_disponible <= 0:
-                break
-            cuota_id = int(cuota['cuota_id'])
-            cuota_rows = db.execute_query(
-                """
-                SELECT pc.*, p.moneda_codigo, p.tipo_cambio
-                FROM contabilidad.planilla_prestamo_cuota pc
-                JOIN contabilidad.planilla_prestamo p ON p.id = pc.prestamo_id
-                WHERE pc.id = %s AND pc.estado IN ('PENDIENTE','PARCIAL')
-                """,
-                (cuota_id,)
-            )
-            if not cuota_rows:
-                continue
-            cuota_db = cuota_rows[0]
-            saldo_cuota = Decimal(str(cuota_db['saldo_pendiente'] or 0)).quantize(CUANTIA)
-            aplicar = min(saldo_cuota, monto_disponible)
-            if aplicar <= 0:
-                continue
-            nuevo_aplicado = Decimal(str(cuota_db['monto_aplicado'] or 0)).quantize(CUANTIA) + aplicar
-            nuevo_saldo = saldo_cuota - aplicar
-            estado_cuota = 'APLICADA' if nuevo_saldo <= 0 else 'PARCIAL'
-            db.execute_update(
-                """
-                UPDATE contabilidad.planilla_prestamo_cuota
-                SET monto_aplicado = %s,
-                    saldo_pendiente = %s,
-                    estado = %s,
-                    planilla_periodo_id = %s,
-                    planilla_detalle_id = %s,
-                    actualizado_en = CURRENT_TIMESTAMP
-                WHERE id = %s
-                """,
-                (nuevo_aplicado, nuevo_saldo, estado_cuota, planilla_id, concepto['planilla_detalle_id'], cuota_id)
-            )
-            db.execute_insert(
-                """
-                INSERT INTO contabilidad.planilla_prestamo_aplicacion (
-                    prestamo_id, cuota_id, tipo_aplicacion, fecha_aplicacion, monto_aplicado,
-                    moneda_codigo, tipo_cambio, planilla_periodo_id, planilla_detalle_id,
-                    referencia, justificativo, creado_por, creado_en
-                ) VALUES (%s, %s, 'PLANILLA', CURRENT_DATE, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
-                """,
-                (
-                    cuota_db['prestamo_id'], cuota_id, aplicar, cuota_db['moneda_codigo'], cuota_db['tipo_cambio'],
-                    planilla_id, concepto['planilla_detalle_id'], planilla['codigo'],
-                    f'Descuento aplicado por planilla {planilla["codigo"]}', _usuario_actual()
-                ),
-                return_id=False
-            )
-            resumen = db.execute_query(
-                """
-                SELECT COALESCE(SUM(monto_aplicado),0) AS aplicado, COALESCE(SUM(saldo_pendiente),0) AS saldo
-                FROM contabilidad.planilla_prestamo_cuota
-                WHERE prestamo_id = %s AND estado <> 'ANULADA'
-                """,
-                (cuota_db['prestamo_id'],)
-            )[0]
-            estado_prestamo = 'PAGADO' if Decimal(str(resumen['saldo'] or 0)) <= 0 else 'PARCIAL'
-            db.execute_update(
-                """
-                UPDATE contabilidad.planilla_prestamo
-                SET monto_recuperado = %s,
-                    saldo_pendiente = %s,
-                    estado = %s,
-                    actualizado_en = CURRENT_TIMESTAMP
-                WHERE id = %s
-                """,
-                (row_decimal(resumen, 'aplicado'), row_decimal(resumen, 'saldo'), estado_prestamo, cuota_db['prestamo_id'])
-            )
-            monto_disponible -= aplicar
+
 
 # ============================================================
 # Devengamiento, reversión y eliminación segura
@@ -1746,13 +1696,10 @@ def _crear_asientos_devengamiento(db: DatabaseManager, planilla_id: int, planill
                COALESCE(SUM(aportes_patronales),0) AS aportes,
                COALESCE(SUM(liquido_pagable),0) AS liquido
         FROM contabilidad.planilla_detalle
-        WHERE planilla_periodo_id = %s
-          AND estado <> 'EXCLUIDO'
+        WHERE planilla_periodo_id = %s AND estado <> 'EXCLUIDO'
         GROUP BY unidad_negocio_id, unidad_negocio_codigo, unidad_negocio_nombre
         ORDER BY unidad_codigo
-        """,
-        (planilla_id,)
-    )
+        """, (planilla_id,))
     asientos: list[int] = []
     fecha_asiento = fecha_contable or planilla['fecha_planilla']
     for u in unidades:
@@ -1762,86 +1709,52 @@ def _crear_asientos_devengamiento(db: DatabaseManager, planilla_id: int, planill
         lineas: list[dict[str, Any]] = []
         aportes = row_decimal(u, 'aportes')
         liquido = row_decimal(u, 'liquido')
-
-        # Honorarios profesionales (6.1.1.017) requiere auxiliar en el plan de cuentas actual.
-        # Por tanto el gasto no puede registrarse como una linea consolidada por unidad;
-        # se desglosa por colaborador usando el auxiliar copiado en el detalle de planilla.
         honorarios_persona = db.execute_query(
             """
             SELECT id, nombre_completo, auxiliar_id, COALESCE(total_ganado,0) AS total_ganado
             FROM contabilidad.planilla_detalle
-            WHERE planilla_periodo_id = %s
-              AND unidad_negocio_id = %s
-              AND estado <> 'EXCLUIDO'
+            WHERE planilla_periodo_id = %s AND unidad_negocio_id = %s AND estado <> 'EXCLUIDO'
               AND COALESCE(total_ganado,0) > 0
             ORDER BY secuencia, nombre_completo
-            """,
-            (planilla_id, unidad_id)
-        )
+            """, (planilla_id, unidad_id))
         for hp in honorarios_persona:
             monto_honorario = row_decimal(hp, 'total_ganado')
-            if monto_honorario <= 0:
-                continue
             if not hp.get('auxiliar_id'):
                 raise ValueError(f'El colaborador {hp["nombre_completo"]} no tiene auxiliar contable vinculado.')
-            _agregar_linea(
-                lineas,
-                parametros['cuenta_gasto_honorarios_codigo'],
-                debe=monto_honorario,
-                auxiliar_id=hp.get('auxiliar_id'),
-                glosa=f'{glosa} - {hp["nombre_completo"]}',
-                atributos={'tipo': 'debe_total_ganado', 'detalle_id': hp.get('id')}
-            )
+            _agregar_linea(lineas, parametros['cuenta_gasto_honorarios_codigo'], debe=monto_honorario,
+                           auxiliar_id=hp.get('auxiliar_id'), glosa=f'{glosa} - {hp["nombre_completo"]}',
+                           atributos={'tipo': 'debe_total_ganado', 'detalle_id': hp.get('id')})
         if aportes > 0:
-            _agregar_linea(lineas, _requiere_cuenta(parametros, 'cuenta_gasto_aportes_patronales_codigo', 'Gasto aportes patronales'), debe=aportes, glosa=glosa, atributos={'tipo': 'debe_aportes_patronales'})
-        # La cuenta por pagar 2.1.1.001 requiere auxiliar en el plan de cuentas actual.
-        # Por tanto, la obligación no puede registrarse como una sola línea consolidada por unidad;
-        # debe desglosarse por colaborador, usando el auxiliar copiado en el detalle de planilla.
+            _agregar_linea(lineas, _requiere_cuenta(parametros, 'cuenta_gasto_aportes_patronales_codigo', 'Gasto aportes patronales'),
+                           debe=aportes, glosa=glosa, atributos={'tipo': 'debe_aportes_patronales'})
         obligaciones_persona = db.execute_query(
             """
             SELECT id, nombre_completo, auxiliar_id, COALESCE(liquido_pagable,0) AS liquido_pagable
             FROM contabilidad.planilla_detalle
-            WHERE planilla_periodo_id = %s
-              AND unidad_negocio_id = %s
-              AND estado <> 'EXCLUIDO'
+            WHERE planilla_periodo_id = %s AND unidad_negocio_id = %s AND estado <> 'EXCLUIDO'
               AND COALESCE(liquido_pagable,0) > 0
             ORDER BY secuencia, nombre_completo
-            """,
-            (planilla_id, unidad_id)
-        )
+            """, (planilla_id, unidad_id))
         for op in obligaciones_persona:
             monto_liquido = row_decimal(op, 'liquido_pagable')
-            if monto_liquido <= 0:
-                continue
             if not op.get('auxiliar_id'):
                 raise ValueError(f'El colaborador {op["nombre_completo"]} no tiene auxiliar contable vinculado.')
-            _agregar_linea(
-                lineas,
-                parametros['cuenta_honorarios_por_pagar_codigo'],
-                haber=monto_liquido,
-                auxiliar_id=op.get('auxiliar_id'),
-                glosa=f'{glosa} - obligación por pagar {op["nombre_completo"]}',
-                atributos={'tipo': 'haber_liquido_pagable', 'detalle_id': op.get('id')}
-            )
+            _agregar_linea(lineas, parametros['cuenta_honorarios_por_pagar_codigo'], haber=monto_liquido,
+                           auxiliar_id=op.get('auxiliar_id'), glosa=f'{glosa} - obligación por pagar {op["nombre_completo"]}',
+                           atributos={'tipo': 'haber_liquido_pagable', 'detalle_id': op.get('id')})
 
         conceptos = db.execute_query(
             """
-            SELECT dc.codigo_concepto, dc.nombre_concepto, dc.tipo_concepto, COALESCE(dc.cuenta_haber_codigo,'') AS cuenta_haber_codigo,
-                   COALESCE(SUM(dc.monto),0) AS monto
+            SELECT dc.codigo_concepto, dc.nombre_concepto, dc.tipo_concepto,
+                   COALESCE(dc.cuenta_haber_codigo,'') AS cuenta_haber_codigo, COALESCE(SUM(dc.monto),0) AS monto
             FROM contabilidad.planilla_detalle_concepto dc
             JOIN contabilidad.planilla_detalle pd ON pd.id = dc.planilla_detalle_id
-            WHERE dc.planilla_periodo_id = %s
-              AND pd.unidad_negocio_id = %s
-              AND pd.estado <> 'EXCLUIDO'
-              AND dc.monto > 0
+            WHERE dc.planilla_periodo_id = %s AND pd.unidad_negocio_id = %s
+              AND pd.estado <> 'EXCLUIDO' AND dc.monto > 0
             GROUP BY dc.codigo_concepto, dc.nombre_concepto, dc.tipo_concepto, dc.cuenta_haber_codigo
-            """,
-            (planilla_id, unidad_id)
-        )
+            """, (planilla_id, unidad_id))
         for c in conceptos:
-            codigo = _upper(c['codigo_concepto'])
-            tipo = _upper(c['tipo_concepto'])
-            monto = row_decimal(c, 'monto')
+            codigo = _upper(c['codigo_concepto']); tipo = _upper(c['tipo_concepto']); monto = row_decimal(c, 'monto')
             if monto <= 0 or codigo == 'ANTICIPO_PRESTAMO':
                 continue
             if codigo == 'AFP_LABORAL':
@@ -1854,35 +1767,62 @@ def _crear_asientos_devengamiento(db: DatabaseManager, planilla_id: int, planill
                 cuenta = c.get('cuenta_haber_codigo') or _requiere_cuenta(parametros, 'cuenta_descuentos_por_pagar_codigo', 'Descuentos por pagar / compensar')
             else:
                 continue
-            _agregar_linea(lineas, cuenta, haber=monto, glosa=f'{glosa} - {c["nombre_concepto"]}', atributos={'tipo': 'haber_concepto', 'codigo_concepto': codigo})
+            _agregar_linea(lineas, cuenta, haber=monto, glosa=f'{glosa} - {c["nombre_concepto"]}',
+                           atributos={'tipo': 'haber_concepto', 'codigo_concepto': codigo})
 
-        prestamos = db.execute_query(
-            """
-            SELECT p.cuenta_cobrar_codigo, p.auxiliar_id, p.nombre_completo,
-                   COALESCE(SUM(pa.monto_aplicado),0) AS monto
-            FROM contabilidad.planilla_prestamo_aplicacion pa
-            JOIN contabilidad.planilla_prestamo p ON p.id = pa.prestamo_id
-            JOIN contabilidad.planilla_detalle pd ON pd.id = pa.planilla_detalle_id
-            WHERE pa.planilla_periodo_id = %s
-              AND pd.unidad_negocio_id = %s
-              AND pa.tipo_aplicacion = 'PLANILLA'
-            GROUP BY p.cuenta_cobrar_codigo, p.auxiliar_id, p.nombre_completo
-            """,
-            (planilla_id, unidad_id)
-        )
-        for pr in prestamos:
-            monto = row_decimal(pr, 'monto')
-            _agregar_linea(lineas, pr['cuenta_cobrar_codigo'], haber=monto, auxiliar_id=pr.get('auxiliar_id'), glosa=f'{glosa} - recupero anticipo/préstamo {pr["nombre_completo"]}', atributos={'tipo': 'haber_recupero_prestamo'})
+        recuperos = recuperos_planilla_por_unidad(db, planilla_id, unidad_id)
+        for pr in recuperos:
+            monto = row_decimal(pr, 'monto_aplicado')
+            acreedora_id = int(pr['unidad_acreedora_id'])
+            if acreedora_id == unidad_id:
+                _agregar_linea(lineas, pr['cuenta_cobrar_codigo'], haber=monto, auxiliar_id=pr.get('auxiliar_id'),
+                               glosa=f'{glosa} - recupero anticipo/préstamo {pr["nombre_completo"]}',
+                               atributos={'tipo': 'haber_recupero_prestamo', 'aplicacion_id': int(pr['aplicacion_id'])})
+            else:
+                aux_acreedora = auxiliar_canonico_unidad(db, acreedora_id)
+                _agregar_linea(lineas, CUENTA_CXP_RELACIONADA, haber=monto, auxiliar_id=aux_acreedora,
+                               glosa=f'{glosa} - retención por cuenta de empresa relacionada',
+                               atributos={'tipo': 'haber_cxp_relacionada_prestamo', 'aplicacion_id': int(pr['aplicacion_id']), 'unidad_acreedora_id': acreedora_id})
+
         asiento_id = _insertar_asiento(
             db, fecha_asiento, unidad_id, planilla['moneda_codigo'], planilla['tipo_cambio'],
-            glosa, referencia, 'devengamiento_planilla_honorarios', planilla_id, lineas,
-            vincular_documento=(len(asientos) == 0)
-        )
+            glosa, referencia, 'devengamiento_planilla_honorarios', planilla_id, lineas, vincular_documento=(len(asientos) == 0))
         asientos.append(asiento_id)
+
+        for pr in recuperos:
+            app_id = int(pr['aplicacion_id']); acreedora_id = int(pr['unidad_acreedora_id']); monto = row_decimal(pr, 'monto_aplicado')
+            if acreedora_id == unidad_id:
+                vincular_aplicacion_asiento(db, app_id, asiento_id)
+                continue
+            aux_deudora = auxiliar_canonico_unidad(db, unidad_id)
+            asiento_acreedora = crear_asiento_intercompania(
+                db, fecha=fecha_asiento, unidad_id=acreedora_id, moneda_codigo=planilla['moneda_codigo'],
+                tipo_cambio=planilla['tipo_cambio'], glosa=f'Recupero intercompañía {pr["prestamo_codigo"]} por {planilla["codigo"]}',
+                referencia=f'{planilla["codigo"]}/APP{app_id}', modulo_origen='PLANILLAS',
+                tabla_origen='contabilidad.planilla_prestamo_aplicacion', origen_id=app_id,
+                accion='recupero_prestamo_planilla_acreedora',
+                lineas=[
+                    {'cuenta': CUENTA_CXC_RELACIONADA, 'auxiliar_id': aux_deudora, 'debe': monto, 'haber': 0,
+                      'glosa': 'CxC a empresa relacionada por retención en planilla', 'atributos': {'aplicacion_id': app_id}},
+                    {'cuenta': pr['cuenta_cobrar_codigo'], 'auxiliar_id': pr.get('auxiliar_id'), 'debe': 0, 'haber': monto,
+                      'glosa': f'Recupero de {pr["prestamo_codigo"]}', 'atributos': {'aplicacion_id': app_id}},
+                ],
+                atributos={'planilla_id': planilla_id, 'aplicacion_id': app_id, 'unidad_retenedora_id': unidad_id},
+            )
+            registrar_operacion(
+                db, clave_origen=f'PLANILLA-PRESTAMO:{app_id}', tipo_operacion='PRESTAMO_PLANILLA',
+                fecha_operacion=fecha_asiento, unidad_deudora_id=unidad_id, unidad_acreedora_id=acreedora_id,
+                moneda_codigo=planilla['moneda_codigo'], tipo_cambio=planilla['tipo_cambio'], monto=monto,
+                modulo_origen='PLANILLAS', tabla_origen='contabilidad.planilla_prestamo_aplicacion', origen_id=app_id,
+                referencia=f'{planilla["codigo"]}/APP{app_id}', asiento_deudora_id=asiento_id, asiento_acreedora_id=asiento_acreedora,
+                usuario=_usuario_actual(), atributos={'planilla_id': planilla_id, 'prestamo_id': int(pr['prestamo_id']), 'cuota_id': int(pr['cuota_id']) if pr.get('cuota_id') else None},
+            )
+            vincular_aplicacion_asiento(db, app_id, asiento_acreedora)
     return asientos
 
 
-def _crear_asientos_reversion(db: DatabaseManager, planilla_id: int, planilla: dict[str, Any], justificativo: str) -> list[int]:
+
+def _crear_asientos_reversion(db: DatabaseManager, planilla_id: int, planilla: dict[str, Any], justificativo: str) -> dict[int, int]:
     rows = db.execute_query(
         """
         SELECT DISTINCT a.*
@@ -1902,63 +1842,60 @@ def _crear_asientos_reversion(db: DatabaseManager, planilla_id: int, planilla: d
           AND COALESCE(a.atributos->>'accion','') = 'devengamiento_planilla_honorarios'
         ORDER BY id
         """,
-        (planilla_id, planilla_id)
+        (planilla_id, planilla_id),
     )
-    reversos: list[int] = []
+    reversos: dict[int, int] = {}
     for asiento in rows:
         detalles = db.execute_query(
-            """
-            SELECT *
-            FROM contabilidad.asiento_detalle
-            WHERE asiento_id = %s
-            ORDER BY secuencia
-            """,
-            (asiento['id'],)
+            "SELECT * FROM contabilidad.asiento_detalle WHERE asiento_id = %s ORDER BY secuencia",
+            (asiento['id'],),
         )
-        lineas = []
-        for d in detalles:
-            lineas.append({
-                'cuenta': d['cuenta_codigo'],
-                'auxiliar_id': d.get('auxiliar_id'),
-                'glosa': f'Reverso {asiento["referencia"]}',
-                'debe': Decimal(str(d.get('haber') or 0)).quantize(CUANTIA),
-                'haber': Decimal(str(d.get('debe') or 0)).quantize(CUANTIA),
-                'atributos': {'tipo': 'reverso_devengamiento', 'asiento_original_id': int(asiento['id'])}
-            })
+        lineas = [{
+            'cuenta': d['cuenta_codigo'], 'auxiliar_id': d.get('auxiliar_id'),
+            'glosa': f'Reverso {asiento["referencia"]}',
+            'debe': Decimal(str(d.get('haber') or 0)).quantize(CUANTIA),
+            'haber': Decimal(str(d.get('debe') or 0)).quantize(CUANTIA),
+            'atributos': {'tipo': 'reverso_devengamiento', 'asiento_original_id': int(asiento['id'])},
+        } for d in detalles]
         reverso_id = _insertar_asiento(
-            db, date.today(), int(asiento['unidad_negocio_id']), asiento['moneda_codigo'], asiento['tipo_cambio'],
+            db, asiento['fecha'], int(asiento['unidad_negocio_id']), asiento['moneda_codigo'], asiento['tipo_cambio'],
             f'Reverso devengamiento {planilla["codigo"]}: {justificativo}', f'REV-{asiento["referencia"]}',
-            'reverso_devengamiento_planilla_honorarios', planilla_id, lineas,
-            vincular_documento=False
+            'reverso_devengamiento_planilla_honorarios', planilla_id, lineas, vincular_documento=False,
         )
-        reversos.append(reverso_id)
+        reversos[int(asiento['id'])] = int(reverso_id)
     if reversos:
         db.execute_update(
-            """
-            UPDATE contabilidad.planilla_periodo
-            SET asiento_anulacion_id = %s,
-                actualizado_en = CURRENT_TIMESTAMP
-            WHERE id = %s
-            """,
-            (reversos[0], planilla_id)
+            "UPDATE contabilidad.planilla_periodo SET asiento_anulacion_id = %s, actualizado_en = CURRENT_TIMESTAMP WHERE id = %s",
+            (next(iter(reversos.values())), planilla_id),
         )
     return reversos
 
 
-def _revertir_cuotas_prestamo_planilla(db: DatabaseManager, planilla_id: int):
-    try:
-        aplicaciones = db.execute_query(
-            """
-            SELECT *
-            FROM contabilidad.planilla_prestamo_aplicacion
-            WHERE planilla_periodo_id = %s
-              AND tipo_aplicacion = 'PLANILLA'
-            ORDER BY id DESC
-            """,
-            (planilla_id,)
-        )
-    except Exception:
+
+def _revertir_cuotas_prestamo_planilla(db: DatabaseManager, planilla_id: int, justificativo: str, reversos_existentes: dict[int, int] | None = None):
+    aplicaciones = [dict(r) for r in db.execute_query(
+        """
+        SELECT *
+        FROM contabilidad.planilla_prestamo_aplicacion
+        WHERE planilla_periodo_id = %s
+          AND tipo_aplicacion = 'PLANILLA'
+        ORDER BY id DESC
+        """,
+        (planilla_id,),
+    )]
+    if not aplicaciones:
         return
+
+    operaciones = operaciones_por_origen(
+        db, 'contabilidad.planilla_prestamo_aplicacion',
+        [int(a['id']) for a in aplicaciones],
+    )
+    for oi in operaciones:
+        revertir_operacion(
+            db, oi, justificativo=justificativo, usuario=_usuario_actual(),
+            reversos_existentes=reversos_existentes or {},
+        )
+
     prestamos_afectados: set[int] = set()
     for app in aplicaciones:
         monto = Decimal(str(app['monto_aplicado'] or 0)).quantize(CUANTIA)
@@ -1966,7 +1903,7 @@ def _revertir_cuotas_prestamo_planilla(db: DatabaseManager, planilla_id: int):
         prestamo_id = int(app['prestamo_id'])
         prestamos_afectados.add(prestamo_id)
         if cuota_id:
-            cuota_rows = db.execute_query("SELECT * FROM contabilidad.planilla_prestamo_cuota WHERE id = %s", (cuota_id,))
+            cuota_rows = db.execute_query("SELECT * FROM contabilidad.planilla_prestamo_cuota WHERE id = %s FOR UPDATE", (cuota_id,))
             if cuota_rows:
                 cuota = cuota_rows[0]
                 aplicado = max(Decimal(str(cuota['monto_aplicado'] or 0)).quantize(CUANTIA) - monto, Decimal('0.00'))
@@ -1976,17 +1913,15 @@ def _revertir_cuotas_prestamo_planilla(db: DatabaseManager, planilla_id: int):
                 db.execute_update(
                     """
                     UPDATE contabilidad.planilla_prestamo_cuota
-                    SET monto_aplicado = %s,
-                        saldo_pendiente = %s,
-                        estado = %s,
-                        planilla_periodo_id = NULL,
-                        planilla_detalle_id = NULL,
+                    SET monto_aplicado = %s, saldo_pendiente = %s, estado = %s,
+                        planilla_periodo_id = NULL, planilla_detalle_id = NULL,
                         actualizado_en = CURRENT_TIMESTAMP
                     WHERE id = %s
                     """,
-                    (aplicado, saldo, estado, cuota_id)
+                    (aplicado, saldo, estado, cuota_id),
                 )
-        db.execute_update("DELETE FROM contabilidad.planilla_prestamo_aplicacion WHERE id = %s", (app['id'],))
+        db.execute_delete("DELETE FROM contabilidad.planilla_prestamo_aplicacion WHERE id = %s", (app['id'],))
+
     for prestamo_id in prestamos_afectados:
         resumen = db.execute_query(
             """
@@ -1994,7 +1929,7 @@ def _revertir_cuotas_prestamo_planilla(db: DatabaseManager, planilla_id: int):
             FROM contabilidad.planilla_prestamo_cuota
             WHERE prestamo_id = %s AND estado <> 'ANULADA'
             """,
-            (prestamo_id,)
+            (prestamo_id,),
         )[0]
         saldo = row_decimal(resumen, 'saldo')
         aplicado = row_decimal(resumen, 'aplicado')
@@ -2002,11 +1937,8 @@ def _revertir_cuotas_prestamo_planilla(db: DatabaseManager, planilla_id: int):
         db.execute_update(
             """
             UPDATE contabilidad.planilla_prestamo
-            SET monto_recuperado = %s,
-                saldo_pendiente = %s,
-                estado = %s,
-                actualizado_en = CURRENT_TIMESTAMP
+            SET monto_recuperado = %s, saldo_pendiente = %s, estado = %s, actualizado_en = CURRENT_TIMESTAMP
             WHERE id = %s
             """,
-            (aplicado, saldo, estado, prestamo_id)
+            (aplicado, saldo, estado, prestamo_id),
         )

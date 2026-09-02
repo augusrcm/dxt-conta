@@ -17,6 +17,17 @@ from database.db_manager import DatabaseManager
 from modules.planilla_prestamos import planilla_prestamos_bp
 from utils.decorators import login_required, roles_required
 from utils.planillas_security import assert_gestion_abierta, mensaje_error_operacion
+from utils.intercompania import (
+    CUENTA_CXC_RELACIONADA,
+    CUENTA_CXP_RELACIONADA,
+    auxiliar_canonico_unidad,
+    crear_asiento as crear_asiento_intercompania,
+    crear_reverso_asiento,
+    obtener_banco,
+    operaciones_por_origen,
+    registrar_operacion,
+    revertir_operacion,
+)
 
 
 ROLES_LECTURA = [9, 10, 11]
@@ -246,18 +257,8 @@ def _get_caja(db: DatabaseManager, caja_id: int) -> dict[str, Any]:
 
 
 def _get_banco(db: DatabaseManager, banco_id: int) -> dict[str, Any]:
-    rows = db.execute_query(
-        """
-        SELECT id, nombre_banco, numero_cuenta, moneda_codigo, cuenta_contable_codigo, unidad_negocio_id
-        FROM contabilidad.cuenta_bancaria
-        WHERE id = %s AND activo = TRUE
-        LIMIT 1
-        """,
-        (banco_id,)
-    )
-    if not rows:
-        raise ValueError('La cuenta bancaria seleccionada no existe o está inactiva.')
-    return dict(rows[0])
+    return obtener_banco(db, banco_id)
+
 
 
 def _prestamo_by_id(db: DatabaseManager, prestamo_id: int) -> dict[str, Any]:
@@ -472,212 +473,140 @@ def _stats(db: DatabaseManager) -> dict[str, Any]:
     }
 
 
-def _crear_asiento_otorgamiento(db: DatabaseManager, prestamo: dict[str, Any], salida_cuenta: str) -> int:
+def _crear_asiento_otorgamiento(db: DatabaseManager, prestamo: dict[str, Any], salida: dict[str, Any]) -> tuple[int, int]:
     glosa = prestamo['glosa'][:500]
     referencia = prestamo.get('referencia') or prestamo['codigo']
-    asiento_id = db.execute_insert(
-        """
-        INSERT INTO contabilidad.asiento (
-            fecha, unidad_negocio_id, moneda_codigo, tipo_cambio, glosa, referencia,
-            modulo_origen, tabla_origen, origen_id, estado, cliente_nit_ci_ref,
-            cliente_nombre_ref, atributos, actualizado_en
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'CONFIRMADO', %s, %s, %s::jsonb, CURRENT_TIMESTAMP)
-        """,
-        (
-            prestamo['fecha_otorgamiento'], prestamo['unidad_negocio_id'], prestamo['moneda_codigo'], prestamo['tipo_cambio'],
-            glosa, referencia, MODULO_ORIGEN, TABLA_PRESTAMO, prestamo['id'], prestamo['ci_nit'], prestamo['nombre_completo'],
-            Json({'origen': 'planilla_prestamos', 'accion': 'otorgamiento', 'prestamo_id': prestamo['id']})
-        ),
-    )
     capital = Decimal(str(prestamo['monto_capital'])).quantize(Q2)
     interes = Decimal(str(prestamo.get('interes_monto') or 0)).quantize(Q2)
     total_recuperar = Decimal(str(prestamo['total_recuperar'])).quantize(Q2)
-    sec = 1
-    db.execute_insert(
-        """
-        INSERT INTO contabilidad.asiento_detalle (
-            asiento_id, secuencia, cuenta_codigo, auxiliar_id, glosa, debe, haber,
-            monto_moneda, referencia, atributos
-        ) VALUES (%s, %s, %s, %s, %s, %s, 0, %s, %s, %s::jsonb)
-        """,
-        (asiento_id, sec, prestamo['cuenta_cobrar_codigo'], prestamo['auxiliar_id'], glosa[:300], total_recuperar, total_recuperar, referencia, Json({'tipo': 'debe_prestamo_personal', 'incluye_interes': str(interes)})),
-        return_id=False,
-    )
-    sec += 1
-    db.execute_insert(
-        """
-        INSERT INTO contabilidad.asiento_detalle (
-            asiento_id, secuencia, cuenta_codigo, auxiliar_id, glosa, debe, haber,
-            monto_moneda, referencia, atributos
-        ) VALUES (%s, %s, %s, NULL, %s, 0, %s, %s, %s, %s::jsonb)
-        """,
-        (asiento_id, sec, salida_cuenta, glosa[:300], capital, capital, referencia, Json({'tipo': 'haber_salida_tesoreria'})),
-        return_id=False,
-    )
-    if interes > 0:
-        if not prestamo.get('cuenta_interes_codigo'):
-            raise ValueError('Debe seleccionar cuenta de interés si el préstamo tiene interés.')
-        sec += 1
-        db.execute_insert(
-            """
-            INSERT INTO contabilidad.asiento_detalle (
-                asiento_id, secuencia, cuenta_codigo, auxiliar_id, glosa, debe, haber,
-                monto_moneda, referencia, atributos
-            ) VALUES (%s, %s, %s, NULL, %s, 0, %s, %s, %s, %s::jsonb)
-            """,
-            (asiento_id, sec, prestamo['cuenta_interes_codigo'], glosa[:300], interes, interes, referencia, Json({'tipo': 'haber_interes_prestamo'})),
-            return_id=False,
-        )
+    unidad_prestamo = int(prestamo['unidad_negocio_id'])
+    es_banco = str(prestamo['medio_desembolso']).upper() == 'BANCO'
+    unidad_salida = int(salida.get('unidad_negocio_id') or unidad_prestamo)
+
+    if interes > 0 and not prestamo.get('cuenta_interes_codigo'):
+        raise ValueError('Debe seleccionar cuenta de interés si el préstamo tiene interés.')
+
+    if not es_banco or unidad_salida == unidad_prestamo:
+        lineas = [
+            {'cuenta': prestamo['cuenta_cobrar_codigo'], 'auxiliar_id': prestamo['auxiliar_id'],
+             'debe': total_recuperar, 'haber': 0, 'glosa': glosa,
+             'atributos': {'tipo': 'debe_prestamo_personal', 'incluye_interes': str(interes)}},
+            {'cuenta': salida['cuenta_contable_codigo'], 'auxiliar_id': salida.get('auxiliar_id') if es_banco else None,
+             'debe': 0, 'haber': capital, 'glosa': glosa, 'atributos': {'tipo': 'haber_salida_tesoreria'}},
+        ]
+        if interes > 0:
+            lineas.append({'cuenta': prestamo['cuenta_interes_codigo'], 'auxiliar_id': None, 'debe': 0, 'haber': interes,
+                           'glosa': glosa, 'atributos': {'tipo': 'haber_interes_prestamo'}})
+        asiento_id = crear_asiento_intercompania(
+            db, fecha=prestamo['fecha_otorgamiento'], unidad_id=unidad_prestamo, moneda_codigo=prestamo['moneda_codigo'],
+            tipo_cambio=prestamo['tipo_cambio'], glosa=glosa, referencia=referencia, modulo_origen=MODULO_ORIGEN,
+            tabla_origen=TABLA_PRESTAMO, origen_id=int(prestamo['id']), accion='otorgamiento', lineas=lineas,
+            atributos={'prestamo_id': int(prestamo['id']), 'intercompania': False},
+            cliente_nit_ci_ref=prestamo['ci_nit'], cliente_nombre_ref=prestamo['nombre_completo'])
+        asiento_tesoreria = asiento_id
+    else:
+        aux_banco_owner = auxiliar_canonico_unidad(db, unidad_salida)
+        aux_prestamo_owner = auxiliar_canonico_unidad(db, unidad_prestamo)
+        lineas_prestamo = [
+            {'cuenta': prestamo['cuenta_cobrar_codigo'], 'auxiliar_id': prestamo['auxiliar_id'], 'debe': total_recuperar, 'haber': 0,
+             'glosa': glosa, 'atributos': {'tipo': 'debe_prestamo_personal', 'incluye_interes': str(interes)}},
+            {'cuenta': CUENTA_CXP_RELACIONADA, 'auxiliar_id': aux_banco_owner, 'debe': 0, 'haber': capital,
+             'glosa': f'CxP relacionada por desembolso {prestamo["codigo"]}', 'atributos': {'tipo': 'haber_cxp_relacionada_desembolso'}},
+        ]
+        if interes > 0:
+            lineas_prestamo.append({'cuenta': prestamo['cuenta_interes_codigo'], 'auxiliar_id': None, 'debe': 0, 'haber': interes,
+                                    'glosa': glosa, 'atributos': {'tipo': 'haber_interes_prestamo'}})
+        asiento_id = crear_asiento_intercompania(
+            db, fecha=prestamo['fecha_otorgamiento'], unidad_id=unidad_prestamo, moneda_codigo=prestamo['moneda_codigo'],
+            tipo_cambio=prestamo['tipo_cambio'], glosa=glosa, referencia=referencia, modulo_origen=MODULO_ORIGEN,
+            tabla_origen=TABLA_PRESTAMO, origen_id=int(prestamo['id']), accion='otorgamiento_intercompania_deudora',
+            lineas=lineas_prestamo, atributos={'prestamo_id': int(prestamo['id']), 'unidad_banco_id': unidad_salida},
+            cliente_nit_ci_ref=prestamo['ci_nit'], cliente_nombre_ref=prestamo['nombre_completo'])
+        asiento_tesoreria = crear_asiento_intercompania(
+            db, fecha=prestamo['fecha_otorgamiento'], unidad_id=unidad_salida, moneda_codigo=prestamo['moneda_codigo'],
+            tipo_cambio=prestamo['tipo_cambio'], glosa=f'Desembolso por cuenta de unidad relacionada - {prestamo["codigo"]}',
+            referencia=referencia, modulo_origen=MODULO_ORIGEN, tabla_origen=TABLA_PRESTAMO, origen_id=int(prestamo['id']),
+            accion='otorgamiento_intercompania_acreedora', lineas=[
+                {'cuenta': CUENTA_CXC_RELACIONADA, 'auxiliar_id': aux_prestamo_owner, 'debe': capital, 'haber': 0,
+                 'glosa': f'CxC relacionada por desembolso {prestamo["codigo"]}', 'atributos': {'tipo': 'debe_cxc_relacionada_desembolso'}},
+                {'cuenta': salida['cuenta_contable_codigo'], 'auxiliar_id': salida.get('auxiliar_id'), 'debe': 0, 'haber': capital,
+                 'glosa': f'Salida banco {salida.get("nombre_banco") or ""}', 'atributos': {'tipo': 'haber_banco_desembolso_intercompania'}},
+            ], atributos={'prestamo_id': int(prestamo['id']), 'unidad_deudora_id': unidad_prestamo})
+        registrar_operacion(
+            db, clave_origen=f'DESEMBOLSO-PRESTAMO:{prestamo["id"]}', tipo_operacion='DESEMBOLSO_PRESTAMO',
+            fecha_operacion=prestamo['fecha_otorgamiento'], unidad_deudora_id=unidad_prestamo, unidad_acreedora_id=unidad_salida,
+            moneda_codigo=prestamo['moneda_codigo'], tipo_cambio=prestamo['tipo_cambio'], monto=capital,
+            modulo_origen=MODULO_ORIGEN, tabla_origen=TABLA_PRESTAMO, origen_id=int(prestamo['id']), referencia=referencia,
+            asiento_deudora_id=asiento_id, asiento_acreedora_id=asiento_tesoreria, usuario=_usuario_actual(),
+            atributos={'cuenta_bancaria_id': prestamo.get('cuenta_bancaria_id')})
+
     db.execute_insert(
         """
         INSERT INTO contabilidad.documento_asiento (modulo, tabla_origen, origen_id, asiento_id)
         VALUES (%s, %s, %s, %s)
-        """,
-        (MODULO_ORIGEN, TABLA_PRESTAMO, prestamo['id'], asiento_id),
-        return_id=False,
-    )
-    return int(asiento_id)
+        ON CONFLICT (tabla_origen, origen_id) DO UPDATE SET modulo = EXCLUDED.modulo, asiento_id = EXCLUDED.asiento_id
+        """, (MODULO_ORIGEN, TABLA_PRESTAMO, prestamo['id'], asiento_id), return_id=False)
+    return int(asiento_id), int(asiento_tesoreria)
+
 
 
 def _registrar_movimiento_desembolso(db: DatabaseManager, prestamo: dict[str, Any], salida_cuenta: str) -> int:
-    medio = prestamo['medio_desembolso']
+    medio = str(prestamo['medio_desembolso']).upper()
     capital = Decimal(str(prestamo['monto_capital'])).quantize(Q2)
+    unidad_prestamo = int(prestamo['unidad_negocio_id'])
+    if medio == 'BANCO':
+        salida = _get_banco(db, int(prestamo['cuenta_bancaria_id']))
+        if str(salida['moneda_codigo']).upper() != str(prestamo['moneda_codigo']).upper():
+            raise ValueError('La moneda de la cuenta bancaria no coincide con la moneda del anticipo/préstamo.')
+        salida['nombre'] = f"{salida['nombre_banco']} · {salida['numero_cuenta']}"
+    else:
+        caja = _get_caja(db, int(prestamo['caja_id']))
+        salida = {**caja, 'unidad_negocio_id': unidad_prestamo, 'auxiliar_id': None, 'moneda_codigo': prestamo['moneda_codigo']}
+    if str(salida['cuenta_contable_codigo']) != str(salida_cuenta):
+        raise ValueError('La cuenta de salida almacenada no coincide con la configuración actual de Caja/Banco.')
+
+    asiento_prestamo, asiento_tesoreria = _crear_asiento_otorgamiento(db, prestamo, salida)
+    es_inter = medio == 'BANCO' and int(salida['unidad_negocio_id']) != unidad_prestamo
+    if es_inter:
+        unidad_mov = int(salida['unidad_negocio_id'])
+        aux_mov = auxiliar_canonico_unidad(db, unidad_prestamo)
+        contra = CUENTA_CXC_RELACIONADA
+    else:
+        unidad_mov = unidad_prestamo
+        aux_mov = prestamo['auxiliar_id']
+        contra = prestamo['cuenta_cobrar_codigo']
     movimiento_id = db.execute_insert(
         """
         INSERT INTO contabilidad.movimiento_tesoreria (
             fecha, tipo_movimiento, medio_origen, caja_origen_id, banco_origen_id,
-            medio_destino, caja_destino_id, banco_destino_id, auxiliar_id,
-            contra_cuenta_codigo, moneda_codigo, tipo_cambio, monto, referencia,
-            glosa, estado, asiento_id, unidad_negocio_id, actualizado_en
-        ) VALUES (
-            %s, 'EGRESO', %s, %s, %s, NULL, NULL, NULL, %s,
-            %s, %s, %s, %s, %s, %s, 'CONFIRMADO', NULL, %s, CURRENT_TIMESTAMP
-        )
+            medio_destino, caja_destino_id, banco_destino_id, auxiliar_id, contra_cuenta_codigo,
+            moneda_codigo, tipo_cambio, monto, referencia, glosa, estado, asiento_id, unidad_negocio_id, actualizado_en
+        ) VALUES (%s, 'EGRESO', %s, %s, %s, NULL, NULL, NULL, %s, %s, %s, %s, %s, %s, %s,
+                  'CONFIRMADO', %s, %s, CURRENT_TIMESTAMP)
         """,
-        (
-            prestamo['fecha_otorgamiento'], medio,
-            prestamo['caja_id'] if medio == 'CAJA' else None,
-            prestamo['cuenta_bancaria_id'] if medio == 'BANCO' else None,
-            prestamo['auxiliar_id'], prestamo['cuenta_cobrar_codigo'], prestamo['moneda_codigo'], prestamo['tipo_cambio'],
-            capital, prestamo.get('referencia') or prestamo['codigo'], prestamo['glosa'], prestamo['unidad_negocio_id'],
-        ),
-    )
-    asiento_id = _crear_asiento_otorgamiento(db, prestamo, salida_cuenta)
-    db.execute_update('UPDATE contabilidad.movimiento_tesoreria SET asiento_id = %s, actualizado_en = CURRENT_TIMESTAMP WHERE id = %s', (asiento_id, movimiento_id))
+        (prestamo['fecha_otorgamiento'], medio, prestamo['caja_id'] if medio == 'CAJA' else None,
+         prestamo['cuenta_bancaria_id'] if medio == 'BANCO' else None, aux_mov, contra, prestamo['moneda_codigo'],
+         prestamo['tipo_cambio'], capital, prestamo.get('referencia') or prestamo['codigo'], prestamo['glosa'],
+         asiento_tesoreria, unidad_mov))
     db.execute_update(
         """
         UPDATE contabilidad.planilla_prestamo
         SET movimiento_tesoreria_id = %s, asiento_otorgamiento_id = %s, cuenta_salida_codigo = %s, actualizado_en = CURRENT_TIMESTAMP
         WHERE id = %s
-        """,
-        (movimiento_id, asiento_id, salida_cuenta, prestamo['id']),
-    )
+        """, (movimiento_id, asiento_prestamo, salida_cuenta, prestamo['id']))
     return int(movimiento_id)
 
 
 
+
 def _crear_asiento_reverso_desde_asiento(
-    db: DatabaseManager,
-    asiento_id: int,
-    fecha_reversion: date,
-    glosa: str,
-    referencia: str,
-    modulo_origen: str,
-    tabla_origen: str,
-    origen_id: int,
-    accion: str,
+    db: DatabaseManager, asiento_id: int, fecha_reversion: date, glosa: str, referencia: str,
+    modulo_origen: str, tabla_origen: str, origen_id: int, accion: str,
 ) -> int:
-    asiento_rows = db.execute_query(
-        """
-        SELECT *
-        FROM contabilidad.asiento
-        WHERE id = %s
-        LIMIT 1
-        """,
-        (asiento_id,)
-    )
-    if not asiento_rows:
-        raise ValueError('No se encontró el asiento contable que debe revertirse.')
+    return crear_reverso_asiento(
+        db, int(asiento_id), fecha_reversion=fecha_reversion, justificativo=glosa,
+        modulo_origen=modulo_origen, tabla_origen=tabla_origen, origen_id=origen_id, accion=accion)
 
-    detalles = db.execute_query(
-        """
-        SELECT *
-        FROM contabilidad.asiento_detalle
-        WHERE asiento_id = %s
-        ORDER BY secuencia
-        """,
-        (asiento_id,)
-    )
-    if not detalles:
-        raise ValueError('El asiento contable no tiene detalle para reversión.')
-
-    total_debe = sum((_money(d.get('haber') or 0, 'haber reverso', positive=False) for d in detalles), Decimal('0.00')).quantize(Q2)
-    total_haber = sum((_money(d.get('debe') or 0, 'debe reverso', positive=False) for d in detalles), Decimal('0.00')).quantize(Q2)
-    if total_debe != total_haber:
-        raise ValueError('El asiento de reversión no cuadra.')
-
-    asiento = dict(asiento_rows[0])
-    reverso_id = db.execute_insert(
-        """
-        INSERT INTO contabilidad.asiento (
-            fecha, unidad_negocio_id, moneda_codigo, tipo_cambio, glosa, referencia,
-            modulo_origen, tabla_origen, origen_id, estado, cliente_nit_ci_ref,
-            cliente_nombre_ref, atributos, actualizado_en
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'CONFIRMADO', %s, %s, %s::jsonb, CURRENT_TIMESTAMP)
-        """,
-        (
-            fecha_reversion,
-            asiento['unidad_negocio_id'],
-            asiento['moneda_codigo'],
-            asiento['tipo_cambio'],
-            glosa[:500],
-            referencia[:150],
-            modulo_origen,
-            tabla_origen,
-            origen_id,
-            asiento.get('cliente_nit_ci_ref'),
-            asiento.get('cliente_nombre_ref'),
-            Json({'origen': 'planilla_prestamos', 'accion': accion, 'asiento_original_id': int(asiento_id)}),
-        )
-    )
-
-    sec = 1
-    for d in detalles:
-        debe_original = _money(d.get('debe') or 0, 'Debe original', positive=False)
-        haber_original = _money(d.get('haber') or 0, 'Haber original', positive=False)
-        db.execute_insert(
-            """
-            INSERT INTO contabilidad.asiento_detalle (
-                asiento_id, secuencia, cuenta_codigo, auxiliar_id, centro_costo_id,
-                glosa, debe, haber, monto_moneda, referencia, atributos
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
-            """,
-            (
-                reverso_id,
-                sec,
-                d['cuenta_codigo'],
-                d.get('auxiliar_id'),
-                d.get('centro_costo_id'),
-                f"Reverso {d.get('glosa') or ''}"[:300],
-                haber_original,
-                debe_original,
-                max(debe_original, haber_original),
-                referencia[:150],
-                Json({'tipo': accion, 'asiento_original_id': int(asiento_id)}),
-            ),
-            return_id=False,
-        )
-        sec += 1
-
-    db.execute_insert(
-        """
-        INSERT INTO contabilidad.documento_asiento (modulo, tabla_origen, origen_id, asiento_id)
-        VALUES (%s, %s, %s, %s)
-        """,
-        (modulo_origen, tabla_origen, origen_id, reverso_id),
-        return_id=False,
-    )
-    return int(reverso_id)
 
 
 def _revertir_aplicacion_prestamo(db: DatabaseManager, aplicacion: dict[str, Any]) -> None:
@@ -1035,6 +964,43 @@ def guardar():
     return _json_ok('Anticipo/préstamo guardado.', id=prestamo_id)
 
 
+def _validar_periodos_planilla_para_confirmacion(db: DatabaseManager, prestamo: dict[str, Any]) -> None:
+    tipo_persona = _upper(prestamo.get('tipo_persona'))
+    if tipo_persona == 'PLANTA':
+        tipo_planilla = 'PLANTA'
+    elif tipo_persona == 'COLABORADOR':
+        tipo_planilla = 'COLABORADORES'
+    else:
+        raise ValueError('El tipo de persona del anticipo/préstamo no es válido para recuperación por planilla.')
+
+    cerradas = db.execute_query(
+        """
+        SELECT pc.numero_cuota, pc.gestion, pc.mes, pp.codigo AS planilla_codigo, pp.estado AS planilla_estado
+        FROM contabilidad.planilla_prestamo_cuota pc
+        JOIN contabilidad.planilla_periodo pp
+          ON pp.tipo_planilla = %s
+         AND pp.gestion = pc.gestion
+         AND pp.mes = pc.mes
+        WHERE pc.prestamo_id = %s
+          AND pc.estado <> 'ANULADA'
+          AND pp.estado IN ('CONSOLIDADA','PAGADA')
+        ORDER BY pc.numero_cuota, pp.id
+        """,
+        (tipo_planilla, int(prestamo['id'])),
+    )
+    if cerradas:
+        detalle = '; '.join(
+            f"cuota {int(r['numero_cuota'])} ({int(r['mes']):02d}/{int(r['gestion'])}) → "
+            f"{r['planilla_codigo']} {r['planilla_estado']}"
+            for r in cerradas
+        )
+        raise ValueError(
+            'No se puede confirmar el anticipo/préstamo porque una o más cuotas apuntan a planillas ya cerradas: '
+            + detalle
+            + '. Reprograme esas cuotas mientras el registro siga en BORRADOR o realice una regularización autorizada.'
+        )
+
+
 @planilla_prestamos_bp.route('/confirmar/<int:prestamo_id>', methods=['POST'])
 @login_required
 @roles_required(ROLES_EDICION)
@@ -1045,6 +1011,7 @@ def confirmar(prestamo_id: int):
         assert_gestion_abierta(db, int(prestamo['fecha_otorgamiento'].year), 'confirmar anticipos o préstamos')
         if prestamo['estado'] != 'BORRADOR':
             return _json_error('Solo se pueden confirmar registros en estado BORRADOR.', 409)
+        _validar_periodos_planilla_para_confirmacion(db, prestamo)
         if prestamo['modalidad_registro'] == 'DESEMBOLSO':
             if not prestamo.get('cuenta_salida_codigo'):
                 if prestamo['medio_desembolso'] == 'CAJA':
@@ -1092,96 +1059,101 @@ def recuperar_directo():
             saldo = Decimal(str(prestamo['saldo_pendiente'])).quantize(Q2)
             if monto > saldo:
                 return _json_error('El monto recuperado no puede superar el saldo pendiente.', 409)
+            unidad_prestamo = int(prestamo['unidad_negocio_id'])
             if medio == 'CAJA':
                 caja = _get_caja(db, caja_id)
-                cuenta_ingreso = caja['cuenta_contable_codigo']
+                ingreso = {**caja, 'unidad_negocio_id': unidad_prestamo, 'auxiliar_id': None, 'moneda_codigo': prestamo['moneda_codigo'], 'nombre': caja['nombre']}
             else:
-                banco = _get_banco(db, banco_id)
-                cuenta_ingreso = banco['cuenta_contable_codigo']
-                if banco['moneda_codigo'] != prestamo['moneda_codigo']:
+                ingreso = _get_banco(db, banco_id)
+                ingreso['nombre'] = f"{ingreso['nombre_banco']} · {ingreso['numero_cuenta']}"
+                if str(ingreso['moneda_codigo']).upper() != str(prestamo['moneda_codigo']).upper():
                     return _json_error('La moneda de la cuenta bancaria no coincide con la moneda del anticipo/préstamo.')
+
             glosa = f"Recupero directo de {prestamo['tipo_operacion'].lower()} {prestamo['codigo']} - {prestamo['nombre_completo']}"
             ref = referencia or f"REC-{prestamo['codigo']}"
             cobro_id = db.execute_insert(
                 """
                 INSERT INTO contabilidad.cobro (
-                    fecha, cliente_auxiliar_id, medio_pago, contra_cuenta_codigo,
-                    caja_id, cuenta_bancaria_id, moneda_codigo, tipo_cambio, monto_total,
-                    referencia, glosa, estado, asiento_id, origen_operacion, unidad_negocio_id, actualizado_en
+                    fecha, cliente_auxiliar_id, medio_pago, contra_cuenta_codigo, caja_id, cuenta_bancaria_id,
+                    moneda_codigo, tipo_cambio, monto_total, referencia, glosa, estado, asiento_id, origen_operacion,
+                    unidad_negocio_id, actualizado_en
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'CONFIRMADO', NULL, 'DIRECTO', %s, CURRENT_TIMESTAMP)
-                """,
-                (
-                    fecha, prestamo['auxiliar_id'], medio, prestamo['cuenta_cobrar_codigo'], caja_id, banco_id,
-                    prestamo['moneda_codigo'], prestamo['tipo_cambio'], monto, ref, glosa, prestamo['unidad_negocio_id'],
-                ),
-            )
+                """, (fecha, prestamo['auxiliar_id'], medio, prestamo['cuenta_cobrar_codigo'], caja_id, banco_id,
+                         prestamo['moneda_codigo'], prestamo['tipo_cambio'], monto, ref, glosa, unidad_prestamo))
             db.execute_insert(
                 """
-                INSERT INTO contabilidad.cobro_detalle (
-                    cobro_id, secuencia, tipo_linea, descripcion, cantidad, precio_unitario,
-                    subtotal, observacion
-                ) VALUES (%s, 1, 'DIRECTO', %s, 1, %s, %s, %s)
-                """,
-                (cobro_id, glosa[:300], monto, monto, justificativo[:300]),
-                return_id=False,
-            )
-            asiento_id = db.execute_insert(
-                """
-                INSERT INTO contabilidad.asiento (
-                    fecha, unidad_negocio_id, moneda_codigo, tipo_cambio, glosa, referencia,
-                    modulo_origen, tabla_origen, origen_id, estado, cliente_nit_ci_ref,
-                    cliente_nombre_ref, atributos, actualizado_en
-                ) VALUES (%s, %s, %s, %s, %s, %s, 'TESORERIA', 'contabilidad.cobro', %s, 'CONFIRMADO', %s, %s, %s::jsonb, CURRENT_TIMESTAMP)
-                """,
-                (
-                    fecha, prestamo['unidad_negocio_id'], prestamo['moneda_codigo'], prestamo['tipo_cambio'], glosa, ref,
-                    cobro_id, prestamo['ci_nit'], prestamo['nombre_completo'],
-                    Json({'origen': 'planilla_prestamos', 'accion': 'recupero_directo', 'prestamo_id': prestamo_id})
-                ),
-            )
-            db.execute_insert(
-                """
-                INSERT INTO contabilidad.asiento_detalle (
-                    asiento_id, secuencia, cuenta_codigo, auxiliar_id, glosa, debe, haber, monto_moneda, referencia, atributos
-                ) VALUES (%s, 1, %s, NULL, %s, %s, 0, %s, %s, %s::jsonb)
-                """,
-                (asiento_id, cuenta_ingreso, glosa[:300], monto, monto, ref, Json({'tipo': 'debe_ingreso_caja_banco'})),
-                return_id=False,
-            )
-            db.execute_insert(
-                """
-                INSERT INTO contabilidad.asiento_detalle (
-                    asiento_id, secuencia, cuenta_codigo, auxiliar_id, glosa, debe, haber, monto_moneda, referencia, atributos
-                ) VALUES (%s, 2, %s, %s, %s, 0, %s, %s, %s, %s::jsonb)
-                """,
-                (asiento_id, prestamo['cuenta_cobrar_codigo'], prestamo['auxiliar_id'], glosa[:300], monto, monto, ref, Json({'tipo': 'haber_recupero_prestamo'})),
-                return_id=False,
-            )
+                INSERT INTO contabilidad.cobro_detalle (cobro_id, secuencia, tipo_linea, descripcion, cantidad, precio_unitario, subtotal, observacion)
+                VALUES (%s, 1, 'DIRECTO', %s, 1, %s, %s, %s)
+                """, (cobro_id, glosa[:300], monto, monto, justificativo[:300]), return_id=False)
+
+            es_inter = medio == 'BANCO' and int(ingreso['unidad_negocio_id']) != unidad_prestamo
+            if not es_inter:
+                asiento_id = crear_asiento_intercompania(
+                    db, fecha=fecha, unidad_id=unidad_prestamo, moneda_codigo=prestamo['moneda_codigo'],
+                    tipo_cambio=prestamo['tipo_cambio'], glosa=glosa, referencia=ref, modulo_origen='TESORERIA',
+                    tabla_origen='contabilidad.cobro', origen_id=cobro_id, accion='recupero_directo', lineas=[
+                        {'cuenta': ingreso['cuenta_contable_codigo'], 'auxiliar_id': ingreso.get('auxiliar_id') if medio == 'BANCO' else None,
+                         'debe': monto, 'haber': 0, 'glosa': glosa, 'atributos': {'tipo': 'debe_ingreso_caja_banco'}},
+                        {'cuenta': prestamo['cuenta_cobrar_codigo'], 'auxiliar_id': prestamo['auxiliar_id'], 'debe': 0, 'haber': monto,
+                         'glosa': glosa, 'atributos': {'tipo': 'haber_recupero_prestamo'}},
+                    ], atributos={'prestamo_id': prestamo_id, 'intercompania': False},
+                    cliente_nit_ci_ref=prestamo['ci_nit'], cliente_nombre_ref=prestamo['nombre_completo'])
+            else:
+                unidad_banco = int(ingreso['unidad_negocio_id'])
+                aux_prestamo_owner = auxiliar_canonico_unidad(db, unidad_prestamo)
+                aux_banco_owner = auxiliar_canonico_unidad(db, unidad_banco)
+                asiento_banco = crear_asiento_intercompania(
+                    db, fecha=fecha, unidad_id=unidad_banco, moneda_codigo=prestamo['moneda_codigo'], tipo_cambio=prestamo['tipo_cambio'],
+                    glosa=f'Cobro por cuenta de unidad relacionada - {glosa}', referencia=ref, modulo_origen='TESORERIA',
+                    tabla_origen='contabilidad.cobro', origen_id=cobro_id, accion='recupero_prestamo_intercompania_deudora', lineas=[
+                        {'cuenta': ingreso['cuenta_contable_codigo'], 'auxiliar_id': ingreso.get('auxiliar_id'), 'debe': monto, 'haber': 0,
+                         'glosa': f'Ingreso banco {ingreso["nombre"]}', 'atributos': {'tipo': 'debe_banco_recupero_intercompania'}},
+                        {'cuenta': CUENTA_CXP_RELACIONADA, 'auxiliar_id': aux_prestamo_owner, 'debe': 0, 'haber': monto,
+                         'glosa': f'CxP relacionada por cobro {prestamo["codigo"]}', 'atributos': {'tipo': 'haber_cxp_relacionada_recupero'}},
+                    ], atributos={'prestamo_id': prestamo_id, 'unidad_acreedora_id': unidad_prestamo})
+                asiento_id = crear_asiento_intercompania(
+                    db, fecha=fecha, unidad_id=unidad_prestamo, moneda_codigo=prestamo['moneda_codigo'], tipo_cambio=prestamo['tipo_cambio'],
+                    glosa=glosa, referencia=ref, modulo_origen='TESORERIA', tabla_origen='contabilidad.cobro', origen_id=cobro_id,
+                    accion='recupero_prestamo_intercompania_acreedora', lineas=[
+                        {'cuenta': CUENTA_CXC_RELACIONADA, 'auxiliar_id': aux_banco_owner, 'debe': monto, 'haber': 0,
+                         'glosa': f'CxC relacionada por cobro {prestamo["codigo"]}', 'atributos': {'tipo': 'debe_cxc_relacionada_recupero'}},
+                        {'cuenta': prestamo['cuenta_cobrar_codigo'], 'auxiliar_id': prestamo['auxiliar_id'], 'debe': 0, 'haber': monto,
+                         'glosa': glosa, 'atributos': {'tipo': 'haber_recupero_prestamo'}},
+                    ], atributos={'prestamo_id': prestamo_id, 'unidad_deudora_id': unidad_banco},
+                    cliente_nit_ci_ref=prestamo['ci_nit'], cliente_nombre_ref=prestamo['nombre_completo'])
+                registrar_operacion(
+                    db, clave_origen=f'COBRO-PRESTAMO:{cobro_id}', tipo_operacion='RECUPERO_PRESTAMO_BANCO',
+                    fecha_operacion=fecha, unidad_deudora_id=unidad_banco, unidad_acreedora_id=unidad_prestamo,
+                    moneda_codigo=prestamo['moneda_codigo'], tipo_cambio=prestamo['tipo_cambio'], monto=monto,
+                    modulo_origen='TESORERIA', tabla_origen='contabilidad.cobro', origen_id=cobro_id, referencia=ref,
+                    asiento_deudora_id=asiento_banco, asiento_acreedora_id=asiento_id, usuario=_usuario_actual(),
+                    atributos={'prestamo_id': prestamo_id, 'cuenta_bancaria_id': banco_id})
+
             db.execute_update('UPDATE contabilidad.cobro SET asiento_id = %s, actualizado_en = CURRENT_TIMESTAMP WHERE id = %s', (asiento_id, cobro_id))
-            db.execute_insert("INSERT INTO contabilidad.documento_asiento (modulo, tabla_origen, origen_id, asiento_id) VALUES (%s, 'contabilidad.cobro', %s, %s)", ('TESORERIA', cobro_id, asiento_id), return_id=False)
+            db.execute_insert(
+                """INSERT INTO contabilidad.documento_asiento (modulo, tabla_origen, origen_id, asiento_id)
+                VALUES (%s, 'contabilidad.cobro', %s, %s)
+                ON CONFLICT (tabla_origen, origen_id) DO UPDATE SET modulo = EXCLUDED.modulo, asiento_id = EXCLUDED.asiento_id""",
+                ('TESORERIA', cobro_id, asiento_id), return_id=False)
             aplicadas = _aplicar_monto_a_cuotas(db, prestamo_id, monto)
             for item in aplicadas:
                 db.execute_insert(
                     """
                     INSERT INTO contabilidad.planilla_prestamo_aplicacion (
-                        prestamo_id, cuota_id, tipo_aplicacion, fecha_aplicacion, monto_aplicado,
-                        moneda_codigo, tipo_cambio, cobro_id, asiento_id, referencia, justificativo,
-                        observacion, creado_por, atributos
+                        prestamo_id, cuota_id, tipo_aplicacion, fecha_aplicacion, monto_aplicado, moneda_codigo, tipo_cambio,
+                        cobro_id, asiento_id, referencia, justificativo, observacion, creado_por, atributos
                     ) VALUES (%s, %s, 'COBRO_DIRECTO', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
-                    """,
-                    (
-                        prestamo_id, item['cuota_id'], fecha, item['monto'], prestamo['moneda_codigo'], prestamo['tipo_cambio'],
-                        cobro_id, asiento_id, ref, justificativo, 'Recupero directo registrado desde Anticipos y Préstamos.', _usuario_actual(),
-                        Json({'origen': 'planilla_prestamos', 'medio': medio})
-                    ),
-                    return_id=False,
-                )
+                    """, (prestamo_id, item['cuota_id'], fecha, item['monto'], prestamo['moneda_codigo'], prestamo['tipo_cambio'],
+                             cobro_id, asiento_id, ref, justificativo, 'Recupero directo registrado desde Anticipos y Préstamos.',
+                             _usuario_actual(), Json({'origen': 'planilla_prestamos', 'medio': medio, 'intercompania': es_inter})),
+                    return_id=False)
             _actualizar_saldo_prestamo(db, prestamo_id)
     except ValueError as exc:
         return _json_error(str(exc))
     except Exception:
-        return _json_error('No se pudo registrar el recupero directo. Revise la configuración de caja/banco, cuentas contables y estructura de Tesorería.', 500)
+        return _json_error('No se pudo registrar el recupero directo. Revise la configuración de caja/banco, cuentas contables e intercompañía.', 500)
     return _json_ok('Recupero directo registrado.')
+
 
 
 @planilla_prestamos_bp.route('/anular-borrador/<int:prestamo_id>', methods=['POST'])
@@ -1193,117 +1165,76 @@ def anular_borrador(prestamo_id: int):
         motivo = _limit(data.get('motivo'), 'Motivo', 800, True)
     except ValueError as exc:
         return _json_error(str(exc))
-
     try:
         with DatabaseManager() as db:
             _assert_tables_ready(db)
             prestamo = _prestamo_by_id(db, prestamo_id)
             assert_gestion_abierta(db, int(prestamo['fecha_otorgamiento'].year), 'anular anticipos o préstamos')
-
             if prestamo['estado'] == 'ANULADO':
                 return _json_error('El anticipo/préstamo ya se encuentra anulado.', 409)
-
             aplicaciones = _aplicaciones_prestamo(db, prestamo_id)
             aplicaciones_planilla = [a for a in aplicaciones if a.get('planilla_periodo_id') or str(a.get('tipo_aplicacion') or '').upper() == 'PLANILLA']
             if aplicaciones_planilla:
-                return _json_error(
-                    'El anticipo/préstamo tiene recuperos aplicados en planillas. Primero revierta las planillas relacionadas desde el módulo correspondiente.',
-                    409
-                )
-
-            aplicaciones_no_reversibles = [
-                a for a in aplicaciones
-                if str(a.get('tipo_aplicacion') or '').upper() not in ('COBRO_DIRECTO', 'AJUSTE', 'CONDONACION')
-            ]
+                return _json_error('El anticipo/préstamo tiene recuperos aplicados en planillas. Primero revierta las planillas relacionadas desde el módulo correspondiente.', 409)
+            aplicaciones_no_reversibles = [a for a in aplicaciones if str(a.get('tipo_aplicacion') or '').upper() not in ('COBRO_DIRECTO','AJUSTE','CONDONACION')]
             if aplicaciones_no_reversibles:
-                return _json_error(
-                    'El anticipo/préstamo tiene aplicaciones originadas en otro proceso. Primero revierta ese proceso desde su módulo de origen.',
-                    409
-                )
+                return _json_error('El anticipo/préstamo tiene aplicaciones originadas en otro proceso. Primero revierta ese proceso desde su módulo de origen.', 409)
 
             reversos: list[int] = []
+            cobros_procesados: set[int] = set()
+            asientos_procesados: set[int] = set()
             for aplicacion in aplicaciones:
-                tipo_aplicacion = str(aplicacion.get('tipo_aplicacion') or '').upper()
-                if tipo_aplicacion == 'COBRO_DIRECTO':
-                    if aplicacion.get('asiento_id'):
-                        reverso_cobro_id = _crear_asiento_reverso_desde_asiento(
-                            db,
-                            int(aplicacion['asiento_id']),
-                            date.today(),
-                            f"Reverso recupero {prestamo['codigo']}: {motivo}",
-                            f"REV-REC-{prestamo['codigo']}",
-                            'PLANILLAS',
-                            'contabilidad.planilla_prestamo',
-                            prestamo_id,
-                            'reverso_recupero_prestamo',
-                        )
-                        reversos.append(reverso_cobro_id)
-                    if aplicacion.get('cobro_id'):
+                if str(aplicacion.get('tipo_aplicacion') or '').upper() == 'COBRO_DIRECTO':
+                    cobro_id = int(aplicacion['cobro_id']) if aplicacion.get('cobro_id') else None
+                    if cobro_id and cobro_id not in cobros_procesados:
+                        ops = [o for o in operaciones_por_origen(db, 'contabilidad.cobro', [cobro_id]) if str(o.get('tipo_operacion')) == 'RECUPERO_PRESTAMO_BANCO']
+                        if len(ops) > 1:
+                            raise ValueError(f'El cobro {cobro_id} tiene más de una operación intercompañía.')
+                        if ops:
+                            rd, ra = revertir_operacion(db, ops[0], justificativo=motivo, usuario=_usuario_actual())
+                            reversos.extend([rd, ra])
+                        elif aplicacion.get('asiento_id') and int(aplicacion['asiento_id']) not in asientos_procesados:
+                            rid = _crear_asiento_reverso_desde_asiento(
+                                db, int(aplicacion['asiento_id']), aplicacion['fecha_aplicacion'],
+                                f"Reverso recupero {prestamo['codigo']}: {motivo}", f"REV-REC-{prestamo['codigo']}",
+                                'PLANILLAS', 'contabilidad.planilla_prestamo', prestamo_id, 'reverso_recupero_prestamo')
+                            reversos.append(rid); asientos_procesados.add(int(aplicacion['asiento_id']))
                         db.execute_update(
-                            """
-                            UPDATE contabilidad.cobro
-                            SET estado = 'ANULADO',
-                                glosa = COALESCE(glosa || E'\n', '') || %s,
-                                actualizado_en = CURRENT_TIMESTAMP
-                            WHERE id = %s
-                            """,
-                            (f'Reverso por anulación de anticipo/préstamo: {motivo}', aplicacion['cobro_id'])
-                        )
+                            "UPDATE contabilidad.cobro SET estado = 'ANULADO', glosa = COALESCE(glosa || E'\n','') || %s, actualizado_en = CURRENT_TIMESTAMP WHERE id = %s",
+                            (f'Reverso por anulación de anticipo/préstamo: {motivo}', cobro_id))
+                        cobros_procesados.add(cobro_id)
                 _revertir_aplicacion_prestamo(db, aplicacion)
 
             reverso_otorgamiento_id = None
-            if prestamo.get('asiento_otorgamiento_id'):
+            ops_otorg = [o for o in operaciones_por_origen(db, TABLA_PRESTAMO, [prestamo_id]) if str(o.get('tipo_operacion')) == 'DESEMBOLSO_PRESTAMO']
+            if len(ops_otorg) > 1:
+                raise ValueError('El préstamo tiene más de una operación intercompañía de desembolso.')
+            if ops_otorg:
+                rd, ra = revertir_operacion(db, ops_otorg[0], justificativo=motivo, usuario=_usuario_actual())
+                reverso_otorgamiento_id = rd
+                reversos.extend([rd, ra])
+            elif prestamo.get('asiento_otorgamiento_id'):
                 reverso_otorgamiento_id = _crear_asiento_reverso_desde_asiento(
-                    db,
-                    int(prestamo['asiento_otorgamiento_id']),
-                    date.today(),
-                    f"Reverso otorgamiento {prestamo['codigo']}: {motivo}",
-                    f"REV-{prestamo['codigo']}",
-                    'PLANILLAS',
-                    'contabilidad.planilla_prestamo',
-                    prestamo_id,
-                    'reverso_otorgamiento_prestamo',
-                )
+                    db, int(prestamo['asiento_otorgamiento_id']), prestamo['fecha_otorgamiento'],
+                    f"Reverso otorgamiento {prestamo['codigo']}: {motivo}", f"REV-{prestamo['codigo']}",
+                    'PLANILLAS', TABLA_PRESTAMO, prestamo_id, 'reverso_otorgamiento_prestamo')
                 reversos.append(reverso_otorgamiento_id)
 
             if prestamo.get('movimiento_tesoreria_id'):
                 db.execute_update(
-                    """
-                    UPDATE contabilidad.movimiento_tesoreria
-                    SET estado = 'ANULADO',
-                        glosa = COALESCE(glosa || E'\n', '') || %s,
-                        actualizado_en = CURRENT_TIMESTAMP
-                    WHERE id = %s
-                    """,
-                    (f'Anulado por reversión de anticipo/préstamo: {motivo}', prestamo['movimiento_tesoreria_id'])
-                )
-
+                    "UPDATE contabilidad.movimiento_tesoreria SET estado = 'ANULADO', glosa = COALESCE(glosa || E'\n','') || %s, actualizado_en = CURRENT_TIMESTAMP WHERE id = %s",
+                    (f'Anulado por reversión de anticipo/préstamo: {motivo}', prestamo['movimiento_tesoreria_id']))
             db.execute_update(
-                """
-                UPDATE contabilidad.planilla_prestamo_cuota
-                SET estado = 'ANULADA',
-                    saldo_pendiente = 0,
-                    actualizado_en = CURRENT_TIMESTAMP
-                WHERE prestamo_id = %s
-                """,
-                (prestamo_id,)
-            )
+                "UPDATE contabilidad.planilla_prestamo_cuota SET estado = 'ANULADA', saldo_pendiente = 0, actualizado_en = CURRENT_TIMESTAMP WHERE prestamo_id = %s",
+                (prestamo_id,))
             db.execute_update(
-                """
-                UPDATE contabilidad.planilla_prestamo
-                SET estado = 'ANULADO',
-                    monto_recuperado = 0,
-                    saldo_pendiente = 0,
-                    asiento_anulacion_id = %s,
-                    anulado_por = %s,
-                    anulado_en = CURRENT_TIMESTAMP,
-                    observacion = CONCAT(COALESCE(observacion,''), CASE WHEN COALESCE(observacion,'') = '' THEN '' ELSE E'\n' END, %s),
-                    actualizado_en = CURRENT_TIMESTAMP
-                WHERE id = %s
-                """,
-                (reverso_otorgamiento_id, _usuario_actual(), f'Anulado/revertido desde sistema. Motivo: {motivo}', prestamo_id),
-            )
-        return _json_ok('Anticipo/préstamo anulado y reversado correctamente.', reversos=reversos)
+                """UPDATE contabilidad.planilla_prestamo
+                SET estado='ANULADO', monto_recuperado=0, saldo_pendiente=0, asiento_anulacion_id=%s,
+                    anulado_por=%s, anulado_en=CURRENT_TIMESTAMP,
+                    observacion=CONCAT(COALESCE(observacion,''), CASE WHEN COALESCE(observacion,'')='' THEN '' ELSE E'\n' END, %s),
+                    actualizado_en=CURRENT_TIMESTAMP WHERE id=%s""",
+                (reverso_otorgamiento_id, _usuario_actual(), f'Anulado/revertido desde sistema. Motivo: {motivo}', prestamo_id))
+        return _json_ok('Anticipo/préstamo anulado y reversado correctamente.', reversos=sorted(set(reversos)))
     except ValueError as exc:
         return _json_error(str(exc))
     except Exception:

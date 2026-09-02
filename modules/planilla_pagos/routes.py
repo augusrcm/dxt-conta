@@ -13,22 +13,33 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 from typing import Any
 
-from flask import Response, current_app, jsonify, render_template, request, session, url_for
-from psycopg2 import errors as pg_errors
+from flask import Response, jsonify, render_template, request, session, url_for
 from psycopg2.extras import Json
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.lib.utils import ImageReader
-from reportlab.platypus import BaseDocTemplate, Frame, FrameBreak, PageTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.platypus import BaseDocTemplate, Frame, PageTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
 
 from database.db_manager import DatabaseManager
 from modules.planilla_pagos import planilla_pagos_bp
 from config import Config
+from modules.reportes_rapidos.core.utils import logo_path
 from utils.decorators import login_required, roles_required
 from utils.planillas_security import assert_gestion_abierta, mensaje_error_operacion
+from utils.intercompania import (
+    CUENTA_CXC_RELACIONADA,
+    CUENTA_CXP_RELACIONADA,
+    auxiliar_canonico_unidad,
+    crear_asiento as crear_asiento_intercompania,
+    crear_reverso_asiento,
+    obtener_banco,
+    operaciones_por_origen,
+    registrar_operacion,
+    revertir_operacion,
+)
 
 
 ROLES_LECTURA = [9, 10, 11]
@@ -51,11 +62,7 @@ ROW_ALT = colors.HexColor('#f7f9fc')
 HEAD_FILL = colors.HexColor('#eef3f8')
 GREEN = colors.HexColor('#107c41')
 RED = colors.HexColor('#b42318')
-LETTER_WIDTH, LETTER_HEIGHT = letter
-HALF_LETTER_HEIGHT = LETTER_HEIGHT / 2
-BOLETA_SIDE_MARGIN = 7 * mm
-BOLETA_VERTICAL_MARGIN = 6 * mm
-BOLETA_BORDER_PADDING = 4
+HALF_LETTER = (215.9 * mm, 139.7 * mm)
 
 
 # ============================================================
@@ -464,13 +471,8 @@ def _cajas(db: DatabaseManager):
 def _bancos(db: DatabaseManager):
     return db.execute_query(
         """
-        SELECT id,
-               nombre_banco,
-               nombre_banco AS banco,
-               numero_cuenta,
-               moneda_codigo,
-               titular,
-               cuenta_contable_codigo
+        SELECT id, nombre_banco, nombre_banco AS banco, numero_cuenta, moneda_codigo,
+               titular, cuenta_contable_codigo, unidad_negocio_id, auxiliar_id
         FROM contabilidad.cuenta_bancaria
         WHERE activo IS TRUE
         ORDER BY nombre_banco, numero_cuenta
@@ -478,38 +480,31 @@ def _bancos(db: DatabaseManager):
     )
 
 
+
 def _cuenta_salida(db: DatabaseManager, medio: str, caja_id: int | None, cuenta_bancaria_id: int | None) -> dict[str, Any]:
     if medio == 'CAJA':
         rows = db.execute_query(
             """
-            SELECT id, nombre, cuenta_contable_codigo, NULL::bigint AS auxiliar_id
+            SELECT id, nombre, cuenta_contable_codigo, NULL::bigint AS unidad_negocio_id,
+                   NULL::bigint AS auxiliar_id, NULL::varchar AS moneda_codigo
             FROM contabilidad.caja
             WHERE id = %s AND activo IS TRUE
-            """,
-            (caja_id,)
-        )
+            """, (caja_id,))
+        if not rows:
+            raise ValueError('No se pudo obtener la caja seleccionada.')
+        row = dict(rows[0])
     elif medio == 'BANCO':
-        rows = db.execute_query(
-            """
-            SELECT id,
-                   nombre_banco || ' · ' || numero_cuenta AS nombre,
-                   cuenta_contable_codigo,
-                   auxiliar_id
-            FROM contabilidad.cuenta_bancaria
-            WHERE id = %s AND activo IS TRUE
-            """,
-            (cuenta_bancaria_id,)
-        )
+        if not cuenta_bancaria_id:
+            raise ValueError('Seleccione una cuenta bancaria.')
+        banco = obtener_banco(db, int(cuenta_bancaria_id))
+        row = dict(banco)
+        row['nombre'] = f"{banco['nombre_banco']} · {banco['numero_cuenta']}"
     else:
         raise ValueError('El medio de pago debe ser CAJA o BANCO.')
-    if not rows:
-        raise ValueError('No se pudo obtener la cuenta contable de caja/banco.')
-    row = dict(rows[0])
     if not row.get('cuenta_contable_codigo'):
         raise ValueError('La caja/banco seleccionado no tiene cuenta contable configurada.')
-    if medio == 'BANCO' and not row.get('auxiliar_id'):
-        raise ValueError('La cuenta bancaria seleccionada no tiene auxiliar configurado.')
     return row
+
 
 
 # ============================================================
@@ -606,10 +601,6 @@ def pagar(planilla_id: int):
         caja_id = _int_or_none(data.get('caja_id'))
         cuenta_bancaria_id = _int_or_none(data.get('cuenta_bancaria_id'))
         unidad_id = _int_or_none(data.get('unidad_id'))
-        if medio == 'CAJA':
-            cuenta_bancaria_id = None
-        elif medio == 'BANCO':
-            caja_id = None
         detalle_ids = data.get('detalle_ids') or []
         if isinstance(detalle_ids, str):
             detalle_ids = [x for x in detalle_ids.split(',') if x]
@@ -630,32 +621,12 @@ def pagar(planilla_id: int):
             numero_cheque = _limit_text(data.get('numero_cheque'), 'Número de cheque', 80, required=medio_entrega == 'CHEQUE')
             referencia_destino = _limit_text(data.get('referencia_destino'), 'Referencia destino', 180, required=False)
             datos_destino = {
-                'medio_entrega': medio_entrega,
-                'banco_destino': banco_destino,
-                'cuenta_destino': cuenta_destino,
-                'numero_cheque': numero_cheque,
+                'medio_entrega': medio_entrega, 'banco_destino': banco_destino,
+                'cuenta_destino': cuenta_destino, 'numero_cheque': numero_cheque,
                 'referencia_destino': referencia_destino,
             }
 
         with DatabaseManager() as db:
-            # Serializa cualquier intento de pago sobre la misma planilla.
-            # Esto evita que dos solicitudes concurrentes lean el mismo saldo
-            # pendiente y generen dos pagos/asientos antes del COMMIT.
-            lock_rows = db.execute_query(
-                """
-                SELECT id
-                FROM contabilidad.planilla_periodo
-                WHERE id = %s
-                  AND tipo_planilla IN ('PLANTA','COLABORADORES')
-                FOR UPDATE
-                """,
-                (planilla_id,)
-            )
-            if not lock_rows:
-                return _json_error('La planilla no existe.', 404)
-
-            # Recalcular SIEMPRE despues de adquirir el lock, de modo que un
-            # segundo request vea el pago confirmado por la transaccion previa.
             planilla = _obtener_planilla(db, planilla_id)
             if not planilla:
                 return _json_error('La planilla no existe.', 404)
@@ -664,39 +635,27 @@ def pagar(planilla_id: int):
                 return _json_error('Solo se pueden pagar planillas CONSOLIDADAS.')
             if money(planilla['saldo_pendiente_real']) <= 0:
                 return _json_error('La planilla no tiene saldo pendiente de pago.')
-            _cuenta_salida(db, medio, caja_id, cuenta_bancaria_id)
+            salida = _cuenta_salida(db, medio, caja_id, cuenta_bancaria_id)
+            if medio == 'BANCO' and str(salida.get('moneda_codigo') or '').upper() != str(planilla['moneda_codigo']).upper():
+                return _json_error('La moneda del banco no coincide con la moneda de la planilla.')
             detalles = _detalles_para_pago(db, planilla_id, scope, detalle_ids, unidad_id)
             if not detalles:
                 return _json_error('No hay beneficiarios pendientes para pagar con los criterios seleccionados.')
+            unidades_pago = {int(d['unidad_negocio_id']) for d in detalles}
+            if medio == 'CAJA' and len(unidades_pago) > 1:
+                return _json_error('Una misma Caja no puede aplicarse a varias unidades jurídicas en un solo pago. Seleccione una unidad por vez.')
             parametros = _parametros_gestion(db, int(planilla['gestion']))
             cuenta_pasivo = _cuenta_pasivo_planilla(parametros, planilla['tipo_planilla'])
-            pagos_creados = _registrar_pagos_por_unidad(db, planilla, detalles, fecha_pago, medio, caja_id, cuenta_bancaria_id, cuenta_pasivo, referencia, glosa, datos_destino=datos_destino)
+            pagos_creados = _registrar_pagos_por_unidad(
+                db, planilla, detalles, fecha_pago, medio, caja_id, cuenta_bancaria_id,
+                cuenta_pasivo, referencia, glosa, datos_destino=datos_destino)
             _recalcular_estado_pago(db, planilla_id)
         return _json_ok('Pago registrado correctamente.', pagos=pagos_creados, redirect=url_for('planilla_pagos.detalle', planilla_id=planilla_id))
     except ValueError as exc:
         return _json_error(str(exc))
-    except pg_errors.CheckViolation as exc:
-        # La BD actua como segunda barrera contra sobrepago/concurrencia.
-        current_app.logger.warning(
-            'Pago de planilla rechazado por regla de integridad planilla_id=%s: %s',
-            planilla_id,
-            exc
-        )
-        return _json_error(
-            'El saldo de la planilla cambio mientras se registraba el pago. '
-            'Actualice la pantalla y verifique los pagos ya registrados antes de volver a intentar.',
-            409
-        )
-    except pg_errors.UniqueViolation:
-        current_app.logger.exception('Error de correlativo duplicado al registrar pago de planilla %s', planilla_id)
-        return _json_error(
-            'No se pudo registrar el pago porque los correlativos internos de la base de datos requieren mantenimiento. ' \
-            'Ejecute el script de ajuste de correlativos y vuelva a intentarlo.',
-            500
-        )
-    except Exception:
-        current_app.logger.exception('Error inesperado al registrar pago de planilla %s', planilla_id)
+    except Exception as exc:
         return _json_error(mensaje_error_operacion('registrar el pago'), 500)
+
 
 
 @planilla_pagos_bp.route('/api/<int:planilla_id>/revertir-pagos', methods=['POST'])
@@ -736,7 +695,7 @@ def revertir_pagos(planilla_id: int):
                     """
                     UPDATE contabilidad.planilla_pago_aplicacion
                     SET estado = 'ANULADO',
-                        fecha_anulacion = CURRENT_DATE,
+                        fecha_anulacion = %s,
                         asiento_reversion_id = %s,
                         justificativo_anulacion = %s,
                         anulado_por = %s,
@@ -745,22 +704,14 @@ def revertir_pagos(planilla_id: int):
                       AND planilla_periodo_id = %s
                       AND estado = 'VIGENTE'
                     """,
-                    (reverso_id, justificativo, _usuario_actual(), pago['id'], planilla_id)
+                    (pago['fecha'], reverso_id, justificativo, _usuario_actual(), pago['id'], planilla_id)
                 )
                 reversos.append(reverso_id)
             _recalcular_estado_pago(db, planilla_id)
         return _json_ok('Pago(s) revertido(s) correctamente.', reversos=reversos, redirect=url_for('planilla_pagos.detalle', planilla_id=planilla_id))
     except ValueError as exc:
         return _json_error(str(exc))
-    except pg_errors.UniqueViolation:
-        current_app.logger.exception('Error de correlativo duplicado al revertir pagos de planilla %s', planilla_id)
-        return _json_error(
-            'No se pudo revertir el pago porque los correlativos internos de la base de datos requieren mantenimiento. ' \
-            'Ejecute el script de ajuste de correlativos y vuelva a intentarlo.',
-            500
-        )
-    except Exception:
-        current_app.logger.exception('Error inesperado al revertir pagos de planilla %s', planilla_id)
+    except Exception as exc:
         return _json_error(mensaje_error_operacion('revertir el pago'), 500)
 
 
@@ -845,57 +796,81 @@ def _registrar_pagos_por_unidad(db: DatabaseManager, planilla: dict[str, Any], d
 
 
 def _crear_asiento_pago_planilla(db: DatabaseManager, pago_id: int, planilla: dict[str, Any], detalles: list[dict[str, Any]], cuenta_pasivo: str) -> int:
-    pago = db.execute_query('SELECT * FROM contabilidad.pago WHERE id = %s', (pago_id,))[0]
+    pago = dict(db.execute_query('SELECT * FROM contabilidad.pago WHERE id = %s', (pago_id,))[0])
     salida = _cuenta_salida(db, pago['medio_pago'], pago.get('caja_id'), pago.get('cuenta_bancaria_id'))
     total = money(pago['monto_total'])
-    asiento_id = db.execute_insert(
-        """
-        INSERT INTO contabilidad.asiento (
-            fecha, unidad_negocio_id, moneda_codigo, tipo_cambio, glosa, referencia,
-            modulo_origen, tabla_origen, origen_id, estado, atributos, actualizado_en
-        ) VALUES (%s, %s, %s, %s, %s, %s, 'PLANILLAS', 'contabilidad.pago', %s,
-                  'CONFIRMADO', %s::jsonb, CURRENT_TIMESTAMP)
-        """,
-        (pago['fecha'], pago['unidad_negocio_id'], pago['moneda_codigo'], pago['tipo_cambio'], pago['glosa'], pago['referencia'], pago_id,
-         Json({'origen': 'planilla_pagos', 'accion': 'pago_planilla', 'planilla_id': int(planilla['id'])}))
-    )
-    sec = 1
+    unidad_pago = int(pago['unidad_negocio_id'])
+    es_banco = str(pago['medio_pago']).upper() == 'BANCO'
+    unidad_banco = int(salida['unidad_negocio_id']) if es_banco else unidad_pago
+    if es_banco and str(salida.get('moneda_codigo') or '').upper() != str(pago['moneda_codigo']).upper():
+        raise ValueError('La moneda del banco no coincide con la moneda del pago.')
+
+    lineas_debe = []
     for d in detalles:
         monto = money(d['saldo_real'])
         if monto <= 0:
             continue
-        db.execute_insert(
-            """
-            INSERT INTO contabilidad.asiento_detalle (
-                asiento_id, secuencia, cuenta_codigo, auxiliar_id, glosa, debe, haber,
-                monto_moneda, referencia, atributos
-            ) VALUES (%s, %s, %s, %s, %s, %s, 0, %s, %s, %s::jsonb)
-            """,
-            (asiento_id, sec, cuenta_pasivo, d.get('auxiliar_id'), f'Pago planilla {planilla["codigo"]} - {d["nombre_completo"]}'[:300], monto, monto, pago['referencia'], Json({'tipo': 'debe_pago_planilla', 'detalle_id': int(d['id'])})),
-            return_id=False
-        )
-        sec += 1
-    db.execute_insert(
-        """
-        INSERT INTO contabilidad.asiento_detalle (
-            asiento_id, secuencia, cuenta_codigo, auxiliar_id, glosa, debe, haber,
-            monto_moneda, referencia, atributos
-        ) VALUES (%s, %s, %s, %s, %s, 0, %s, %s, %s, %s::jsonb)
-        """,
-        (asiento_id, sec, salida['cuenta_contable_codigo'], salida.get('auxiliar_id'), f'Salida {pago["medio_pago"]} - {salida["nombre"]}'[:300], total, total, pago['referencia'], Json({'tipo': 'haber_salida_planilla'})),
-        return_id=False
-    )
+        lineas_debe.append({
+            'cuenta': cuenta_pasivo, 'auxiliar_id': d.get('auxiliar_id'), 'debe': monto, 'haber': 0,
+            'glosa': f'Pago planilla {planilla["codigo"]} - {d["nombre_completo"]}',
+            'atributos': {'tipo': 'debe_pago_planilla', 'detalle_id': int(d['id'])},
+        })
+
+    if not es_banco or unidad_banco == unidad_pago:
+        lineas = lineas_debe + [{
+            'cuenta': salida['cuenta_contable_codigo'],
+            'auxiliar_id': salida.get('auxiliar_id') if es_banco else None,
+            'debe': 0, 'haber': total,
+            'glosa': f'Salida {pago["medio_pago"]} - {salida["nombre"]}',
+            'atributos': {'tipo': 'haber_salida_planilla'},
+        }]
+        asiento_id = crear_asiento_intercompania(
+            db, fecha=pago['fecha'], unidad_id=unidad_pago, moneda_codigo=pago['moneda_codigo'],
+            tipo_cambio=pago['tipo_cambio'], glosa=pago['glosa'], referencia=pago['referencia'],
+            modulo_origen='PLANILLAS', tabla_origen='contabilidad.pago', origen_id=pago_id,
+            accion='pago_planilla', lineas=lineas, atributos={'planilla_id': int(planilla['id']), 'intercompania': False})
+    else:
+        aux_banco_owner = auxiliar_canonico_unidad(db, unidad_banco)
+        aux_unidad_pago = auxiliar_canonico_unidad(db, unidad_pago)
+        lineas_deudora = lineas_debe + [{
+            'cuenta': CUENTA_CXP_RELACIONADA, 'auxiliar_id': aux_banco_owner,
+            'debe': 0, 'haber': total, 'glosa': f'CxP relacionada por pago de {planilla["codigo"]}',
+            'atributos': {'tipo': 'haber_cxp_relacionada_pago', 'unidad_acreedora_id': unidad_banco},
+        }]
+        asiento_id = crear_asiento_intercompania(
+            db, fecha=pago['fecha'], unidad_id=unidad_pago, moneda_codigo=pago['moneda_codigo'],
+            tipo_cambio=pago['tipo_cambio'], glosa=pago['glosa'], referencia=pago['referencia'],
+            modulo_origen='PLANILLAS', tabla_origen='contabilidad.pago', origen_id=pago_id,
+            accion='pago_planilla_intercompania_deudora', lineas=lineas_deudora,
+            atributos={'planilla_id': int(planilla['id']), 'unidad_banco_id': unidad_banco})
+        asiento_banco = crear_asiento_intercompania(
+            db, fecha=pago['fecha'], unidad_id=unidad_banco, moneda_codigo=pago['moneda_codigo'],
+            tipo_cambio=pago['tipo_cambio'], glosa=f'Pago por cuenta de unidad relacionada - {pago["glosa"]}',
+            referencia=pago['referencia'], modulo_origen='PLANILLAS', tabla_origen='contabilidad.pago',
+            origen_id=pago_id, accion='pago_planilla_intercompania_acreedora',
+            lineas=[
+                {'cuenta': CUENTA_CXC_RELACIONADA, 'auxiliar_id': aux_unidad_pago, 'debe': total, 'haber': 0,
+                 'glosa': f'CxC relacionada por pago de {planilla["codigo"]}', 'atributos': {'tipo': 'debe_cxc_relacionada_pago'}},
+                {'cuenta': salida['cuenta_contable_codigo'], 'auxiliar_id': salida.get('auxiliar_id'), 'debe': 0, 'haber': total,
+                 'glosa': f'Salida BANCO - {salida["nombre"]}', 'atributos': {'tipo': 'haber_banco_pago_intercompania'}},
+            ], atributos={'planilla_id': int(planilla['id']), 'unidad_deudora_id': unidad_pago})
+        registrar_operacion(
+            db, clave_origen=f'PAGO-PLANILLA:{pago_id}', tipo_operacion='PAGO_PLANILLA',
+            fecha_operacion=pago['fecha'], unidad_deudora_id=unidad_pago, unidad_acreedora_id=unidad_banco,
+            moneda_codigo=pago['moneda_codigo'], tipo_cambio=pago['tipo_cambio'], monto=total,
+            modulo_origen='PLANILLAS', tabla_origen='contabilidad.pago', origen_id=pago_id,
+            referencia=pago['referencia'], asiento_deudora_id=asiento_id, asiento_acreedora_id=asiento_banco,
+            usuario=_usuario_actual(), atributos={'planilla_id': int(planilla['id']), 'cuenta_bancaria_id': pago.get('cuenta_bancaria_id')})
+
     db.execute_insert(
         """
         INSERT INTO contabilidad.documento_asiento (modulo, tabla_origen, origen_id, asiento_id)
         VALUES ('PLANILLAS', 'contabilidad.pago', %s, %s)
         ON CONFLICT (tabla_origen, origen_id)
         DO UPDATE SET modulo = EXCLUDED.modulo, asiento_id = EXCLUDED.asiento_id
-        """,
-        (pago_id, asiento_id),
-        return_id=False
-    )
-    return asiento_id
+        """, (pago_id, asiento_id), return_id=False)
+    return int(asiento_id)
+
 
 
 def _pagos_planilla(db: DatabaseManager, planilla_id: int) -> list[dict[str, Any]]:
@@ -944,46 +919,18 @@ def _pagos_para_reversion(db: DatabaseManager, planilla_id: int, scope: str, pag
 def _crear_asiento_reverso_pago(db: DatabaseManager, pago: dict[str, Any], justificativo: str) -> int:
     if not pago.get('asiento_id'):
         raise ValueError(f'El pago {pago["id"]} no tiene asiento para revertir.')
-    detalles = db.execute_query(
-        """
-        SELECT *
-        FROM contabilidad.asiento_detalle
-        WHERE asiento_id = %s
-        ORDER BY secuencia
-        """,
-        (pago['asiento_id'],)
-    )
-    if not detalles:
-        raise ValueError(f'No se encontró detalle contable del pago {pago["id"]}.')
-    total_debe = sum((money(d['haber']) for d in detalles), Decimal('0.00')).quantize(CUANTIA)
-    total_haber = sum((money(d['debe']) for d in detalles), Decimal('0.00')).quantize(CUANTIA)
-    if total_debe != total_haber:
-        raise ValueError(f'El reverso del pago {pago["id"]} no cuadra.')
-    reverso_id = db.execute_insert(
-        """
-        INSERT INTO contabilidad.asiento (
-            fecha, unidad_negocio_id, moneda_codigo, tipo_cambio, glosa, referencia,
-            modulo_origen, tabla_origen, origen_id, estado, atributos, actualizado_en
-        ) VALUES (CURRENT_DATE, %s, %s, %s, %s, %s, 'PLANILLAS', 'contabilidad.pago', %s,
-                  'CONFIRMADO', %s::jsonb, CURRENT_TIMESTAMP)
-        """,
-        (pago['unidad_negocio_id'], pago['moneda_codigo'], pago['tipo_cambio'], f'Reverso pago planilla: {justificativo}'[:500], f'REV-{pago["referencia"]}'[:150], pago['id'],
-         Json({'origen': 'planilla_pagos', 'accion': 'reverso_pago_planilla', 'pago_original_id': int(pago['id'])}))
-    )
-    sec = 1
-    for d in detalles:
-        db.execute_insert(
-            """
-            INSERT INTO contabilidad.asiento_detalle (
-                asiento_id, secuencia, cuenta_codigo, auxiliar_id, glosa, debe, haber,
-                monto_moneda, referencia, atributos
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb)
-            """,
-            (reverso_id, sec, d['cuenta_codigo'], d.get('auxiliar_id'), f'Reverso {d["glosa"]}'[:300], money(d['haber']), money(d['debe']), max(money(d['debe']), money(d['haber'])), f'REV-{pago["referencia"]}'[:150], Json({'tipo': 'reverso_pago_planilla', 'asiento_original_id': int(pago['asiento_id'])})),
-            return_id=False
-        )
-        sec += 1
-    return reverso_id
+    operaciones = operaciones_por_origen(db, 'contabilidad.pago', [int(pago['id'])])
+    operaciones = [o for o in operaciones if str(o.get('tipo_operacion')) == 'PAGO_PLANILLA' and str(o.get('estado')) in ('CONFIRMADA','REVERSADA')]
+    if len(operaciones) > 1:
+        raise ValueError(f'El pago {pago["id"]} tiene más de una operación intercompañía vinculada.')
+    if operaciones:
+        rev_deudora, _ = revertir_operacion(db, operaciones[0], justificativo=justificativo, usuario=_usuario_actual())
+        return int(rev_deudora)
+    return crear_reverso_asiento(
+        db, int(pago['asiento_id']), fecha_reversion=pago['fecha'], justificativo=justificativo,
+        modulo_origen='PLANILLAS', tabla_origen='contabilidad.pago', origen_id=int(pago['id']),
+        accion='reverso_pago_planilla')
+
 
 
 def _recalcular_estado_pago(db: DatabaseManager, planilla_id: int):
@@ -1057,8 +1004,6 @@ def pdf_masivo(planilla_id: int):
     pdf = _build_boletas_pdf(planilla, detalles)
     filename = ('boletas' if planilla['tipo_planilla'] == 'PLANTA' else 'comprobantes') + f'_{planilla["codigo"]}.pdf'
     return Response(pdf, mimetype='application/pdf', headers={'Content-Disposition': f'inline; filename="{filename}"'})
-
-
 @planilla_pagos_bp.route('/detalle/<int:detalle_id>/boleta/pdf')
 @login_required
 @roles_required(ROLES_LECTURA)
@@ -1146,15 +1091,11 @@ def _logo_unidad_path(detalle: dict[str, Any]) -> str | None:
     if ruta:
         try:
             path = (Path(Config.DXT_CONTA_DATA_DIR) / str(ruta)).resolve()
-            if path.exists() and path.is_file():
+            if path.exists():
                 return str(path)
         except Exception:
             pass
-
-    # No usar el logo global de DXT-CONTA como reemplazo del logo de una
-    # unidad de negocio. Un comprobante debe mostrar exclusivamente el logo
-    # configurado para su propia unidad; si no existe, el espacio queda vacío.
-    return None
+    return logo_path()
 
 
 def _img_logo_for_pdf(path: str | None, max_w: float = 32*mm, max_h: float = 15*mm):
@@ -1218,104 +1159,37 @@ def _scaled_widths(total_width: float, weights: list[float]) -> list[float]:
     return [(total_width * weight) / total_weight for weight in weights]
 
 
-def _boleta_page_layout(canvas, doc):
-    """Dibuja las medias cartas ocupadas y una guía central de corte."""
-    border_width = LETTER_WIDTH - (2 * BOLETA_SIDE_MARGIN)
-    border_height = HALF_LETTER_HEIGHT - (2 * BOLETA_VERTICAL_MARGIN)
-    page_number = canvas.getPageNumber()
-    total_boletas = int(getattr(doc, 'total_boletas', 0) or 0)
-    dibujar_inferior = (page_number * 2) <= total_boletas
-
+def _boleta_page_border(canvas, doc):
     canvas.saveState()
     canvas.setStrokeColor(NAVY)
     canvas.setLineWidth(0.9)
-    canvas.rect(
-        BOLETA_SIDE_MARGIN,
-        HALF_LETTER_HEIGHT + BOLETA_VERTICAL_MARGIN,
-        border_width,
-        border_height,
-        stroke=1,
-        fill=0,
-    )
-    if dibujar_inferior:
-        canvas.rect(
-            BOLETA_SIDE_MARGIN,
-            BOLETA_VERTICAL_MARGIN,
-            border_width,
-            border_height,
-            stroke=1,
-            fill=0,
-        )
-
-    canvas.setStrokeColor(BORDER)
-    canvas.setLineWidth(0.5)
-    canvas.setDash(3, 2)
-    canvas.line(
-        BOLETA_SIDE_MARGIN,
-        HALF_LETTER_HEIGHT,
-        LETTER_WIDTH - BOLETA_SIDE_MARGIN,
-        HALF_LETTER_HEIGHT,
-    )
+    canvas.rect(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, stroke=1, fill=0)
     canvas.restoreState()
 
 
 def _build_boletas_pdf(planilla: dict[str, Any], detalles: list[dict[str, Any]]) -> bytes:
     buffer = io.BytesIO()
-    doc = BaseDocTemplate(
-        buffer,
-        pagesize=letter,
-        leftMargin=BOLETA_SIDE_MARGIN,
-        rightMargin=BOLETA_SIDE_MARGIN,
-        topMargin=0,
-        bottomMargin=0,
-    )
-    doc.total_boletas = len(detalles)
-
-    border_width = LETTER_WIDTH - (2 * BOLETA_SIDE_MARGIN)
-    border_height = HALF_LETTER_HEIGHT - (2 * BOLETA_VERTICAL_MARGIN)
-    frame_width = border_width - (2 * BOLETA_BORDER_PADDING)
-    frame_height = border_height - (2 * BOLETA_BORDER_PADDING)
-    frame_x = BOLETA_SIDE_MARGIN + BOLETA_BORDER_PADDING
-
-    top_frame = Frame(
-        frame_x,
-        HALF_LETTER_HEIGHT + BOLETA_VERTICAL_MARGIN + BOLETA_BORDER_PADDING,
-        frame_width,
-        frame_height,
-        id='boleta_superior',
+    doc = BaseDocTemplate(buffer, pagesize=HALF_LETTER, leftMargin=7*mm, rightMargin=7*mm, topMargin=6*mm, bottomMargin=6*mm)
+    border_padding = 4
+    frame = Frame(
+        doc.leftMargin + border_padding,
+        doc.bottomMargin + border_padding,
+        doc.width - (border_padding * 2),
+        doc.height - (border_padding * 2),
+        id='normal',
         leftPadding=0,
         rightPadding=0,
         topPadding=0,
         bottomPadding=0,
     )
-    bottom_frame = Frame(
-        frame_x,
-        BOLETA_VERTICAL_MARGIN + BOLETA_BORDER_PADDING,
-        frame_width,
-        frame_height,
-        id='boleta_inferior',
-        leftPadding=0,
-        rightPadding=0,
-        topPadding=0,
-        bottomPadding=0,
-    )
-    doc.addPageTemplates([
-        PageTemplate(
-            id='carta_vertical_dos_boletas',
-            frames=[top_frame, bottom_frame],
-            onPage=_boleta_page_layout,
-            pagesize=letter,
-        )
-    ])
-
+    doc.addPageTemplates([PageTemplate(id='half', frames=[frame], onPage=_boleta_page_border)])
     styles = _styles()
-    content_width = frame_width
+    content_width = doc.width - (border_padding * 2)
     story = []
-    for idx, detalle in enumerate(detalles):
+    for idx, d in enumerate(detalles):
         if idx:
-            story.append(FrameBreak())
-        story.extend(_boleta_story(planilla, detalle, styles, content_width))
-
+            story.append(PageBreak())
+        story.extend(_boleta_story(planilla, d, styles, content_width))
     doc.build(story)
     pdf = buffer.getvalue()
     buffer.close()
@@ -1344,7 +1218,7 @@ def _boleta_story(planilla: dict[str, Any], d: dict[str, Any], styles: dict[str,
         unidad_lineas += f'<br/><b>NIT:</b> {_pdf_text(unidad_nit)}'
     unidad_lineas += '<br/>Bolivia'
     header_left = Paragraph(unidad_lineas, ParagraphStyle('boleta_head_left', parent=styles['small'], fontName='Helvetica-Bold', fontSize=7.4, leading=8.3, textColor=NAVY))
-    header_right = logo if logo else ''
+    header_right = logo if logo else Paragraph('<b>DXT-CONTA</b>', styles['right_bold'])
     header = Table([[header_left, header_right]], colWidths=_scaled_widths(content_width, [145, 49]))
     header.setStyle(TableStyle([
         ('VALIGN', (0,0), (-1,-1), 'TOP'),
