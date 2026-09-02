@@ -1,0 +1,1505 @@
+{% extends "layout.html" %} {% block title %}Personas de Planilla{% endblock
+title %} {% block page_help_url %}{{ url_for('planilla_personas.help') }}{%
+endblock %} {% block extra_css %}
+<style>
+  :root {
+    --pp-navy: #0f2340;
+    --pp-blue: #17406f;
+    --pp-accent: #2563eb;
+    --pp-accent-soft: #eaf2ff;
+    --pp-success: #0f766e;
+    --pp-success-soft: #ecfdf5;
+    --pp-warning: #f97316;
+    --pp-warning-soft: #fff7ed;
+    --pp-danger: #dc2626;
+    --pp-danger-soft: #fff1f2;
+    --pp-border: #dfe7f1;
+    --pp-surface: #f8fafc;
+    --pp-text: #172033;
+    --pp-muted: #64748b;
+    --pp-radius: 1rem;
+  }
+
+  #planillaPersonasPage {
+    display: grid;
+    gap: 1rem;
+  }
+
+  #planillaPersonasPage .pp-header {
+    align-items: center;
+    background: linear-gradient(135deg, var(--pp-navy), var(--pp-blue));
+    border-radius: var(--pp-radius);
+    box-shadow: 0 18px 38px rgba(15, 35, 64, 0.18);
+    color: #fff;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    overflow: hidden;
+    padding: 1.15rem 1.3rem;
+    position: relative;
+  }
+
+  #planillaPersonasPage .pp-header::after {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 50%;
+    content: "";
+    height: 180px;
+    pointer-events: none;
+    position: absolute;
+    right: -48px;
+    top: -58px;
+    width: 180px;
+  }
+
+  #planillaPersonasPage .pp-header-left {
+    align-items: center;
+    display: flex;
+    gap: 0.9rem;
+    min-width: 260px;
+    position: relative;
+    z-index: 1;
+  }
+
+  #planillaPersonasPage .pp-header-icon {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 0.9rem;
+    display: flex;
+    flex: 0 0 auto;
+    font-size: 1.25rem;
+    height: 46px;
+    justify-content: center;
+    width: 46px;
+  }
+
+  #planillaPersonasPage .pp-kicker {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  #planillaPersonasPage .pp-title {
+    font-size: clamp(1.18rem, 2vw, 1.7rem);
+    font-weight: 900;
+    line-height: 1.15;
+    margin: 0.08rem 0;
+  }
+
+  #planillaPersonasPage .pp-subtitle {
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 0.84rem;
+    margin: 0;
+  }
+
+  #planillaPersonasPage .pp-actions-top {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    position: relative;
+    z-index: 1;
+  }
+
+  #planillaPersonasPage .pp-header .btn {
+    border-radius: 0.85rem;
+    font-weight: 850;
+    min-height: 40px;
+  }
+
+  #planillaPersonasPage .pp-header .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: var(--pp-accent);
+  }
+
+  #planillaPersonasPage .pp-header .btn-outline-light {
+    border-color: rgba(255, 255, 255, 0.45);
+  }
+
+  #planillaPersonasPage .pp-stats-grid {
+    display: grid;
+    gap: 0.8rem;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  #planillaPersonasPage .pp-stat-card {
+    background: #fff;
+    border: 1px solid var(--pp-border);
+    border-left: 5px solid var(--pp-accent);
+    border-radius: var(--pp-radius);
+    box-shadow: 0 10px 26px rgba(15, 35, 64, 0.06);
+    padding: 0.95rem 1rem;
+  }
+
+  #planillaPersonasPage .pp-stat-card.is-success {
+    border-left-color: var(--pp-success);
+  }
+  #planillaPersonasPage .pp-stat-card.is-warning {
+    border-left-color: var(--pp-warning);
+  }
+  #planillaPersonasPage .pp-stat-card.is-danger {
+    border-left-color: var(--pp-danger);
+  }
+
+  #planillaPersonasPage .pp-stat-label {
+    color: var(--pp-muted);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  #planillaPersonasPage .pp-stat-value {
+    color: var(--pp-navy);
+    font-size: 1.55rem;
+    font-weight: 950;
+    line-height: 1.1;
+    margin-top: 0.25rem;
+  }
+
+  #planillaPersonasPage .pp-card {
+    background: #fff;
+    border: 1px solid var(--pp-border);
+    border-radius: var(--pp-radius);
+    box-shadow: 0 14px 34px rgba(15, 35, 64, 0.08);
+    overflow: hidden;
+  }
+
+  #planillaPersonasPage .pp-toolbar {
+    align-items: end;
+    background: var(--pp-surface);
+    border-bottom: 1px solid var(--pp-border);
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 0.85fr 0.75fr 1.35fr auto;
+    padding: 0.95rem 1rem;
+  }
+
+  #planillaPersonasPage .pp-field label,
+  #modalPlanillaPersona .pp-field label,
+  #modalImportarFuncionario .pp-field label {
+    color: #334155;
+    font-size: 0.75rem;
+    font-weight: 850;
+    margin-bottom: 0.3rem;
+  }
+
+  #modalPlanillaPersona .select2-container--default .select2-selection--single {
+    border: 1px solid #d6e1ee;
+    border-radius: 0.75rem;
+    height: 38px;
+  }
+
+  #modalPlanillaPersona .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: var(--pp-text);
+    font-size: 0.86rem;
+    line-height: 36px;
+    padding-left: 0.8rem;
+  }
+
+  #modalPlanillaPersona .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+  }
+
+  #modalPlanillaPersona .pp-help-text {
+    color: var(--pp-muted);
+    font-size: 0.72rem;
+    line-height: 1.25;
+    margin-top: 0.25rem;
+  }
+
+  #planillaPersonasPage .form-control,
+  #planillaPersonasPage .form-select,
+  #modalPlanillaPersona .form-control,
+  #modalPlanillaPersona .form-select,
+  #modalImportarFuncionario .form-control,
+  #modalImportarFuncionario .form-select {
+    border-color: #d5deea;
+    border-radius: 0.8rem;
+    min-height: 40px;
+  }
+
+  #planillaPersonasPage .pp-filter-actions {
+    display: inline-flex;
+    gap: 0.45rem;
+    justify-content: flex-end;
+  }
+
+  #planillaPersonasPage .pp-table-wrap {
+    padding: 1rem;
+  }
+
+  #planillaPersonasPage #tablaPlanillaPersonas {
+    width: 100% !important;
+  }
+
+  #planillaPersonasPage #tablaPlanillaPersonas thead th {
+    background: #eef3f8;
+    color: var(--pp-navy);
+    font-size: 0.7rem;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  #planillaPersonasPage #tablaPlanillaPersonas td {
+    vertical-align: middle;
+  }
+
+  #planillaPersonasPage .pp-main-text,
+  #modalImportarFuncionario .pp-main-text {
+    color: var(--pp-navy);
+    display: block;
+    font-weight: 850;
+  }
+
+  #planillaPersonasPage .pp-sub-text,
+  #modalImportarFuncionario .pp-sub-text {
+    color: var(--pp-muted);
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1.25;
+  }
+
+  #planillaPersonasPage .pp-badge,
+  #modalImportarFuncionario .pp-badge,
+  #modalPlanillaPersona .pp-badge {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.72rem;
+    font-weight: 900;
+    gap: 0.3rem;
+    padding: 0.25rem 0.55rem;
+    white-space: nowrap;
+  }
+
+  #planillaPersonasPage .is-planta,
+  #modalImportarFuncionario .is-planta {
+    background: var(--pp-accent-soft);
+    color: #1d4ed8;
+  }
+  #planillaPersonasPage .is-colaborador,
+  #modalImportarFuncionario .is-colaborador {
+    background: var(--pp-warning-soft);
+    color: #c2410c;
+  }
+  #planillaPersonasPage .is-activo,
+  #modalImportarFuncionario .is-activo {
+    background: var(--pp-success-soft);
+    color: var(--pp-success);
+  }
+  #planillaPersonasPage .is-inactivo,
+  #modalImportarFuncionario .is-inactivo {
+    background: var(--pp-danger-soft);
+    color: #be123c;
+  }
+  #planillaPersonasPage .is-auxiliar {
+    background: #f0fdf4;
+    color: #166534;
+  }
+  #planillaPersonasPage .is-sin-auxiliar {
+    background: #f8fafc;
+    color: #64748b;
+  }
+  #planillaPersonasPage .is-origen,
+  #modalPlanillaPersona .is-origen {
+    background: #f5f3ff;
+    color: #6d28d9;
+  }
+  #planillaPersonasPage .is-bank {
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+
+  #planillaPersonasPage .pp-actions {
+    display: inline-flex;
+    gap: 0.35rem;
+    justify-content: flex-end;
+  }
+
+  #planillaPersonasPage .pp-action-btn {
+    align-items: center;
+    border-radius: 0.65rem;
+    display: inline-flex;
+    height: 32px;
+    justify-content: center;
+    padding: 0;
+    width: 32px;
+  }
+
+  #modalPlanillaPersona .modal-content,
+  #modalImportarFuncionario .modal-content {
+    border: 0;
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+
+  #modalPlanillaPersona .modal-header,
+  #modalImportarFuncionario .modal-header {
+    background: #17406f;
+    color: #fff;
+  }
+
+  #modalPlanillaPersona .modal-header small,
+  #modalImportarFuncionario .modal-header small {
+    color: rgba(255, 255, 255, 0.78);
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 0.12rem;
+  }
+
+  #modalPlanillaPersona .btn-close,
+  #modalImportarFuncionario .btn-close {
+    filter: invert(1);
+  }
+
+  #modalPlanillaPersona .pp-form-grid,
+  #modalImportarFuncionario .pp-form-grid {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+
+  #modalPlanillaPersona .pp-col-2,
+  #modalImportarFuncionario .pp-col-2 {
+    grid-column: span 2;
+  }
+  #modalPlanillaPersona .pp-col-3,
+  #modalImportarFuncionario .pp-col-3 {
+    grid-column: span 3;
+  }
+  #modalPlanillaPersona .pp-col-4,
+  #modalImportarFuncionario .pp-col-4 {
+    grid-column: span 4;
+  }
+  #modalPlanillaPersona .pp-col-5,
+  #modalImportarFuncionario .pp-col-5 {
+    grid-column: span 5;
+  }
+  #modalPlanillaPersona .pp-col-6,
+  #modalImportarFuncionario .pp-col-6 {
+    grid-column: span 6;
+  }
+  #modalPlanillaPersona .pp-col-7,
+  #modalImportarFuncionario .pp-col-7 {
+    grid-column: span 7;
+  }
+  #modalPlanillaPersona .pp-col-8,
+  #modalImportarFuncionario .pp-col-8 {
+    grid-column: span 8;
+  }
+  #modalPlanillaPersona .pp-col-12,
+  #modalImportarFuncionario .pp-col-12 {
+    grid-column: span 12;
+  }
+
+  #modalPlanillaPersona .pp-source-box {
+    align-items: center;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 0.9rem;
+    display: flex;
+    gap: 0.55rem;
+    justify-content: space-between;
+    min-height: 42px;
+    padding: 0.45rem 0.65rem;
+  }
+
+  #modalImportarFuncionario .pp-import-grid {
+    border: 1px solid var(--pp-border);
+    border-radius: 0.9rem;
+    max-height: 430px;
+    overflow: auto;
+  }
+
+  #modalImportarFuncionario .pp-import-row {
+    align-items: center;
+    border-bottom: 1px solid var(--pp-border);
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: 1fr auto;
+    padding: 0.85rem;
+  }
+
+  #modalImportarFuncionario .pp-import-row:last-child {
+    border-bottom: 0;
+  }
+  #modalImportarFuncionario .pp-import-row:hover {
+    background: #f8fafc;
+  }
+
+  @media (max-width: 992px) {
+    #planillaPersonasPage .pp-header {
+      align-items: stretch;
+      flex-direction: column;
+    }
+    #planillaPersonasPage .pp-toolbar {
+      grid-template-columns: 1fr 1fr;
+    }
+    #planillaPersonasPage .pp-stats-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    #modalPlanillaPersona .pp-form-grid,
+    #modalImportarFuncionario .pp-form-grid {
+      grid-template-columns: 1fr;
+    }
+    #modalPlanillaPersona .pp-col-2,
+    #modalPlanillaPersona .pp-col-3,
+    #modalPlanillaPersona .pp-col-4,
+    #modalPlanillaPersona .pp-col-5,
+    #modalPlanillaPersona .pp-col-6,
+    #modalPlanillaPersona .pp-col-7,
+    #modalPlanillaPersona .pp-col-8,
+    #modalPlanillaPersona .pp-col-12,
+    #modalImportarFuncionario .pp-col-2,
+    #modalImportarFuncionario .pp-col-3,
+    #modalImportarFuncionario .pp-col-4,
+    #modalImportarFuncionario .pp-col-5,
+    #modalImportarFuncionario .pp-col-6,
+    #modalImportarFuncionario .pp-col-7,
+    #modalImportarFuncionario .pp-col-8,
+    #modalImportarFuncionario .pp-col-12 {
+      grid-column: span 1;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div id="planillaPersonasPage">
+  <section class="pp-header">
+    <div class="pp-header-left">
+      <div class="pp-header-icon"><i class="fas fa-user-group"></i></div>
+      <div>
+        <div class="pp-kicker">Planillas</div>
+        <h1 class="pp-title">Personas de Planilla</h1>
+        <p class="pp-subtitle">
+          Base de planta y colaboradores para planillas mensuales.
+        </p>
+      </div>
+    </div>
+    {% if puede_editar %}
+    <div class="pp-actions-top">
+      <button type="button" class="btn btn-primary" id="btnNuevaPersona">
+        <i class="fas fa-plus me-1"></i> Nueva persona
+      </button>
+    </div>
+    {% endif %}
+  </section>
+
+  {% if error %}
+  <div
+    id="planillaPersonasServerError"
+    data-message="{{ error|e }}"
+    hidden
+  ></div>
+  {% endif %}
+
+  <section class="pp-stats-grid">
+    <article class="pp-stat-card">
+      <div class="pp-stat-label">Registros</div>
+      <div class="pp-stat-value">{{ stats.total }}</div>
+    </article>
+    <article class="pp-stat-card is-success">
+      <div class="pp-stat-label">Activos</div>
+      <div class="pp-stat-value">{{ stats.activos }}</div>
+    </article>
+    <article class="pp-stat-card">
+      <div class="pp-stat-label">Planta</div>
+      <div class="pp-stat-value">{{ stats.planta }}</div>
+    </article>
+    <article class="pp-stat-card is-warning">
+      <div class="pp-stat-label">Colaboradores</div>
+      <div class="pp-stat-value">{{ stats.colaboradores }}</div>
+    </article>
+    <article class="pp-stat-card is-success">
+      <div class="pp-stat-label">Con auxiliar</div>
+      <div class="pp-stat-value">{{ stats.con_auxiliar }}</div>
+    </article>
+    <article class="pp-stat-card is-danger">
+      <div class="pp-stat-label">Sin unidad</div>
+      <div class="pp-stat-value">{{ stats.sin_unidad }}</div>
+    </article>
+    <article class="pp-stat-card is-warning">
+      <div class="pp-stat-label">Planta sin básico</div>
+      <div class="pp-stat-value">{{ stats.planta_sin_basico }}</div>
+    </article>
+  </section>
+
+  <section class="pp-card">
+    <div class="pp-toolbar">
+      <div class="pp-field">
+        <label for="filtroTipo">Tipo</label>
+        <select id="filtroTipo" class="form-select form-select-sm">
+          <option value="">Todos</option>
+          <option value="PLANTA">Planta</option>
+          <option value="COLABORADOR">Colaborador</option>
+        </select>
+      </div>
+      <div class="pp-field">
+        <label for="filtroEstado">Estado</label>
+        <select id="filtroEstado" class="form-select form-select-sm">
+          <option value="ACTIVO">Activos</option>
+          <option value="INACTIVO">Inactivos</option>
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="pp-field">
+        <label for="filtroBusqueda">Buscar</label>
+        <input
+          id="filtroBusqueda"
+          class="form-control form-control-sm"
+          placeholder="Nombre, CI, NIT, cargo, banco, unidad"
+        />
+      </div>
+      <div class="pp-filter-actions">
+        <button
+          type="button"
+          class="btn btn-outline-secondary btn-sm"
+          id="btnLimpiar"
+          title="Limpiar filtros"
+        >
+          <i class="fas fa-eraser"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="pp-table-wrap table-responsive">
+      <table class="table table-hover align-middle" id="tablaPlanillaPersonas">
+        <thead>
+          <tr>
+            <th>Persona</th>
+            <th>Tipo</th>
+            <th>Unidad</th>
+            <th>Contacto</th>
+            <th>Base ref.</th>
+            <th>Pago ref.</th>
+            <th>Origen</th>
+            <th>Auxiliar</th>
+            <th>Estado</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div
+  class="modal fade"
+  id="modalPlanillaPersona"
+  tabindex="-1"
+  aria-labelledby="personaModalTitle"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title fw-bold mb-0" id="personaModalTitle">
+            Nueva persona de planilla
+          </h5>
+          <small id="personaModalSubtitle"
+            >Registro base para planillas mensuales.</small
+          >
+        </div>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Cerrar"
+        ></button>
+      </div>
+      <form id="formPlanillaPersona" autocomplete="off">
+        <div class="modal-body">
+          <input type="hidden" id="personaId" />
+          <input type="hidden" id="personaEstado" value="ACTIVO" />
+          <input type="hidden" id="origenSchema" />
+          <input type="hidden" id="origenTabla" />
+          <input type="hidden" id="origenClave" />
+          <div class="pp-form-grid">
+            <div class="pp-field pp-col-12">
+              <label>Origen de datos</label>
+              <div class="pp-source-box">
+                <div>
+                  <span id="origenTexto" class="pp-badge is-origen"
+                    ><i class="fas fa-pen"></i> Manual</span
+                  >
+                  <span class="pp-sub-text mt-1" id="origenDetalle"
+                    >Registro creado directamente en DXT-CONTA.</span
+                  >
+                </div>
+                {% if puede_editar %}
+                <button
+                  type="button"
+                  class="btn btn-outline-primary btn-sm"
+                  id="btnBuscarOrigen"
+                  {%
+                  if
+                  not
+                  funcionarios_ok
+                  %}disabled{%
+                  endif
+                  %}
+                >
+                  <i class="fas fa-list-check me-1"></i> Seleccionar de
+                  Funcionarios
+                </button>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="pp-field pp-col-2">
+              <label for="tipoPersona">Tipo</label>
+              <select id="tipoPersona" class="form-select" required>
+                <option value="PLANTA">Planta</option>
+                <option value="COLABORADOR">Colaborador</option>
+              </select>
+            </div>
+            <div class="pp-field pp-col-4">
+              <label for="unidadNegocio">Unidad de negocio</label>
+              <select id="unidadNegocio" class="form-select" required>
+                <option value="">Seleccione unidad</option>
+                {% for unidad in unidades %}
+                <option value="{{ unidad.id }}">
+                  {{ unidad.codigo }} - {{ unidad.nombre }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="pp-field pp-col-2">
+              <label for="ciNit">CI / documento</label>
+              <input id="ciNit" class="form-control" maxlength="50" required />
+            </div>
+            <div class="pp-field pp-col-2">
+              <label for="nitReferencia">NIT</label>
+              <input id="nitReferencia" class="form-control" maxlength="50" />
+            </div>
+            <div class="pp-field pp-col-2">
+              <label for="fechaIngreso">Fecha ingreso</label>
+              <input id="fechaIngreso" type="date" class="form-control" />
+            </div>
+
+            <div class="pp-field pp-col-3">
+              <label for="fechaNacimiento">Fecha nacimiento</label>
+              <input id="fechaNacimiento" type="date" class="form-control" />
+            </div>
+            <div class="pp-field pp-col-3">
+              <label for="nacionalidad">Nacionalidad</label>
+              <input
+                id="nacionalidad"
+                class="form-control"
+                maxlength="80"
+                placeholder="Boliviana"
+              />
+            </div>
+            <div class="pp-field pp-col-2">
+              <label for="sexo">Sexo</label>
+              <select id="sexo" class="form-select">
+                <option value="">Sin dato</option>
+                <option value="M">M</option>
+                <option value="F">F</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+            <div class="pp-field pp-col-4">
+              <label for="ocupacionReferencia">Ocupación</label>
+              <input
+                id="ocupacionReferencia"
+                class="form-control"
+                maxlength="150"
+              />
+            </div>
+
+            <div class="pp-field pp-col-8">
+              <label for="nombreCompleto">Nombre completo / Razón social</label>
+              <input
+                id="nombreCompleto"
+                class="form-control"
+                maxlength="250"
+                required
+              />
+            </div>
+            <div class="pp-field pp-col-4">
+              <label for="regionalReferencia">Regional</label>
+              <select id="regionalReferencia" class="form-select">
+                <option value="">Sin regional</option>
+                {% for codigo, nombre in regionales.items() %}
+                <option value="{{ codigo }}">
+                  {{ codigo }} - {{ nombre }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="pp-field pp-col-4">
+              <label for="cargoReferencia">Cargo / servicio base</label>
+              <input
+                id="cargoReferencia"
+                class="form-control"
+                maxlength="150"
+              />
+            </div>
+            <div class="pp-field pp-col-4">
+              <label for="telefono">Teléfono</label>
+              <input id="telefono" class="form-control" maxlength="80" />
+            </div>
+            <div class="pp-field pp-col-4">
+              <label for="correo">Correo</label>
+              <input
+                id="correo"
+                type="email"
+                class="form-control"
+                maxlength="150"
+              />
+            </div>
+
+            <div class="pp-field pp-col-6" id="grupoHaberBasico">
+              <label for="haberBasicoReferencia">Haber básico</label>
+              <input
+                id="haberBasicoReferencia"
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-control"
+                placeholder="0.00"
+              />
+            </div>
+            <div class="pp-field pp-col-6" id="grupoMinimoColaborador">
+              <label for="montoMinimoMensualReferencia"
+                >Mínimo mensual referencial</label
+              >
+              <input
+                id="montoMinimoMensualReferencia"
+                type="number"
+                step="0.01"
+                min="0"
+                class="form-control"
+                placeholder="0.00"
+              />
+            </div>
+
+            <div class="pp-field pp-col-4">
+              <label for="bancoReferencia">Banco ref.</label>
+              <input
+                id="bancoReferencia"
+                class="form-control"
+                maxlength="120"
+              />
+            </div>
+            <div class="pp-field pp-col-4">
+              <label for="cuentaBancariaReferencia">Cuenta Bancaria ref.</label>
+              <input
+                id="cuentaBancariaReferencia"
+                class="form-control"
+                maxlength="80"
+              />
+            </div>
+            <div class="pp-field pp-col-4 d-flex align-items-end">
+              <div class="form-check form-switch mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="crearAuxiliar"
+                  checked
+                />
+                <label class="form-check-label fw-bold" for="crearAuxiliar"
+                  >Crear o vincular auxiliar contable</label
+                >
+              </div>
+            </div>
+
+            <div class="pp-field pp-col-12" id="grupoCuentaAuxiliar">
+              <label for="cuentaAuxiliarCodigo">Cuenta contable auxiliar</label>
+              <select id="cuentaAuxiliarCodigo" class="form-select"></select>
+              <div class="pp-help-text">
+                Cuenta del plan contable activa, postable y marcada para manejo con auxiliares. El sistema sugiere una cuenta según el tipo de persona, pero puede cambiarse.
+              </div>
+            </div>
+
+            <div class="pp-field pp-col-12">
+              <label for="observacion">Observación</label>
+              <textarea
+                id="observacion"
+                class="form-control"
+                rows="2"
+                maxlength="500"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            data-bs-dismiss="modal"
+          >
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" id="btnGuardarPersona">
+            <i class="fas fa-save me-1"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div
+  class="modal fade"
+  id="modalImportarFuncionario"
+  tabindex="-1"
+  aria-labelledby="modalImportarFuncionarioTitle"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5
+            class="modal-title fw-bold mb-0"
+            id="modalImportarFuncionarioTitle"
+          >
+            Funcionarios pendientes de vincular
+          </h5>
+          <small
+            >Seleccione un registro del esquema funcionarios para completar la
+            persona de planilla.</small
+          >
+        </div>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Cerrar"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="pp-form-grid mb-3">
+          <div class="pp-field pp-col-3">
+            <label for="importTipoPersona">Tipo destino</label>
+            <select id="importTipoPersona" class="form-select">
+              <option value="PLANTA">Planta</option>
+              <option value="COLABORADOR">Colaborador</option>
+            </select>
+          </div>
+          <div class="pp-field pp-col-6">
+            <label for="buscarFuncionario">Buscar en pendientes</label>
+            <input
+              id="buscarFuncionario"
+              class="form-control"
+              placeholder="Nombre, CI, NIT o cargo"
+            />
+          </div>
+          <div class="pp-field pp-col-3 d-flex align-items-end">
+            <div class="form-check form-switch mb-2">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="soloActivos"
+                checked
+              />
+              <label class="form-check-label fw-bold" for="soloActivos"
+                >Solo activos</label
+              >
+            </div>
+          </div>
+          <div class="pp-field pp-col-12 d-flex justify-content-end">
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              id="btnBuscarFuncionarios"
+            >
+              <i class="fas fa-search me-1"></i> Buscar
+            </button>
+          </div>
+        </div>
+        <div class="pp-import-grid" id="funcionariosResultados"></div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          data-bs-dismiss="modal"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  (() => {
+    const URLS = {
+      listar: "{{ url_for('planilla_personas.listar') }}",
+      obtener: "{{ url_for('planilla_personas.obtener', persona_id=0) }}",
+      guardar: "{{ url_for('planilla_personas.guardar') }}",
+      cambiarEstado: "{{ url_for('planilla_personas.cambiar_estado', persona_id=0) }}",
+      cuentasAuxiliares: "{{ url_for('planilla_personas.buscar_cuentas_auxiliares') }}",
+      buscarFuncionarios: "{{ url_for('planilla_personas.buscar_funcionarios') }}",
+      obtenerFuncionario: "{{ url_for('planilla_personas.obtener_funcionario', ci='__CI__') }}"
+    };
+    const PUEDE_EDITAR = {{ 'true' if puede_editar else 'false' }};
+    const FUNCIONARIOS_OK = {{ 'true' if funcionarios_ok else 'false' }};
+    let tabla = null;
+
+    const $ = window.jQuery;
+    const modalPersona = new bootstrap.Modal(document.getElementById('modalPlanillaPersona'));
+    const modalImportar = new bootstrap.Modal(document.getElementById('modalImportarFuncionario'));
+
+    const escapeHtml = (value) => String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+
+    const notify = (type, message, title = null) => {
+      const icon = ['success', 'error', 'warning', 'info', 'question'].includes(type) ? type : 'info';
+      if (window.Swal) {
+        Swal.fire({
+          icon,
+          title: title || (icon === 'error' ? 'No se pudo completar la operación' : ''),
+          text: message,
+          timer: icon === 'success' ? 1800 : undefined,
+          showConfirmButton: icon !== 'success',
+          confirmButtonText: 'Aceptar'
+        });
+        return;
+      }
+      console[icon === 'error' ? 'error' : 'log'](message);
+    };
+
+    const getDtLanguage = () => {
+      const localLanguage = {
+        processing: 'Procesando...',
+        search: '',
+        searchPlaceholder: 'Buscar...',
+        lengthMenu: 'Mostrar _MENU_ registros',
+        info: 'Mostrando _START_ a _END_ de _TOTAL_ personas',
+        infoEmpty: 'Mostrando 0 a 0 de 0 personas',
+        infoFiltered: '(filtradas de _MAX_ personas)',
+        loadingRecords: 'Cargando...',
+        zeroRecords: 'No se encontraron personas con los filtros aplicados.',
+        emptyTable: 'No existen personas de planilla registradas.',
+        paginate: { first: '«', last: '»', next: '›', previous: '‹' },
+        aria: {
+          sortAscending: ': activar para ordenar ascendente',
+          sortDescending: ': activar para ordenar descendente'
+        }
+      };
+      return window.DXTBase && typeof window.DXTBase.getDataTableLanguageEs === 'function'
+        ? window.DXTBase.getDataTableLanguageEs(localLanguage)
+        : localLanguage;
+    };
+
+    if ($ && $.fn && $.fn.dataTable) {
+      $.fn.dataTable.ext.errMode = (_settings, _helpPage, message) => {
+        const cleanMessage = String(message || 'No se pudo cargar la tabla.')
+          .replace(/^DataTables warning:\s*/i, '')
+          .trim();
+        notify('warning', cleanMessage, 'Error en tabla');
+      };
+    }
+
+    const serverErrorEl = document.getElementById('planillaPersonasServerError');
+    if (serverErrorEl?.dataset?.message) {
+      notify('error', serverErrorEl.dataset.message);
+    }
+
+    const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const csrfSafeMethod = (method) => ['GET','HEAD','OPTIONS','TRACE'].includes(String(method || 'GET').toUpperCase());
+
+    const getJson = async (url, options = {}) => {
+      const method = String(options.method || 'GET').toUpperCase();
+      const headers = Object.assign({ 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, options.headers || {});
+      if (!csrfSafeMethod(method)) headers['X-CSRFToken'] = csrfToken();
+      const response = await fetch(url, Object.assign({}, options, { headers }));
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.success === false) {
+        throw new Error(data.message || 'No se pudo completar la operación.');
+      }
+      return data;
+    };
+
+    const formatDateInput = (value) => {
+      if (!value) return '';
+      return String(value).slice(0, 10);
+    };
+
+    const setValue = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.value = value ?? '';
+    };
+
+    const actualizarCamposPorTipo = () => {
+      const tipo = document.getElementById('tipoPersona').value;
+      const grupoHaber = document.getElementById('grupoHaberBasico');
+      const grupoMinimo = document.getElementById('grupoMinimoColaborador');
+      if (tipo === 'PLANTA') {
+        grupoHaber.style.display = '';
+        grupoMinimo.style.display = 'none';
+        document.getElementById('montoMinimoMensualReferencia').value = '0.00';
+        document.querySelector('label[for="fechaIngreso"]').textContent = 'Fecha ingreso';
+      } else {
+        grupoHaber.style.display = 'none';
+        grupoMinimo.style.display = '';
+        document.getElementById('haberBasicoReferencia').value = '0.00';
+        document.querySelector('label[for="fechaIngreso"]').textContent = 'Fecha referencia';
+      }
+    };
+
+    const setCuentaAuxiliarSeleccionada = (codigo, nombre) => {
+      const select = $('#cuentaAuxiliarCodigo');
+      select.empty();
+      if (codigo) {
+        const text = nombre ? `${codigo} | ${nombre}` : codigo;
+        const option = new Option(text, codigo, true, true);
+        select.append(option).trigger('change');
+      } else {
+        select.val(null).trigger('change');
+      }
+    };
+
+    const actualizarCuentaAuxiliarVisible = () => {
+      const activo = document.getElementById('crearAuxiliar').checked;
+      const grupo = document.getElementById('grupoCuentaAuxiliar');
+      if (grupo) grupo.style.display = activo ? '' : 'none';
+      if (!activo) setCuentaAuxiliarSeleccionada('', '');
+    };
+
+    const sugerirCuentaAuxiliar = async () => {
+      if (!document.getElementById('crearAuxiliar').checked) return;
+      if ($('#cuentaAuxiliarCodigo').val()) return;
+      try {
+        const params = new URLSearchParams({
+          q: '',
+          tipo_persona: document.getElementById('tipoPersona').value || 'PLANTA'
+        });
+        const response = await fetch(`${URLS.cuentasAuxiliares}?${params.toString()}`, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await response.json().catch(() => ({}));
+        const first = (data.results || [])[0];
+        if ($('#cuentaAuxiliarCodigo').val()) return;
+        if (response.ok && first) {
+          setCuentaAuxiliarSeleccionada(first.id, first.nombre || first.text || '');
+        }
+      } catch (_error) {
+        setCuentaAuxiliarSeleccionada('', '');
+      }
+    };
+
+    const resetForm = () => {
+      document.getElementById('formPlanillaPersona').reset();
+      setValue('personaId', '');
+      setValue('origenSchema', '');
+      setValue('origenTabla', '');
+      setValue('origenClave', '');
+      setValue('tipoPersona', 'PLANTA');
+      setValue('unidadNegocio', '');
+      setValue('personaEstado', 'ACTIVO');
+      document.getElementById('crearAuxiliar').checked = true;
+      setCuentaAuxiliarSeleccionada('', '');
+      actualizarCuentaAuxiliarVisible();
+      sugerirCuentaAuxiliar();
+      document.getElementById('origenTexto').innerHTML = '<i class="fas fa-pen"></i> Manual';
+      document.getElementById('origenDetalle').textContent = 'Registro creado directamente en DXT-CONTA.';
+      document.getElementById('personaModalTitle').textContent = 'Nueva persona de planilla';
+      document.getElementById('personaModalSubtitle').textContent = 'Registro base para planillas mensuales.';
+      actualizarCamposPorTipo();
+    };
+
+    const fillForm = (data = {}) => {
+      const esOrigenExterno = data.__external_funcionario === true;
+      setValue('personaId', esOrigenExterno ? '' : (data.id || ''));
+      setValue('tipoPersona', data.tipo_persona || 'PLANTA');
+      setValue('unidadNegocio', data.unidad_negocio_id || '');
+      setValue('personaEstado', data.estado || 'ACTIVO');
+      setValue('ciNit', data.ci_nit || data.ci || '');
+      setValue('nitReferencia', data.nit_referencia || '');
+      setValue('nombreCompleto', data.nombre_completo || '');
+      setValue('fechaIngreso', formatDateInput(data.fecha_ingreso_referencia));
+      setValue('fechaNacimiento', formatDateInput(data.fecha_nacimiento));
+      setValue('nacionalidad', data.nacionalidad || '');
+      setValue('sexo', data.sexo || '');
+      setValue('ocupacionReferencia', data.ocupacion_referencia || data.cargo_referencia || '');
+      setValue('haberBasicoReferencia', data.haber_basico_referencia || '0.00');
+      setValue('montoMinimoMensualReferencia', data.monto_minimo_mensual_referencia || '0.00');
+      actualizarCamposPorTipo();
+      setValue('cargoReferencia', data.cargo_referencia || '');
+      setValue('regionalReferencia', data.regional_referencia || '');
+      setValue('telefono', data.telefono || '');
+      setValue('correo', data.correo || '');
+      setValue('bancoReferencia', data.banco_referencia || '');
+      setValue('cuentaBancariaReferencia', data.cuenta_bancaria_referencia || '');
+      document.getElementById('crearAuxiliar').checked = Boolean(data.auxiliar_id) || data.crear_auxiliar !== false;
+      setCuentaAuxiliarSeleccionada(data.cuenta_auxiliar_codigo || '', data.cuenta_auxiliar_nombre || '');
+      actualizarCuentaAuxiliarVisible();
+      if (!data.cuenta_auxiliar_codigo) sugerirCuentaAuxiliar();
+      setValue('observacion', data.observacion || '');
+      setValue('origenSchema', data.origen_schema || '');
+      setValue('origenTabla', data.origen_tabla || '');
+      setValue('origenClave', data.origen_clave || '');
+
+      if (data.origen_schema === 'funcionarios' || data.origen === 'funcionarios') {
+        document.getElementById('origenTexto').innerHTML = '<i class="fas fa-link"></i> Funcionarios';
+        document.getElementById('origenDetalle').textContent = `Origen CI ${data.origen_clave || data.ci || data.ci_nit || ''}`.trim();
+      } else {
+        document.getElementById('origenTexto').innerHTML = '<i class="fas fa-pen"></i> Manual';
+        document.getElementById('origenDetalle').textContent = 'Registro creado directamente en DXT-CONTA.';
+      }
+    };
+
+    const payloadForm = () => ({
+      id: document.getElementById('personaId').value,
+      tipo_persona: document.getElementById('tipoPersona').value,
+      unidad_negocio_id: document.getElementById('unidadNegocio').value,
+      estado: document.getElementById('personaEstado').value,
+      ci_nit: document.getElementById('ciNit').value,
+      nit_referencia: document.getElementById('nitReferencia').value,
+      nombre_completo: document.getElementById('nombreCompleto').value,
+      fecha_ingreso_referencia: document.getElementById('fechaIngreso').value,
+      fecha_nacimiento: document.getElementById('fechaNacimiento').value,
+      nacionalidad: document.getElementById('nacionalidad').value,
+      sexo: document.getElementById('sexo').value,
+      ocupacion_referencia: document.getElementById('ocupacionReferencia').value,
+      haber_basico_referencia: document.getElementById('haberBasicoReferencia').value,
+      monto_minimo_mensual_referencia: document.getElementById('montoMinimoMensualReferencia').value,
+      cargo_referencia: document.getElementById('cargoReferencia').value,
+      regional_referencia: document.getElementById('regionalReferencia').value,
+      telefono: document.getElementById('telefono').value,
+      correo: document.getElementById('correo').value,
+      banco_referencia: document.getElementById('bancoReferencia').value,
+      cuenta_bancaria_referencia: document.getElementById('cuentaBancariaReferencia').value,
+      observacion: document.getElementById('observacion').value,
+      crear_auxiliar: document.getElementById('crearAuxiliar').checked,
+      cuenta_auxiliar_codigo: document.getElementById('crearAuxiliar').checked
+        ? ($('#cuentaAuxiliarCodigo').val() || '')
+        : '',
+      origen_schema: document.getElementById('origenSchema').value,
+      origen_tabla: document.getElementById('origenTabla').value,
+      origen_clave: document.getElementById('origenClave').value
+    });
+
+    const badgeTipo = (tipo) => tipo === 'PLANTA'
+      ? '<span class="pp-badge is-planta"><i class="fas fa-id-badge"></i> Planta</span>'
+      : '<span class="pp-badge is-colaborador"><i class="fas fa-user-clock"></i> Colaborador</span>';
+
+    const badgeEstado = (estado) => estado === 'ACTIVO'
+      ? '<span class="pp-badge is-activo"><i class="fas fa-check"></i> Activo</span>'
+      : '<span class="pp-badge is-inactivo"><i class="fas fa-ban"></i> Inactivo</span>';
+
+    const badgeOrigen = (row) => row.origen_schema === 'funcionarios'
+      ? '<span class="pp-badge is-origen"><i class="fas fa-link"></i> Funcionarios</span>'
+      : '<span class="pp-badge is-origen"><i class="fas fa-pen"></i> Manual</span>';
+
+    const renderUnidad = (row) => {
+      if (!row.unidad_negocio_id) {
+        return '<span class="pp-badge is-sin-auxiliar"><i class="fas fa-triangle-exclamation"></i> Sin unidad</span>';
+      }
+      return `
+        <span class="pp-main-text">${escapeHtml(row.unidad_negocio_codigo || 'Unidad')}</span>
+        <span class="pp-sub-text">${escapeHtml(row.unidad_negocio_nombre || '')}</span>
+      `;
+    };
+
+    const renderBase = (row) => {
+      if (row.tipo_persona === 'PLANTA') {
+        return `<span class="pp-main-text">Bs ${Number(row.haber_basico_referencia || 0).toFixed(2)}</span><span class="pp-sub-text">haber básico mensual</span>`;
+      }
+      return `<span class="pp-main-text">Bs ${Number(row.monto_minimo_mensual_referencia || 0).toFixed(2)}</span><span class="pp-sub-text">mínimo mensual ref.</span>`;
+    };
+
+    const renderPago = (row) => {
+      if (!row.banco_referencia && !row.cuenta_bancaria_referencia) {
+        return '<span class="pp-sub-text">Sin dato</span>';
+      }
+      return `
+        <span class="pp-main-text">${escapeHtml(row.banco_referencia || 'Banco no definido')}</span>
+        <span class="pp-sub-text">${escapeHtml(row.cuenta_bancaria_referencia || 'Cuenta no definida')}</span>
+      `;
+    };
+
+    document.getElementById('tipoPersona')?.addEventListener('change', actualizarCamposPorTipo);
+
+    const initTabla = () => {
+      tabla = $('#tablaPlanillaPersonas').DataTable({
+        ajax: {
+          url: URLS.listar,
+          data: function(d) {
+            d.tipo = document.getElementById('filtroTipo').value;
+            d.estado = document.getElementById('filtroEstado').value;
+            d.q = document.getElementById('filtroBusqueda').value;
+          },
+          dataSrc: 'data'
+        },
+        processing: true,
+        paging: true,
+        pageLength: 10,
+        searching: false,
+        lengthChange: false,
+        order: [],
+        language: getDtLanguage(),
+        columns: [
+          {
+            data: null,
+            render: (row) => `
+              <span class="pp-main-text">${escapeHtml(row.nombre_completo)}</span>
+              <span class="pp-sub-text">CI/doc: ${escapeHtml(row.ci_nit)}${row.nit_referencia ? ' · NIT: ' + escapeHtml(row.nit_referencia) : ''}</span>
+              <span class="pp-sub-text">${escapeHtml(row.cargo_referencia || 'Sin cargo/servicio')}</span>
+            `
+          },
+          { data: 'tipo_persona', render: badgeTipo },
+          { data: null, render: renderUnidad },
+          { data: null, render: renderBase },
+          {
+            data: null,
+            render: (row) => `
+              <span class="pp-main-text">${escapeHtml(row.telefono || 'Sin teléfono')}</span>
+              <span class="pp-sub-text">${escapeHtml(row.correo || 'Sin correo')}</span>
+            `
+          },
+          { data: null, render: renderPago },
+          { data: null, render: badgeOrigen },
+          {
+            data: null,
+            render: (row) => row.auxiliar_id
+              ? `<span class="pp-badge is-auxiliar"><i class="fas fa-link"></i> ${escapeHtml(row.auxiliar_tipo || 'Auxiliar')}</span>`
+              : '<span class="pp-badge is-sin-auxiliar"><i class="fas fa-minus"></i> Sin auxiliar</span>'
+          },
+          { data: 'estado', render: badgeEstado },
+          {
+            data: null,
+            className: 'text-end',
+            orderable: false,
+            render: (row) => {
+              const editar = PUEDE_EDITAR ? `<button class="btn btn-outline-primary btn-sm pp-action-btn js-editar" data-id="${row.id}" title="Editar"><i class="fas fa-pen"></i></button>` : '';
+              const estadoIcon = row.estado === 'ACTIVO' ? 'fa-ban' : 'fa-check';
+              const estadoClass = row.estado === 'ACTIVO' ? 'btn-outline-danger' : 'btn-outline-success';
+              const estado = PUEDE_EDITAR ? `<button class="btn ${estadoClass} btn-sm pp-action-btn js-estado" data-id="${row.id}" title="Cambiar estado"><i class="fas ${estadoIcon}"></i></button>` : '';
+              return `<div class="pp-actions">${editar}${estado}</div>`;
+            }
+          }
+        ]
+      });
+    };
+
+    const guardarPersona = async (event) => {
+      event.preventDefault();
+      const btn = document.getElementById('btnGuardarPersona');
+      const original = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Guardando';
+      if (document.getElementById('crearAuxiliar').checked && !$('#cuentaAuxiliarCodigo').val()) {
+        notify('warning', 'Seleccione la cuenta contable auxiliar.');
+        btn.disabled = false;
+        btn.innerHTML = original;
+        return;
+      }
+      try {
+        await getJson(URLS.guardar, { method: 'POST', body: JSON.stringify(payloadForm()) });
+        modalPersona.hide();
+        tabla.ajax.reload(null, false);
+        notify('success', 'Persona de planilla guardada correctamente.');
+      } catch (error) {
+        notify('error', error.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }
+    };
+
+    const abrirEditar = async (id) => {
+      try {
+        const data = await getJson(URLS.obtener.replace('/0', `/${id}`));
+        resetForm();
+        fillForm(data.data || {});
+        document.getElementById('personaModalTitle').textContent = 'Editar persona de planilla';
+        document.getElementById('personaModalSubtitle').textContent = 'Actualice datos base para futuras planillas.';
+        modalPersona.show();
+      } catch (error) {
+        notify('error', error.message);
+      }
+    };
+
+    const cambiarEstado = async (id) => {
+      try {
+        await getJson(URLS.cambiarEstado.replace('/0', `/${id}`), { method: 'POST', body: '{}' });
+        tabla.ajax.reload(null, false);
+        notify('success', 'Estado actualizado.');
+      } catch (error) {
+        notify('error', error.message);
+      }
+    };
+
+    const renderFuncionarios = (rows) => {
+      const cont = document.getElementById('funcionariosResultados');
+      if (!FUNCIONARIOS_OK) {
+        cont.innerHTML = '<div class="p-3 text-muted">El esquema funcionarios no está disponible.</div>';
+        return;
+      }
+      if (!rows.length) {
+        cont.innerHTML = '<div class="p-3 text-muted">No hay funcionarios pendientes con ese criterio.</div>';
+        return;
+      }
+      cont.innerHTML = rows.map(row => {
+        const disabled = row.ya_importado ? 'disabled' : '';
+        const imported = row.ya_importado ? '<span class="pp-badge is-inactivo"><i class="fas fa-check"></i> Ya vinculado</span>' : '';
+        return `
+          <div class="pp-import-row">
+            <div>
+              <span class="pp-main-text">${escapeHtml(row.nombre_completo)}</span>
+              <span class="pp-sub-text">CI: ${escapeHtml(row.ci)}${row.nit_referencia ? ' · NIT: ' + escapeHtml(row.nit_referencia) : ''}</span>
+              <span class="pp-sub-text">${escapeHtml(row.cargo_referencia || 'Sin cargo')} · ${escapeHtml(row.regional_referencia || 'Sin regional')}</span>
+              <div class="mt-1">${imported}</div>
+            </div>
+            <div>
+              <button type="button" class="btn btn-primary btn-sm js-usar-funcionario" data-ci="${escapeHtml(row.ci)}" ${disabled}>
+                <i class="fas fa-arrow-right-to-bracket me-1"></i> Usar datos
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
+    const buscarFuncionarios = async () => {
+      const params = new URLSearchParams({
+        q: document.getElementById('buscarFuncionario').value,
+        solo_activos: document.getElementById('soloActivos').checked ? '1' : '0',
+        solo_pendientes: '1'
+      });
+      try {
+        const response = await fetch(`${URLS.buscarFuncionarios}?${params.toString()}`);
+        const data = await response.json();
+        renderFuncionarios(data.results || []);
+      } catch (error) {
+        notify('error', 'No se pudo buscar en Funcionarios.');
+      }
+    };
+
+    const usarFuncionario = async (ci) => {
+      try {
+        const url = URLS.obtenerFuncionario.replace('__CI__', encodeURIComponent(ci));
+        const data = await getJson(url);
+        const origen = data.data || {};
+        resetForm();
+        fillForm({
+          ...origen,
+          __external_funcionario: true,
+          tipo_persona: document.getElementById('importTipoPersona').value,
+          estado: 'ACTIVO',
+          origen_schema: 'funcionarios',
+          origen_tabla: 'funcionarios',
+          origen_clave: origen.ci
+        });
+        document.getElementById('personaModalTitle').textContent = 'Nueva persona vinculada';
+        document.getElementById('personaModalSubtitle').textContent = 'Revise, complete la unidad de negocio y guarde.';
+        modalImportar.hide();
+        setTimeout(() => modalPersona.show(), 220);
+      } catch (error) {
+        notify('error', error.message);
+      }
+    };
+
+    document.getElementById('formPlanillaPersona')?.addEventListener('submit', guardarPersona);
+
+    document.getElementById('btnNuevaPersona')?.addEventListener('click', () => {
+      resetForm();
+      modalPersona.show();
+    });
+
+    const abrirImportar = () => {
+      document.getElementById('buscarFuncionario').value = '';
+      renderFuncionarios([]);
+      modalImportar.show();
+      setTimeout(buscarFuncionarios, 180);
+    };
+
+    document.getElementById('btnBuscarOrigen')?.addEventListener('click', abrirImportar);
+    document.getElementById('btnBuscarFuncionarios')?.addEventListener('click', buscarFuncionarios);
+    document.getElementById('buscarFuncionario')?.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        buscarFuncionarios();
+      }
+    });
+
+    const recargarFiltros = () => tabla.ajax.reload();
+    let filtroBusquedaTimer = null;
+
+    document.getElementById('filtroTipo')?.addEventListener('change', recargarFiltros);
+    document.getElementById('filtroEstado')?.addEventListener('change', recargarFiltros);
+    document.getElementById('filtroBusqueda')?.addEventListener('input', () => {
+      clearTimeout(filtroBusquedaTimer);
+      filtroBusquedaTimer = setTimeout(recargarFiltros, 250);
+    });
+
+    document.getElementById('btnLimpiar')?.addEventListener('click', () => {
+      document.getElementById('filtroTipo').value = '';
+      document.getElementById('filtroEstado').value = 'ACTIVO';
+      document.getElementById('filtroBusqueda').value = '';
+      recargarFiltros();
+    });
+
+    document.getElementById('tablaPlanillaPersonas')?.addEventListener('click', (event) => {
+      const edit = event.target.closest('.js-editar');
+      if (edit) abrirEditar(edit.dataset.id);
+      const estado = event.target.closest('.js-estado');
+      if (estado) cambiarEstado(estado.dataset.id);
+    });
+
+    document.getElementById('funcionariosResultados')?.addEventListener('click', (event) => {
+      const btn = event.target.closest('.js-usar-funcionario');
+      if (btn) usarFuncionario(btn.dataset.ci);
+    });
+
+    if ($ && $.fn.select2) {
+      $('#cuentaAuxiliarCodigo').select2({
+        width: '100%',
+        dropdownParent: $('#modalPlanillaPersona'),
+        placeholder: 'Buscar cuenta por código o nombre',
+        allowClear: true,
+        minimumInputLength: 0,
+        language: 'es',
+        ajax: {
+          url: URLS.cuentasAuxiliares,
+          dataType: 'json',
+          delay: 250,
+          data: function (params) {
+            return {
+              q: params.term || '',
+              tipo_persona: document.getElementById('tipoPersona').value || 'PLANTA'
+            };
+          },
+          processResults: function (data) {
+            return { results: data.results || [] };
+          }
+        }
+      });
+    }
+
+    document.getElementById('crearAuxiliar')?.addEventListener('change', () => {
+      actualizarCuentaAuxiliarVisible();
+      sugerirCuentaAuxiliar();
+    });
+
+    document.getElementById('tipoPersona')?.addEventListener('change', () => {
+      setCuentaAuxiliarSeleccionada('', '');
+      sugerirCuentaAuxiliar();
+    });
+
+    if ($ && $.fn.DataTable) {
+      initTabla();
+    }
+  })();
+</script>
+{% endblock %}

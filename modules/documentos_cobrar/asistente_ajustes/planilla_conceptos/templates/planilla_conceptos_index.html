@@ -1,0 +1,661 @@
+{% extends "layout.html" %}
+{% block title %}Conceptos de Planilla{% endblock title %}
+{% block page_help_url %}{{ url_for('planilla_conceptos.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --pc-navy: #0f2340;
+    --pc-blue: #17406f;
+    --pc-accent: #2563eb;
+    --pc-success: #0f766e;
+    --pc-warning: #f97316;
+    --pc-danger: #dc2626;
+    --pc-border: #dbe5f0;
+    --pc-muted: #64748b;
+  }
+  #planillaConceptosPage { color: #06142b; }
+  #planillaConceptosPage .pc-header {
+    align-items: center; background: linear-gradient(135deg, #112b4e, #1e4b7f); border-radius: 1rem;
+    box-shadow: 0 14px 32px rgba(15,35,64,.16); color: #fff; display: flex; justify-content: space-between;
+    margin: .35rem 0 1rem; padding: 1.15rem 1.25rem;
+  }
+  #planillaConceptosPage .pc-header-left { align-items: center; display: flex; gap: .9rem; }
+  #planillaConceptosPage .pc-header-icon { align-items: center; background: rgba(255,255,255,.12); border-radius: .9rem; display: flex; height: 42px; justify-content: center; width: 42px; }
+  #planillaConceptosPage .pc-kicker { color: rgba(255,255,255,.72); font-size: .68rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+  #planillaConceptosPage .pc-title { font-size: 1.6rem; font-weight: 900; line-height: 1.1; margin: 0; }
+  #planillaConceptosPage .pc-subtitle { color: rgba(255,255,255,.80); font-size: .8rem; margin: .2rem 0 0; }
+  #planillaConceptosPage .pc-actions-top { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: flex-end; }
+  #planillaConceptosPage .pc-actions-top .btn { border-radius: .72rem; font-weight: 800; }
+  #planillaConceptosPage .pc-stats-grid { display: grid; gap: .75rem; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: .85rem; }
+  #planillaConceptosPage .pc-stat-card { background: #fff; border: 1px solid var(--pc-border); border-left: 4px solid var(--pc-accent); border-radius: .85rem; box-shadow: 0 8px 22px rgba(15,35,64,.07); padding: .95rem 1rem; }
+  #planillaConceptosPage .pc-stat-card.is-success { border-left-color: var(--pc-success); }
+  #planillaConceptosPage .pc-stat-card.is-warning { border-left-color: var(--pc-warning); }
+  #planillaConceptosPage .pc-stat-card.is-danger { border-left-color: var(--pc-danger); }
+  #planillaConceptosPage .pc-stat-label { color: var(--pc-muted); font-size: .67rem; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
+  #planillaConceptosPage .pc-stat-value { color: #06142b; font-size: 1.35rem; font-weight: 950; line-height: 1; margin-top: .2rem; }
+  #planillaConceptosPage .pc-card { background: #fff; border: 1px solid var(--pc-border); border-radius: .95rem; box-shadow: 0 14px 34px rgba(15,35,64,.08); overflow: hidden; }
+  #planillaConceptosPage .pc-toolbar { align-items: end; display: grid; gap: .7rem; grid-template-columns: 1.05fr 1.05fr 1fr 1.6fr auto; padding: .95rem; }
+  #planillaConceptosPage label, #modalPlanillaConcepto label { color: #13233f; font-size: .72rem; font-weight: 900; margin-bottom: .28rem; }
+  #planillaConceptosPage .form-control, #planillaConceptosPage .form-select, #modalPlanillaConcepto .form-control, #modalPlanillaConcepto .form-select { border-color: #d5deea; border-radius: .75rem; min-height: 40px; }
+  #planillaConceptosPage .pc-filter-actions { display: flex; justify-content: flex-end; }
+  #planillaConceptosPage .pc-table-wrap { border-top: 1px solid #e6edf6; padding: 0 .9rem .9rem; }
+  #planillaConceptosPage table { font-size: .8rem; margin-bottom: 0; }
+  #planillaConceptosPage thead th { background: #eaf1f8; border-bottom: 1px solid #cdd9e6; color: #06142b; font-size: .68rem; font-weight: 950; padding: .62rem .55rem; text-transform: uppercase; }
+  #planillaConceptosPage tbody td { border-color: #e1e9f2; padding: .62rem .55rem; vertical-align: middle; }
+  #planillaConceptosPage .pc-main-title { font-weight: 900; line-height: 1.2; }
+  #planillaConceptosPage .pc-main-sub { color: var(--pc-muted); font-size: .72rem; margin-top: .12rem; }
+  #planillaConceptosPage .pc-badge { align-items: center; border-radius: .45rem; display: inline-flex; font-size: .68rem; font-weight: 900; gap: .25rem; padding: .2rem .42rem; white-space: nowrap; }
+  #planillaConceptosPage .pc-badge.is-primary { background: #dbeafe; color: #1d4ed8; }
+  #planillaConceptosPage .pc-badge.is-success { background: #ccfbf1; color: #0f766e; }
+  #planillaConceptosPage .pc-badge.is-warning { background: #ffedd5; color: #c2410c; }
+  #planillaConceptosPage .pc-badge.is-danger { background: #fee2e2; color: #b91c1c; }
+  #planillaConceptosPage .pc-badge.is-muted { background: #eef2f7; color: #475569; }
+  #planillaConceptosPage .pc-account { color: #334155; font-size: .75rem; line-height: 1.35; min-width: 90px; }
+  #planillaConceptosPage .pc-actions { display: inline-flex; gap: .35rem; justify-content: flex-end; }
+  #planillaConceptosPage .btn-icon { align-items: center; border-radius: .7rem; display: inline-flex; height: 34px; justify-content: center; width: 34px; }
+  #modalPlanillaConcepto .modal-content { border: 0; border-radius: 1rem; overflow: hidden; }
+  #modalPlanillaConcepto .modal-header { background: linear-gradient(135deg, var(--pc-navy), var(--pc-blue)); color: #fff; padding: 1rem 1.15rem; }
+  #modalPlanillaConcepto .modal-title { font-weight: 900; }
+  #modalPlanillaConcepto .pc-modal-subtitle { color: rgba(255,255,255,.70); font-size: .78rem; margin-top: .1rem; }
+  #modalPlanillaConcepto .btn-close { filter: invert(1) grayscale(100%); opacity: .9; }
+  #modalPlanillaConcepto .pc-form-grid { display: grid; gap: .85rem; grid-template-columns: repeat(12, minmax(0,1fr)); }
+  #modalPlanillaConcepto .pc-col-3 { grid-column: span 3; }
+  #modalPlanillaConcepto .pc-col-4 { grid-column: span 4; }
+  #modalPlanillaConcepto .pc-col-5 { grid-column: span 5; }
+  #modalPlanillaConcepto .pc-col-6 { grid-column: span 6; }
+  #modalPlanillaConcepto .pc-col-8 { grid-column: span 8; }
+  #modalPlanillaConcepto .pc-col-9 { grid-column: span 9; }
+  #modalPlanillaConcepto .pc-col-12 { grid-column: span 12; }
+  #modalPlanillaConcepto .pc-check-card { align-items: center; background: #f8fafc; border: 1px solid var(--pc-border); border-radius: .9rem; display: flex; gap: .55rem; min-height: 40px; padding: .45rem .75rem; }
+  #modalPlanillaConcepto .pc-readonly { background: #f8fafc; color: #334155; font-weight: 800; }
+  #modalPlanillaConcepto .select2-container--default .select2-selection--single { border: 1px solid #d5deea; border-radius: .8rem; height: 40px; }
+  #modalPlanillaConcepto .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 38px; padding-left: .75rem; }
+  #modalPlanillaConcepto .select2-container--default .select2-selection--single .select2-selection__arrow { height: 38px; }
+  @media (max-width: 1180px) { #planillaConceptosPage .pc-stats-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } #planillaConceptosPage .pc-toolbar { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width: 768px) { #planillaConceptosPage .pc-header { align-items: flex-start; flex-direction: column; } #planillaConceptosPage .pc-stats-grid { grid-template-columns: 1fr; } #planillaConceptosPage .pc-toolbar { grid-template-columns: 1fr; } #modalPlanillaConcepto .pc-form-grid { grid-template-columns: 1fr; } #modalPlanillaConcepto [class*="pc-col-"] { grid-column: span 1; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="planillaConceptosPage">
+  <section class="pc-header">
+    <div class="pc-header-left">
+      <div class="pc-header-icon"><i class="fas fa-sliders"></i></div>
+      <div>
+        <div class="pc-kicker">Planillas</div>
+        <h1 class="pc-title">Conceptos de Planilla</h1>
+        <p class="pc-subtitle">Configuración base para planta y colaboradores.</p>
+      </div>
+    </div>
+    <div class="pc-actions-top">
+      {% if puede_editar %}
+      <button type="button" class="btn btn-outline-light" id="btnCargarSugeridos">
+        <i class="fas fa-wand-magic-sparkles me-1"></i> Cargar base
+      </button>
+      <button type="button" class="btn btn-outline-light" id="btnInactivarTodos">
+        <i class="fas fa-ban me-1"></i> Inactivar todos
+      </button>
+      <button type="button" class="btn btn-outline-light" id="btnActivarTodos">
+        <i class="fas fa-check me-1"></i> Activar todos
+      </button>
+      <button type="button" class="btn btn-outline-light" id="btnLimpiarConceptos">
+        <i class="fas fa-broom me-1"></i> Limpiar conceptos
+      </button>
+      <button type="button" class="btn btn-primary" id="btnNuevoConcepto">
+        <i class="fas fa-plus me-1"></i> Nuevo concepto
+      </button>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="pc-stats-grid">
+    <div class="pc-stat-card"><div class="pc-stat-label">Total</div><div class="pc-stat-value">{{ stats.total or 0 }}</div></div>
+    <div class="pc-stat-card is-success"><div class="pc-stat-label">Activos</div><div class="pc-stat-value">{{ stats.activos or 0 }}</div></div>
+    <div class="pc-stat-card is-warning"><div class="pc-stat-label">Planta</div><div class="pc-stat-value">{{ stats.planta or 0 }}</div></div>
+    <div class="pc-stat-card"><div class="pc-stat-label">Colaboradores</div><div class="pc-stat-value">{{ stats.colaboradores or 0 }}</div></div>
+    <div class="pc-stat-card is-danger"><div class="pc-stat-label">Inactivos</div><div class="pc-stat-value">{{ stats.inactivos or 0 }}</div></div>
+  </section>
+
+  <section class="pc-card">
+    <form class="pc-toolbar" id="formFiltrosConceptos" method="get" action="{{ url_for('planilla_conceptos.index') }}">
+      <div class="pc-field">
+        <label for="filtro_tipo_planilla">Planilla</label>
+        <select class="form-select" id="filtro_tipo_planilla" name="tipo_planilla">
+          <option value="">Todas</option>
+          {% for codigo, label in tipos_planilla.items() %}
+            <option value="{{ codigo }}" {% if filtros.tipo_planilla == codigo %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="pc-field">
+        <label for="filtro_tipo_concepto">Tipo</label>
+        <select class="form-select" id="filtro_tipo_concepto" name="tipo_concepto">
+          <option value="">Todos</option>
+          {% for codigo, label in tipos_concepto.items() %}
+            <option value="{{ codigo }}" {% if filtros.tipo_concepto == codigo %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="pc-field">
+        <label for="filtro_estado">Estado</label>
+        <select class="form-select" id="filtro_estado" name="estado">
+          {% for codigo, label in estados_filtro.items() %}
+            <option value="{{ codigo }}" {% if filtros.estado == codigo %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="pc-field">
+        <label for="filtro_q">Buscar</label>
+        <input type="search" class="form-control" id="filtro_q" name="q" value="{{ filtros.q }}" placeholder="Código, nombre u observación">
+      </div>
+      <div class="pc-filter-actions">
+        <a class="btn btn-outline-secondary" href="{{ url_for('planilla_conceptos.index') }}" title="Limpiar filtros"><i class="fas fa-eraser"></i></a>
+      </div>
+    </form>
+
+    <div class="pc-table-wrap">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle" id="tablaPlanillaConceptos">
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th>Planilla</th>
+              <th>Tipo</th>
+              <th>Impacto</th>
+              <th>Método</th>
+              <th class="text-end">Ref.</th>
+              <th>Cuentas</th>
+              <th>Estado</th>
+              <th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for concepto in conceptos %}
+            <tr>
+              <td>
+                <div class="pc-main-title">{{ concepto.nombre }}</div>
+                <div class="pc-main-sub">{{ concepto.codigo }}</div>
+              </td>
+              <td><span class="pc-badge is-primary">{{ concepto.tipo_planilla_label }}</span></td>
+              <td><span class="pc-badge is-muted">{{ concepto.tipo_concepto_label }}</span></td>
+              <td>
+                {% if concepto.impacto_liquido == 'SUMA' %}
+                  <span class="pc-badge is-success"><i class="fas fa-plus"></i>{{ concepto.impacto_label }}</span>
+                {% elif concepto.impacto_liquido == 'RESTA' %}
+                  <span class="pc-badge is-danger"><i class="fas fa-minus"></i>{{ concepto.impacto_label }}</span>
+                {% else %}
+                  <span class="pc-badge is-muted"><i class="fas fa-equals"></i>{{ concepto.impacto_label }}</span>
+                {% endif %}
+              </td>
+              <td><span class="pc-badge is-warning">{{ concepto.metodo_label }}</span></td>
+              <td class="text-end">
+                {% if concepto.metodo_calculo == 'PORCENTAJE' and concepto.porcentaje_referencial %}
+                  {{ concepto.porcentaje_referencial }}%
+                {% elif concepto.metodo_calculo == 'FIJO' and concepto.monto_referencial %}
+                  {{ concepto.monto_referencial }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>
+                <div class="pc-account">
+                  {% if concepto.cuenta_debe_codigo %}<div><strong>D:</strong> {{ concepto.cuenta_debe_codigo }}</div>{% endif %}
+                  {% if concepto.cuenta_haber_codigo %}<div><strong>H:</strong> {{ concepto.cuenta_haber_codigo }}</div>{% endif %}
+                  {% if not concepto.cuenta_debe_codigo and not concepto.cuenta_haber_codigo %}-{% endif %}
+                </div>
+              </td>
+              <td>
+                {% if concepto.activo %}<span class="pc-badge is-success">Activo</span>{% else %}<span class="pc-badge is-danger">Inactivo</span>{% endif %}
+              </td>
+              <td class="text-end">
+                <div class="pc-actions">
+                  {% if puede_editar %}
+                  <button type="button" class="btn btn-outline-primary btn-sm btn-icon btnEditar" data-id="{{ concepto.id }}" title="Editar"><i class="fas fa-pen"></i></button>
+                  <button type="button" class="btn btn-outline-danger btn-sm btn-icon btnEliminar" data-id="{{ concepto.id }}" data-nombre="{{ concepto.nombre }}" title="Eliminar"><i class="fas fa-trash"></i></button>
+                  {% if concepto.activo %}
+                    <button type="button" class="btn btn-outline-warning btn-sm btn-icon btnEstado" data-id="{{ concepto.id }}" data-activo="false" title="Inactivar"><i class="fas fa-ban"></i></button>
+                  {% else %}
+                    <button type="button" class="btn btn-outline-success btn-sm btn-icon btnEstado" data-id="{{ concepto.id }}" data-activo="true" title="Activar"><i class="fas fa-check"></i></button>
+                  {% endif %}
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="modal fade" id="modalPlanillaConcepto" tabindex="-1" aria-labelledby="modalPlanillaConceptoTitle" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="modalPlanillaConceptoTitle">Nuevo concepto</h5>
+          <div class="pc-modal-subtitle" id="modalPlanillaConceptoSubtitle">Configuración base reutilizable por mes.</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formPlanillaConcepto" autocomplete="off">
+          <input type="hidden" id="concepto_id" name="id">
+          <input type="hidden" id="codigo" name="codigo">
+          <div class="pc-form-grid">
+            <div class="pc-field pc-col-3">
+              <label for="codigo_display">Código</label>
+              <input type="text" class="form-control pc-readonly" id="codigo_display" readonly tabindex="-1" placeholder="Automático">
+            </div>
+            <div class="pc-field pc-col-9">
+              <label for="concepto_sugerido">Concepto sugerido</label>
+              <select class="form-select" id="concepto_sugerido">
+                <option value="">Concepto personalizado</option>
+                {% for item in conceptos_sugeridos %}
+                  <option value="{{ item.codigo }}" {% if item.ya_configurado %}disabled{% endif %}>{{ item.tipo_planilla_label }} · {{ item.nombre }}{% if item.ya_configurado %} · ya configurado{% endif %}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="pc-field pc-col-3">
+              <label for="tipo_planilla">Aplica a</label>
+              <select class="form-select" id="tipo_planilla" name="tipo_planilla" required>
+                {% for codigo, label in tipos_planilla.items() %}<option value="{{ codigo }}">{{ label }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="pc-field pc-col-3">
+              <label for="tipo_concepto">Tipo concepto</label>
+              <select class="form-select" id="tipo_concepto" name="tipo_concepto" required>
+                {% for codigo, label in tipos_concepto.items() %}<option value="{{ codigo }}">{{ label }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="pc-field pc-col-3">
+              <label for="impacto_liquido">Impacto líquido</label>
+              <select class="form-select" id="impacto_liquido" name="impacto_liquido" required>
+                {% for codigo, label in impactos.items() %}<option value="{{ codigo }}">{{ label }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="pc-field pc-col-3">
+              <label for="metodo_calculo">Método</label>
+              <select class="form-select" id="metodo_calculo" name="metodo_calculo" required>
+                {% for codigo, label in metodos.items() %}<option value="{{ codigo }}">{{ label }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="pc-field pc-col-12">
+              <label for="nombre">Nombre del concepto</label>
+              <input type="text" class="form-control" id="nombre" name="nombre" maxlength="180" required>
+            </div>
+            <div class="pc-field pc-col-3">
+              <label for="porcentaje_referencial">% ref.</label>
+              <input type="number" class="form-control" id="porcentaje_referencial" name="porcentaje_referencial" min="0" max="100" step="0.000001">
+            </div>
+            <div class="pc-field pc-col-3">
+              <label for="monto_referencial">Monto ref.</label>
+              <input type="number" class="form-control" id="monto_referencial" name="monto_referencial" min="0" step="0.01">
+            </div>
+            <div class="pc-field pc-col-6">
+              <label>&nbsp;</label>
+              <label class="pc-check-card" for="requiere_justificativo">
+                <input class="form-check-input m-0" type="checkbox" id="requiere_justificativo" name="requiere_justificativo">
+                <span>Requiere justificativo al usarlo en la planilla mensual</span>
+              </label>
+            </div>
+            <div class="pc-field pc-col-6">
+              <label for="cuenta_debe_codigo">Cuenta debe sugerida</label>
+              <select class="form-select" id="cuenta_debe_codigo" name="cuenta_debe_codigo"></select>
+            </div>
+            <div class="pc-field pc-col-6">
+              <label for="cuenta_haber_codigo">Cuenta haber sugerida</label>
+              <select class="form-select" id="cuenta_haber_codigo" name="cuenta_haber_codigo"></select>
+            </div>
+            <div class="pc-field pc-col-12">
+              <label for="observacion">Observación</label>
+              <input type="text" class="form-control" id="observacion" name="observacion" maxlength="500">
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardarConcepto"><i class="fas fa-save me-1"></i> Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const boot = {
+    urls: {
+      guardar: {{ url_for('planilla_conceptos.guardar')|tojson }},
+      obtener: {{ url_for('planilla_conceptos.api_obtener', concepto_id=0)|tojson }},
+      estado: {{ url_for('planilla_conceptos.cambiar_estado', concepto_id=0)|tojson }},
+      eliminar: {{ url_for('planilla_conceptos.eliminar_concepto', concepto_id=0)|tojson }},
+      estadoGlobal: {{ url_for('planilla_conceptos.cambiar_estado_global')|tojson }},
+      cuentas: {{ url_for('planilla_conceptos.api_cuentas')|tojson }},
+      cargarSugeridos: {{ url_for('planilla_conceptos.cargar_sugeridos')|tojson }},
+      limpiarConceptos: {{ url_for('planilla_conceptos.limpiar_conceptos')|tojson }}
+    },
+    sugeridos: {{ conceptos_sugeridos|tojson }},
+    error: {{ error|tojson }}
+  };
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const modalEl = document.getElementById('modalPlanillaConcepto');
+  const modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+  const form = document.getElementById('formPlanillaConcepto');
+  const $debe = window.jQuery ? $('#cuenta_debe_codigo') : null;
+  const $haber = window.jQuery ? $('#cuenta_haber_codigo') : null;
+  const $sugerido = window.jQuery ? $('#concepto_sugerido') : null;
+  let codigoAutogenerado = true;
+  let filtroTimer = null;
+
+  const toastError = (title, msg) => { if (window.Swal) Swal.fire(title || 'Atención', msg || 'No se pudo completar la operación.', 'warning'); else console.error(title, msg); };
+  const toastOk = (msg) => { if (window.Swal) Swal.fire('Listo', msg || 'Operación completada.', 'success'); };
+  const endpoint = (url, id) => url.replace(/0$/, String(id));
+  const byId = (id) => document.getElementById(id);
+  const val = (id) => (byId(id)?.value || '').trim();
+  const checked = (id) => !!byId(id)?.checked;
+  const sugeridoByCode = (code) => (boot.sugeridos || []).find(item => item.codigo === code);
+
+  const dtLanguage = {
+    decimal: ',', thousands: '.', emptyTable: 'Sin registros', info: 'Mostrando _START_ a _END_ de _TOTAL_',
+    infoEmpty: 'Mostrando 0 a 0 de 0', infoFiltered: '(filtrado de _MAX_)', lengthMenu: 'Mostrar _MENU_',
+    loadingRecords: 'Cargando...', processing: 'Procesando...', search: 'Buscar:', zeroRecords: 'Sin resultados',
+    paginate: { first: 'Primero', last: 'Último', next: 'Siguiente', previous: 'Anterior' }
+  };
+
+  const slugCodigo = (text) => (text || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase().replace(/[^A-Z0-9_-]+/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
+
+  const setCodigo = (code) => {
+    const codigo = slugCodigo(code || val('nombre'));
+    byId('codigo').value = codigo;
+    byId('codigo_display').value = codigo || '';
+  };
+
+  const setSelect2Value = ($select, value, text) => {
+    if (!$select || !$select.length) return;
+    $select.find('option').remove();
+    if (value) {
+      const option = new Option(text || value, value, true, true);
+      $select.append(option).trigger('change');
+    } else {
+      $select.val(null).trigger('change');
+    }
+  };
+
+  const applyFilters = () => document.getElementById('formFiltrosConceptos')?.submit();
+
+  const initSelect2 = () => {
+    if (!window.jQuery || !$.fn || !$.fn.select2) return;
+    const lang = { inputTooShort: () => 'Ingrese más caracteres', noResults: () => 'Sin resultados', searching: () => 'Buscando...' };
+    [$debe, $haber].forEach(($el) => {
+      if (!$el || !$el.length) return;
+      $el.select2({ dropdownParent: $('#modalPlanillaConcepto'), width: '100%', allowClear: true, placeholder: 'Buscar cuenta contable', language: lang, ajax: { url: boot.urls.cuentas, dataType: 'json', delay: 250, data: (params) => ({ q: params.term || '' }) } });
+    });
+    if ($sugerido && $sugerido.length) {
+      $sugerido.select2({ dropdownParent: $('#modalPlanillaConcepto'), width: '100%', placeholder: 'Concepto personalizado', allowClear: true, language: lang });
+    }
+  };
+
+  const aplicarMetodo = () => {
+    const metodo = val('metodo_calculo');
+    byId('porcentaje_referencial').disabled = metodo !== 'PORCENTAJE';
+    byId('monto_referencial').disabled = metodo !== 'FIJO';
+    if (metodo !== 'PORCENTAJE') byId('porcentaje_referencial').value = '';
+    if (metodo !== 'FIJO') byId('monto_referencial').value = '';
+  };
+
+  const aplicarSugerenciaTipo = () => {
+    const tipo = val('tipo_concepto');
+    const impacto = { INGRESO: 'SUMA', DESCUENTO: 'RESTA', RETENCION: 'RESTA', APORTE_PATRONAL: 'NO_AFECTA', NETO_INFORMATIVO: 'NO_AFECTA' }[tipo] || 'NO_AFECTA';
+    byId('impacto_liquido').value = impacto;
+    byId('requiere_justificativo').checked = ['DESCUENTO', 'RETENCION'].includes(tipo);
+  };
+
+  const aplicarSugerido = (code) => {
+    const item = sugeridoByCode(code);
+    if (!item) {
+      if (!val('concepto_id')) {
+        byId('tipo_planilla').value = 'PLANTA';
+        byId('tipo_concepto').value = 'INGRESO';
+        aplicarSugerenciaTipo();
+      }
+      return;
+    }
+    byId('tipo_planilla').value = item.tipo_planilla || 'AMBAS';
+    byId('tipo_concepto').value = item.tipo_concepto || 'INGRESO';
+    byId('impacto_liquido').value = item.impacto_liquido || 'NO_AFECTA';
+    byId('metodo_calculo').value = item.metodo_calculo || 'MANUAL';
+    byId('nombre').value = item.nombre || '';
+    byId('observacion').value = item.observacion || '';
+    byId('requiere_justificativo').checked = !!item.requiere_justificativo;
+    setSelect2Value($debe, item.cuenta_debe_codigo || '', item.cuenta_debe_label || item.cuenta_debe_codigo || '');
+    setSelect2Value($haber, item.cuenta_haber_codigo || '', item.cuenta_haber_label || item.cuenta_haber_codigo || '');
+    setCodigo(item.codigo || item.nombre);
+    codigoAutogenerado = true;
+    aplicarMetodo();
+  };
+
+  const resetForm = () => {
+    form.reset();
+    byId('concepto_id').value = '';
+    byId('modalPlanillaConceptoTitle').textContent = 'Nuevo concepto';
+    byId('modalPlanillaConceptoSubtitle').textContent = 'Configuración base reutilizable por mes.';
+    byId('tipo_planilla').value = 'PLANTA';
+    byId('tipo_concepto').value = 'INGRESO';
+    byId('impacto_liquido').value = 'SUMA';
+    byId('metodo_calculo').value = 'MANUAL';
+    byId('requiere_justificativo').checked = false;
+    byId('observacion').value = '';
+    byId('nombre').value = '';
+    setCodigo('');
+    setSelect2Value($debe, '', '');
+    setSelect2Value($haber, '', '');
+    if ($sugerido && $sugerido.length) $sugerido.val(null).trigger('change');
+    codigoAutogenerado = true;
+    aplicarMetodo();
+  };
+
+  const collectPayload = () => ({
+    id: val('concepto_id') || null,
+    codigo: val('codigo'),
+    nombre: val('nombre'),
+    tipo_planilla: val('tipo_planilla'),
+    tipo_concepto: val('tipo_concepto'),
+    impacto_liquido: val('impacto_liquido'),
+    metodo_calculo: val('metodo_calculo'),
+    porcentaje_referencial: val('porcentaje_referencial') || null,
+    monto_referencial: val('monto_referencial') || null,
+    cuenta_debe_codigo: ($debe && $debe.length ? $debe.val() : '') || null,
+    cuenta_haber_codigo: ($haber && $haber.length ? $haber.val() : '') || null,
+    requiere_justificativo: checked('requiere_justificativo'),
+    observacion: val('observacion') || null
+  });
+
+  const guardar = async () => {
+    if (!val('codigo')) setCodigo(val('nombre'));
+    if (!form.reportValidity()) return;
+    const payload = collectPayload();
+    try {
+      const resp = await fetch(boot.urls.guardar, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }, body: JSON.stringify(payload) });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) throw new Error(data.message || 'No se pudo guardar el concepto.');
+      modal.hide();
+      toastOk(data.message);
+      window.location.reload();
+    } catch (err) { toastError('No se pudo guardar', err.message); }
+  };
+
+  const editar = async (id) => {
+    try {
+      const resp = await fetch(endpoint(boot.urls.obtener, id), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const data = await resp.json();
+      if (!resp.ok || !data.success) throw new Error(data.message || 'No se pudo cargar el concepto.');
+      const c = data.concepto;
+      resetForm();
+      byId('concepto_id').value = c.id || '';
+      byId('modalPlanillaConceptoTitle').textContent = 'Editar concepto';
+      byId('modalPlanillaConceptoSubtitle').textContent = c.codigo || '';
+      byId('nombre').value = c.nombre || '';
+      byId('tipo_planilla').value = c.tipo_planilla || 'AMBAS';
+      byId('tipo_concepto').value = c.tipo_concepto || 'INGRESO';
+      byId('impacto_liquido').value = c.impacto_liquido || 'NO_AFECTA';
+      byId('metodo_calculo').value = c.metodo_calculo || 'MANUAL';
+      byId('porcentaje_referencial').value = c.porcentaje_referencial || '';
+      byId('monto_referencial').value = c.monto_referencial || '';
+      byId('requiere_justificativo').checked = !!c.requiere_justificativo;
+      byId('observacion').value = c.observacion || '';
+      setCodigo(c.codigo || c.nombre || '');
+      setSelect2Value($debe, c.cuenta_debe_codigo || '', c.cuenta_debe_label || c.cuenta_debe_codigo || '');
+      setSelect2Value($haber, c.cuenta_haber_codigo || '', c.cuenta_haber_label || c.cuenta_haber_codigo || '');
+      if ($sugerido && $sugerido.length) $sugerido.val(null).trigger('change');
+      codigoAutogenerado = false;
+      aplicarMetodo();
+      modal.show();
+    } catch (err) { toastError('No se pudo cargar', err.message); }
+  };
+
+  const cambiarEstado = (id, activo) => {
+    const title = activo ? 'Activar concepto' : 'Inactivar concepto';
+    const text = activo ? 'El concepto volverá a estar disponible.' : 'El concepto no se cargará en nuevas planillas.';
+    Swal.fire({ title, text, icon: 'question', showCancelButton: true, confirmButtonText: activo ? 'Activar' : 'Inactivar', cancelButtonText: 'Cancelar' }).then(async (res) => {
+      if (!res.isConfirmed) return;
+      try {
+        const resp = await fetch(endpoint(boot.urls.estado, id), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }, body: JSON.stringify({ activo }) });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.message || 'No se pudo cambiar el estado.');
+        toastOk(data.message);
+        window.location.reload();
+      } catch (err) { toastError('No se pudo completar', err.message); }
+    });
+  };
+
+
+  const eliminarConcepto = (id, nombre) => {
+    Swal.fire({
+      title: 'Eliminar concepto',
+      html: `Se eliminará el concepto base <strong>${nombre || ''}</strong>.<br>Las planillas ya generadas conservarán su copia histórica.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc3545',
+      input: 'text',
+      inputLabel: 'Motivo',
+      inputPlaceholder: 'Ej.: Concepto reemplazado por nueva configuración',
+      inputValidator: (value) => !value ? 'Registre el motivo de la eliminación.' : null
+    }).then(async (res) => {
+      if (!res.isConfirmed) return;
+      try {
+        const resp = await fetch(endpoint(boot.urls.eliminar, id), { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }, body: JSON.stringify({ motivo: res.value }) });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.message || 'No se pudo eliminar el concepto.');
+        toastOk(data.message);
+        window.location.reload();
+      } catch (err) { toastError('No se pudo eliminar', err.message); }
+    });
+  };
+
+  const cambiarEstadoGlobal = (activo) => {
+    Swal.fire({
+      title: activo ? 'Activar todos' : 'Inactivar todos',
+      text: activo ? 'Todos los conceptos volverán a estar disponibles para nuevas planillas.' : 'Ningún concepto se cargará automáticamente en nuevas planillas hasta reactivarlo.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: activo ? 'Activar' : 'Inactivar',
+      cancelButtonText: 'Cancelar'
+    }).then(async (res) => {
+      if (!res.isConfirmed) return;
+      try {
+        const resp = await fetch(boot.urls.estadoGlobal, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }, body: JSON.stringify({ activo }) });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.message || 'No se pudo cambiar el estado global.');
+        toastOk(data.message);
+        window.location.reload();
+      } catch (err) { toastError('No se pudo completar', err.message); }
+    });
+  };
+
+  const cargarSugeridos = () => {
+    Swal.fire({
+      title: 'Cargar base sugerida',
+      text: 'Se crearán solo los conceptos que aún no existen. Las cuentas debe/haber se sugerirán desde Parámetros de Planilla y podrán modificarse después.',
+      icon: 'question',
+      input: 'select',
+      inputOptions: { TODAS: 'Planta y colaboradores', PLANTA: 'Solo planta', COLABORADORES: 'Solo colaboradores' },
+      inputValue: 'TODAS',
+      showCancelButton: true,
+      confirmButtonText: 'Cargar',
+      cancelButtonText: 'Cancelar'
+    }).then(async (res) => {
+      if (!res.isConfirmed) return;
+      try {
+        const resp = await fetch(boot.urls.cargarSugeridos, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }, body: JSON.stringify({ tipo_planilla: res.value || 'TODAS' }) });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.message || 'No se pudo cargar la base sugerida.');
+        toastOk(data.message);
+        window.location.reload();
+      } catch (err) { toastError('No se pudo cargar', err.message); }
+    });
+  };
+
+  const limpiarConceptos = () => {
+    Swal.fire({
+      title: 'Limpiar conceptos',
+      html: 'Se eliminarán los conceptos base configurados.<br><strong>Las planillas ya generadas conservarán su copia histórica.</strong>',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc3545',
+      input: 'text',
+      inputLabel: 'Motivo',
+      inputPlaceholder: 'Ej.: Reinicio de configuración base',
+      inputValidator: (value) => !value ? 'Registre el motivo de la eliminación.' : null
+    }).then(async (res) => {
+      if (!res.isConfirmed) return;
+      try {
+        const resp = await fetch(boot.urls.limpiarConceptos, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' }, body: JSON.stringify({ motivo: res.value || 'Limpieza global de conceptos base' }) });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.message || 'No se pudieron limpiar los conceptos.');
+        toastOk(data.message);
+        window.location.reload();
+      } catch (err) { toastError('No se pudo limpiar', err.message); }
+    });
+  };
+
+  const initTable = () => {
+    if (!window.jQuery || !$.fn || !$.fn.DataTable) return;
+    $.fn.dataTable.ext.errMode = function (_settings, _tn, msg) { toastError('DataTables', msg); };
+    $('#tablaPlanillaConceptos').DataTable({ pageLength: 25, order: [], language: dtLanguage, dom: 'rt<"d-flex justify-content-between align-items-center mt-3"ip>' });
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (boot.error) toastError('Módulo no disponible', boot.error);
+    initSelect2();
+    initTable();
+    document.getElementById('btnNuevoConcepto')?.addEventListener('click', () => { resetForm(); modal.show(); });
+    document.getElementById('btnCargarSugeridos')?.addEventListener('click', cargarSugeridos);
+    document.getElementById('btnLimpiarConceptos')?.addEventListener('click', limpiarConceptos);
+    document.getElementById('btnInactivarTodos')?.addEventListener('click', () => cambiarEstadoGlobal(false));
+    document.getElementById('btnActivarTodos')?.addEventListener('click', () => cambiarEstadoGlobal(true));
+    document.getElementById('btnGuardarConcepto')?.addEventListener('click', guardar);
+    document.querySelectorAll('.btnEditar').forEach((btn) => btn.addEventListener('click', () => editar(btn.dataset.id)));
+    document.querySelectorAll('.btnEstado').forEach((btn) => btn.addEventListener('click', () => cambiarEstado(btn.dataset.id, btn.dataset.activo === 'true')));
+    document.querySelectorAll('.btnEliminar').forEach((btn) => btn.addEventListener('click', () => eliminarConcepto(btn.dataset.id, btn.dataset.nombre || '')));
+    ['filtro_tipo_planilla', 'filtro_tipo_concepto', 'filtro_estado'].forEach((id) => byId(id)?.addEventListener('change', applyFilters));
+    byId('filtro_q')?.addEventListener('input', () => { clearTimeout(filtroTimer); filtroTimer = setTimeout(applyFilters, 450); });
+    byId('concepto_sugerido')?.addEventListener('change', () => aplicarSugerido(val('concepto_sugerido')));
+    if ($sugerido && $sugerido.length) $sugerido.on('select2:select select2:clear', () => aplicarSugerido($sugerido.val() || ''));
+    byId('tipo_concepto')?.addEventListener('change', aplicarSugerenciaTipo);
+    byId('metodo_calculo')?.addEventListener('change', aplicarMetodo);
+    byId('nombre')?.addEventListener('input', () => { if (codigoAutogenerado) setCodigo(byId('nombre').value); });
+  });
+})();
+</script>
+{% endblock %}

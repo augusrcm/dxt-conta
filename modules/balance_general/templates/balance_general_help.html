@@ -1,0 +1,136 @@
+{% extends "layouthelp.html" %}
+
+{% block title %}Ayuda · Balance General{% endblock %}
+{% block help_title %}Ayuda rápida · Balance General{% endblock %}
+{% block help_subtitle %}Guía breve para consultar la situación patrimonial a una fecha de corte y emitir el reporte
+PDF.{% endblock %}
+
+{% block help_summary %}
+<li>Qué muestra el Balance General.</li>
+<li>Cómo usar gestión, fecha de corte y Unidad de Negocio.</li>
+<li>Qué contiene activo, pasivo y patrimonio.</li>
+<li>Cómo se incorpora el resultado del período.</li>
+<li>Cómo interpretar si el balance está cuadrado por moneda.</li>
+<li>Cómo emitir el PDF.</li>
+{% endblock %}
+
+{% block help_content %}
+<section class="help-section">
+    <h2>1. ¿Para qué sirve esta pantalla?</h2>
+    <div class="help-callout">
+        El <strong>Balance General</strong> muestra la situación patrimonial de la entidad
+        a una <strong>fecha de corte</strong>, separando:
+        <strong>Activo</strong>, <strong>Pasivo</strong> y <strong>Patrimonio</strong>.
+    </div>
+    <p>
+        Su objetivo es verificar la composición patrimonial y comparar el total del
+        <strong>Activo</strong> contra el total de <strong>Pasivo + Patrimonio</strong>.
+    </p>
+</section>
+
+<section class="help-section">
+    <h2>2. Filtros disponibles</h2>
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Gestión</h3>
+            <p>Define la gestión contable que se tomará como base para el resultado del período.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Fecha de corte</h3>
+            <p>Es la fecha exacta hasta la cual se calculan los saldos del Balance General.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Unidad de Negocio</h3>
+            <p>Permite consultar el balance de una unidad específica o de todas las unidades juntas.</p>
+        </div>
+    </div>
+    <div class="help-callout">
+        La <strong>fecha de corte</strong> debe pertenecer a la <strong>gestión seleccionada</strong>.
+    </div>
+    <div class="help-callout">
+        Cuando existan movimientos en más de una moneda, el Balance General muestra los totales
+        <strong>separados por moneda</strong>. No se mezclan Bs, USD u otras monedas en un único total.
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>3. Qué contiene cada sección</h2>
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Activo</h3>
+            <p>Incluye las cuentas que representan bienes, derechos y disponibilidades.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Pasivo</h3>
+            <p>Incluye obligaciones y deudas pendientes de la entidad.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Patrimonio</h3>
+            <p>Incluye capital, reservas, resultados acumulados y otros rubros patrimoniales.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Resultado del período</h3>
+            <p>Se incorpora dentro de patrimonio como una línea separada mientras no se haya realizado el cierre de
+                gestión.</p>
+        </div>
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>4. Cómo interpretar el resumen</h2>
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Total activo</h3>
+            <p>Suma de todas las cuentas del activo a la fecha de corte.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Total pasivo</h3>
+            <p>Suma de todas las cuentas del pasivo a la fecha de corte.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Total patrimonio</h3>
+            <p>Suma del patrimonio base más el resultado del período cuando corresponda.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Pasivo + patrimonio</h3>
+            <p>Debe compararse contra el total del activo para validar la estructura del balance.</p>
+        </div>
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>5. Cuándo está cuadrado</h2>
+    <div class="help-callout">
+        El balance está <strong>cuadrado</strong> cuando, para cada moneda:
+        <strong>Total Activo = Total Pasivo + Total Patrimonio</strong>.
+    </div>
+    <p>
+        Si aparece como <strong>descuadrado</strong>, conviene revisar los comprobantes confirmados,
+        el resultado del período, la moneda de los asientos y la consistencia de la estructura contable antes de emitir el reporte.
+    </p>
+</section>
+
+<section class="help-section">
+    <h2>6. Flujo recomendado</h2>
+    <ol class="help-steps">
+        <li>Selecciona la <strong>gestión</strong>.</li>
+        <li>Define la <strong>fecha de corte</strong>.</li>
+        <li>Selecciona la <strong>Unidad de Negocio</strong> si necesitas segmentar el balance.</li>
+        <li>Presiona <strong>Consultar</strong>.</li>
+        <li>Revisa las tres secciones y los totales por moneda.</li>
+        <li>Verifica el indicador de cuadratura.</li>
+        <li>Si todo está correcto, emite el <strong>PDF</strong>.</li>
+    </ol>
+</section>
+
+<section class="help-section">
+    <h2>7. Reporte PDF</h2>
+    <div class="help-callout">
+        El PDF conserva el mismo corte aplicado en pantalla y presenta el
+        <strong>Balance General</strong> con sus secciones, monedas y totales por moneda.
+    </div>
+    <p>
+        Se recomienda validar primero la información en pantalla y luego emitir el reporte formal.
+    </p>
+</section>
+{% endblock %}

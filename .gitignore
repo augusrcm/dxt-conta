@@ -1,0 +1,41 @@
+﻿# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Variables y credenciales locales
+.env
+.env.local
+.env.production
+.env.*.local
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporales
+*.log
+*.tmp
+*.temp
+.cache/
+.pytest_cache/
+
+# Backups locales
+backup/
+backups/
+var/backups/
+*.bak
+
+# Node si existiera
+node_modules/
+
+# Archivos comprimidos generados
+*.zip
+
+# PostgreSQL dumps locales
+*.dump
+*.backup

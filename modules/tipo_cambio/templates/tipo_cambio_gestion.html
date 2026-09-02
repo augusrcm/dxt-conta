@@ -1,0 +1,980 @@
+{% extends "layout.html" %} {% block title %}Tipo de Cambio{% endblock %} {%
+block page_help_url %}{{ url_for('tipo_cambio.help') }}{% endblock %} {% block
+extra_css %}
+<style>
+  :root {
+    --tc-navy: #0f2340;
+    --tc-blue: #1a4a7a;
+    --tc-accent: #2d7dd2;
+    --tc-accent-lt: #e8f1fc;
+    --tc-gold: #c8962a;
+    --tc-gold-lt: #fdf6e3;
+    --tc-success: #1a7a4a;
+    --tc-success-lt: #e6f6ee;
+    --tc-danger: #b83232;
+    --tc-danger-lt: #fdeaea;
+    --tc-muted: #8898aa;
+    --tc-border: #dde4ed;
+    --tc-surface: #f5f8fc;
+    --tc-white: #ffffff;
+    --tc-text: #1e2d3d;
+    --tc-text-soft: #4a6070;
+    --tc-radius: 14px;
+    --tc-radius-sm: 8px;
+    --tc-shadow: 0 4px 24px rgba(15, 35, 64, 0.09);
+    --tc-shadow-lg: 0 12px 40px rgba(15, 35, 64, 0.14);
+    --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-mono: "Consolas", "Cascadia Code", "Courier New", monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+  }
+
+  /* ── Outer wrapper ── */
+  #tcPage {
+    font-family: var(--font-sans);
+  }
+
+  /* ── Card ── */
+  .tc-card {
+    background: var(--tc-white);
+    border: 0;
+    border-radius: var(--tc-radius);
+    box-shadow: var(--tc-shadow-lg);
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .tc-card-header {
+    background: linear-gradient(120deg,
+        var(--tc-navy) 0%,
+        var(--tc-blue) 60%,
+        #1f5d9e 100%);
+    padding: 1.4rem 1.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tc-card-header::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+  }
+
+  .tc-card-header::after {
+    content: "";
+    position: absolute;
+    bottom: -60px;
+    right: 80px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.03);
+    pointer-events: none;
+  }
+
+  .tc-header-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(4px);
+    flex-shrink: 0;
+    font-size: 1.2rem;
+    color: #fff;
+    margin-right: 1rem;
+  }
+
+  .tc-header-title {
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .tc-header-sub {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.82rem;
+    margin-top: 3px;
+    font-weight: 400;
+  }
+
+  /* ── Stat chips in header ── */
+  .tc-stat-chips {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .tc-stat-chip {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 20px;
+    padding: 5px 13px;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+
+  .tc-stat-chip .chip-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #7fd9a0;
+  }
+
+  /* ── Read-only badge ── */
+  .badge-readonly {
+    background: rgba(200, 150, 42, 0.2);
+    border: 1px solid rgba(200, 150, 42, 0.4);
+    color: #f5d48a;
+    border-radius: 20px;
+    padding: 5px 13px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ── Filter bar ── */
+  .tc-filtros {
+    background: var(--tc-surface);
+    border-bottom: 1px solid var(--tc-border);
+    padding: 1.1rem 1.75rem;
+  }
+
+  .tc-filtros .form-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--tc-text-soft);
+    margin-bottom: 5px;
+  }
+
+  .tc-filtros .form-control {
+    border: 1.5px solid var(--tc-border);
+    border-radius: var(--tc-radius-sm);
+    font-size: 0.88rem;
+    font-family: var(--font-mono);
+    color: var(--tc-text);
+    background: var(--tc-white);
+    padding: 7px 11px;
+    transition:
+      border-color 0.18s,
+      box-shadow 0.18s;
+    height: 38px;
+  }
+
+  .tc-filtros .form-control:focus {
+    border-color: var(--tc-accent);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.12);
+    outline: none;
+  }
+
+  /* ── Hint pill ── */
+  .tc-filter-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--tc-accent-lt);
+    color: var(--tc-accent);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+
+  /* ── Grid wrapper ── */
+  .tc-grid-wrap {
+    padding: 0 1.75rem 1.75rem;
+  }
+
+  /* ── Table ── */
+  table#tablaTipoCambio {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  #tablaTipoCambio thead th {
+    background: var(--tc-surface);
+    color: var(--tc-text-soft);
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--tc-border);
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+
+  #tablaTipoCambio tbody tr {
+    transition: background 0.15s;
+  }
+
+  #tablaTipoCambio tbody tr:hover {
+    background: var(--tc-accent-lt) !important;
+  }
+
+  #tablaTipoCambio tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eef1f6;
+    font-size: 0.875rem;
+    color: var(--tc-text);
+  }
+
+  /* Fecha pill */
+  .tc-fecha-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--tc-text);
+    background: var(--tc-surface);
+    border: 1px solid var(--tc-border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+
+  .tc-fecha-pill i {
+    color: var(--tc-muted);
+    font-size: 0.72rem;
+  }
+
+  /* Numeric values */
+  .tc-num {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    letter-spacing: -0.2px;
+  }
+
+  .tc-num-usd {
+    color: #1a5c2f;
+    font-weight: 500;
+  }
+
+  .tc-num-ufv {
+    color: #1a4070;
+    font-weight: 500;
+  }
+
+  .tc-valor-vacio {
+    color: var(--tc-border);
+    font-size: 1rem;
+  }
+
+  /* Registrado por */
+  .tc-usuario-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--tc-text-soft);
+  }
+
+  .tc-usuario-pill .tc-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,
+        var(--tc-accent) 0%,
+        var(--tc-navy) 100%);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+
+  /* Editing row */
+  tr.tc-row-editing {
+    background: rgba(45, 125, 210, 0.05) !important;
+    box-shadow: inset 3px 0 0 var(--tc-accent);
+  }
+
+  tr.tc-row-editing td {
+    border-bottom-color: rgba(45, 125, 210, 0.2) !important;
+  }
+
+  /* Inline inputs */
+  .tc-input-inline {
+    min-width: 120px;
+    max-width: 140px;
+    border: 1.5px solid var(--tc-accent);
+    border-radius: var(--tc-radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--tc-text);
+    padding: 5px 9px;
+    height: 34px;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .tc-input-inline:focus {
+    border-color: var(--tc-accent);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.18);
+    outline: none;
+  }
+
+  .tc-input-inline.input-usd {
+    border-color: #1a7a4a;
+    box-shadow: 0 0 0 3px rgba(26, 122, 74, 0.1);
+  }
+
+  .tc-input-inline.input-usd:focus {
+    box-shadow: 0 0 0 3px rgba(26, 122, 74, 0.18);
+  }
+
+  .tc-input-inline.input-ufv {
+    border-color: var(--tc-accent);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+  }
+
+  /* Action buttons */
+  .tc-btn-accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: var(--tc-radius-sm);
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.82rem;
+    transition:
+      background 0.15s,
+      color 0.15s,
+      transform 0.15s;
+    color: var(--tc-muted);
+  }
+
+  .tc-btn-accion+.tc-btn-accion {
+    margin-left: 3px;
+  }
+
+  .tc-btn-accion:hover {
+    transform: translateY(-1px);
+  }
+
+  .tc-btn-edit:hover {
+    background: var(--tc-accent-lt);
+    color: var(--tc-accent);
+  }
+
+  .tc-btn-add:hover {
+    background: var(--tc-success-lt);
+    color: var(--tc-success);
+  }
+
+  .tc-btn-save {
+    background: var(--tc-success-lt);
+    color: var(--tc-success);
+  }
+
+  .tc-btn-save:hover {
+    background: var(--tc-success);
+    color: #fff;
+  }
+
+  .tc-btn-cancel {
+    background: #f5eded;
+    color: #a04040;
+  }
+
+  .tc-btn-cancel:hover {
+    background: var(--tc-danger);
+    color: #fff;
+  }
+
+  /* DataTable overrides */
+  div.dataTables_wrapper div.dataTables_filter input {
+    border: 1.5px solid var(--tc-border);
+    border-radius: var(--tc-radius-sm);
+    font-size: 0.84rem;
+    padding: 5px 10px;
+    font-family: var(--font-sans);
+  }
+
+  div.dataTables_wrapper div.dataTables_filter input:focus {
+    border-color: var(--tc-accent);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+    outline: none;
+  }
+
+  div.dataTables_wrapper div.dataTables_length select {
+    border: 1.5px solid var(--tc-border);
+    border-radius: var(--tc-radius-sm);
+    font-size: 0.84rem;
+    font-family: var(--font-sans);
+    padding: 4px 8px;
+  }
+
+  div.dataTables_wrapper div.dataTables_info {
+    font-size: 0.8rem;
+    color: var(--tc-muted);
+    padding-top: 10px;
+  }
+
+  div.dataTables_wrapper div.dataTables_paginate .paginate_button {
+    border-radius: 6px !important;
+    font-size: 0.82rem;
+    font-family: var(--font-sans);
+    padding: 4px 10px !important;
+  }
+
+  div.dataTables_wrapper div.dataTables_paginate .paginate_button.current,
+  div.dataTables_wrapper div.dataTables_paginate .paginate_button.current:hover {
+    background: var(--tc-accent) !important;
+    border-color: var(--tc-accent) !important;
+    color: #fff !important;
+  }
+
+  div.dataTables_wrapper div.dataTables_paginate .paginate_button:hover {
+    background: var(--tc-accent-lt) !important;
+    border-color: var(--tc-accent-lt) !important;
+    color: var(--tc-accent) !important;
+  }
+
+  .dataTables_wrapper .dt-buttons {
+    margin-bottom: 0;
+  }
+
+  /* Top bar between filters and table */
+  .tc-table-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem 1.75rem 0.75rem;
+    border-bottom: 1px solid var(--tc-border);
+    background: var(--tc-white);
+  }
+
+  .tc-section-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: var(--tc-muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .tc-section-label::before {
+    content: "";
+    display: block;
+    width: 3px;
+    height: 14px;
+    background: var(--tc-accent);
+    border-radius: 2px;
+  }
+
+  /* Striped rows */
+  #tablaTipoCambio tbody tr:nth-child(even) {
+    background: #f9fbfe;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .tc-card-header {
+      padding: 1.1rem 1.1rem;
+    }
+
+    .tc-filtros,
+    .tc-grid-wrap,
+    .tc-table-topbar {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+
+    .tc-input-inline {
+      min-width: 90px;
+      max-width: 115px;
+    }
+
+    .tc-stat-chips {
+      display: none;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid py-4" id="tcPage" data-puede-editar="{{ '1' if puede_editar else '0' }}">
+  <div class="card tc-card">
+    <!-- ── Header ── -->
+    <div class="tc-card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div class="d-flex align-items-center">
+        <div class="tc-header-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div>
+          <h4 class="tc-header-title">Tipos de Cambio</h4>
+          <div class="tc-header-sub">
+            USD Paralelo &amp; UFV — Registro diario
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="tc-stat-chips">
+          <div class="tc-stat-chip">
+            <span class="chip-dot"></span>
+            Período: {{ fecha_desde }} → {{ fecha_hasta }}
+          </div>
+        </div>
+
+        {% if not puede_editar %}
+        <div class="badge-readonly">
+          <i class="fas fa-lock" style="font-size: 0.7rem"></i>
+          Modo lectura
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── Filtros ── -->
+    <div class="tc-filtros">
+      <div class="row g-3 align-items-end">
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+          <label for="filtroDesde" class="form-label">
+            <i class="far fa-calendar-alt me-1"></i>Desde
+          </label>
+          <input type="text" id="filtroDesde" class="form-control" value="{{ fecha_desde }}" autocomplete="off" />
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+          <label for="filtroHasta" class="form-label">
+            <i class="far fa-calendar-alt me-1"></i>Hasta
+          </label>
+          <input type="text" id="filtroHasta" class="form-control" value="{{ fecha_hasta }}" autocomplete="off" />
+        </div>
+
+        <div class="col-12 col-md-4 col-lg-6 d-flex align-items-end pb-1">
+          <span class="tc-filter-hint">
+            <i class="fas fa-circle-info" style="font-size: 0.72rem"></i>
+            Los filtros se aplican automáticamente
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Table top bar ── -->
+    <div class="tc-table-topbar">
+      <span class="tc-section-label">Registros del período</span>
+    </div>
+
+    <!-- ── Grid ── -->
+    <div class="tc-grid-wrap pt-3">
+      <div class="table-responsive">
+        <table id="tablaTipoCambio" class="table table-hover align-middle w-100">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>USD Paralelo</th>
+              <th>UFV</th>
+              <th>Registrado Por</th>
+              <th class="text-center" style="width: 90px">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Automatico -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="{{ url_for('static', filename='office/xlsx.full.min.js') }}"></script>
+
+<script>
+  let tablaTipoCambio = null;
+  let filaEnEdicion = null;
+  let temporizadorFiltro = null;
+
+  const TC_PAGE = document.getElementById("tcPage");
+  const PUEDE_EDITAR = TC_PAGE && TC_PAGE.dataset.puedeEditar === "1";
+
+  /* ── Helpers ── */
+  function notificar(icono, titulo, mensaje, autoClose = true) {
+    if (typeof Swal !== "undefined") {
+      return Swal.fire({
+        icon: icono,
+        title: titulo,
+        text: mensaje,
+        timer: autoClose ? 1500 : undefined,
+        showConfirmButton: !autoClose,
+        borderRadius: "14px",
+        customClass: { popup: "tc-swal-popup" },
+      });
+    }
+    if (icono === "error" || icono === "warning") {
+      alert(`${titulo}\n\n${mensaje}`);
+    }
+  }
+
+  function inicializarFiltros() {
+    flatpickr("#filtroDesde", {
+      dateFormat: "Y-m-d",
+      locale: "es",
+      allowInput: false,
+      onChange: dispararRecargaConDebounce,
+    });
+    flatpickr("#filtroHasta", {
+      dateFormat: "Y-m-d",
+      locale: "es",
+      allowInput: false,
+      onChange: dispararRecargaConDebounce,
+    });
+  }
+
+  function dispararRecargaConDebounce() {
+    clearTimeout(temporizadorFiltro);
+    temporizadorFiltro = setTimeout(() => {
+      if (validarRangoFechasSilencioso()) {
+        filaEnEdicion = null;
+        tablaTipoCambio.ajax.reload(null, false);
+      }
+    }, 300);
+  }
+
+  function validarRangoFechasSilencioso() {
+    const desde = $("#filtroDesde").val();
+    const hasta = $("#filtroHasta").val();
+    if (!desde || !hasta) return false;
+    if (desde > hasta) {
+      notificar(
+        "warning",
+        "Rango inválido",
+        "La fecha Desde no puede ser mayor que Hasta.",
+        false,
+      );
+      return false;
+    }
+    return true;
+  }
+
+  /* ── Render helpers ── */
+  function renderValorNumero(valor, decimales, clase) {
+    if (valor === null || valor === undefined || valor === "") {
+      return '<span class="tc-valor-vacio">—</span>';
+    }
+    return `<span class="tc-num ${clase}">${Number(valor).toFixed(
+      decimales,
+    )}</span>`;
+  }
+
+  function getInitials(name) {
+    if (!name) return "?";
+    return name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase();
+  }
+
+  function renderRegistradoPor(valor) {
+    if (!valor) return '<span class="tc-valor-vacio">—</span>';
+    return `
+      <span class="tc-usuario-pill">
+        <span class="tc-avatar">${getInitials(valor)}</span>
+        ${valor}
+      </span>
+    `;
+  }
+
+  function renderFecha(row) {
+    const display = row.fecha_display || row.fecha;
+    return `
+      <span class="tc-fecha-pill">
+        <i class="far fa-calendar"></i>
+        ${display}
+      </span>
+    `;
+  }
+
+  function renderAcciones(row) {
+    if (!row.puede_editar) {
+      return '<span style="color:var(--tc-border)">—</span>';
+    }
+    if (row.existe) {
+      return `
+        <button
+          type="button"
+          class="tc-btn-accion tc-btn-edit btn-editar"
+          title="Editar registro"
+          data-fecha="${row.fecha}"
+          data-usd="${row.usd_paralelo ?? ""}"
+          data-ufv="${row.ufv ?? ""}"
+        >
+          <i class="fas fa-pen"></i>
+        </button>
+      `;
+    }
+    return `
+      <button
+        type="button"
+        class="tc-btn-accion tc-btn-add btn-editar"
+        title="Agregar registro"
+        data-fecha="${row.fecha}"
+        data-usd=""
+        data-ufv=""
+      >
+        <i class="fas fa-plus"></i>
+      </button>
+    `;
+  }
+
+  /* ── DataTable ── */
+  function construirTabla() {
+    tablaTipoCambio = $("#tablaTipoCambio").DataTable({
+      processing: true,
+      serverSide: false,
+      paging: true,
+      pageLength: 31,
+      searching: true,
+      ordering: true,
+      order: [[0, "desc"]],
+      responsive: true,
+      autoWidth: false,
+      ajax: {
+        url: "{{ base_path }}/tipo-cambio/api/listado",
+        dataSrc: "data",
+        data: function (d) {
+          d.desde = $("#filtroDesde").val();
+          d.hasta = $("#filtroHasta").val();
+        },
+        error: function (xhr) {
+          let mensaje = "No se pudo cargar el listado de tipos de cambio.";
+          if (xhr.responseJSON && xhr.responseJSON.error)
+            mensaje = xhr.responseJSON.error;
+          notificar("error", "Error al cargar", mensaje, false);
+        },
+      },
+      columns: [
+        {
+          data: "fecha",
+          render: function (data, type, row) {
+            if (type === "sort" || type === "type") return data;
+            return renderFecha(row);
+          },
+        },
+        {
+          data: "usd_paralelo",
+          className: "col-usd",
+          render: function (data) {
+            return renderValorNumero(data, 4, "tc-num-usd");
+          },
+        },
+        {
+          data: "ufv",
+          className: "col-ufv",
+          render: function (data) {
+            return renderValorNumero(data, 6, "tc-num-ufv");
+          },
+        },
+        {
+          data: "registrado_por",
+          className: "col-registrado-por",
+          render: function (data) {
+            return renderRegistradoPor(data);
+          },
+        },
+        {
+          data: null,
+          className: "text-center col-acciones",
+          orderable: false,
+          searchable: false,
+          render: function (data, type, row) {
+            return renderAcciones(row);
+          },
+        },
+      ],
+      drawCallback: function () {
+        filaEnEdicion = null;
+      },
+      language: {
+        processing: "Procesando...",
+        search: "",
+        searchPlaceholder: "Buscar…",
+        lengthMenu: "Mostrar _MENU_ registros",
+        info: "Mostrando _START_–_END_ de _TOTAL_",
+        infoEmpty: "Sin registros",
+        infoFiltered: "(de _MAX_ totales)",
+        loadingRecords: "Cargando…",
+        zeroRecords: "No se encontraron registros",
+        emptyTable: "No hay datos para el rango seleccionado",
+        paginate: {
+          first: "«",
+          last: "»",
+          next: "›",
+          previous: "‹",
+        },
+      },
+    });
+  }
+
+  /* ── Inline editing ── */
+  function cancelarEdicion() {
+    if (!filaEnEdicion) return;
+    filaEnEdicion = null;
+    tablaTipoCambio.ajax.reload(null, false);
+  }
+
+  function entrarEnEdicion($btn) {
+    if (!PUEDE_EDITAR) return;
+    if (filaEnEdicion) cancelarEdicion();
+
+    const $tr = $btn.closest("tr");
+    const fecha = $btn.data("fecha");
+    const usd = $btn.data("usd");
+    const ufv = $btn.data("ufv");
+
+    filaEnEdicion = fecha;
+    $tr.addClass("tc-row-editing");
+
+    $tr.find("td.col-usd").html(`
+      <input
+        type="number"
+        step="0.0001"
+        min="0.0001"
+        class="form-control tc-input-inline input-usd"
+        value="${usd !== undefined && usd !== null ? usd : ""}"
+        placeholder="0.0000"
+      />
+    `);
+
+    $tr.find("td.col-ufv").html(`
+      <input
+        type="number"
+        step="0.000001"
+        min="0.000001"
+        class="form-control tc-input-inline input-ufv"
+        value="${ufv !== undefined && ufv !== null ? ufv : ""}"
+        placeholder="0.000000"
+      />
+    `);
+
+    $tr.find("td.col-acciones").html(`
+      <button
+        type="button"
+        class="tc-btn-accion tc-btn-save btn-guardar"
+        title="Guardar"
+        data-fecha="${fecha}"
+      >
+        <i class="fas fa-check"></i>
+      </button>
+      <button
+        type="button"
+        class="tc-btn-accion tc-btn-cancel btn-cancelar"
+        title="Cancelar"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+    `);
+
+    $tr.find(".input-usd").focus();
+  }
+
+  function guardarFila($btn) {
+    const fecha = $btn.data("fecha");
+    const $tr = $btn.closest("tr");
+    const usd = $tr.find(".input-usd").val();
+    const ufv = $tr.find(".input-ufv").val();
+
+    if (!usd || Number(usd) <= 0) {
+      notificar(
+        "warning",
+        "Dato inválido",
+        "El USD Paralelo debe ser mayor a 0.",
+        false,
+      );
+      return;
+    }
+
+    if (!ufv || Number(ufv) <= 0) {
+      notificar(
+        "warning",
+        "Dato inválido",
+        "La UFV debe ser mayor a 0.",
+        false,
+      );
+      return;
+    }
+
+    $btn.prop("disabled", true);
+
+    $.ajax({
+      url: "{{ base_path }}/tipo-cambio/api/guardar",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({ fecha, usd_paralelo: usd, ufv }),
+      success: function (resp) {
+        filaEnEdicion = null;
+        tablaTipoCambio.ajax.reload(null, false);
+        notificar("success", "Guardado correctamente", resp.mensaje, true);
+      },
+      error: function (xhr) {
+        $btn.prop("disabled", false);
+        let mensaje = "No se pudo guardar el tipo de cambio.";
+        if (xhr.responseJSON && xhr.responseJSON.error)
+          mensaje = xhr.responseJSON.error;
+        notificar("error", "Error al guardar", mensaje, false);
+      },
+    });
+  }
+
+  /* ── Init ── */
+  $(document).ready(function () {
+    inicializarFiltros();
+    construirTabla();
+
+    $("#tablaTipoCambio tbody").on("click", ".btn-editar", function () {
+      entrarEnEdicion($(this));
+    });
+    $("#tablaTipoCambio tbody").on("click", ".btn-cancelar", function () {
+      cancelarEdicion();
+    });
+    $("#tablaTipoCambio tbody").on("click", ".btn-guardar", function () {
+      guardarFila($(this));
+    });
+
+    $(document).on("keydown", function (e) {
+      if (e.key === "Escape" && filaEnEdicion) cancelarEdicion();
+    });
+  });
+</script>
+{% endblock %}

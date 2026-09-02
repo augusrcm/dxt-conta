@@ -1,0 +1,216 @@
+{% extends "layout.html" %}
+{% block title %}Reportes Especiales · Resumen Ejecutivo Mensual{% endblock %}
+{% block page_help_url %}{{ url_for('resumen_ejecutivo_mensual.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .rem-page{display:grid;gap:1rem}
+  .rem-header{background:linear-gradient(135deg,#0f2340,#17406f);border-radius:1.15rem;box-shadow:0 18px 38px rgba(15,35,64,.18);color:#fff;padding:1.15rem 1.3rem}
+  .rem-header-kicker{align-items:center;color:rgba(255,255,255,.82);display:flex;font-size:.78rem;font-weight:800;gap:.45rem;letter-spacing:.06em;text-transform:uppercase}
+  .rem-header-title{font-size:clamp(1.35rem,2vw,2rem);font-weight:850;margin:.35rem 0 0}
+  .rem-card{background:#fff;border:1px solid #dfe7f1;border-radius:1.15rem;box-shadow:0 14px 34px rgba(15,35,64,.08)}
+  .rem-filter-card{padding:1rem}
+  .rem-filter-grid{align-items:end;display:grid;gap:.85rem;grid-template-columns:.75fr .95fr 1.7fr auto}
+  .rem-field label{color:#334155;font-size:.78rem;font-weight:800;margin-bottom:.3rem}
+  .rem-field .form-control,.rem-field .form-select{border-color:#d5deea;border-radius:.8rem;min-height:40px}
+  .rem-actions{display:flex;gap:.45rem;justify-content:flex-end}
+  .rem-action-btn{align-items:center;border-radius:.85rem;display:inline-flex;font-weight:800;gap:.45rem;min-height:40px;padding-inline:.9rem;white-space:nowrap}
+  .rem-section-card{overflow:hidden}
+  .rem-section-toolbar{align-items:center;border-bottom:1px solid #dfe7f1;display:flex;justify-content:space-between;padding:.9rem 1rem}
+  .rem-section-title{color:#0f2340;font-weight:900;margin:0}
+  .rem-section-note{color:#64748b;font-size:.78rem;margin:.15rem 0 0}
+  .rem-section-body{padding:1rem}
+  .rem-summary{display:grid;gap:.75rem;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .rem-summary-card{border-left:5px solid #8aa1bd;padding:.95rem 1rem;position:relative;overflow:hidden}
+  .rem-summary-card.is-primary{border-left-color:#2563eb}.rem-summary-card.is-success{border-left-color:#0f766e}.rem-summary-card.is-warning{border-left-color:#f97316}.rem-summary-card.is-danger{border-left-color:#dc2626}.rem-summary-card.is-neutral{border-left-color:#64748b}
+  .rem-summary-icon{align-items:center;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:.85rem;color:#0f2340;display:inline-flex;height:34px;justify-content:center;position:absolute;right:.85rem;top:.85rem;width:34px}
+  .rem-summary-label{color:#64748b;font-size:.74rem;font-weight:850;letter-spacing:.04em;text-transform:uppercase;padding-right:2.4rem}
+  .rem-summary-value{color:#0f2340;font-size:1.16rem;font-weight:900;line-height:1.15;margin-top:.25rem;word-break:break-word}
+  .rem-summary-card.is-danger .rem-summary-value{color:#b42318}.rem-summary-card.is-success .rem-summary-value{color:#0f766e}
+  .rem-summary-note{color:#64748b;font-size:.74rem;margin-top:.25rem}.rem-summary-note span{display:block;line-height:1.2}
+  .rem-grid-2{display:grid;gap:1rem;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .rem-table-card{overflow:hidden}
+  .rem-table-wrap{padding:1rem;overflow-x:auto}
+  .rem-table{width:100%}.rem-table thead th{background:#eef3f8;color:#0f2340;font-size:.72rem;letter-spacing:.03em;text-transform:uppercase;vertical-align:middle;white-space:nowrap}.rem-table td{vertical-align:middle}.rem-main-text{color:#0f2340;display:block;font-weight:850}.rem-sub-text{color:#64748b;display:block;font-size:.76rem;line-height:1.2}.rem-money{font-feature-settings:"tnum";font-weight:850;text-align:right;white-space:nowrap}.rem-empty{color:#64748b;padding:2rem 1rem;text-align:center}.rem-badge-soft{background:#fff4ec;border:1px solid #ffd8bc;color:#9a4b10}.rem-badge-type{background:#f8fafc;border:1px solid #dfe7f1;color:#0f2340}.rem-chart-wrap{overflow-x:auto}.rem-chart svg{display:block;height:auto;min-width:780px;width:100%}.bar-positive{fill:#0f766e}.bar-negative{fill:#dc2626}
+  @media(max-width:1450px){.rem-filter-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.rem-actions{grid-column:1/-1;justify-content:flex-start}.rem-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:900px){.rem-filter-grid,.rem-summary,.rem-grid-2{grid-template-columns:1fr}.rem-section-toolbar{align-items:flex-start;flex-direction:column;gap:.75rem}.rem-actions{justify-content:flex-start}}
+</style>
+{% endblock %}
+
+{% macro kpi_card(icon, label, value, variant='is-neutral', items=None, field='monto_label') -%}
+<div class="rem-card rem-summary-card {{ variant }}">
+  <span class="rem-summary-icon"><i class="{{ icon }}"></i></span>
+  <div class="rem-summary-label">{{ label }}</div>
+  <div class="rem-summary-value">{{ value }}</div>
+  {% if items and value == 'Por moneda' %}
+  <div class="rem-summary-note">
+    {% for item in items %}<span>{{ item[field] }}</span>{% endfor %}
+  </div>
+  {% endif %}
+</div>
+{%- endmacro %}
+
+{% block content %}
+<div class="rem-page">
+  <section class="rem-header">
+    <div class="rem-header-kicker"><i class="fas fa-chart-pie"></i> Reportes Especiales · Gerencial</div>
+    <h1 class="rem-header-title">Resumen Ejecutivo Mensual</h1>
+  </section>
+
+  {% if error %}<div class="alert alert-warning mb-0"><i class="fas fa-triangle-exclamation me-2"></i>{{ error }}</div>{% endif %}
+
+  <section class="rem-card rem-filter-card">
+    <form method="get" autocomplete="off">
+      <div class="rem-filter-grid">
+        <div class="rem-field">
+          <label for="gestion">Gestión</label>
+          <select id="gestion" name="gestion" class="form-select">
+            {% for gestion in gestiones %}<option value="{{ gestion }}" {% if gestion == filtros.gestion %}selected{% endif %}>{{ gestion }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="rem-field">
+          <label for="mes">Mes</label>
+          <select id="mes" name="mes" class="form-select">
+            {% for numero, nombre in meses.items() %}<option value="{{ numero }}" {% if numero == filtros.mes %}selected{% endif %}>{{ nombre }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="rem-field">
+          <label for="unidad_negocio_id">Unidad</label>
+          <select id="unidad_negocio_id" name="unidad_negocio_id" class="form-select">
+            <option value="">Todas</option>
+            {% for un in unidades %}<option value="{{ un.id }}" {% if filtros.unidad_negocio_id == un.id %}selected{% endif %}>{{ un.codigo }} · {{ un.nombre }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="rem-actions">
+          <button class="btn btn-primary rem-action-btn" type="submit"><i class="fas fa-filter"></i> Filtrar</button>
+          <a class="btn btn-outline-secondary rem-action-btn" href="{{ url_for('resumen_ejecutivo_mensual.index') }}" title="Limpiar filtros"><i class="fas fa-eraser"></i></a>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="rem-card rem-section-card">
+    <div class="rem-section-toolbar">
+      <div>
+        <h2 class="h6 rem-section-title mb-0">Indicadores ejecutivos</h2>
+        <p class="rem-section-note">{{ filtros.mes_label }} · Corte {{ filtros.fecha_hasta_label }}{% if unidad %} · {{ unidad.codigo }} · {{ unidad.nombre }}{% endif %}</p>
+      </div>
+      <a class="btn btn-outline-danger rem-action-btn" target="_blank" href="{{ url_for('resumen_ejecutivo_mensual.pdf', **query_args) }}"><i class="fas fa-file-pdf"></i> PDF</a>
+    </div>
+    <div class="rem-section-body">
+      <div class="rem-summary">
+        {{ kpi_card('fas fa-arrow-trend-up', 'Ingresos del mes', data.estado_mes.ingresos_label, 'is-success', data.estado_mes.totales_por_moneda, 'ingresos_label') }}
+        {{ kpi_card('fas fa-arrow-trend-down', 'Egresos del mes', data.estado_mes.egresos_label, 'is-warning', data.estado_mes.totales_por_moneda, 'egresos_label') }}
+        {{ kpi_card('fas fa-scale-balanced', 'Resultado neto', data.estado_mes.resultado_neto_label, 'is-success' if data.estado_mes.resultado_tipo == 'positivo' else 'is-danger', data.estado_mes.totales_por_moneda, 'resultado_neto_label') }}
+        {{ kpi_card('fas fa-file-invoice-dollar', 'Cuentas por cobrar', data.cxc.saldo_pendiente_label, 'is-primary', data.cxc.totales_por_moneda) }}
+        {{ kpi_card('fas fa-hand-holding-dollar', 'Cuentas por pagar', data.cxp.saldo_pendiente_label, 'is-danger') }}
+        {{ kpi_card('fas fa-building-columns', 'Saldo en bancos', data.tesoreria.saldo_bancos_label, 'is-primary', data.tesoreria.totales_bancos_por_moneda) }}
+        {{ kpi_card('fas fa-cash-register', 'Saldo en cajas', data.tesoreria.saldo_cajas_label, 'is-success', data.tesoreria.totales_cajas_por_moneda) }}
+        {{ kpi_card('fas fa-folder-open', 'Docs. CxC pendientes', data.cxc.documentos_pendientes, 'is-neutral') }}
+      </div>
+    </div>
+  </section>
+
+  <section class="rem-grid-2">
+    <div class="rem-card rem-table-card">
+      <div class="rem-section-toolbar"><div><h2 class="h6 rem-section-title mb-0">Top clientes deudores</h2><p class="rem-section-note">Saldo pendiente al corte</p></div></div>
+      <div class="rem-table-wrap">
+        <table class="table table-hover align-middle rem-table">
+          <thead><tr><th>#</th><th>Cliente</th><th>Origen</th><th class="text-center">Docs.</th><th class="text-end">Saldo</th></tr></thead>
+          <tbody>
+            {% for row in data.cxc.top %}
+            <tr>
+              <td class="text-center">{{ loop.index }}</td>
+              <td><span class="rem-main-text">{{ row.auxiliar }}</span>{% if row.documento %}<span class="rem-sub-text">{{ row.documento }}</span>{% endif %}</td>
+              <td><span class="badge rounded-pill rem-badge-soft">{{ row.origen_label }}</span></td>
+              <td class="text-center fw-bold">{{ row.documentos }}</td>
+              <td class="rem-money">{{ row.saldo_pendiente_label }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="rem-empty">Sin cartera pendiente al corte.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="rem-card rem-table-card">
+      <div class="rem-section-toolbar"><div><h2 class="h6 rem-section-title mb-0">Top gastos/costos</h2><p class="rem-section-note">Movimientos confirmados del mes</p></div></div>
+      <div class="rem-table-wrap">
+        <table class="table table-hover align-middle rem-table">
+          <thead><tr><th>#</th><th>Cuenta contable</th><th class="text-end">Monto</th></tr></thead>
+          <tbody>
+            {% for row in data.top_gastos %}
+            <tr>
+              <td class="text-center">{{ loop.index }}</td>
+              <td><span class="rem-main-text">{{ row.codigo }}</span><span class="rem-sub-text">{{ row.cuenta }}</span></td>
+              <td class="rem-money">{{ row.monto_label }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="rem-empty">Sin gastos/costos registrados.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="rem-grid-2">
+    <div class="rem-card rem-table-card">
+      <div class="rem-section-toolbar"><div><h2 class="h6 rem-section-title mb-0">Top bancos/cajas con saldo</h2><p class="rem-section-note">Saldos por movimientos confirmados</p></div></div>
+      <div class="rem-table-wrap">
+        <table class="table table-hover align-middle rem-table">
+          <thead><tr><th>#</th><th class="text-center">Tipo</th><th>Cuenta / caja</th><th class="text-end">Saldo</th></tr></thead>
+          <tbody>
+            {% for row in data.tesoreria.top %}
+            <tr>
+              <td class="text-center">{{ loop.index }}</td>
+              <td class="text-center"><span class="badge rounded-pill rem-badge-type">{{ row.tipo_objeto }}</span></td>
+              <td><span class="rem-main-text">{{ row.nombre }}</span>{% if row.codigo %}<span class="rem-sub-text">{{ row.codigo }}</span>{% endif %}</td>
+              <td class="rem-money">{{ row.saldo_label }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="rem-empty">Sin saldos al corte.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="rem-card rem-table-card">
+      <div class="rem-section-toolbar"><div><h2 class="h6 rem-section-title mb-0">Resultado neto por mes{% if data.chart.moneda_codigo %} · {{ data.chart.moneda_codigo }}{% endif %}</h2><p class="rem-section-note">Gestión {{ filtros.gestion }}</p></div></div>
+      <div class="rem-section-body">
+        <div class="rem-chart-wrap">
+          <div class="rem-chart">
+            <svg viewBox="0 0 {{ data.chart.width }} {{ data.chart.height }}" role="img" aria-label="Resultado neto por mes">
+              <rect x="0" y="0" width="{{ data.chart.width }}" height="{{ data.chart.height }}" rx="16" fill="#ffffff" stroke="#d9e1ea"></rect>
+              <line x1="{{ data.chart.pad_left }}" y1="{{ data.chart.zero_y }}" x2="{{ data.chart.width - data.chart.pad_right }}" y2="{{ data.chart.zero_y }}" stroke="#c8d3df" stroke-dasharray="4 4"></line>
+              {% if data.chart.has_data %}
+                {% for bar in data.chart.series %}
+                <rect class="{{ 'bar-positive' if bar.tipo == 'positivo' else 'bar-negative' }}" x="{{ bar.x }}" y="{{ bar.bar_y }}" width="{{ bar.bar_width }}" height="{{ bar.bar_height }}" rx="5"></rect>
+                <text x="{{ bar.center_x }}" y="{{ bar.value_y }}" text-anchor="middle" font-size="10" fill="#687789">{{ bar.value_label }}</text>
+                <text x="{{ bar.center_x }}" y="{{ data.chart.height - 22 }}" text-anchor="middle" font-size="11" fill="#243447">{{ bar.label }}</text>
+                {% endfor %}
+              {% else %}
+                <text x="{{ data.chart.width / 2 }}" y="{{ data.chart.height / 2 }}" text-anchor="middle" font-size="14" fill="#687789">Sin datos para graficar.</text>
+              {% endif %}
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    {% if error %}
+    if (window.Swal) {
+      Swal.fire({icon:'warning', title:'Resumen ejecutivo mensual', text:{{ error|tojson }}, timer:2200, showConfirmButton:false});
+    }
+    {% endif %}
+  });
+</script>
+{% endblock %}

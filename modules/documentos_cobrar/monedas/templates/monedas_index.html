@@ -1,0 +1,723 @@
+{% extends "layout.html" %} {% block title %}Monedas{% endblock %} {% block
+extra_css %}
+<style>
+  #monedasPage {
+    --mn-accent: #2d7dd2;
+    --mn-accent-lt: #e8f1fc;
+    --mn-success: #16a34a;
+    --mn-success-lt: #e8f7ee;
+    --mn-danger: #dc2626;
+    --mn-danger-lt: #fdecec;
+    --mn-warning: #d97706;
+    --mn-surface: #f8fafc;
+    --mn-border: #e2e8f0;
+    --mn-text: #334155;
+    --mn-muted: #64748b;
+    --mn-radius: 14px;
+  }
+
+  #monedasPage .mn-header {
+    background: linear-gradient(120deg, #0f2340 0%, #1a4a7a 60%, #1f5d9e 100%);
+    border-radius: var(--mn-radius);
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15, 35, 64, 0.14);
+    position: sticky;
+    top: 72px;
+    z-index: 30;
+    overflow: hidden;
+  }
+
+  #monedasPage .mn-header::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+  }
+
+  #monedasPage .mn-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  #monedasPage .mn-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.12rem;
+    flex-shrink: 0;
+  }
+
+  #monedasPage .mn-header-title {
+    color: #fff;
+    font-size: 1.08rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.2px;
+  }
+
+  #monedasPage .mn-header-sub {
+    color: rgba(255, 255, 255, 0.66);
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+
+  #monedasPage .mn-card {
+    background: #fff;
+    border: 1px solid var(--mn-border);
+    border-radius: var(--mn-radius);
+    box-shadow: 0 4px 18px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+  }
+
+  #monedasPage .mn-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.95rem 1.1rem;
+    background: var(--mn-surface);
+    border-bottom: 1px solid var(--mn-border);
+  }
+
+  #monedasPage .mn-table-wrap {
+    padding-bottom: 0.35rem;
+  }
+
+  #monedasPage #tblMonedas thead th {
+    background: var(--mn-surface);
+    color: var(--mn-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.55px;
+    border-bottom: 2px solid var(--mn-border);
+    padding: 11px 14px;
+    white-space: nowrap;
+  }
+
+  #monedasPage #tblMonedas thead th:first-child,
+  #monedasPage #tblMonedas tbody td:first-child {
+    padding-left: 1.1rem;
+  }
+
+  #monedasPage #tblMonedas tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eef2f7;
+    font-size: 0.875rem;
+    color: var(--mn-text);
+  }
+
+  #monedasPage #tblMonedas tbody tr:nth-child(even) {
+    background: #fbfdff;
+  }
+
+  #monedasPage #tblMonedas tbody tr:hover td {
+    background: var(--mn-accent-lt) !important;
+  }
+
+  #monedasPage .badge-codigo {
+    display: inline-flex;
+    align-items: center;
+    font-family: Consolas, monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.45px;
+    background: var(--mn-accent-lt);
+    color: var(--mn-accent);
+    border: 1px solid #bfdbfe;
+    padding: 3px 10px;
+    border-radius: 7px;
+  }
+
+  #monedasPage .mn-simbolo {
+    display: inline-block;
+    font-family: Consolas, monospace;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #1e3a5f;
+    background: #f1f5ff;
+    border: 1px solid #dbe3f0;
+    border-radius: 7px;
+    padding: 2px 9px;
+    min-width: 34px;
+    text-align: center;
+  }
+
+  #monedasPage .inline-input {
+    width: 100%;
+    border: 1.5px solid var(--mn-accent);
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 0.875rem;
+    outline: none;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+    transition: box-shadow 0.16s ease;
+  }
+
+  #monedasPage .inline-input:focus {
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.18);
+  }
+
+  #monedasPage tr.fila-en-edicion {
+    background: rgba(45, 125, 210, 0.05) !important;
+    box-shadow: inset 3px 0 0 var(--mn-accent);
+  }
+
+  #monedasPage .mn-btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 31px;
+    height: 31px;
+    border-radius: 8px;
+    border: 1.5px solid var(--mn-border);
+    background: #fff;
+    color: var(--mn-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.78rem;
+    padding: 0;
+  }
+
+  #monedasPage .mn-btn-action:hover {
+    transform: translateY(-1px);
+  }
+
+  #monedasPage .mn-btn-save:hover {
+    background: var(--mn-success-lt);
+    border-color: #b7e4c7;
+    color: var(--mn-success);
+  }
+
+  #monedasPage .mn-btn-cancel:hover {
+    background: #f8ecec;
+    border-color: #fecaca;
+    color: var(--mn-danger);
+  }
+
+  #monedasPage .mn-btn-edit:hover {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+  }
+
+  #monedasPage div.dataTables_wrapper {
+    padding: 0.8rem 1rem 1rem;
+  }
+
+  #monedasPage div.dataTables_wrapper div.dataTables_filter input,
+  #monedasPage div.dataTables_wrapper div.dataTables_length select {
+    border: 1.5px solid var(--mn-border);
+    border-radius: 8px;
+    font-size: 0.84rem;
+    padding: 5px 10px;
+  }
+
+  #monedasPage div.dataTables_wrapper div.dataTables_filter input:focus {
+    border-color: var(--mn-accent);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+    outline: none;
+  }
+
+  #monedasPage div.dataTables_wrapper div.dataTables_filter label,
+  #monedasPage div.dataTables_wrapper div.dataTables_length label,
+  #monedasPage div.dataTables_wrapper div.dataTables_info {
+    font-size: 0.8rem;
+    color: var(--mn-muted);
+  }
+
+  #monedasPage div.dataTables_wrapper div.dataTables_paginate .paginate_button {
+    border-radius: 7px !important;
+    font-size: 0.82rem;
+    padding: 4px 10px !important;
+    border: 1px solid transparent !important;
+    color: var(--mn-muted) !important;
+  }
+
+  #monedasPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button.current,
+  #monedasPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button.current:hover {
+    background: var(--mn-accent) !important;
+    border-color: var(--mn-accent) !important;
+    color: #fff !important;
+    font-weight: 600;
+  }
+
+  #monedasPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button:hover {
+    background: var(--mn-accent-lt) !important;
+    border-color: var(--mn-accent-lt) !important;
+    color: var(--mn-accent) !important;
+  }
+
+  .swal2-modal-lg {
+    width: 42rem !important;
+    max-width: 92vw !important;
+    border-radius: 16px !important;
+    padding: 1.9rem 1.4rem 1.35rem !important;
+  }
+
+  .swal2-title-lg {
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+    color: #334155 !important;
+    line-height: 1.25 !important;
+  }
+
+  .swal2-text-md {
+    font-size: 0.98rem !important;
+    color: #475569 !important;
+    line-height: 1.5 !important;
+  }
+
+  .swal2-actions {
+    margin-top: 1.15rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .swal2-styled.btn {
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  @media (max-width: 640px) {
+    #monedasPage .mn-header {
+      top: 68px;
+    }
+
+    .swal2-modal-lg {
+      width: 94vw !important;
+      padding: 1.35rem 1rem 1rem !important;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div id="monedasPage">
+  <div class="mn-header">
+    <div class="mn-header-left">
+      <div class="mn-header-icon">
+        <i class="fas fa-coins"></i>
+      </div>
+      <div>
+        <h4 class="mn-header-title">Monedas</h4>
+        <div class="mn-header-sub">
+          Catálogo controlado del sistema: BOB, USD y UFV
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mn-card">
+    <div class="mn-toolbar">
+      <span
+        style="
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.6px;
+          text-transform: uppercase;
+          color: #64748b;
+          display: flex;
+          align-items: center;
+          gap: 7px;
+        "
+      >
+        <span
+          style="
+            display: block;
+            width: 3px;
+            height: 13px;
+            background: #2d7dd2;
+            border-radius: 2px;
+          "
+        ></span>
+        Listado de monedas permitidas
+      </span>
+    </div>
+
+    <div class="mn-table-wrap">
+      <div class="table-responsive">
+        <table id="tblMonedas" class="table table-hover w-100">
+          <thead>
+            <tr>
+              <th style="width: 120px">Código</th>
+              <th>Nombre</th>
+              <th style="width: 110px">Símbolo</th>
+              <th style="width: 90px" class="text-center no-sort">Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  ;(function () {
+    'use strict'
+
+    let tabla = null
+
+    function escHtml(valor) {
+      return String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+    }
+
+    function mostrarMensaje(tipo, titulo, texto) {
+      const iconMap = {
+        success: 'success',
+        warning: 'warning',
+        error: 'error',
+        info: 'info'
+      }
+
+      return Swal.fire({
+        icon: iconMap[tipo] || 'info',
+        title: titulo,
+        text: texto,
+        confirmButtonText: 'Aceptar',
+        allowOutsideClick: false,
+        allowEscapeKey: true,
+        buttonsStyling: false,
+        customClass: {
+          popup: 'swal2-modal-lg',
+          title: 'swal2-title-lg',
+          htmlContainer: 'swal2-text-md',
+          confirmButton: 'btn btn-primary'
+        }
+      })
+    }
+
+    function ajaxJSON(options) {
+      return $.ajax({
+        url: options.url,
+        method: options.method || 'GET',
+        data: options.body ? JSON.stringify(options.body) : null,
+        contentType: 'application/json; charset=UTF-8',
+        dataType: 'json',
+        processData: false
+      })
+    }
+
+    function getBaseUrl() {
+      return `{{ url_for("monedas.index") }}`.replace(/\/$/, '')
+    }
+
+    function getDtLanguage() {
+      if (window.DXTBase && DXTBase.dtLang) {
+        return typeof DXTBase.dtLang === 'function'
+          ? DXTBase.dtLang()
+          : DXTBase.dtLang
+      }
+
+      return {
+        processing: 'Procesando...',
+        search: 'Buscar:',
+        lengthMenu: 'Mostrar _MENU_ registros',
+        info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
+        infoEmpty: 'Mostrando 0 a 0 de 0 registros',
+        infoFiltered: '(filtrado de _MAX_ registros totales)',
+        loadingRecords: 'Cargando...',
+        zeroRecords: 'No se encontraron resultados',
+        emptyTable: 'No hay datos disponibles',
+        paginate: {
+          first: 'Primero',
+          previous: 'Anterior',
+          next: 'Siguiente',
+          last: 'Último'
+        }
+      }
+    }
+
+    function initTabla() {
+      tabla = $('#tblMonedas').DataTable({
+        ajax: {
+          url: '{{ url_for("monedas.data") }}',
+          dataSrc: 'data',
+          cache: false
+        },
+        columns: [
+          {
+            data: 'codigo',
+            render: function (valor) {
+              return `<span class="badge-codigo">${escHtml(valor)}</span>`
+            }
+          },
+          {
+            data: 'nombre',
+            render: function (valor, type, row) {
+              return `
+                <span class="valor-celda" data-campo="nombre" data-codigo="${escHtml(
+                  row.codigo
+                )}">
+                  ${escHtml(valor)}
+                </span>
+              `
+            }
+          },
+          {
+            data: 'simbolo',
+            render: function (valor, type, row) {
+              const contenido = valor ? escHtml(valor) : '&nbsp;'
+              return `
+                <span class="valor-celda mn-simbolo" data-campo="simbolo" data-codigo="${escHtml(
+                  row.codigo
+                )}">
+                  ${contenido}
+                </span>
+              `
+            }
+          },
+          {
+            data: null,
+            className: 'text-center',
+            orderable: false,
+            render: function (valor, type, row) {
+              return `
+                <div class="d-flex justify-content-center gap-1">
+                  <button
+                    class="mn-btn-action mn-btn-edit btn-editar"
+                    type="button"
+                    data-codigo="${escHtml(row.codigo)}"
+                    title="Editar"
+                  >
+                    <i class="fas fa-pencil-alt"></i>
+                  </button>
+
+                  <button
+                    class="mn-btn-action mn-btn-save btn-guardar d-none"
+                    type="button"
+                    data-codigo="${escHtml(row.codigo)}"
+                    title="Guardar"
+                  >
+                    <i class="fas fa-save"></i>
+                  </button>
+
+                  <button
+                    class="mn-btn-action mn-btn-cancel btn-cancelar d-none"
+                    type="button"
+                    data-codigo="${escHtml(row.codigo)}"
+                    title="Cancelar"
+                  >
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              `
+            }
+          }
+        ],
+        language: getDtLanguage(),
+        order: [[0, 'asc']],
+        pageLength: 15,
+        columnDefs: [{ targets: 'no-sort', orderable: false }]
+      })
+    }
+
+    function hayEdicionActiva() {
+      return $('#tblMonedas tbody tr.fila-en-edicion').length > 0
+    }
+
+    function activarEdicionFila($fila) {
+      if (!$fila.length || $fila.hasClass('fila-en-edicion')) return
+
+      if (hayEdicionActiva()) {
+        mostrarMensaje(
+          'warning',
+          'Edición en curso',
+          'Primero guarda o cancela la fila que estás editando.'
+        )
+        return
+      }
+
+      const rowData = tabla.row($fila).data()
+      if (!rowData) return
+
+      $fila.addClass('fila-en-edicion')
+
+      $fila.find('[data-campo="nombre"]').replaceWith(`
+        <input
+          type="text"
+          class="inline-input input-edicion"
+          data-campo="nombre"
+          value="${escHtml(rowData.nombre || '')}"
+          maxlength="100"
+        >
+      `)
+
+      $fila.find('[data-campo="simbolo"]').replaceWith(`
+        <input
+          type="text"
+          class="inline-input input-edicion"
+          data-campo="simbolo"
+          value="${escHtml(rowData.simbolo || '')}"
+          maxlength="10"
+        >
+      `)
+
+      $fila.find('.btn-editar').addClass('d-none')
+      $fila.find('.btn-guardar, .btn-cancelar').removeClass('d-none')
+      $fila
+        .find('.input-edicion[data-campo="nombre"]')
+        .trigger('focus')
+        .select()
+    }
+
+    function cancelarEdicionFila($fila) {
+      if (!$fila.length) return
+      tabla.ajax.reload(null, false)
+    }
+
+    function guardarEdicionFila($fila) {
+      if (!$fila.length) return
+
+      const rowData = tabla.row($fila).data()
+      if (!rowData) return
+
+      const codigo = rowData.codigo
+      const nombreOriginal = (rowData.nombre || '').trim()
+      const simboloOriginal = (rowData.simbolo || '').trim()
+
+      const nombreNuevo = (
+        $fila.find('.input-edicion[data-campo="nombre"]').val() || ''
+      ).trim()
+      const simboloNuevo = (
+        $fila.find('.input-edicion[data-campo="simbolo"]').val() || ''
+      ).trim()
+
+      if (!nombreNuevo) {
+        mostrarMensaje(
+          'warning',
+          'Datos incompletos',
+          'El nombre es obligatorio.'
+        )
+        $fila.find('.input-edicion[data-campo="nombre"]').trigger('focus')
+        return
+      }
+
+      if (!simboloNuevo) {
+        mostrarMensaje(
+          'warning',
+          'Datos incompletos',
+          'El símbolo es obligatorio.'
+        )
+        $fila.find('.input-edicion[data-campo="simbolo"]').trigger('focus')
+        return
+      }
+
+      const cambios = []
+
+      if (nombreNuevo !== nombreOriginal) {
+        cambios.push({
+          campo: 'nombre',
+          valor: nombreNuevo
+        })
+      }
+
+      if (simboloNuevo !== simboloOriginal) {
+        cambios.push({
+          campo: 'simbolo',
+          valor: simboloNuevo
+        })
+      }
+
+      if (!cambios.length) {
+        tabla.ajax.reload(null, false)
+        return
+      }
+
+      const requests = cambios.map(function (item) {
+        return ajaxJSON({
+          url: getBaseUrl() + '/editar/' + encodeURIComponent(codigo),
+          method: 'PUT',
+          body: {
+            campo: item.campo,
+            valor: item.valor
+          }
+        })
+      })
+
+      $.when
+        .apply($, requests)
+        .done(function () {
+          tabla.ajax.reload(null, false)
+          mostrarMensaje(
+            'success',
+            'Guardado correctamente',
+            'Moneda actualizada correctamente.'
+          )
+        })
+        .fail(function (xhr) {
+          const resp = xhr.responseJSON || {}
+          tabla.ajax.reload(null, false)
+          mostrarMensaje(
+            'error',
+            'No se pudo guardar',
+            resp.msg || 'Ocurrió un error al actualizar la moneda.'
+          )
+        })
+    }
+
+    $(function () {
+      initTabla()
+
+      $(document).on('click', '.btn-editar', function () {
+        activarEdicionFila($(this).closest('tr'))
+      })
+
+      $(document).on('click', '.btn-cancelar', function () {
+        cancelarEdicionFila($(this).closest('tr'))
+      })
+
+      $(document).on('click', '.btn-guardar', function () {
+        guardarEdicionFila($(this).closest('tr'))
+      })
+
+      $(document).on('keydown', '.input-edicion', function (e) {
+        const $fila = $(this).closest('tr')
+
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          guardarEdicionFila($fila)
+        }
+
+        if (e.key === 'Escape') {
+          e.preventDefault()
+          cancelarEdicionFila($fila)
+        }
+      })
+    })
+  })()
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+  {{ super() }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/layouthelp.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div class="help-page-shell">
+  <div class="help-page-header">
+    <div class="help-page-badge"><i class="fas fa-circle-question"></i> Centro de ayuda</div>
+    <h1 class="help-page-title">{% block help_title %}Ayuda del sistema{% endblock %}</h1>
+    <p class="help-page-subtitle">{% block help_subtitle %}Guía breve, clara y útil para operar esta pantalla sin perder tiempo.{% endblock %}</p>
+  </div>
+  <div class="help-page-grid">
+    <aside class="help-page-summary-card">
+      <h2>En esta ayuda</h2>
+      <ul class="help-summary-list">
+        {% block help_summary %}{% endblock %}
+      </ul>
+    </aside>
+    <section class="help-page-content-card">
+      {% block help_content %}{% endblock %}
+    </section>
+  </div>
+</div>
+{% endblock %}

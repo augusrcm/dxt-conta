@@ -1,0 +1,1277 @@
+{% extends "layout.html" %}
+{% block title %}Tesorería · Cobros{% endblock %}
+{% block page_help_url %}{{ url_for('tesoreria_cobros.help') }}{% endblock %}
+{% block extra_css %}
+<style>
+  #cobrosIndexPage {
+    --tc-primary: #2563eb;
+    --tc-primary-soft: #eff6ff;
+    --tc-primary-border: #bfdbfe;
+    --tc-dark: #0f2340;
+    font-family: var(--dxt-font-sans, 'Segoe UI', system-ui, sans-serif);
+  }
+
+  .tc-index-head {
+    background: linear-gradient(120deg, #0f2340 0%, #1a4a7a 60%, #1f5d9e 100%);
+    border-radius: 14px;
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15, 35, 64, 0.18);
+  }
+
+  .tc-index-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .tc-index-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  .tc-index-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    letter-spacing: -0.2px;
+  }
+
+  .tc-index-subtitle {
+    color: rgba(255, 255, 255, 0.68);
+    margin-top: 2px;
+    font-size: 0.8rem;
+  }
+
+  .tc-index-head .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+  }
+
+  .tc-index-head .btn-primary:hover {
+    background: #eff6ff;
+    border-color: #eff6ff;
+  }
+
+  .tc-index-head .btn-outline-secondary {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.85);
+    background: transparent;
+  }
+
+  .tc-index-head .btn-outline-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #fff;
+  }
+
+  .tc-view-tabs,
+  .tc-subtabs {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+  }
+
+  .tc-view-tabs {
+    margin-bottom: 1rem;
+  }
+
+  .tc-tab-btn {
+    border: 1.5px solid #d8e2ef;
+    background: #fff;
+    color: #35506b;
+    border-radius: 999px;
+    padding: 0.48rem 0.95rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    transition: all 0.16s ease;
+  }
+
+  .tc-tab-btn:hover {
+    border-color: #93c5fd;
+    color: #1d4ed8;
+    background: #eff6ff;
+  }
+
+  .tc-tab-btn.active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
+  }
+
+  .tc-panel-hidden {
+    display: none !important;
+  }
+
+  .tc-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .tc-kpi-card {
+    background: #fff;
+    border: 1px solid #dde4ed;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(15, 35, 64, 0.06);
+    padding: 0.85rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .tc-kpi-icon {
+    width: 39px;
+    height: 39px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .tc-kpi-blue { background: #eff6ff; color: #2563eb; }
+  .tc-kpi-amber { background: #fffbeb; color: #d97706; }
+  .tc-kpi-green { background: #f0fdf4; color: #16a34a; }
+  .tc-kpi-indigo { background: #eef2ff; color: #4f46e5; }
+
+  .tc-kpi-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #8898aa;
+    margin-bottom: 0.15rem;
+  }
+
+  .tc-kpi-value {
+    font-size: 1.22rem;
+    font-weight: 800;
+    color: #1e2d3d;
+    line-height: 1.05;
+    font-family: var(--dxt-font-mono, 'Consolas', monospace);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tc-filter-card,
+  .tc-table-card {
+    background: #fff;
+    border: 1px solid #dde4ed;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+  }
+
+  .tc-filter-card {
+    background: #f5f8fc;
+    padding: 0.95rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .tc-filter-grid-pending {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.7fr) auto;
+    gap: 0.75rem;
+    align-items: end;
+  }
+
+  .tc-filter-grid-history {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) 160px 160px 160px 170px minmax(220px, 0.8fr) auto;
+    gap: 0.75rem;
+    align-items: end;
+  }
+
+  .tc-filter-card .form-label {
+    font-size: 0.71rem;
+    font-weight: 800;
+    letter-spacing: 0.55px;
+    text-transform: uppercase;
+    color: #4a6070;
+    margin-bottom: 5px;
+  }
+
+  .tc-filter-card .form-control,
+  .tc-filter-card .form-select {
+    border: 1.5px solid #dde4ed;
+    border-radius: 9px;
+    font-size: 0.875rem;
+    color: #1e2d3d;
+    background: #fff;
+    height: 38px;
+    transition: border-color 0.16s, box-shadow 0.16s;
+  }
+
+  .tc-filter-card .form-control:focus,
+  .tc-filter-card .form-select:focus {
+    border-color: #2d7dd2;
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+    outline: none;
+  }
+
+  .tc-table-card + .tc-table-card {
+    margin-top: 1rem;
+  }
+
+  .tc-table-head {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #dde4ed;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: #f5f8fc;
+  }
+
+  .tc-table-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: #8898aa;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .tc-table-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 13px;
+    background: #2d7dd2;
+    border-radius: 2px;
+  }
+
+  .tc-table-wrap {
+    padding: 0.5rem;
+  }
+
+  .tc-table-wrap .dataTables_length,
+  .tc-table-wrap .dataTables_filter {
+    display: none;
+  }
+
+  .tc-table-wrap .dataTables_scrollHeadInner,
+  .tc-table-wrap table {
+    width: 100% !important;
+  }
+
+  table.dataTable th {
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.71rem;
+    font-weight: 800;
+    color: #8898aa;
+    background: #f5f8fc;
+    border-bottom: 2px solid #dde4ed;
+  }
+
+  table.dataTable tbody td {
+    vertical-align: middle;
+    font-size: 0.875rem;
+    color: #1e2d3d;
+    border-bottom: 1px solid #eef1f6;
+  }
+
+  table.dataTable tbody tr:nth-child(even) {
+    background: #f9fbfe;
+  }
+
+  table.dataTable tbody tr:hover td {
+    background: #e8f1fc !important;
+  }
+
+  .tc-row-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .tc-row-main strong {
+    font-size: 0.875rem;
+    color: #1e2d3d;
+  }
+
+  .tc-row-main small {
+    font-size: 0.78rem;
+    color: #8898aa;
+  }
+
+  .tc-money {
+    font-family: var(--dxt-font-mono, 'Consolas', monospace);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 800;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .tc-badge::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.8;
+    flex-shrink: 0;
+  }
+
+  .tc-badge-borrador { color: #b45309; background: #fffbeb; border-color: #fde68a; }
+  .tc-badge-confirmado { color: #047857; background: #ecfdf5; border-color: #bbf7d0; }
+  .tc-badge-anulado { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+  .tc-badge-directo { color: #1d4ed8; background: #eff6ff; border-color: #bfdbfe; }
+  .tc-badge-compromiso { color: #6d28d9; background: #f5f3ff; border-color: #ddd6fe; }
+  .tc-badge-documento { color: #047857; background: #ecfdf5; border-color: #bbf7d0; }
+  .tc-badge-soft { color: #36506b; background: #f8fafc; border-color: #dbe5f0; }
+
+  .tc-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .tc-btn-icon,
+  .tc-btn-action {
+    border-radius: 8px;
+    border: 1.5px solid #dde4ed;
+    background: #fff;
+    color: #35506b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    font-weight: 700;
+  }
+
+  .tc-btn-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .tc-btn-action {
+    min-height: 32px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.78rem;
+  }
+
+  .tc-btn-icon:hover,
+  .tc-btn-action:hover {
+    background: #e8f1fc;
+    border-color: #bfdbfe;
+    color: #2563eb;
+    transform: translateY(-1px);
+  }
+
+  .tc-btn-action-primary {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+  }
+
+  .tc-btn-action-primary:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #fff;
+  }
+
+  @media (max-width: 1200px) {
+    .tc-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tc-filter-grid-pending,
+    .tc-filter-grid-history { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 720px) {
+    .tc-kpi-grid,
+    .tc-filter-grid-pending,
+    .tc-filter-grid-history { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 dxt-page" id="cobrosIndexPage" data-puede-editar="{{ '1' if puede_editar else '0' }}">
+  <div class="tc-index-head">
+    <div class="tc-index-title-wrap">
+      <div class="tc-index-icon"><i class="fas fa-cash-register"></i></div>
+      <div>
+        <h1 class="tc-index-title">Tesorería · Cobros</h1>
+        <div class="tc-index-subtitle">Bandeja de cobranza y control de cobros registrados.</div>
+      </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      {% if puede_editar %}
+      <a href="{{ url_for('tesoreria_cobros.nuevo') }}" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus me-1"></i> Nuevo cobro
+      </a>
+      {% endif %}
+      <button type="button" class="btn btn-outline-secondary btn-sm" id="btnRecargarTodoCobros">
+        <i class="fas fa-rotate me-1"></i> Actualizar
+      </button>
+    </div>
+  </div>
+
+  <div class="tc-view-tabs" role="tablist" aria-label="Vistas de cobros">
+    <button type="button" class="tc-tab-btn active" data-panel="pendientes">
+      <i class="fas fa-inbox"></i> Pendientes por cobrar
+    </button>
+    <button type="button" class="tc-tab-btn" data-panel="realizados">
+      <i class="fas fa-list-check"></i> Cobros realizados
+    </button>
+  </div>
+
+  <div id="panelPendientesCobros">
+    <div class="tc-kpi-grid">
+      <div class="tc-kpi-card">
+        <div class="tc-kpi-icon tc-kpi-blue"><i class="fas fa-file-invoice-dollar"></i></div>
+        <div>
+          <div class="tc-kpi-label">Documentos</div>
+          <div class="tc-kpi-value" id="kpiPendDocs">0</div>
+        </div>
+      </div>
+      <div class="tc-kpi-card">
+        <div class="tc-kpi-icon tc-kpi-amber"><i class="fas fa-calendar-check"></i></div>
+        <div>
+          <div class="tc-kpi-label">Compromisos</div>
+          <div class="tc-kpi-value" id="kpiPendCompromisos">0</div>
+        </div>
+      </div>
+      <div class="tc-kpi-card">
+        <div class="tc-kpi-icon tc-kpi-green"><i class="fas fa-coins"></i></div>
+        <div>
+          <div class="tc-kpi-label">Saldo documentos</div>
+          <div class="tc-kpi-value tc-money" id="kpiPendMontoDocs">0.00</div>
+        </div>
+      </div>
+      <div class="tc-kpi-card">
+        <div class="tc-kpi-icon tc-kpi-indigo"><i class="fas fa-hand-holding-dollar"></i></div>
+        <div>
+          <div class="tc-kpi-label">Monto compromisos</div>
+          <div class="tc-kpi-value tc-money" id="kpiPendMontoCompromisos">0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tc-filter-card">
+      <div class="tc-filter-grid-pending">
+        <div>
+          <label for="filtroTextoPendientes" class="form-label"><i class="fas fa-magnifying-glass me-1"></i>Buscar pendiente</label>
+          <input type="text" id="filtroTextoPendientes" class="form-control" maxlength="120"
+            placeholder="Cliente, documento, compromiso o referencia">
+        </div>
+        <div>
+          <label for="filtroUnidadPendientes" class="form-label">Unidad de negocio</label>
+          <select id="filtroUnidadPendientes" class="form-select">
+            <option value="">Todas</option>
+            {% for unidad in unidades_negocio %}
+            <option value="{{ unidad.id }}">{{ unidad.codigo }} · {{ unidad.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <button type="button" class="btn btn-outline-primary btn-sm w-100" id="btnRecargarPendientes">
+            <i class="fas fa-rotate me-1"></i> Recargar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tc-table-card">
+      <div class="tc-table-head">
+        <div class="tc-subtabs" role="tablist" aria-label="Tipos de pendientes">
+          <button type="button" class="tc-tab-btn active" data-pending-tab="documentos">
+            <i class="fas fa-file-invoice-dollar"></i> Documentos
+          </button>
+          <button type="button" class="tc-tab-btn" data-pending-tab="compromisos">
+            <i class="fas fa-calendar-check"></i> Compromisos
+          </button>
+        </div>
+      </div>
+      <div class="tc-table-wrap" id="wrapPendientesDocumentos">
+        <table id="tablaPendientesDocumentos" class="table table-hover align-middle w-100">
+          <thead>
+            <tr>
+              <th>Documento</th>
+              <th>Cliente</th>
+              <th>Gestión / Fecha</th>
+              <th>Unidad</th>
+              <th class="text-end">Saldo</th>
+              <th style="width: 130px">Acción</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+      <div class="tc-table-wrap tc-panel-hidden" id="wrapPendientesCompromisos">
+        <table id="tablaPendientesCompromisos" class="table table-hover align-middle w-100">
+          <thead>
+            <tr>
+              <th>Compromiso</th>
+              <th>Cliente</th>
+              <th>Vencimiento</th>
+              <th>Unidad</th>
+              <th class="text-end">Monto</th>
+              <th style="width: 90px">Acción</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="panelCobrosRealizados" class="tc-panel-hidden">
+    <div class="tc-kpi-grid">
+      <div class="tc-kpi-card">
+        <div class="tc-kpi-icon tc-kpi-blue"><i class="fas fa-receipt"></i></div>
+        <div>
+          <div class="tc-kpi-label">Cobros</div>
+          <div class="tc-kpi-value" id="kpiDocumentos">0</div>
+        </div>
+      </div>
+      <div class="tc-kpi-card">
+        <div class="tc-kpi-icon tc-kpi-amber"><i class="fas fa-clock-rotate-left"></i></div>
+        <div>
+          <div class="tc-kpi-label">Borradores</div>
+          <div class="tc-kpi-value" id="kpiBorradores">0</div>
+        </div>
+      </div>
+      <div class="tc-kpi-card">
+        <div class="tc-kpi-icon tc-kpi-green"><i class="fas fa-circle-check"></i></div>
+        <div>
+          <div class="tc-kpi-label">Confirmados</div>
+          <div class="tc-kpi-value" id="kpiConfirmados">0</div>
+        </div>
+      </div>
+      <div class="tc-kpi-card">
+        <div class="tc-kpi-icon tc-kpi-indigo"><i class="fas fa-coins"></i></div>
+        <div>
+          <div class="tc-kpi-label">Monto total</div>
+          <div class="tc-kpi-value tc-money" id="kpiMontoTotal">0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tc-filter-card">
+      <div class="tc-filter-grid-history">
+        <div>
+          <label for="filtroTextoCobros" class="form-label"><i class="fas fa-magnifying-glass me-1"></i>Buscar cobro</label>
+          <input type="text" id="filtroTextoCobros" class="form-control" maxlength="120"
+            placeholder="Cliente, glosa, referencia, medio, importe o fecha">
+        </div>
+        <div>
+          <label for="filtroFechaDesdeCobros" class="form-label">Desde</label>
+          <input type="date" id="filtroFechaDesdeCobros" class="form-control">
+        </div>
+        <div>
+          <label for="filtroFechaHastaCobros" class="form-label">Hasta</label>
+          <input type="date" id="filtroFechaHastaCobros" class="form-control">
+        </div>
+        <div>
+          <label for="filtroEstadoCobros" class="form-label">Estado</label>
+          <select id="filtroEstadoCobros" class="form-select">
+            <option value="">Todos</option>
+            <option value="BORRADOR">Borrador</option>
+            <option value="CONFIRMADO">Confirmado</option>
+            <option value="ANULADO">Anulado</option>
+          </select>
+        </div>
+        <div>
+          <label for="filtroOrigenCobros" class="form-label">Origen</label>
+          <select id="filtroOrigenCobros" class="form-select">
+            <option value="">Todos</option>
+            <option value="DIRECTO">Directo</option>
+            <option value="COMPROMISO">Compromiso</option>
+            <option value="DOCUMENTO_COBRAR">Documento por cobrar</option>
+          </select>
+        </div>
+        <div>
+          <label for="filtroUnidadNegocioCobros" class="form-label">Unidad de negocio</label>
+          <select id="filtroUnidadNegocioCobros" class="form-select">
+            <option value="">Todas</option>
+            {% for unidad in unidades_negocio %}
+            <option value="{{ unidad.id }}">{{ unidad.codigo }} · {{ unidad.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="btnLimpiarFiltrosCobros">
+            <i class="fas fa-xmark me-1"></i> Limpiar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tc-table-card">
+      <div class="tc-table-head">
+        <div class="tc-table-title">Cobros realizados</div>
+      </div>
+      <div class="tc-table-wrap">
+        <table id="tablaCobros" class="table table-hover align-middle w-100">
+          <thead>
+            <tr>
+              <th>Documento</th>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Unidad de negocio</th>
+              <th>Origen</th>
+              <th>Ingreso</th>
+              <th>Líneas</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th style="width: 90px">Acción</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="tcMovimientosDocumentoModal" tabindex="-1" aria-labelledby="tcMovimientosDocumentoTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="tcMovimientosDocumentoTitle">Movimientos del documento</h5>
+          <small class="text-muted" id="tcMovimientosDocumentoSubtitle">Historial del documento seleccionado.</small>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Glosa</th>
+                <th class="text-end">Debe</th>
+                <th class="text-end">Haber</th>
+              </tr>
+            </thead>
+            <tbody id="tcMovimientosDocumentoBody">
+              <tr><td colspan="4" class="text-center text-muted py-3">Seleccione un documento.</td></tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th colspan="2" class="text-end">Totales</th>
+                <th class="text-end" id="tcMovimientosDocumentoDebe">0.00</th>
+                <th class="text-end" id="tcMovimientosDocumentoHaber">0.00</th>
+              </tr>
+              <tr>
+                <th colspan="2" class="text-end">Saldo</th>
+                <th colspan="2" class="text-end" id="tcMovimientosDocumentoSaldo">0.00</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="tesoreriaCobrosIndexBootstrap" type="application/json">
+  {{ {
+    'puedeEditar': puede_editar,
+    'urls': {
+      'nuevo': url_for('tesoreria_cobros.nuevo'),
+      'apiLista': url_for('tesoreria_cobros.api_lista'),
+      'apiDocumentosPendientes': url_for('tesoreria_cobros.api_documentos_pendientes'),
+      'apiCompromisosPendientes': url_for('tesoreria_cobros.api_pendientes'),
+      'editarBase': url_for('tesoreria_cobros.editar', cobro_id=0),
+      'pdfBase': url_for('tesoreria_cobros.pdf', cobro_id=0),
+      'eliminarBase': url_for('tesoreria_cobros.api_eliminar', cobro_id=0),
+      'movimientosDocumentoBase': url_for('documentos_cobrar.movimientos', documento_id=0)
+    }
+  } | tojson }}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    'use strict';
+
+    const page = document.getElementById('cobrosIndexPage');
+    const bootEl = document.getElementById('tesoreriaCobrosIndexBootstrap');
+    if (!page || !bootEl || !window.jQuery) return;
+
+    const boot = JSON.parse(bootEl.textContent || '{}');
+    const urls = boot.urls || {};
+    const puedeEditar = Boolean(boot.puedeEditar);
+    const $ = window.jQuery;
+
+    let tablaPendDocs = null;
+    let tablaPendComp = null;
+    let tablaHistorial = null;
+    let searchTimer = null;
+    let historialSearchTimer = null;
+    let modalMovimientosDocumento = null;
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, function (char) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[char];
+      });
+    }
+
+    function money(value) {
+      return Number(value || 0).toLocaleString('es-BO', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function dateShort(value) {
+      return window.DXTBase && typeof window.DXTBase.formatDateShortEs === 'function'
+        ? window.DXTBase.formatDateShortEs(value)
+        : (value || '—');
+    }
+
+    function dataTableLanguage(overrides) {
+      const local = {
+        processing: 'Procesando...',
+        search: 'Buscar:',
+        lengthMenu: 'Mostrar _MENU_ registros',
+        info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
+        infoEmpty: 'Mostrando 0 a 0 de 0 registros',
+        infoFiltered: '(filtrados de _MAX_ registros)',
+        loadingRecords: 'Cargando...',
+        zeroRecords: 'No se encontraron registros.',
+        emptyTable: 'No existen datos disponibles.',
+        paginate: { first: 'Primero', previous: 'Anterior', next: 'Siguiente', last: 'Último' },
+        aria: { sortAscending: ': activar para ordenar ascendente', sortDescending: ': activar para ordenar descendente' }
+      };
+      if (window.DXTBase && typeof window.DXTBase.getDataTableLanguageEs === 'function') {
+        return window.DXTBase.getDataTableLanguageEs(overrides || {});
+      }
+      return Object.assign(local, overrides || {});
+    }
+
+    function replaceBase(baseUrl, zeroSegment, id) {
+      return String(baseUrl || '').replace(zeroSegment, `/${id}${zeroSegment.replace('/0', '')}`);
+    }
+
+    function editUrl(id) {
+      return replaceBase(urls.editarBase, '/0/editar', id);
+    }
+
+    function pdfUrl(id) {
+      return replaceBase(urls.pdfBase, '/0/pdf', id);
+    }
+
+    function deleteUrl(id) {
+      return replaceBase(urls.eliminarBase, '/0/eliminar', id);
+    }
+
+    function documentoMovimientosUrl(id) {
+      return replaceBase(urls.movimientosDocumentoBase, '/0/movimientos', id);
+    }
+
+    function newCobroUrl(params) {
+      const url = new URL(urls.nuevo, window.location.origin);
+      Object.entries(params || {}).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value !== '') url.searchParams.set(key, String(value));
+      });
+      return url.pathname + url.search;
+    }
+
+    function stateBadge(state) {
+      const key = String(state || '').toUpperCase();
+      const map = {
+        BORRADOR: 'tc-badge tc-badge-borrador',
+        CONFIRMADO: 'tc-badge tc-badge-confirmado',
+        ANULADO: 'tc-badge tc-badge-anulado'
+      };
+      return `<span class="${map[key] || 'tc-badge tc-badge-soft'}">${escapeHtml(key || '—')}</span>`;
+    }
+
+    function originBadge(origin) {
+      const key = String(origin || '').toUpperCase();
+      const map = {
+        COMPROMISO: ['tc-badge tc-badge-compromiso', 'Compromiso'],
+        DOCUMENTO_COBRAR: ['tc-badge tc-badge-documento', 'Documento'],
+        DIRECTO: ['tc-badge tc-badge-directo', 'Directo']
+      };
+      const item = map[key] || map.DIRECTO;
+      return `<span class="${item[0]}">${item[1]}</span>`;
+    }
+
+    function cobrableSourceLabel(row) {
+      const source = String(row.fuente_cobro || row.origen_documento || '').toUpperCase();
+      if (source === 'FACTURA_ELECTRONICA') return 'Factura electronica';
+      if (source === 'DOCUMENTO_COBRAR') return 'Documento por cobrar';
+      return row.fuente_label || row.origen_documento || 'Documento';
+    }
+
+    function updateText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function updatePendingKpis() {
+      const docs = tablaPendDocs ? tablaPendDocs.rows({ search: 'applied' }).data().toArray() : [];
+      const comps = tablaPendComp ? tablaPendComp.rows({ search: 'applied' }).data().toArray() : [];
+      updateText('kpiPendDocs', String(docs.length));
+      updateText('kpiPendCompromisos', String(comps.length));
+      updateText('kpiPendMontoDocs', money(docs.reduce((sum, row) => sum + Number(row.saldo_disponible || 0), 0)));
+      updateText('kpiPendMontoCompromisos', money(comps.reduce((sum, row) => sum + Number(row.monto_programado || 0), 0)));
+    }
+
+    function updateHistoryKpis() {
+      const rows = tablaHistorial ? tablaHistorial.rows({ search: 'applied' }).data().toArray() : [];
+      updateText('kpiDocumentos', String(rows.length));
+      updateText('kpiBorradores', String(rows.filter(row => row.estado === 'BORRADOR').length));
+      updateText('kpiConfirmados', String(rows.filter(row => row.estado === 'CONFIRMADO').length));
+      updateText('kpiMontoTotal', money(rows.reduce((sum, row) => sum + Number(row.monto_total || 0), 0)));
+    }
+
+    function initPendingTables() {
+      tablaPendDocs = $('#tablaPendientesDocumentos').DataTable({
+        data: [],
+        deferRender: true,
+        autoWidth: false,
+        pageLength: 10,
+        order: [[2, 'desc'], [0, 'desc']],
+        scrollX: true,
+        language: dataTableLanguage({
+          emptyTable: 'No existen documentos pendientes.',
+          zeroRecords: 'No se encontraron documentos con los filtros aplicados.'
+        }),
+        columns: [
+          {
+            data: null,
+            render: function (data, type, row) {
+              if (type !== 'display') return `${row.tipo_documento || ''} ${row.numero_documento || ''}`;
+              return `<div class="tc-row-main"><strong>${escapeHtml(row.numero_documento || '—')}</strong><small>${escapeHtml(row.tipo_documento || 'Documento')} · ${escapeHtml(cobrableSourceLabel(row))}</small></div>`;
+            }
+          },
+          {
+            data: null,
+            render: function (data, type, row) {
+              if (type !== 'display') return row.cliente_nombre || '';
+              return `<div class="tc-row-main"><strong>${escapeHtml(row.cliente_nombre || 'Sin cliente')}</strong><small>${escapeHtml(row.cliente_nit || '')}</small></div>`;
+            }
+          },
+          {
+            data: null,
+            render: function (data, type, row) {
+              if (type !== 'display') return `${row.gestion_origen || ''} ${row.fecha_documento || ''}`;
+              return `<div class="tc-row-main"><strong>${escapeHtml(row.gestion_origen || '—')}</strong><small>${dateShort(row.fecha_documento)}</small></div>`;
+            }
+          },
+          {
+            data: null,
+            render: function (data, type, row) {
+              if (type !== 'display') return `${row.unidad_negocio_codigo || ''} ${row.unidad_negocio_nombre || ''}`;
+              return `<div class="tc-row-main"><strong>${escapeHtml(row.unidad_negocio_codigo || '—')}</strong><small>${escapeHtml(row.unidad_negocio_nombre || 'Sin unidad')}</small></div>`;
+            }
+          },
+          {
+            data: 'saldo_disponible',
+            className: 'text-end',
+            render: function (data, type, row) {
+              if (type !== 'display') return Number(data || 0);
+              return `<strong class="tc-money">${money(data)}</strong><div class="tc-row-main"><small>${escapeHtml(row.moneda_codigo || 'BOB')}</small></div>`;
+            }
+          },
+          {
+            data: null,
+            orderable: false,
+            searchable: false,
+            className: 'text-center',
+            render: function (data, type, row) {
+              if (type !== 'display') return row.id || row.documento_id;
+              if (!puedeEditar) return '<span class="tc-badge tc-badge-soft">Lectura</span>';
+              const fuente = String(row.fuente_cobro || '').toUpperCase();
+              const documentoId = row.documento_id || (fuente !== 'FACTURA_ELECTRONICA' ? row.item_id || row.id : null);
+              const facturaId = row.factura_id || (fuente === 'FACTURA_ELECTRONICA' ? row.item_id || row.id : null);
+              const href = facturaId
+                ? newCobroUrl({ origen: 'DOCUMENTO_COBRAR', factura_id: facturaId })
+                : newCobroUrl({ origen: 'DOCUMENTO_COBRAR', documento_id: documentoId });
+              const movimientoBtn = facturaId
+                ? ''
+                : `<button type="button" class="tc-btn-icon js-documento-movimientos" data-id="${documentoId}" title="Ver movimientos"><i class="fas fa-clock-rotate-left"></i></button>`;
+              return `<div class="tc-actions">${movimientoBtn}<a href="${href}" class="tc-btn-action tc-btn-action-primary"><i class="fas fa-cash-register"></i> Cobrar</a></div>`;
+            }
+          }
+        ]
+      });
+
+      tablaPendComp = $('#tablaPendientesCompromisos').DataTable({
+        data: [],
+        deferRender: true,
+        autoWidth: false,
+        pageLength: 10,
+        order: [[2, 'desc'], [0, 'desc']],
+        scrollX: true,
+        language: dataTableLanguage({
+          emptyTable: 'No existen compromisos pendientes.',
+          zeroRecords: 'No se encontraron compromisos con los filtros aplicados.'
+        }),
+        columns: [
+          {
+            data: null,
+            render: function (data, type, row) {
+              if (type !== 'display') return `${row.compromiso_codigo || ''} ${row.compromiso_nombre || ''}`;
+              return `<div class="tc-row-main"><strong>${escapeHtml(row.compromiso_codigo || '—')}</strong><small>${escapeHtml(row.compromiso_nombre || '')}</small></div>`;
+            }
+          },
+          { data: 'auxiliar_nombre', render: (data, type) => type === 'display' ? escapeHtml(data || 'Sin cliente') : data },
+          {
+            data: 'fecha_vencimiento',
+            render: function (data, type) {
+              return type === 'display' ? `<span class="tc-badge tc-badge-soft">${dateShort(data)}</span>` : (data || '');
+            }
+          },
+          {
+            data: null,
+            render: function (data, type, row) {
+              if (type !== 'display') return `${row.unidad_negocio_codigo || ''} ${row.unidad_negocio_nombre || ''}`;
+              return `<div class="tc-row-main"><strong>${escapeHtml(row.unidad_negocio_codigo || '—')}</strong><small>${escapeHtml(row.unidad_negocio_nombre || 'Sin unidad')}</small></div>`;
+            }
+          },
+          { data: 'monto_programado', className: 'text-end', render: (data, type) => type === 'display' ? `<strong class="tc-money">${money(data)}</strong>` : Number(data || 0) },
+          {
+            data: null,
+            orderable: false,
+            searchable: false,
+            className: 'text-center',
+            render: function (data, type, row) {
+              if (type !== 'display') return row.id;
+              if (!puedeEditar) return '<span class="tc-badge tc-badge-soft">Lectura</span>';
+              const href = newCobroUrl({ origen: 'COMPROMISO', compromiso_detalle_id: row.id });
+              return `<a href="${href}" class="tc-btn-action tc-btn-action-primary"><i class="fas fa-cash-register"></i> Cobrar</a>`;
+            }
+          }
+        ]
+      });
+
+      tablaPendDocs.on('draw', updatePendingKpis);
+      tablaPendComp.on('draw', updatePendingKpis);
+    }
+
+    function initHistoryTable() {
+      tablaHistorial = $('#tablaCobros').DataTable({
+        data: [],
+        deferRender: true,
+        autoWidth: false,
+        pageLength: 25,
+        order: [[1, 'desc'], [0, 'desc']],
+        scrollX: true,
+        scrollY: '54vh',
+        scrollCollapse: true,
+        language: dataTableLanguage({
+          emptyTable: 'No existen cobros registrados.',
+          zeroRecords: 'No se encontraron cobros con los filtros aplicados.',
+          info: 'Mostrando _START_ a _END_ de _TOTAL_ cobros',
+          infoEmpty: 'Mostrando 0 a 0 de 0 cobros',
+          infoFiltered: '(filtrados de _MAX_ cobros)'
+        }),
+        columns: [
+          {
+            data: null,
+            render: function (data, type, row) {
+              if (type !== 'display') return row.id;
+              return `<div class="tc-row-main"><strong>Cobro #${row.id}</strong><small>${escapeHtml(row.glosa || row.referencia || 'Documento de cobro')}</small></div>`;
+            }
+          },
+          {
+            data: 'fecha',
+            render: function (data, type) {
+              if (type !== 'display') return data || '';
+              return `<div class="tc-row-main"><strong>${dateShort(data)}</strong><small>${escapeHtml(data || '—')}</small></div>`;
+            }
+          },
+          {
+            data: null,
+            render: function (data, type, row) {
+              if (type !== 'display') return row.cliente_nombre || '';
+              return `<div class="tc-row-main"><strong>${escapeHtml(row.cliente_nombre || 'Sin cliente')}</strong><small>${escapeHtml(row.referencia || 'Sin referencia')}</small></div>`;
+            }
+          },
+          {
+            data: null,
+            render: function (data, type, row) {
+              if (type !== 'display') return `${row.unidad_negocio_codigo || ''} ${row.unidad_negocio_nombre || ''}`.trim();
+              return `<div class="tc-row-main"><strong>${escapeHtml(row.unidad_negocio_codigo || '—')}</strong><small>${escapeHtml(row.unidad_negocio_nombre || 'Sin unidad')}</small></div>`;
+            }
+          },
+          { data: 'origen_operacion', render: (data, type) => type === 'display' ? originBadge(data) : data },
+          {
+            data: null,
+            render: function (data, type, row) {
+              if (type !== 'display') return `${row.medio_pago || ''} ${row.ingreso_nombre || ''}`;
+              return `<div class="tc-row-main"><strong>${escapeHtml(row.medio_pago || '—')}</strong><small>${escapeHtml(row.ingreso_nombre || 'No definido')}</small></div>`;
+            }
+          },
+          {
+            data: null,
+            className: 'text-center',
+            render: function (data, type, row) {
+              if (type !== 'display') return row.cantidad_lineas || 0;
+              return `<div class="tc-row-main"><strong>${Number(row.cantidad_lineas || 0) + Number(row.cantidad_documentos || 0)}</strong><small>${Number(row.cantidad_compromisos || 0)} compromiso · ${Number(row.cantidad_documentos || 0)} doc.</small></div>`;
+            }
+          },
+          {
+            data: 'monto_total',
+            className: 'text-end',
+            render: function (data, type, row) {
+              if (type !== 'display') return Number(data || 0);
+              return `<div class="tc-row-main text-end"><strong class="tc-money">${money(data)}</strong><small>${escapeHtml(row.moneda_codigo || 'BOB')} · TC ${money(row.tipo_cambio || 1)}</small></div>`;
+            }
+          },
+          { data: 'estado', render: (data, type) => type === 'display' ? stateBadge(data) : data },
+          {
+            data: null,
+            orderable: false,
+            searchable: false,
+            className: 'text-center',
+            render: function (data, type, row) {
+              if (type !== 'display') return row.id;
+              const canDelete = puedeEditar && row.estado === 'BORRADOR';
+              return `<div class="tc-actions">
+                <a href="${editUrl(row.id)}" class="tc-btn-icon" title="${canDelete ? 'Editar cobro' : 'Ver cobro'}"><i class="fas ${canDelete ? 'fa-pen-to-square' : 'fa-eye'}"></i></a>
+                <a href="${pdfUrl(row.id)}" class="tc-btn-icon" target="_blank" rel="noopener" title="Generar PDF"><i class="fas fa-file-pdf"></i></a>
+                ${canDelete ? `<button type="button" class="tc-btn-icon js-delete-cobro" data-id="${row.id}" title="Eliminar borrador"><i class="fas fa-trash-can"></i></button>` : ''}
+              </div>`;
+            }
+          }
+        ]
+      });
+
+      $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+        if (settings.nTable.id !== 'tablaCobros') return true;
+        const row = tablaHistorial.row(dataIndex).data();
+        const estado = ($('#filtroEstadoCobros').val() || '').toUpperCase();
+        const origen = ($('#filtroOrigenCobros').val() || '').toUpperCase();
+        const texto = ($('#filtroTextoCobros').val() || '').trim().toLowerCase();
+        const unidad = $('#filtroUnidadNegocioCobros').val() || '';
+        const desde = $('#filtroFechaDesdeCobros').val() || '';
+        const hasta = $('#filtroFechaHastaCobros').val() || '';
+        if (estado && String(row.estado || '').toUpperCase() !== estado) return false;
+        if (origen && String(row.origen_operacion || '').toUpperCase() !== origen) return false;
+        if (unidad && String(row.unidad_negocio_id || '') !== String(unidad)) return false;
+        const fecha = String(row.fecha || '');
+        if (desde && fecha && fecha < desde) return false;
+        if (hasta && fecha && fecha > hasta) return false;
+        if ((desde || hasta) && !fecha) return false;
+        if (texto) {
+          const bag = [row.id, row.cliente_nombre, row.referencia, row.glosa, row.fecha, dateShort(row.fecha), row.medio_pago, row.ingreso_nombre, row.moneda_codigo, row.unidad_negocio_codigo, row.unidad_negocio_nombre, row.origen_operacion, row.estado, row.monto_total].join(' ').toLowerCase();
+          if (!bag.includes(texto)) return false;
+        }
+        return true;
+      });
+
+      tablaHistorial.on('draw', updateHistoryKpis);
+    }
+
+    async function loadPendingRows(showAlerts) {
+      const params = new URLSearchParams();
+      const text = ($('#filtroTextoPendientes').val() || '').trim();
+      const unidad = $('#filtroUnidadPendientes').val() || '';
+      if (text) params.set('q', text);
+      if (unidad) params.set('unidad_negocio_id', unidad);
+      params.set('unificado', '1');
+
+      try {
+        const [docsResp, compResp] = await Promise.all([
+          fetch(`${urls.apiDocumentosPendientes}?${params.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }),
+          fetch(`${urls.apiCompromisosPendientes}?${params.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        ]);
+        const docsData = await docsResp.json();
+        const compData = await compResp.json();
+        if (!docsResp.ok || !docsData.success) throw new Error(docsData.message || 'No se pudieron cargar los documentos pendientes.');
+        if (!compResp.ok || !compData.success) throw new Error(compData.message || 'No se pudieron cargar los compromisos pendientes.');
+        tablaPendDocs.clear().rows.add(docsData.rows || []).draw();
+        tablaPendComp.clear().rows.add(compData.rows || []).draw();
+        updatePendingKpis();
+      } catch (error) {
+        if (showAlerts) {
+          Swal.fire({ icon: 'error', title: 'No se pudieron cargar pendientes', text: error.message || 'Ocurrió un error al consultar pendientes.' });
+        }
+      }
+    }
+
+    async function loadHistoryRows(showAlerts) {
+      try {
+        const response = await fetch(urls.apiLista, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo cargar la lista de cobros.');
+        tablaHistorial.clear().rows.add(data.data || []).draw();
+        updateHistoryKpis();
+      } catch (error) {
+        if (showAlerts) {
+          Swal.fire({ icon: 'error', title: 'No se pudo cargar la lista', text: error.message || 'Ocurrió un error al obtener los cobros.' });
+        }
+      }
+    }
+
+    async function abrirMovimientosDocumento(documentoId) {
+      const tbody = document.getElementById('tcMovimientosDocumentoBody');
+      const debeEl = document.getElementById('tcMovimientosDocumentoDebe');
+      const haberEl = document.getElementById('tcMovimientosDocumentoHaber');
+      const saldoEl = document.getElementById('tcMovimientosDocumentoSaldo');
+      const subtitle = document.getElementById('tcMovimientosDocumentoSubtitle');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">Cargando movimientos...</td></tr>';
+      if (debeEl) debeEl.textContent = '0.00';
+      if (haberEl) haberEl.textContent = '0.00';
+      if (saldoEl) saldoEl.textContent = '0.00';
+      if (modalMovimientosDocumento) modalMovimientosDocumento.show();
+
+      try {
+        const response = await fetch(documentoMovimientosUrl(documentoId), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'No se pudieron cargar los movimientos.');
+        const documento = data.documento || {};
+        if (subtitle) subtitle.textContent = `${documento.tipo_documento_label || 'Documento'} ${documento.numero_documento || ''} · ${documento.cliente_nombre || 'Sin cliente'}`;
+        const rows = Array.isArray(data.movimientos) ? data.movimientos : [];
+        if (!rows.length) {
+          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">El documento aún no tiene movimientos registrados.</td></tr>';
+        } else {
+          tbody.innerHTML = rows.map((row) => `
+            <tr>
+              <td>${escapeHtml(row.fecha_label || '')}</td>
+              <td>${escapeHtml(row.glosa || '')}</td>
+              <td class="text-end">${escapeHtml(row.debe_label || '0.00')}</td>
+              <td class="text-end">${escapeHtml(row.haber_label || '0.00')}</td>
+            </tr>`).join('');
+        }
+        if (debeEl) debeEl.textContent = data.total_debe_label || '0.00';
+        if (haberEl) haberEl.textContent = data.total_haber_label || '0.00';
+        if (saldoEl) saldoEl.textContent = data.saldo_label || '0.00';
+      } catch (error) {
+        if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-3">${escapeHtml(error.message || 'No se pudieron cargar los movimientos.')}</td></tr>`;
+      }
+    }
+
+    async function deleteReceiptFromGrid(cobroId) {
+      const result = await Swal.fire({
+        icon: 'warning',
+        title: '¿Eliminar borrador?',
+        text: 'Esta acción eliminará definitivamente el cobro en borrador.',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      });
+      if (!result.isConfirmed) return;
+
+      try {
+        const response = await fetch(deleteUrl(cobroId), { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo eliminar el cobro.');
+        await Swal.fire({ icon: 'success', title: 'Cobro eliminado', text: data.message || 'El cobro fue eliminado correctamente.' });
+        await Promise.all([loadPendingRows(false), loadHistoryRows(false)]);
+      } catch (error) {
+        Swal.fire({ icon: 'error', title: 'No se pudo eliminar', text: error.message || 'Ocurrió un error al eliminar el cobro.' });
+      }
+    }
+
+    function showMainPanel(name) {
+      const pendientes = name === 'pendientes';
+      $('#panelPendientesCobros').toggleClass('tc-panel-hidden', !pendientes);
+      $('#panelCobrosRealizados').toggleClass('tc-panel-hidden', pendientes);
+      $('.tc-view-tabs .tc-tab-btn').removeClass('active');
+      $(`.tc-view-tabs .tc-tab-btn[data-panel="${name}"]`).addClass('active');
+      setTimeout(function () {
+        if (pendientes) {
+          tablaPendDocs && tablaPendDocs.columns.adjust();
+          tablaPendComp && tablaPendComp.columns.adjust();
+        } else {
+          tablaHistorial && tablaHistorial.columns.adjust();
+        }
+      }, 80);
+    }
+
+    function showPendingTab(name) {
+      const docs = name === 'documentos';
+      $('#wrapPendientesDocumentos').toggleClass('tc-panel-hidden', !docs);
+      $('#wrapPendientesCompromisos').toggleClass('tc-panel-hidden', docs);
+      $('.tc-subtabs .tc-tab-btn').removeClass('active');
+      $(`.tc-subtabs .tc-tab-btn[data-pending-tab="${name}"]`).addClass('active');
+      setTimeout(function () {
+        docs ? tablaPendDocs.columns.adjust() : tablaPendComp.columns.adjust();
+      }, 80);
+    }
+
+    function bindEvents() {
+      $('.tc-view-tabs .tc-tab-btn').on('click', function () {
+        showMainPanel(this.dataset.panel || 'pendientes');
+      });
+      $('.tc-subtabs .tc-tab-btn').on('click', function () {
+        showPendingTab(this.dataset.pendingTab || 'documentos');
+      });
+      $('#filtroTextoPendientes').on('input', function () {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => loadPendingRows(false), 260);
+      });
+      $('#filtroUnidadPendientes').on('change', () => loadPendingRows(false));
+      $('#btnRecargarPendientes').on('click', () => loadPendingRows(true));
+      $('#btnRecargarTodoCobros').on('click', () => Promise.all([loadPendingRows(true), loadHistoryRows(true)]));
+      $('#filtroTextoCobros').on('input', function () {
+        clearTimeout(historialSearchTimer);
+        historialSearchTimer = setTimeout(() => tablaHistorial && tablaHistorial.draw(), 180);
+      });
+      $('#filtroFechaDesdeCobros, #filtroFechaHastaCobros, #filtroEstadoCobros, #filtroOrigenCobros, #filtroUnidadNegocioCobros').on('change', () => tablaHistorial && tablaHistorial.draw());
+      $('#btnLimpiarFiltrosCobros').on('click', function () {
+        $('#filtroTextoCobros, #filtroFechaDesdeCobros, #filtroFechaHastaCobros').val('');
+        $('#filtroEstadoCobros, #filtroOrigenCobros, #filtroUnidadNegocioCobros').val('');
+        tablaHistorial && tablaHistorial.draw();
+      });
+      $(document).on('click', '.js-documento-movimientos', function () {
+        const documentoId = Number(this.dataset.id || 0);
+        if (documentoId) abrirMovimientosDocumento(documentoId);
+      });
+      $(document).on('click', '.js-delete-cobro', function () {
+        const cobroId = Number(this.dataset.id || 0);
+        if (cobroId) deleteReceiptFromGrid(cobroId);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const modalEl = document.getElementById('tcMovimientosDocumentoModal');
+      if (modalEl && window.bootstrap) modalMovimientosDocumento = new bootstrap.Modal(modalEl);
+      initPendingTables();
+      initHistoryTable();
+      bindEvents();
+      loadPendingRows(false);
+      loadHistoryRows(false);
+    });
+  })();
+</script>
+{% endblock %}

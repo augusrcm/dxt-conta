@@ -1,0 +1,132 @@
+{% extends "layouthelp.html" %}
+
+{% block title %}Ayuda · Estado de Resultados{% endblock %}
+{% block help_title %}Ayuda rápida · Estado de Resultados{% endblock %}
+{% block help_subtitle %}Guía breve para consultar ingresos, costos, gastos y utilidad o pérdida del período, y emitir
+el reporte PDF.{% endblock %}
+
+{% block help_summary %}
+<li>Qué muestra el Estado de Resultados.</li>
+<li>Cómo usar gestión o rango libre.</li>
+<li>Cómo aplicar el filtro por Unidad de Negocio.</li>
+<li>Qué representan ingresos, costos y gastos.</li>
+<li>Cómo interpretar utilidad bruta y utilidad neta.</li>
+<li>Cómo leer resultados cuando existen varias monedas.</li>
+<li>Cómo emitir el PDF.</li>
+{% endblock %}
+
+{% block help_content %}
+<section class="help-section">
+    <h2>1. ¿Para qué sirve esta pantalla?</h2>
+    <div class="help-callout">
+        El <strong>Estado de Resultados</strong> resume el desempeño económico del período,
+        mostrando <strong>Ingresos</strong>, <strong>Costos</strong>, <strong>Gastos</strong>
+        y la <strong>Utilidad o Pérdida</strong>.
+    </div>
+    <p>
+        La consulta se construye únicamente con <strong>comprobantes confirmados</strong>
+        y sirve como base de validación antes del cierre de gestión.
+    </p>
+</section>
+
+<section class="help-section">
+    <h2>2. Filtros disponibles</h2>
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Gestión contable</h3>
+            <p>Consulta toda la gestión o año contable completo.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Rango libre</h3>
+            <p>Permite revisar un período puntual indicando <strong>Fecha desde</strong> y <strong>Fecha hasta</strong>.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Unidad de Negocio</h3>
+            <p>Permite obtener el Estado de Resultados de una unidad específica o consultar todas en conjunto.</p>
+        </div>
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>3. Qué representa cada sección</h2>
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Ingresos</h3>
+            <p>Corresponden a ventas, servicios u otros ingresos operativos y no operativos registrados en el período.
+            </p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Costos</h3>
+            <p>Incluyen los costos directamente asociados a la generación de ingresos.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Gastos</h3>
+            <p>Incluyen egresos administrativos, comerciales, operativos y otros gastos del período.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Utilidad bruta</h3>
+            <p>Es el resultado de <strong>Ingresos menos Costos</strong>.</p>
+        </div>
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>4. Cómo interpretar el resultado neto</h2>
+    <div class="help-callout">
+        La <strong>Utilidad o Pérdida Neta</strong> se obtiene restando los
+        <strong>Gastos</strong> a la <strong>Utilidad Bruta</strong>.
+    </div>
+    <p>
+        Si el valor final es positivo, existe <strong>utilidad</strong>.
+        Si es negativo, existe <strong>pérdida</strong>.
+    </p>
+</section>
+
+<section class="help-section">
+    <h2>5. Monedas</h2>
+    <div class="help-callout">
+        Cuando existan movimientos en más de una moneda, el reporte separa ingresos, costos, gastos y resultados
+        <strong>por moneda</strong>. No mezcla Bs, USD u otras monedas en un único total.
+    </div>
+    <p>
+        Si solo existe una moneda en el período consultado, los totales principales se muestran directamente. Si hay varias,
+        los cuadros principales indican <strong>Por moneda</strong> y el detalle aparece en la tabla de totales por moneda.
+    </p>
+</section>
+
+<section class="help-section">
+    <h2>6. Flujo recomendado</h2>
+    <ol class="help-steps">
+        <li>Selecciona el período por <strong>gestión</strong> o por <strong>rango libre</strong>.</li>
+        <li>Si corresponde, selecciona una <strong>Unidad de Negocio</strong>.</li>
+        <li>Presiona <strong>Consultar</strong>.</li>
+        <li>Revisa los totales de ingresos, costos y gastos.</li>
+        <li>Valida la utilidad bruta y la utilidad o pérdida neta.</li>
+        <li>Si corresponde, emite el <strong>PDF</strong>.</li>
+    </ol>
+</section>
+
+<section class="help-section">
+    <h2>7. Reporte PDF</h2>
+    <div class="help-callout">
+        El PDF conserva el mismo período aplicado en pantalla y presenta el
+        <strong>Estado de Resultados</strong> con sus secciones, totales, monedas y la Unidad de Negocio filtrada cuando corresponda.
+    </div>
+    <p>
+        Se recomienda revisar primero el resultado en pantalla y luego emitir el reporte formal.
+    </p>
+</section>
+
+<section class="help-section">
+    <h2>8. Recomendaciones</h2>
+    <ul class="help-summary-list">
+        <li>Usa <strong>gestión</strong> para evaluación anual y <strong>rango libre</strong> para cortes intermedios.
+        </li>
+        <li>Este reporte es una referencia clave antes del <strong>cierre de gestión</strong>.</li>
+        <li>Si el reporte sale vacío, no existen cuentas de ingresos, costos o gastos con movimiento en el período
+            consultado.</li>
+        <li>Valida siempre la utilidad o pérdida neta antes de continuar con procesos de cierre contable.</li>
+        <li>Si hay varias monedas, revisa el resultado neto de cada moneda por separado.</li>
+    </ul>
+</section>
+{% endblock %}

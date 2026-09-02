@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+{% block title %}Pago de Planillas{% endblock %}
+{% block content %}
+<div class="container-fluid py-3 planilla-pagos-page">
+  <div class="page-hero d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="hero-icon"><i class="fas fa-money-check-dollar"></i></div>
+      <div>
+        <div class="hero-kicker">PLANILLAS</div>
+        <h2 class="mb-0">Pago de Planillas</h2>
+        <small>Pago individual o global de sueldos y honorarios.</small>
+      </div>
+    </div>
+    <a href="{{ url_for('planilla_pagos.ayuda') }}" class="btn btn-outline-light btn-sm"><i class="fas fa-question-circle me-1"></i>Ayuda</a>
+  </div>
+
+  <div class="row g-2 mb-3">
+    <div class="col-md-4"><div class="metric-card primary"><span>Planillas</span><strong>{{ stats.planillas }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card success"><span>Pagado</span><strong>{{ moneyfmt(stats.pagado) }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card warning"><span>Pendiente</span><strong>{{ moneyfmt(stats.pendiente) }}</strong></div></div>
+  </div>
+
+  <div class="card filter-card mb-3">
+    <form id="filtrosPagoPlanillas" method="get" class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label">Tipo</label>
+        <select name="tipo" class="form-select auto-filter">
+          <option value="">Todas</option>
+          {% for key, label in tipos.items() %}<option value="{{ key }}" {% if filtros.tipo == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Gestión</label>
+        <input type="number" name="gestion" class="form-control auto-filter" value="{{ filtros.gestion }}" min="2000" max="2100">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Mes</label>
+        <select name="mes" class="form-select auto-filter">
+          <option value="">Todos</option>
+          {% for nro, mes in meses %}<option value="{{ nro }}" {% if filtros.mes|string == nro|string %}selected{% endif %}>{{ mes }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Buscar</label>
+        <input type="search" name="buscar" class="form-control auto-filter-text" value="{{ filtros.buscar }}" placeholder="Código o glosa">
+      </div>
+      <div class="col-md-1 d-grid">
+        <a href="{{ url_for('planilla_pagos.index') }}" class="btn btn-outline-secondary"><i class="fas fa-eraser"></i></a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card grid-card">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0" id="tablaPagosPlanillas">
+        <thead>
+          <tr>
+            <th>Código</th><th>Tipo</th><th>Periodo</th><th>Estado</th><th class="text-end">Líquido</th><th class="text-end">Pagado</th><th class="text-end">Pendiente</th><th>Unid.</th><th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in planillas %}
+          <tr>
+            <td><strong>{{ p.codigo }}</strong></td>
+            <td>{{ tipos.get(p.tipo_planilla, p.tipo_planilla) }}</td>
+            <td>{{ meses[p.mes-1][1] }} {{ p.gestion }}</td>
+            <td>
+              {% if p.estado_visual == 'PAGADA' %}<span class="badge bg-success">Pagada</span>
+              {% elif p.estado_visual == 'PAGADA_PARCIAL' %}<span class="badge bg-warning text-dark">Parcial</span>
+              {% else %}<span class="badge bg-primary">Consolidada</span>{% endif %}
+            </td>
+            <td class="text-end">{{ moneyfmt(p.total_liquido) }}</td>
+            <td class="text-end">{{ moneyfmt(p.total_pagado) }}</td>
+            <td class="text-end fw-bold">{{ moneyfmt(p.saldo_pendiente) }}</td>
+            <td>{{ p.unidades }}</td>
+            <td class="text-center"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('planilla_pagos.detalle', planilla_id=p.id) }}"><i class="fas fa-eye"></i></a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="9" class="text-center text-muted py-4">Sin planillas disponibles para pago.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<style>
+.page-hero{background:linear-gradient(135deg,#0f2340,#194a7a);color:#fff;border-radius:14px;padding:16px 18px}.hero-icon{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.12);display:grid;place-items:center}.hero-kicker{font-size:.72rem;font-weight:800;letter-spacing:.08em;opacity:.75}.metric-card{background:#fff;border:1px solid #d9e1ea;border-left:4px solid #0d6efd;border-radius:12px;padding:12px 14px;box-shadow:0 6px 18px rgba(15,35,64,.06)}.metric-card span{display:block;font-size:.72rem;font-weight:800;color:#5f6f83;text-transform:uppercase}.metric-card strong{font-size:1.3rem}.metric-card.success{border-left-color:#198754}.metric-card.warning{border-left-color:#ffc107}.filter-card,.grid-card{border:1px solid #d9e1ea;border-radius:12px;padding:12px}.form-label{font-size:.72rem;font-weight:800;color:#26364a;text-transform:uppercase}.table thead th{background:#eef3f8;color:#0f2340;font-size:.72rem;text-transform:uppercase;border-bottom:1px solid #d6dee8}
+</style>
+<script>
+(() => {
+  const form = document.getElementById('filtrosPagoPlanillas');
+  if (!form) return;
+  form.querySelectorAll('.auto-filter').forEach(el => el.addEventListener('change', () => form.submit()));
+  let t = null;
+  form.querySelectorAll('.auto-filter-text').forEach(el => el.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => form.submit(), 450); }));
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends "layouthelp.html" %} {% block title %}Ayuda · Libro Mayor{% endblock
+%} {% block help_title %}Ayuda rápida · Libro Mayor{% endblock %} {% block
+help_subtitle %}Guía breve para consultar el mayor por cuenta, auxiliar opcional, Unidad de Negocio, interpretar el saldo acumulado según naturaleza de cuenta y emitir el reporte PDF.{% endblock %} {% block help_summary %}
+<li>Qué muestra el Libro Mayor.</li>
+<li>Cómo usar cuenta, auxiliar, Unidad de Negocio y período.</li>
+<li>Qué significa saldo inicial, debe, haber y saldo según naturaleza.</li>
+<li>Cómo interpretar el movimiento acumulado.</li>
+<li>Cómo emitir el PDF del reporte.</li>
+{% endblock %} {% block help_content %}
+<section class="help-section">
+  <h2>1. ¿Para qué sirve esta pantalla?</h2>
+  <div class="help-callout">
+    El <strong>Libro Mayor</strong> permite revisar los movimientos contables de
+    una <strong>cuenta específica</strong>, mostrando el detalle cronológico y
+    el <strong>saldo acumulado</strong> del período consultado.
+  </div>
+  <p>
+    La información se construye únicamente con
+    <strong>comprobantes confirmados</strong>. Si la cuenta trabaja con tercero
+    o referencia auxiliar, puedes filtrar también por <strong>auxiliar</strong>.
+    También puedes separar la consulta por <strong>Unidad de Negocio</strong>.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>2. Qué debes seleccionar antes de consultar</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Cuenta</h3>
+      <p>
+        Es el filtro principal y es <strong>obligatorio</strong>. Sin cuenta no
+        se genera el mayor.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Auxiliar</h3>
+      <p>
+        Es <strong>opcional</strong>. Si lo dejas vacío, el sistema consulta
+        todos los auxiliares de esa cuenta.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Unidad de Negocio</h3>
+      <p>
+        Es <strong>opcional</strong>. Si lo dejas en todas, el mayor combina los
+        movimientos de todas las unidades registradas para esa cuenta.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Rango libre</h3>
+      <p>
+        Permite consultar un corte puntual indicando
+        <strong>Fecha desde</strong> y <strong>Fecha hasta</strong>.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Gestión contable</h3>
+      <p>
+        Permite revisar toda una gestión o año contable en una sola consulta.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>3. Qué significan los saldos</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Saldo inicial</h3>
+      <p>
+        Es el saldo acumulado de la cuenta
+        <strong>antes del período consultado</strong>.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Debe período</h3>
+      <p>
+        Suma de todos los importes registrados al <strong>Debe</strong> dentro
+        del período.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Haber período</h3>
+      <p>
+        Suma de todos los importes registrados al <strong>Haber</strong> dentro
+        del período.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Saldo final</h3>
+      <p>
+        Resultado del <strong>saldo inicial</strong> más los movimientos del
+        período.
+      </p>
+    </div>
+  </div>
+  <div class="help-callout">
+    <strong>Importante:</strong> la columna <strong>Saldo</strong> respeta la naturaleza de la cuenta:
+    cuentas de naturaleza deudora acumulan <strong>Debe - Haber</strong> y cuentas de naturaleza acreedora acumulan
+    <strong>Haber - Debe</strong>. La tabla recalcula el saldo movimiento por movimiento.
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>4. Qué muestra la tabla</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Fecha</h3>
+      <p>Fecha contable del asiento confirmado.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Asiento</h3>
+      <p>Identificador interno del comprobante o asiento.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Origen</h3>
+      <p>Identifica si el asiento proviene de Tesorería, Facturas Electrónicas, Saldos Iniciales o registro manual.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Moneda</h3>
+      <p>Moneda del asiento mostrado. Si existen varias monedas, revísalas antes de interpretar totales globales.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Unidad</h3>
+      <p>Unidad de Negocio a la que pertenece el asiento mostrado.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Referencia</h3>
+      <p>
+        Dato de referencia de la línea o de la cabecera del asiento, cuando
+        exista.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Detalle</h3>
+      <p>Glosa del movimiento que explica el registro contable.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Debe / Haber / Saldo</h3>
+      <p>Importes del movimiento y su impacto acumulado en el mayor.</p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>5. Flujo recomendado de trabajo</h2>
+  <ol class="help-steps">
+    <li>Selecciona la <strong>cuenta</strong>.</li>
+    <li>Si corresponde, selecciona un <strong>auxiliar</strong>.</li>
+    <li>Si deseas separar la consulta, selecciona una <strong>Unidad de Negocio</strong>.</li>
+    <li>
+      Define el período por <strong>rango libre</strong> o por
+      <strong>gestión</strong>.
+    </li>
+    <li>Presiona <strong>Consultar</strong>.</li>
+    <li>Revisa resumen, detalle y saldo acumulado.</li>
+    <li>Si la información es correcta, presiona <strong>PDF</strong>.</li>
+  </ol>
+</section>
+
+<section class="help-section">
+  <h2>6. Reporte PDF</h2>
+  <div class="help-callout">
+    El PDF respeta el mismo filtro aplicado en pantalla y muestra el
+    <strong>Libro Mayor</strong> con saldo inicial, origen, moneda, movimientos del período,
+    unidad de negocio cuando corresponda, totales y saldo final.
+  </div>
+  <p>
+    Se recomienda primero validar la información en pantalla y luego emitir el
+    reporte formal.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>7. Recomendaciones importantes</h2>
+  <ul class="help-summary-list">
+    <li>El Libro Mayor no se consulta sin cuenta contable.</li>
+    <li>
+      Si una cuenta maneja auxiliares, usar el filtro de auxiliar ayuda a aislar
+      un tercero específico.
+    </li>
+    <li>El sistema muestra solo <strong>comprobantes confirmados</strong>.</li>
+    <li>
+      Usa rango libre para cortes puntuales y gestión para revisión anual.
+    </li>
+    <li>
+      Antes de imprimir, valida el <strong>saldo final</strong> y la cantidad de
+      movimientos.
+    </li>
+  </ul>
+</section>
+{% endblock %}

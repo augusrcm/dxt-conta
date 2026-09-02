@@ -1,0 +1,51 @@
+<div class="layout-help-doc">
+  <h2>Reportes rápidos</h2>
+
+  {% if reporte_actual %}
+  <p>
+    <strong>{{ reporte_actual.titulo }}:</strong>
+    {{ reporte_actual.help_intro or reporte_actual.descripcion }}
+  </p>
+
+  {% if reporte_actual.calidad %}
+  <h3>Criterio de lectura</h3>
+  <ul>
+    <li><strong>Fuente:</strong> {{ reporte_actual.calidad.fuente_datos }}</li>
+    <li><strong>Criterio:</strong> {{ reporte_actual.calidad.criterio_reporte }}</li>
+    <li><strong>Importante:</strong> {{ reporte_actual.calidad.advertencia }}</li>
+  </ul>
+  {% endif %}
+
+  {% if reporte_actual.help_items %}
+  <h3>Qué puede hacer en este reporte</h3>
+  <ul>
+    {% for item in reporte_actual.help_items %}
+    <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% else %}
+  <p>Esta pantalla concentra reportes operativos de consulta rápida para tesorería, contabilidad, publicidad y control diario.</p>
+  {% endif %}
+
+  <h3>Uso de la interfaz</h3>
+  <ul>
+    <li>El área de menú permite cambiar de reporte sin salir de la pantalla.</li>
+    <li>El área de filtros actualiza los resultados automáticamente al cambiar periodo, fecha, estado o unidad.</li>
+    <li>El área de resultados conserva la tabla anterior mientras se actualiza para evitar pantallas en blanco.</li>
+    <li>Use Excel para análisis detallado y PDF para impresión o revisión ejecutiva.</li>
+  </ul>
+
+  <h3>Totales</h3>
+  <p>
+    Los totales se muestran cuando el reporte trabaja con una moneda única o con moneda base definida.
+    Si el reporte contiene varias monedas, el sistema prioriza totales por moneda o evita mezclar importes.
+  </p>
+
+  <h3>Reportes disponibles</h3>
+  <ul>
+    {% for reporte in reportes %}
+    <li><strong>{{ reporte.titulo }}:</strong> {{ reporte.descripcion }}</li>
+    {% endfor %}
+  </ul>
+</div>

@@ -1,0 +1,49 @@
+<div class="help-content">
+  <h2>Saldos Iniciales</h2>
+
+  <p>
+    Esta pantalla sirve para registrar el punto de partida del sistema contable cuando la empresa empieza a usar
+    DXT-Conta. No es cierre de gestión y no es apertura automática de una nueva gestión.
+  </p>
+
+  <h3>Cuándo usarla</h3>
+  <p>
+    Úsela una sola vez al iniciar la contabilidad en el sistema, o para corregir esos importes mientras la gestión
+    permanezca abierta.
+  </p>
+
+  <h3>Reglas principales</h3>
+  <ul>
+    <li>Cada línea debe tener una unidad de negocio.</li>
+    <li>Solo se permiten cuentas activas, postables y de balance: Activo, Pasivo o Patrimonio.</li>
+    <li>Una línea puede tener Debe o Haber, pero no ambos.</li>
+    <li>Cada unidad de negocio debe cuadrar por separado: total Debe igual a total Haber.</li>
+    <li>Si una cuenta exige auxiliar o centro de costo, debe seleccionarse antes de guardar.</li>
+  </ul>
+
+  <h3>Qué genera el sistema</h3>
+  <p>
+    Al guardar, el sistema crea o actualiza comprobantes contables especiales con origen
+    <strong>SALDOS_INICIALES</strong>. Internamente se genera un comprobante por cada unidad de negocio que tenga
+    líneas cuadradas.
+  </p>
+
+  <h3>Modificaciones</h3>
+  <p>
+    Si la gestión está abierta, puede corregir importes o cuentas desde esta misma pantalla. Si la gestión está cerrada,
+    no se permite modificar directamente los saldos iniciales: corresponde reabrir la gestión o registrar un asiento de
+    ajuste posterior.
+  </p>
+
+  <h3>Reporte y respaldo</h3>
+  <p>
+    Después de guardar, puede emitir el <strong>PDF</strong> para revisión, archivo o firma. También puede descargar
+    el <strong>Excel</strong> cuando necesite revisar, filtrar o conservar el detalle completo de las líneas.
+  </p>
+
+  <h3>Recomendación operativa</h3>
+  <p>
+    Antes de guardar, revise el bloque de control de cuadratura. Si una unidad aparece con diferencia, debe corregir sus
+    líneas antes de procesar. Luego emita el PDF como respaldo formal de los importes iniciales cargados.
+  </p>
+</div>

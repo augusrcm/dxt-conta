@@ -1,0 +1,1031 @@
+{% extends "layout.html" %}
+{% block title %}Estado de Resultados{% endblock %}
+{% block page_help_url %}{{ url_for('estado_resultados.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    #estadoResultadosPage {
+        --er-navy: #0f2340;
+        --er-blue: #173f6a;
+        --er-accent: #2d7dd2;
+        --er-accent-soft: #edf5ff;
+        --er-border: #dde5ef;
+        --er-surface-2: #fbfdff;
+        --er-text: #1d2c3c;
+        --er-muted: #6f7f90;
+        --er-success: #177a53;
+        --er-danger: #a61f2b;
+        --er-radius: 18px;
+        color: var(--er-text);
+    }
+
+    #estadoResultadosPage .er-header {
+        background: linear-gradient(130deg, var(--er-navy) 0%, var(--er-blue) 55%, #1f5d9e 100%);
+        border-radius: var(--er-radius);
+        padding: 1rem 1.2rem;
+        margin-bottom: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        flex-wrap: wrap;
+        box-shadow: 0 12px 28px rgba(15, 35, 64, 0.15);
+    }
+
+    #estadoResultadosPage .er-header-main {
+        display: flex;
+        align-items: center;
+        gap: 0.95rem;
+    }
+
+    #estadoResultadosPage .er-header-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.14);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    #estadoResultadosPage .er-title {
+        margin: 0;
+        color: #fff;
+        font-size: 1.18rem;
+        font-weight: 700;
+    }
+
+    #estadoResultadosPage .er-subtitle {
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 0.82rem;
+        margin-top: 2px;
+    }
+
+    #estadoResultadosPage .er-header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+    }
+
+    #estadoResultadosPage .er-card {
+        background: #fff;
+        border: 1px solid var(--er-border);
+        border-radius: var(--er-radius);
+        box-shadow: 0 8px 28px rgba(15, 35, 64, 0.06);
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    #estadoResultadosPage .er-card-head {
+        padding: 0.95rem 1.2rem;
+        border-bottom: 1px solid var(--er-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.85rem;
+        flex-wrap: wrap;
+        background: linear-gradient(180deg, #fff 0%, #f9fbfe 100%);
+    }
+
+    #estadoResultadosPage .er-card-title {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-weight: 700;
+        color: var(--er-navy);
+    }
+
+    #estadoResultadosPage .er-card-title small {
+        display: block;
+        margin-top: 2px;
+        color: var(--er-muted);
+        font-size: 0.78rem;
+        font-weight: 500;
+    }
+
+    #estadoResultadosPage .er-card-body {
+        padding: 1rem 1.2rem 1.15rem;
+    }
+
+    #estadoResultadosPage .er-filter-grid {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 0.9rem;
+        align-items: start;
+    }
+
+    #estadoResultadosPage .er-mode-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.45rem;
+        padding: 0.55rem;
+        border: 1px solid var(--er-border);
+        border-radius: 16px;
+        background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+    }
+
+    #estadoResultadosPage .er-mode-card {
+        border: 1px solid var(--er-border);
+        border-radius: 12px;
+        padding: 0.8rem 0.85rem;
+        background: linear-gradient(180deg, #fff 0%, var(--er-surface-2) 100%);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        height: 100%;
+    }
+
+    #estadoResultadosPage .er-mode-card.active {
+        border-color: var(--er-accent);
+        box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.12);
+        background: linear-gradient(180deg, var(--er-accent-soft) 0%, #fff 100%);
+    }
+
+    #estadoResultadosPage .er-mode-title {
+        font-weight: 700;
+        color: var(--er-navy);
+        margin-bottom: 0.25rem;
+    }
+
+    #estadoResultadosPage .er-mode-text {
+        color: var(--er-muted);
+        font-size: 0.84rem;
+        line-height: 1.4;
+    }
+
+    #estadoResultadosPage .er-period-panel {
+        border: 1px solid var(--er-border);
+        border-radius: 16px;
+        background: var(--er-surface-2);
+        padding: 0.9rem;
+    }
+
+    #estadoResultadosPage .er-date-wrap {
+        position: relative;
+    }
+
+    #estadoResultadosPage .er-date-input {
+        padding-right: 2.8rem;
+        cursor: pointer;
+        background-color: #fff;
+    }
+
+    #estadoResultadosPage .er-date-button {
+        position: absolute;
+        top: 50%;
+        right: 0.55rem;
+        transform: translateY(-50%);
+        width: 1.9rem;
+        height: 1.9rem;
+        border: none;
+        border-radius: 10px;
+        background: var(--er-accent-soft);
+        color: var(--er-blue);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    #estadoResultadosPage .er-hidden {
+        display: none !important;
+    }
+
+    #estadoResultadosPage .er-filter-fields {
+        display: grid;
+        grid-template-columns: 1fr 1fr 240px 260px auto;
+        gap: 0.75rem;
+        align-items: end;
+    }
+
+    #estadoResultadosPage .er-filter-actions {
+        display: flex;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    #estadoResultadosPage .er-filter-actions .btn {
+        min-width: 116px;
+    }
+
+    #estadoResultadosPage .er-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+    }
+
+    #estadoResultadosPage .er-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.8rem;
+        border-radius: 999px;
+        background: var(--er-accent-soft);
+        color: var(--er-blue);
+        font-weight: 700;
+        font-size: 0.82rem;
+    }
+
+    #estadoResultadosPage .er-chip.ok {
+        background: #edf8f3;
+        color: var(--er-success);
+    }
+
+    #estadoResultadosPage .er-chip.bad {
+        background: #fdeff1;
+        color: var(--er-danger);
+    }
+
+    #estadoResultadosPage .er-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 0.85rem;
+    }
+
+    #estadoResultadosPage .er-summary-box {
+        background: linear-gradient(180deg, #fff 0%, var(--er-surface-2) 100%);
+        border: 1px solid var(--er-border);
+        border-radius: 16px;
+        padding: 0.9rem 1rem;
+    }
+
+    #estadoResultadosPage .er-summary-label {
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.72rem;
+        color: var(--er-muted);
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+    }
+
+    #estadoResultadosPage .er-summary-value {
+        color: var(--er-navy);
+        font-weight: 700;
+        font-size: 1.02rem;
+    }
+
+
+    #estadoResultadosPage .er-currency-summary {
+        margin-top: 0.85rem;
+        border: 1px solid var(--er-border);
+        border-radius: 16px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    #estadoResultadosPage .er-currency-summary table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    #estadoResultadosPage .er-currency-summary th {
+        background: #f2f6fb;
+        color: var(--er-blue);
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.65rem 0.8rem;
+        border-bottom: 1px solid var(--er-border);
+    }
+
+    #estadoResultadosPage .er-currency-summary td {
+        padding: 0.65rem 0.8rem;
+        border-bottom: 1px solid #edf2f7;
+        font-size: 0.85rem;
+    }
+
+    #estadoResultadosPage .er-currency-summary tr:last-child td {
+        border-bottom: none;
+    }
+
+    #estadoResultadosPage .er-sections {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    #estadoResultadosPage .er-section-card {
+        border: 1px solid var(--er-border);
+        border-radius: 18px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    #estadoResultadosPage .er-section-head {
+        padding: 0.9rem 1rem;
+        background: linear-gradient(180deg, #f7faff 0%, #eef4fb 100%);
+        border-bottom: 1px solid var(--er-border);
+    }
+
+    #estadoResultadosPage .er-section-name {
+        font-weight: 800;
+        color: var(--er-navy);
+    }
+
+    #estadoResultadosPage .er-section-total {
+        font-size: 0.82rem;
+        color: var(--er-muted);
+        margin-top: 0.2rem;
+    }
+
+    #estadoResultadosPage .er-table-wrap {
+        max-height: 540px;
+        overflow: auto;
+    }
+
+    #estadoResultadosPage .er-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    #estadoResultadosPage .er-table thead th {
+        position: sticky;
+        top: 0;
+        background: #f2f6fb;
+        color: var(--er-blue);
+        border-bottom: 1px solid var(--er-border);
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.7rem 0.8rem;
+    }
+
+    #estadoResultadosPage .er-table tbody td {
+        border-bottom: 1px solid #edf2f7;
+        padding: 0.68rem 0.8rem;
+        font-size: 0.85rem;
+        vertical-align: middle;
+    }
+
+    #estadoResultadosPage .er-money {
+        text-align: right;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    #estadoResultadosPage .er-empty {
+        text-align: center;
+        padding: 1.8rem 1rem;
+        color: var(--er-muted);
+    }
+
+    @media (max-width: 1320px) {
+        #estadoResultadosPage .er-filter-fields {
+            grid-template-columns: 1fr 1fr 220px 1fr;
+        }
+
+        #estadoResultadosPage .er-filter-actions {
+            grid-column: 1 / -1;
+            justify-content: flex-start;
+        }
+    }
+
+    @media (max-width: 1200px) {
+
+        #estadoResultadosPage .er-summary-grid,
+        #estadoResultadosPage .er-sections {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 900px) {
+
+        #estadoResultadosPage .er-filter-grid,
+        #estadoResultadosPage .er-summary-grid,
+        #estadoResultadosPage .er-sections,
+        #estadoResultadosPage .er-mode-grid,
+        #estadoResultadosPage .er-filter-fields {
+            grid-template-columns: 1fr;
+        }
+
+        #estadoResultadosPage .er-header,
+        #estadoResultadosPage .er-card-head {
+            align-items: stretch;
+        }
+
+        #estadoResultadosPage .er-header-actions .btn {
+            flex: 1 1 auto;
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div id="estadoResultadosPage">
+    <div class="er-header">
+        <div class="er-header-main">
+            <div class="er-header-icon"><i class="fas fa-chart-line"></i></div>
+            <div>
+                <h1 class="er-title">Estado de Resultados</h1>
+                <div class="er-subtitle">
+                    Ingresos, costos, gastos y utilidad o pérdida del período
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="er-card">
+        <div class="er-card-head">
+            <div class="er-card-title">
+                <i class="fas fa-filter"></i>
+                <div>
+                    Filtros<small>Período por gestión completa o por rango libre</small>
+                </div>
+            </div>
+        </div>
+        <div class="er-card-body">
+            <div class="er-filter-grid">
+                <div>
+                    <div class="er-mode-grid">
+                        <div class="er-mode-card active" data-mode="gestion">
+                            <div class="er-mode-title">Gestión contable</div>
+                            <div class="er-mode-text">Consulta anual completa.</div>
+                        </div>
+                        <div class="er-mode-card" data-mode="rango">
+                            <div class="er-mode-title">Rango libre</div>
+                            <div class="er-mode-text">Consulta puntual por fechas.</div>
+                        </div>
+                    </div>
+                    <input id="modoPeriodo" type="hidden" value="gestion" />
+                </div>
+
+                <div class="er-filter-fields">
+                    <div id="panelGestion" class="er-period-panel">
+                        <label for="gestion" class="form-label">Gestión</label>
+                        <select id="gestion" class="form-select">
+                            {% for item in gestiones %}
+                            {% if item == gestion_actual %}
+                            <option value="{{ item }}" selected>{{ item }}</option>
+                            {% else %}
+                            <option value="{{ item }}">{{ item }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="panelRango" class="er-period-panel er-hidden">
+                        <label for="fechaDesde" class="form-label">Fecha desde</label>
+                        <div class="er-date-wrap">
+                            <input id="fechaDesde" type="text" class="form-control er-date-input"
+                                value="{{ fecha_hoy }}" autocomplete="off" readonly />
+                            <button id="btnFechaDesde" type="button" class="er-date-button"
+                                aria-label="Seleccionar fecha desde">
+                                <i class="fas fa-calendar-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="panelRangoHasta" class="er-period-panel er-hidden">
+                        <label for="fechaHasta" class="form-label">Fecha hasta</label>
+                        <div class="er-date-wrap">
+                            <input id="fechaHasta" type="text" class="form-control er-date-input"
+                                value="{{ fecha_hoy }}" autocomplete="off" readonly />
+                            <button id="btnFechaHasta" type="button" class="er-date-button"
+                                aria-label="Seleccionar fecha hasta">
+                                <i class="fas fa-calendar-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="er-period-panel">
+                        <label for="unidadNegocio" class="form-label">Unidad de negocio</label>
+                        <select id="unidadNegocio" class="form-select">
+                            <option value="">Todas las unidades</option>
+                            {% for item in unidades_negocio %}
+                            <option value="{{ item.id }}">{{ item.codigo }} - {{ item.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="er-filter-actions">
+                        <button id="btnConsultar" type="button" class="btn btn-primary btn-sm">
+                            <i class="fas fa-search me-1"></i> Consultar
+                        </button>
+                        <button id="btnLimpiar" type="button" class="btn btn-light btn-sm">
+                            <i class="fas fa-rotate-left me-1"></i> Limpiar
+                        </button>
+                        <button id="btnPdf" type="button" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-file-pdf me-1"></i> PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="er-card">
+        <div class="er-card-head">
+            <div class="er-card-title">
+                <i class="fas fa-chart-column"></i>
+                <div>
+                    Resumen<small>Resultado global del período y contexto de unidad</small>
+                </div>
+            </div>
+            <div class="er-chip-row">
+                <div id="periodoBadge" class="er-chip">
+                    <i class="fas fa-calendar-days"></i> Sin consulta realizada
+                </div>
+                <div id="resultadoBadge" class="er-chip">
+                    <i class="fas fa-sack-dollar"></i> Resultado pendiente
+                </div>
+            </div>
+        </div>
+        <div class="er-card-body">
+            <div class="er-summary-grid">
+                <div class="er-summary-box">
+                    <div class="er-summary-label">Unidad</div>
+                    <div id="sumUnidad" class="er-summary-value">Todas las unidades</div>
+                </div>
+                <div class="er-summary-box">
+                    <div class="er-summary-label">Monedas</div>
+                    <div id="sumMonedas" class="er-summary-value">0</div>
+                </div>
+                <div class="er-summary-box">
+                    <div class="er-summary-label">Ingresos</div>
+                    <div id="sumIngresos" class="er-summary-value">0,00</div>
+                </div>
+                <div class="er-summary-box">
+                    <div class="er-summary-label">Costos</div>
+                    <div id="sumCostos" class="er-summary-value">0,00</div>
+                </div>
+                <div class="er-summary-box">
+                    <div class="er-summary-label">Utilidad bruta</div>
+                    <div id="sumUtilidadBruta" class="er-summary-value">0,00</div>
+                </div>
+                <div class="er-summary-box">
+                    <div class="er-summary-label">Gastos</div>
+                    <div id="sumGastos" class="er-summary-value">0,00</div>
+                </div>
+                <div class="er-summary-box">
+                    <div class="er-summary-label">Utilidad / pérdida neta</div>
+                    <div id="sumUtilidadNeta" class="er-summary-value">0,00</div>
+                </div>
+            </div>
+            <div class="er-currency-summary">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Moneda</th>
+                            <th class="text-end">Ingresos</th>
+                            <th class="text-end">Costos</th>
+                            <th class="text-end">Utilidad bruta</th>
+                            <th class="text-end">Gastos</th>
+                            <th class="text-end">Utilidad / pérdida neta</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyMonedas">
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Sin consulta realizada</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="er-card">
+        <div class="er-card-head">
+            <div class="er-card-title">
+                <i class="fas fa-table"></i>
+                <div>
+                    Estructura del reporte<small>Ingresos, costos y gastos por cuenta</small>
+                </div>
+            </div>
+        </div>
+        <div class="er-card-body">
+            <div class="er-sections">
+                <div class="er-section-card">
+                    <div class="er-section-head">
+                        <div class="er-section-name">Ingresos</div>
+                        <div id="totIngresosCard" class="er-section-total">Total: 0,00</div>
+                    </div>
+                    <div class="er-table-wrap">
+                        <table class="er-table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Cuenta</th>
+                                    <th>Moneda</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyIngresos"></tbody>
+                        </table>
+                        <div id="emptyIngresos" class="er-empty">Sin datos</div>
+                    </div>
+                </div>
+
+                <div class="er-section-card">
+                    <div class="er-section-head">
+                        <div class="er-section-name">Costos</div>
+                        <div id="totCostosCard" class="er-section-total">Total: 0,00</div>
+                    </div>
+                    <div class="er-table-wrap">
+                        <table class="er-table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Cuenta</th>
+                                    <th>Moneda</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyCostos"></tbody>
+                        </table>
+                        <div id="emptyCostos" class="er-empty">Sin datos</div>
+                    </div>
+                </div>
+
+                <div class="er-section-card">
+                    <div class="er-section-head">
+                        <div class="er-section-name">Gastos</div>
+                        <div id="totGastosCard" class="er-section-total">Total: 0,00</div>
+                    </div>
+                    <div class="er-table-wrap">
+                        <table class="er-table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Cuenta</th>
+                                    <th>Moneda</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyGastos"></tbody>
+                        </table>
+                        <div id="emptyGastos" class="er-empty">Sin datos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="estadoResultadosBootstrap" type="application/json">
+  {{ {
+    "fecha_hoy": fecha_hoy,
+    "gestion_actual": gestion_actual,
+    "urls": {
+      "datos": url_for('estado_resultados.datos'),
+      "pdf": url_for('estado_resultados.pdf')
+    }
+  } | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const bootEl = document.getElementById("estadoResultadosBootstrap");
+        if (!bootEl) {
+            return;
+        }
+
+        if (typeof flatpickr === "undefined") {
+            Swal.fire({
+                icon: "error",
+                title: "Estado de Resultados",
+                text: "No se pudieron cargar los componentes requeridos de la pantalla.",
+                confirmButtonText: "Aceptar",
+                confirmButtonColor: "#1d4ed8",
+            });
+            return;
+        }
+
+        const boot = JSON.parse(bootEl.textContent || "{}");
+
+        const modeCards = Array.from(
+            document.querySelectorAll("#estadoResultadosPage .er-mode-card"),
+        );
+        const modoPeriodo = document.getElementById("modoPeriodo");
+        const panelRango = document.getElementById("panelRango");
+        const panelRangoHasta = document.getElementById("panelRangoHasta");
+        const panelGestion = document.getElementById("panelGestion");
+
+        const fechaDesde = document.getElementById("fechaDesde");
+        const fechaHasta = document.getElementById("fechaHasta");
+        const btnFechaDesde = document.getElementById("btnFechaDesde");
+        const btnFechaHasta = document.getElementById("btnFechaHasta");
+        const gestion = document.getElementById("gestion");
+        const unidadNegocio = document.getElementById("unidadNegocio");
+
+        const btnConsultar = document.getElementById("btnConsultar");
+        const btnLimpiar = document.getElementById("btnLimpiar");
+        const btnPdf = document.getElementById("btnPdf");
+
+        const periodoBadge = document.getElementById("periodoBadge");
+        const resultadoBadge = document.getElementById("resultadoBadge");
+
+        const sumUnidad = document.getElementById("sumUnidad");
+        const sumMonedas = document.getElementById("sumMonedas");
+        const sumIngresos = document.getElementById("sumIngresos");
+        const sumCostos = document.getElementById("sumCostos");
+        const sumUtilidadBruta = document.getElementById("sumUtilidadBruta");
+        const sumGastos = document.getElementById("sumGastos");
+        const sumUtilidadNeta = document.getElementById("sumUtilidadNeta");
+
+        const totIngresosCard = document.getElementById("totIngresosCard");
+        const totCostosCard = document.getElementById("totCostosCard");
+        const totGastosCard = document.getElementById("totGastosCard");
+
+        const tbodyIngresos = document.getElementById("tbodyIngresos");
+        const tbodyCostos = document.getElementById("tbodyCostos");
+        const tbodyGastos = document.getElementById("tbodyGastos");
+        const tbodyMonedas = document.getElementById("tbodyMonedas");
+
+        const emptyIngresos = document.getElementById("emptyIngresos");
+        const emptyCostos = document.getElementById("emptyCostos");
+        const emptyGastos = document.getElementById("emptyGastos");
+
+        let ultimaConsulta = null;
+
+        function formatMoney(value) {
+            return Number(value || 0).toLocaleString("es-BO", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+        }
+
+        function formatMoneyWithSymbol(value, symbol) {
+            const prefix = symbol ? `${symbol} ` : "";
+            return `${prefix}${formatMoney(value)}`.trim();
+        }
+
+        function summaryAmount(value, resumen) {
+            if (!resumen || !resumen.moneda_unica) {
+                return "Por moneda";
+            }
+            return formatMoneyWithSymbol(value, resumen.moneda_principal_simbolo || resumen.moneda_principal || "");
+        }
+
+        function setCurrencyTotals(rows) {
+            tbodyMonedas.innerHTML = "";
+            if (!rows || !rows.length) {
+                tbodyMonedas.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Sin datos</td></tr>';
+                return;
+            }
+            rows.forEach((row) => {
+                const tr = document.createElement("tr");
+                const moneda = row.moneda_codigo || "";
+                const simbolo = row.moneda_simbolo || moneda;
+                tr.innerHTML = `
+                    <td><strong>${moneda}</strong></td>
+                    <td class="er-money">${formatMoneyWithSymbol(row.total_ingresos, simbolo)}</td>
+                    <td class="er-money">${formatMoneyWithSymbol(row.total_costos, simbolo)}</td>
+                    <td class="er-money">${formatMoneyWithSymbol(row.utilidad_bruta, simbolo)}</td>
+                    <td class="er-money">${formatMoneyWithSymbol(row.total_gastos, simbolo)}</td>
+                    <td class="er-money">${formatMoneyWithSymbol(row.utilidad_neta, simbolo)}</td>
+                `;
+                tbodyMonedas.appendChild(tr);
+            });
+        }
+
+        function showError(message) {
+            Swal.fire({
+                icon: "error",
+                title: "Estado de Resultados",
+                text: message,
+                confirmButtonText: "Aceptar",
+                confirmButtonColor: "#1d4ed8",
+            });
+        }
+
+        function setMode(mode) {
+            modoPeriodo.value = mode;
+            modeCards.forEach((card) => {
+                card.classList.toggle("active", card.dataset.mode === mode);
+            });
+            panelRango.classList.toggle("er-hidden", mode !== "rango");
+            panelRangoHasta.classList.toggle("er-hidden", mode !== "rango");
+            panelGestion.classList.toggle("er-hidden", mode !== "gestion");
+        }
+
+        modeCards.forEach((card) => {
+            card.addEventListener("click", function () {
+                setMode(card.dataset.mode || "gestion");
+            });
+        });
+
+        const fpDesde = flatpickr(fechaDesde, {
+            locale: flatpickr.l10ns.es || "es",
+            dateFormat: "Y-m-d",
+            allowInput: false,
+            clickOpens: true,
+            disableMobile: true,
+            defaultDate: boot.fecha_hoy,
+        });
+
+        const fpHasta = flatpickr(fechaHasta, {
+            locale: flatpickr.l10ns.es || "es",
+            dateFormat: "Y-m-d",
+            allowInput: false,
+            clickOpens: true,
+            disableMobile: true,
+            defaultDate: boot.fecha_hoy,
+        });
+
+        btnFechaDesde.addEventListener("click", function () {
+            fpDesde.open();
+        });
+
+        btnFechaHasta.addEventListener("click", function () {
+            fpHasta.open();
+        });
+
+        fechaDesde.addEventListener("click", function () {
+            fpDesde.open();
+        });
+
+        fechaHasta.addEventListener("click", function () {
+            fpHasta.open();
+        });
+
+        function clearBody(tbody, emptyEl, text) {
+            tbody.innerHTML = "";
+            emptyEl.textContent = text || "Sin datos";
+            emptyEl.style.display = "block";
+        }
+
+        function setSectionRows(tbody, emptyEl, rows) {
+            tbody.innerHTML = "";
+
+            if (!rows || !rows.length) {
+                emptyEl.style.display = "block";
+                return;
+            }
+
+            emptyEl.style.display = "none";
+
+            rows.forEach((row) => {
+                const tr = document.createElement("tr");
+
+                const tdCodigo = document.createElement("td");
+                tdCodigo.textContent = row.codigo || "";
+
+                const tdNombre = document.createElement("td");
+                tdNombre.textContent = row.nombre || "";
+
+                const tdMoneda = document.createElement("td");
+                tdMoneda.textContent = row.moneda_codigo || "";
+
+                const tdMonto = document.createElement("td");
+                tdMonto.className = "er-money";
+                tdMonto.textContent = formatMoneyWithSymbol(row.monto, row.moneda_simbolo || row.moneda_codigo || "");
+
+                tr.appendChild(tdCodigo);
+                tr.appendChild(tdNombre);
+                tr.appendChild(tdMoneda);
+                tr.appendChild(tdMonto);
+                tbody.appendChild(tr);
+            });
+        }
+
+        function resetSummary() {
+            periodoBadge.innerHTML =
+                '<i class="fas fa-calendar-days"></i> Sin consulta realizada';
+            resultadoBadge.className = "er-chip";
+            resultadoBadge.innerHTML =
+                '<i class="fas fa-sack-dollar"></i> Resultado pendiente';
+
+            sumUnidad.textContent = "Todas las unidades";
+            sumMonedas.textContent = "0";
+            sumIngresos.textContent = "0,00";
+            sumCostos.textContent = "0,00";
+            sumUtilidadBruta.textContent = "0,00";
+            sumGastos.textContent = "0,00";
+            sumUtilidadNeta.textContent = "0,00";
+
+            totIngresosCard.textContent = "Total: 0,00";
+            totCostosCard.textContent = "Total: 0,00";
+            totGastosCard.textContent = "Total: 0,00";
+            setCurrencyTotals([]);
+        }
+
+        function currentParams() {
+            return {
+                modo_periodo: modoPeriodo.value || "gestion",
+                gestion: gestion.value || boot.gestion_actual,
+                fecha_desde: fechaDesde.value || boot.fecha_hoy,
+                fecha_hasta: fechaHasta.value || boot.fecha_hoy,
+                unidad_negocio_id: (unidadNegocio && unidadNegocio.value) ? unidadNegocio.value : "",
+            };
+        }
+
+        function setLoading(isLoading) {
+            btnConsultar.disabled = isLoading;
+            btnPdf.disabled = isLoading;
+            btnLimpiar.disabled = isLoading;
+            btnConsultar.innerHTML = isLoading
+                ? '<span class="spinner-border spinner-border-sm me-1"></span> Consultando...'
+                : '<i class="fas fa-search me-1"></i> Consultar';
+        }
+
+        async function consultar() {
+            const params = currentParams();
+            setLoading(true);
+
+            try {
+                const query = new URLSearchParams(params);
+                const response = await fetch(`${boot.urls.datos}?${query.toString()}`, {
+                    headers: {
+                        Accept: "application/json",
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                });
+
+                const payload = await response.json();
+
+                if (!response.ok || !payload.success) {
+                    throw new Error(
+                        payload.message || "No se pudo consultar el estado de resultados.",
+                    );
+                }
+
+                const resumen = payload.resumen || {};
+                const ingresos = payload.ingresos || [];
+                const costos = payload.costos || [];
+                const gastos = payload.gastos || [];
+                const totalesPorMoneda = payload.totales_por_moneda || [];
+
+                periodoBadge.innerHTML = `<i class="fas fa-calendar-days"></i> ${resumen.descripcion_periodo || "Sin período"}`;
+
+                const utilidadNeta = Number(resumen.utilidad_neta || 0);
+                if (resumen.moneda_unica) {
+                    resultadoBadge.className = utilidadNeta >= 0 ? "er-chip ok" : "er-chip bad";
+                    resultadoBadge.innerHTML = utilidadNeta >= 0
+                        ? `<i class="fas fa-circle-check"></i> Utilidad neta: ${summaryAmount(resumen.utilidad_neta, resumen)}`
+                        : `<i class="fas fa-triangle-exclamation"></i> Pérdida neta: ${summaryAmount(resumen.utilidad_neta, resumen)}`;
+                } else if (Number(resumen.cantidad_monedas || 0) > 1) {
+                    resultadoBadge.className = "er-chip";
+                    resultadoBadge.innerHTML = '<i class="fas fa-coins"></i> Resultado por moneda';
+                } else {
+                    resultadoBadge.className = "er-chip";
+                    resultadoBadge.innerHTML = '<i class="fas fa-sack-dollar"></i> Sin movimientos';
+                }
+
+                const unidadTexto = resumen.unidad_negocio_id
+                    ? `${resumen.unidad_negocio_codigo} - ${resumen.unidad_negocio_nombre}`
+                    : `Todas las unidades (${Number(resumen.cantidad_unidades || 0)})`;
+
+                sumUnidad.textContent = unidadTexto;
+                sumMonedas.textContent = Number(resumen.cantidad_monedas || 0);
+                sumIngresos.textContent = summaryAmount(resumen.total_ingresos, resumen);
+                sumCostos.textContent = summaryAmount(resumen.total_costos, resumen);
+                sumUtilidadBruta.textContent = summaryAmount(resumen.utilidad_bruta, resumen);
+                sumGastos.textContent = summaryAmount(resumen.total_gastos, resumen);
+                sumUtilidadNeta.textContent = summaryAmount(resumen.utilidad_neta, resumen);
+
+                totIngresosCard.textContent = resumen.moneda_unica ? `Total: ${summaryAmount(resumen.total_ingresos, resumen)}` : "Total: Por moneda";
+                totCostosCard.textContent = resumen.moneda_unica ? `Total: ${summaryAmount(resumen.total_costos, resumen)}` : "Total: Por moneda";
+                totGastosCard.textContent = resumen.moneda_unica ? `Total: ${summaryAmount(resumen.total_gastos, resumen)}` : "Total: Por moneda";
+                setCurrencyTotals(totalesPorMoneda);
+
+                setSectionRows(tbodyIngresos, emptyIngresos, ingresos);
+                setSectionRows(tbodyCostos, emptyCostos, costos);
+                setSectionRows(tbodyGastos, emptyGastos, gastos);
+
+                ultimaConsulta = params;
+            } catch (error) {
+                clearBody(tbodyIngresos, emptyIngresos, "Sin datos");
+                clearBody(tbodyCostos, emptyCostos, "Sin datos");
+                clearBody(tbodyGastos, emptyGastos, "Sin datos");
+                resetSummary();
+                ultimaConsulta = null;
+                showError(error.message || "No se pudo consultar el estado de resultados.");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        btnConsultar.addEventListener("click", consultar);
+
+        btnLimpiar.addEventListener("click", function () {
+            setMode("gestion");
+            gestion.value = String(boot.gestion_actual || "");
+            if (unidadNegocio) {
+                unidadNegocio.value = "";
+            }
+            fpDesde.setDate(boot.fecha_hoy, true);
+            fpHasta.setDate(boot.fecha_hoy, true);
+            ultimaConsulta = null;
+            resetSummary();
+            clearBody(tbodyIngresos, emptyIngresos, "Consulte para visualizar los ingresos.");
+            clearBody(tbodyCostos, emptyCostos, "Consulte para visualizar los costos.");
+            clearBody(tbodyGastos, emptyGastos, "Consulte para visualizar los gastos.");
+        });
+
+        btnPdf.addEventListener("click", function () {
+            const params = ultimaConsulta || currentParams();
+            const query = new URLSearchParams(params);
+            window.open(`${boot.urls.pdf}?${query.toString()}`, "_blank");
+        });
+
+        setMode("gestion");
+        resetSummary();
+        clearBody(tbodyIngresos, emptyIngresos, "Consulte para visualizar los ingresos.");
+        clearBody(tbodyCostos, emptyCostos, "Consulte para visualizar los costos.");
+        clearBody(tbodyGastos, emptyGastos, "Consulte para visualizar los gastos.");
+    })();
+</script>
+{% endblock extra_js %}

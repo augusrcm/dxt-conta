@@ -1,0 +1,131 @@
+{% extends "layouthelp.html" %} {% block title %}Ayuda · Tipo de Cambio{%
+endblock %} {% block help_title %}Ayuda rápida · Tipo de Cambio{% endblock %} {%
+block help_subtitle %}Guía práctica de la pantalla de gestión diaria de USD
+Paralelo y UFV.{% endblock %} {% block help_summary %}
+<li>Qué muestra esta pantalla.</li>
+<li>Cómo usar el rango de fechas.</li>
+<li>Cómo registrar o editar un valor diario.</li>
+<li>Qué significa cada columna.</li>
+<li>Buenas prácticas antes de guardar.</li>
+{% endblock %} {% block help_content %}
+<section class="help-section">
+  <h2>1. ¿Para qué sirve esta pantalla?</h2>
+  <div class="help-callout">
+    Esta interfaz permite consultar, registrar y actualizar el tipo de cambio
+    diario utilizado por el sistema contable. La gestión se realiza por fecha y
+    contempla dos valores: <strong>USD Paralelo</strong> y <strong>UFV</strong>.
+  </div>
+  <p>
+    El listado muestra un rango de días. Si una fecha no tiene registro,
+    igualmente aparece en la tabla para facilitar el control y permitir
+    completar la información faltante.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>2. Filtros de búsqueda</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Desde</h3>
+      <p>Indica la fecha inicial del rango que deseas consultar.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Hasta</h3>
+      <p>Indica la fecha final del rango que deseas consultar.</p>
+    </div>
+  </div>
+  <p>
+    El sistema valida que <strong>Desde</strong> no sea mayor que
+    <strong>Hasta</strong>. Si el rango es correcto, el listado se recarga
+    mostrando todos los días comprendidos entre ambas fechas.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>3. ¿Qué significa cada columna?</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Fecha</h3>
+      <p>
+        Corresponde al día exacto al que pertenece el registro del tipo de
+        cambio.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>USD Paralelo</h3>
+      <p>Valor en bolivianos correspondiente a 1 USD para esa fecha.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>UFV</h3>
+      <p>Valor de la UFV para la fecha seleccionada.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Registro / Actualización</h3>
+      <p>
+        Permite identificar quién registró o modificó el dato y en qué momento
+        se realizó.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>4. Cómo registrar o editar un tipo de cambio</h2>
+  <ol class="help-steps">
+    <li>Ubica la fecha en la tabla.</li>
+    <li>Haz clic en el botón de acción correspondiente.</li>
+    <li>
+      Ingresa los valores de <strong>USD Paralelo</strong> y
+      <strong>UFV</strong>.
+    </li>
+    <li>Presiona <strong>Guardar</strong> para confirmar el registro.</li>
+    <li>Si no deseas continuar, usa <strong>Cancelar</strong>.</li>
+  </ol>
+  <div class="help-callout">
+    Solo los usuarios con permisos de edición podrán registrar o modificar
+    valores.
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>5. Validaciones importantes</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Valores obligatorios</h3>
+      <p>USD Paralelo y UFV deben tener un valor numérico válido.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Valores mayores a cero</h3>
+      <p>El sistema no permite guardar valores iguales o menores a 0.</p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>6. Ejemplo práctico</h2>
+  <div class="help-callout">
+    <strong>Ejemplo:</strong> para la fecha <strong>15/03/2026</strong>, se
+    registra: <strong>USD Paralelo = 11.45</strong> y
+    <strong>UFV = 2.673841</strong>.
+  </div>
+  <p>
+    Esto significa que, para esa fecha, el sistema podrá tomar esos valores como
+    referencia en procesos contables o de conversión que dependan del tipo de
+    cambio diario.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>7. Recomendaciones de uso</h2>
+  <ul class="help-summary-list">
+    <li>Verifica que estás editando la fecha correcta antes de guardar.</li>
+    <li>Revisa cuidadosamente los decimales ingresados.</li>
+    <li>
+      Completa los días faltantes para mantener continuidad en la información.
+    </li>
+    <li>
+      Evita sobrescribir un valor sin confirmar previamente la fuente del dato.
+    </li>
+  </ul>
+</section>
+{% endblock %}

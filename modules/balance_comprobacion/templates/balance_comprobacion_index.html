@@ -1,0 +1,1066 @@
+{% extends "layout.html" %}
+{% block title %}Balance de Comprobación{% endblock %}
+{% block page_help_url %}{{ url_for('balance_comprobacion.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  #balanceComprobacionPage {
+    --bc-navy: #0f2340;
+    --bc-blue: #173f6a;
+    --bc-accent: #2563eb;
+    --bc-accent-soft: #edf5ff;
+    --bc-border: #dbe5f0;
+    --bc-surface: #f6f9fc;
+    --bc-surface-2: #fbfdff;
+    --bc-text: #1d2c3c;
+    --bc-muted: #6f7f90;
+    --bc-success: #177a53;
+    --bc-danger: #a61f2b;
+    --bc-radius: 18px;
+    color: var(--bc-text);
+  }
+
+  #balanceComprobacionPage .bc-header {
+    background: linear-gradient(130deg, var(--bc-navy) 0%, var(--bc-blue) 58%, #1f5d9e 100%);
+    border-radius: var(--bc-radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 12px 30px rgba(15, 35, 64, 0.14);
+  }
+
+  #balanceComprobacionPage .bc-header-main {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  #balanceComprobacionPage .bc-header-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+  }
+
+  #balanceComprobacionPage .bc-title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.12rem;
+    font-weight: 700;
+  }
+
+  #balanceComprobacionPage .bc-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.81rem;
+    margin-top: 0.2rem;
+  }
+
+  #balanceComprobacionPage .bc-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  #balanceComprobacionPage .bc-card {
+    background: #fff;
+    border: 1px solid var(--bc-border);
+    border-radius: var(--bc-radius);
+    box-shadow: 0 6px 22px rgba(15, 35, 64, 0.05);
+    overflow: hidden;
+    margin-bottom: 0.9rem;
+  }
+
+  #balanceComprobacionPage .bc-card-head {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--bc-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    background: linear-gradient(180deg, #fff 0%, #f9fbfe 100%);
+  }
+
+  #balanceComprobacionPage .bc-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-weight: 700;
+    color: var(--bc-navy);
+  }
+
+  #balanceComprobacionPage .bc-card-title small {
+    display: block;
+    margin-top: 1px;
+    color: var(--bc-muted);
+    font-size: 0.76rem;
+    font-weight: 500;
+  }
+
+  #balanceComprobacionPage .bc-card-body {
+    padding: 0.95rem 1rem 1rem;
+  }
+
+  #balanceComprobacionPage .bc-toolbar {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.9rem;
+  }
+
+  #balanceComprobacionPage .bc-mode-wrap {
+    border: 1px solid var(--bc-border);
+    border-radius: 14px;
+    background: var(--bc-surface-2);
+    padding: 0.5rem;
+    min-width: 280px;
+  }
+
+  #balanceComprobacionPage .bc-mode-label {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: var(--bc-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  #balanceComprobacionPage .bc-mode-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  #balanceComprobacionPage .bc-mode-card {
+    border: 1px solid var(--bc-border);
+    border-radius: 12px;
+    padding: 0.65rem 0.75rem;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+
+  #balanceComprobacionPage .bc-mode-card.active {
+    border-color: var(--bc-accent);
+    background: var(--bc-accent-soft);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  #balanceComprobacionPage .bc-mode-title {
+    font-weight: 700;
+    color: var(--bc-navy);
+    margin-bottom: 0.15rem;
+    font-size: 0.86rem;
+  }
+
+  #balanceComprobacionPage .bc-mode-text {
+    color: var(--bc-muted);
+    font-size: 0.74rem;
+    line-height: 1.35;
+  }
+
+  #balanceComprobacionPage .bc-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  #balanceComprobacionPage .bc-actions .btn {
+    min-width: 110px;
+  }
+
+  #balanceComprobacionPage .bc-filter-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1.1fr 1.1fr 1.1fr 1.15fr;
+    gap: 0.8rem;
+  }
+
+  #balanceComprobacionPage .bc-field {
+    min-width: 0;
+  }
+
+  #balanceComprobacionPage .bc-hidden {
+    display: none !important;
+  }
+
+  #balanceComprobacionPage .form-label {
+    color: var(--bc-navy);
+    font-weight: 700;
+    font-size: 0.75rem;
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  #balanceComprobacionPage .form-control,
+  #balanceComprobacionPage .form-select,
+  #balanceComprobacionPage .select2-container--default .select2-selection--single {
+    min-height: 40px;
+    border-radius: 12px;
+    border: 1px solid #d7e2ee;
+    box-shadow: none;
+  }
+
+  #balanceComprobacionPage .form-control:focus,
+  #balanceComprobacionPage .form-select:focus {
+    border-color: #8fb8eb;
+    box-shadow: 0 0 0 0.2rem rgba(45, 125, 210, 0.12);
+  }
+
+  #balanceComprobacionPage .bc-select2 .select2-container {
+    width: 100% !important;
+  }
+
+  #balanceComprobacionPage .select2-container--default .select2-selection--single {
+    display: flex;
+    align-items: center;
+    padding: 0.15rem 0.7rem;
+  }
+
+  #balanceComprobacionPage .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: var(--bc-text);
+    line-height: 1.4;
+    padding-left: 0;
+    padding-right: 1.8rem;
+  }
+
+  #balanceComprobacionPage .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 38px;
+    right: 8px;
+  }
+
+  #balanceComprobacionPage .bc-date-wrap {
+    position: relative;
+  }
+
+  #balanceComprobacionPage .bc-date-input {
+    padding-right: 2.5rem;
+    cursor: pointer;
+    background-color: #fff;
+  }
+
+  #balanceComprobacionPage .bc-date-button {
+    position: absolute;
+    top: 50%;
+    right: 0.45rem;
+    transform: translateY(-50%);
+    width: 1.85rem;
+    height: 1.85rem;
+    border: none;
+    border-radius: 10px;
+    background: var(--bc-accent-soft);
+    color: var(--bc-blue);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  #balanceComprobacionPage .bc-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  #balanceComprobacionPage .bc-summary-box {
+    background: linear-gradient(180deg, #fff 0%, var(--bc-surface-2) 100%);
+    border: 1px solid var(--bc-border);
+    border-radius: 14px;
+    padding: 0.75rem 0.85rem;
+  }
+
+  #balanceComprobacionPage .bc-summary-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.68rem;
+    color: var(--bc-muted);
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+  }
+
+  #balanceComprobacionPage .bc-summary-value {
+    color: var(--bc-navy);
+    font-weight: 700;
+    font-size: 0.96rem;
+    line-height: 1.3;
+  }
+
+  #balanceComprobacionPage .bc-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  #balanceComprobacionPage .bc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.42rem 0.75rem;
+    border-radius: 999px;
+    background: var(--bc-accent-soft);
+    color: var(--bc-blue);
+    font-weight: 700;
+    font-size: 0.78rem;
+  }
+
+  #balanceComprobacionPage .bc-chip.ok {
+    background: #edf8f3;
+    color: var(--bc-success);
+  }
+
+  #balanceComprobacionPage .bc-chip.bad {
+    background: #fdeff1;
+    color: var(--bc-danger);
+  }
+
+  #balanceComprobacionPage .bc-currency-wrap {
+    margin-top: 0.85rem;
+    border: 1px solid var(--bc-border);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  #balanceComprobacionPage .bc-currency-title {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.65rem 0.85rem;
+    background: #f8fafc;
+    color: var(--bc-blue);
+    font-weight: 800;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  #balanceComprobacionPage .bc-currency-table {
+    width: 100%;
+    margin: 0;
+  }
+
+  #balanceComprobacionPage .bc-currency-table th,
+  #balanceComprobacionPage .bc-currency-table td {
+    padding: 0.5rem 0.65rem;
+    border-top: 1px solid var(--bc-border);
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  #balanceComprobacionPage .bc-currency-table th {
+    color: var(--bc-muted);
+    background: #fbfdff;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.68rem;
+  }
+
+  #balanceComprobacionPage .bc-currency-table .money,
+  #balanceComprobacionPage .bc-currency-table .center {
+    text-align: right;
+    font-weight: 700;
+  }
+
+  #balanceComprobacionPage .bc-currency-table .center {
+    text-align: center;
+  }
+
+  #balanceComprobacionPage .bc-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  #balanceComprobacionPage table.dataTable thead th {
+    background: #f2f6fb;
+    color: var(--bc-blue);
+    border-bottom: 1px solid var(--bc-border) !important;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  #balanceComprobacionPage table.dataTable tbody td {
+    vertical-align: middle;
+    font-size: 0.84rem;
+  }
+
+  #balanceComprobacionPage .bc-money {
+    text-align: right;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  #balanceComprobacionPage .bc-empty {
+    text-align: center;
+    padding: 1.35rem 1rem;
+    color: var(--bc-muted);
+  }
+
+  @media (max-width: 1280px) {
+    #balanceComprobacionPage .bc-filter-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    #balanceComprobacionPage .bc-summary-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 900px) {
+    #balanceComprobacionPage .bc-toolbar,
+    #balanceComprobacionPage .bc-card-head,
+    #balanceComprobacionPage .bc-header {
+      align-items: stretch;
+    }
+
+    #balanceComprobacionPage .bc-actions {
+      width: 100%;
+    }
+
+    #balanceComprobacionPage .bc-actions .btn {
+      flex: 1 1 auto;
+    }
+
+    #balanceComprobacionPage .bc-filter-grid,
+    #balanceComprobacionPage .bc-summary-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    #balanceComprobacionPage .bc-mode-switch,
+    #balanceComprobacionPage .bc-filter-grid,
+    #balanceComprobacionPage .bc-summary-grid {
+      grid-template-columns: 1fr;
+    }
+
+    #balanceComprobacionPage .bc-actions .btn {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="balanceComprobacionPage">
+  <div class="bc-header">
+    <div class="bc-header-main">
+      <div class="bc-header-icon"><i class="fas fa-scale-balanced"></i></div>
+      <div>
+        <h1 class="bc-title">Balance de Comprobación</h1>
+        <div class="bc-subtitle">Consulta compacta de saldos anteriores, movimientos del período y saldo final por cuenta.</div>
+      </div>
+    </div>
+    <div class="bc-status-chip"><i class="fas fa-circle-check"></i> Comprobantes confirmados</div>
+  </div>
+
+  <div class="bc-card">
+    <div class="bc-card-head">
+      <div class="bc-card-title">
+        <i class="fas fa-filter"></i>
+        <div>Filtros del balance<small>Vista compacta para consultar sin alargar la pantalla.</small></div>
+      </div>
+    </div>
+    <div class="bc-card-body">
+      <div class="bc-toolbar">
+        <div class="bc-mode-wrap">
+          <span class="bc-mode-label">Modo de período</span>
+          <div class="bc-mode-switch">
+            <div class="bc-mode-card" data-mode="rango">
+              <div class="bc-mode-title">Rango libre</div>
+              <div class="bc-mode-text">Consulta puntual por fechas.</div>
+            </div>
+            <div class="bc-mode-card active" data-mode="gestion">
+              <div class="bc-mode-title">Gestión</div>
+              <div class="bc-mode-text">Consulta anual completa.</div>
+            </div>
+          </div>
+          <input id="modoPeriodo" type="hidden" value="gestion" />
+        </div>
+
+        <div class="bc-actions">
+          <button id="btnConsultar" type="button" class="btn btn-primary btn-sm">
+            <i class="fas fa-search me-1"></i> Consultar
+          </button>
+          <button id="btnPdf" type="button" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-file-pdf me-1"></i> PDF
+          </button>
+          <button id="btnLimpiar" type="button" class="btn btn-light btn-sm">
+            <i class="fas fa-rotate-left me-1"></i> Limpiar
+          </button>
+        </div>
+      </div>
+
+      <div class="bc-filter-grid">
+        <div id="fieldGestion" class="bc-field">
+          <label for="gestion" class="form-label">Gestión</label>
+          <select id="gestion" class="form-select">
+            {% for item in gestiones %}
+              <option value="{{ item }}" {% if item == gestion_actual %}selected{% endif %}>{{ item }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div id="fieldFechaDesde" class="bc-field bc-hidden">
+          <label for="fechaDesde" class="form-label">Fecha desde</label>
+          <div class="bc-date-wrap">
+            <input id="fechaDesde" type="text" class="form-control bc-date-input" value="{{ fecha_hoy }}" autocomplete="off" readonly />
+            <button id="btnFechaDesde" type="button" class="bc-date-button" aria-label="Seleccionar fecha desde">
+              <i class="fas fa-calendar-alt"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="fieldFechaHasta" class="bc-field bc-hidden">
+          <label for="fechaHasta" class="form-label">Fecha hasta</label>
+          <div class="bc-date-wrap">
+            <input id="fechaHasta" type="text" class="form-control bc-date-input" value="{{ fecha_hoy }}" autocomplete="off" readonly />
+            <button id="btnFechaHasta" type="button" class="bc-date-button" aria-label="Seleccionar fecha hasta">
+              <i class="fas fa-calendar-alt"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="bc-field bc-select2">
+          <label for="cuentaDesde" class="form-label">Cuenta desde</label>
+          <select id="cuentaDesde" class="form-select"></select>
+        </div>
+
+        <div class="bc-field bc-select2">
+          <label for="cuentaHasta" class="form-label">Cuenta hasta</label>
+          <select id="cuentaHasta" class="form-select"></select>
+        </div>
+
+        <div class="bc-field">
+          <label for="unidadNegocio" class="form-label">Unidad de Negocio</label>
+          <select id="unidadNegocio" class="form-select">
+            <option value="">Todas las unidades</option>
+            {% for item in unidades_negocio %}
+              <option value="{{ item.id }}">{{ item.codigo }} · {{ item.nombre }}{% if not item.activo %} · Inactiva{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bc-card">
+    <div class="bc-card-head">
+      <div class="bc-card-title">
+        <i class="fas fa-chart-column"></i>
+        <div>Resumen<small>Período, unidad, cantidades y cuadratura del balance.</small></div>
+      </div>
+    </div>
+    <div class="bc-card-body">
+      <div class="bc-chip-row">
+        <div id="periodoBadge" class="bc-chip"><i class="fas fa-calendar-days"></i> Sin consulta realizada</div>
+        <div id="cuentasBadge" class="bc-chip"><i class="fas fa-sitemap"></i> Todas las cuentas</div>
+        <div id="unidadBadge" class="bc-chip"><i class="fas fa-building"></i> Todas las unidades</div>
+        <div id="estadoBadge" class="bc-chip"><i class="fas fa-balance-scale"></i> Estado pendiente</div>
+      </div>
+
+      <div class="bc-summary-grid">
+        <div class="bc-summary-box">
+          <div class="bc-summary-label">Cuentas</div>
+          <div id="sumCuentas" class="bc-summary-value">0</div>
+        </div>
+        <div class="bc-summary-box">
+          <div class="bc-summary-label">Unidades</div>
+          <div id="sumUnidades" class="bc-summary-value">0</div>
+        </div>
+        <div class="bc-summary-box">
+          <div class="bc-summary-label">Monedas</div>
+          <div id="sumMonedas" class="bc-summary-value">0</div>
+        </div>
+        <div class="bc-summary-box">
+          <div class="bc-summary-label">Debe</div>
+          <div id="sumDebe" class="bc-summary-value">0,00</div>
+        </div>
+        <div class="bc-summary-box">
+          <div class="bc-summary-label">Haber</div>
+          <div id="sumHaber" class="bc-summary-value">0,00</div>
+        </div>
+        <div class="bc-summary-box">
+          <div class="bc-summary-label">Saldo final deudor</div>
+          <div id="sumSaldoDeudor" class="bc-summary-value">0,00</div>
+        </div>
+        <div class="bc-summary-box">
+          <div class="bc-summary-label">Saldo final acreedor</div>
+          <div id="sumSaldoAcreedor" class="bc-summary-value">0,00</div>
+        </div>
+      </div>
+
+      <div id="totalesMonedaWrap" class="bc-currency-wrap bc-hidden">
+        <div class="bc-currency-title"><i class="fas fa-coins"></i> Totales por moneda</div>
+        <div class="bc-table-wrap">
+          <table class="bc-currency-table">
+            <thead>
+              <tr>
+                <th>Moneda</th>
+                <th>Saldo Ant. Deudor</th>
+                <th>Saldo Ant. Acreedor</th>
+                <th>Debe</th>
+                <th>Haber</th>
+                <th>Saldo Final Deudor</th>
+                <th>Saldo Final Acreedor</th>
+                <th>Cuadre</th>
+              </tr>
+            </thead>
+            <tbody id="totalesMonedaBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bc-card">
+    <div class="bc-card-head">
+      <div class="bc-card-title">
+        <i class="fas fa-table"></i>
+        <div>Detalle del balance<small>Saldos separados en deudor y acreedor por cuenta postable.</small></div>
+      </div>
+    </div>
+    <div class="bc-card-body">
+      <div class="bc-table-wrap">
+        <table id="tablaBalanceComprobacion" class="table table-striped align-middle w-100">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Moneda</th>
+              <th>Cuenta</th>
+              <th>Saldo Ant. Deudor</th>
+              <th>Saldo Ant. Acreedor</th>
+              <th>Debe</th>
+              <th>Haber</th>
+              <th>Saldo Final Deudor</th>
+              <th>Saldo Final Acreedor</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="bc-empty">
+        <i class="fas fa-scale-balanced fa-2x mb-3"></i>
+        <div>Consulta el período para visualizar el Balance de Comprobación.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="balanceComprobacionBootstrap" type="application/json">
+  {{ {
+    "fecha_hoy": fecha_hoy,
+    "gestion_actual": gestion_actual,
+    "urls": {
+      "datos": url_for('balance_comprobacion.datos'),
+      "pdf": url_for('balance_comprobacion.pdf'),
+      "buscar_cuentas": url_for('balance_comprobacion.buscar_cuentas')
+    }
+  } | tojson }}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const bootEl = document.getElementById("balanceComprobacionBootstrap");
+    if (!bootEl) {
+      return;
+    }
+
+    if (
+      typeof flatpickr === "undefined" ||
+      !window.jQuery ||
+      !window.jQuery.fn ||
+      !window.jQuery.fn.select2
+    ) {
+      Swal.fire({
+        icon: "error",
+        title: "Balance de Comprobación",
+        text: "No se pudieron cargar los componentes requeridos de la pantalla.",
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#1d4ed8",
+      });
+      return;
+    }
+
+    const boot = JSON.parse(bootEl.textContent || "{}");
+    const $ = window.jQuery;
+
+    const modeCards = Array.from(document.querySelectorAll("#balanceComprobacionPage .bc-mode-card"));
+    const modoPeriodo = document.getElementById("modoPeriodo");
+    const fieldGestion = document.getElementById("fieldGestion");
+    const fieldFechaDesde = document.getElementById("fieldFechaDesde");
+    const fieldFechaHasta = document.getElementById("fieldFechaHasta");
+    const fechaDesde = document.getElementById("fechaDesde");
+    const fechaHasta = document.getElementById("fechaHasta");
+    const btnFechaDesde = document.getElementById("btnFechaDesde");
+    const btnFechaHasta = document.getElementById("btnFechaHasta");
+    const gestion = document.getElementById("gestion");
+    const unidadNegocio = document.getElementById("unidadNegocio");
+    const btnConsultar = document.getElementById("btnConsultar");
+    const btnLimpiar = document.getElementById("btnLimpiar");
+    const btnPdf = document.getElementById("btnPdf");
+    const periodoBadge = document.getElementById("periodoBadge");
+    const cuentasBadge = document.getElementById("cuentasBadge");
+    const unidadBadge = document.getElementById("unidadBadge");
+    const estadoBadge = document.getElementById("estadoBadge");
+    const sumCuentas = document.getElementById("sumCuentas");
+    const sumUnidades = document.getElementById("sumUnidades");
+    const sumMonedas = document.getElementById("sumMonedas");
+    const sumDebe = document.getElementById("sumDebe");
+    const sumHaber = document.getElementById("sumHaber");
+    const sumSaldoDeudor = document.getElementById("sumSaldoDeudor");
+    const sumSaldoAcreedor = document.getElementById("sumSaldoAcreedor");
+    const emptyState = document.getElementById("emptyState");
+    const totalesMonedaWrap = document.getElementById("totalesMonedaWrap");
+    const totalesMonedaBody = document.getElementById("totalesMonedaBody");
+
+    const $cuentaDesde = $("#cuentaDesde");
+    const $cuentaHasta = $("#cuentaHasta");
+
+    let ultimaConsulta = null;
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("es-BO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    function showError(message) {
+      Swal.fire({
+        icon: "error",
+        title: "Balance de Comprobación",
+        text: message,
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#1d4ed8",
+      });
+    }
+
+    function setMode(mode) {
+      modoPeriodo.value = mode;
+      modeCards.forEach((card) => {
+        card.classList.toggle("active", card.dataset.mode === mode);
+      });
+      fieldGestion.classList.toggle("bc-hidden", mode !== "gestion");
+      fieldFechaDesde.classList.toggle("bc-hidden", mode !== "rango");
+      fieldFechaHasta.classList.toggle("bc-hidden", mode !== "rango");
+    }
+
+    modeCards.forEach((card) => {
+      card.addEventListener("click", function () {
+        setMode(card.dataset.mode || "gestion");
+      });
+    });
+
+    const fpDesde = flatpickr(fechaDesde, {
+      locale: flatpickr.l10ns.es || "es",
+      dateFormat: "Y-m-d",
+      allowInput: false,
+      clickOpens: true,
+      disableMobile: true,
+      defaultDate: boot.fecha_hoy,
+    });
+
+    const fpHasta = flatpickr(fechaHasta, {
+      locale: flatpickr.l10ns.es || "es",
+      dateFormat: "Y-m-d",
+      allowInput: false,
+      clickOpens: true,
+      disableMobile: true,
+      defaultDate: boot.fecha_hoy,
+    });
+
+    btnFechaDesde.addEventListener("click", function () { fpDesde.open(); });
+    btnFechaHasta.addEventListener("click", function () { fpHasta.open(); });
+    fechaDesde.addEventListener("click", function () { fpDesde.open(); });
+    fechaHasta.addEventListener("click", function () { fpHasta.open(); });
+
+    function initCuentaSelect($el) {
+      $el.select2({
+        width: "100%",
+        allowClear: true,
+        placeholder: "Buscar cuenta...",
+        language: "es",
+        ajax: {
+          url: boot.urls.buscar_cuentas,
+          dataType: "json",
+          delay: 220,
+          data: function (params) {
+            return { q: params.term || "" };
+          },
+          processResults: function (data) {
+            return { results: (data && data.results) || [] };
+          },
+        },
+      });
+    }
+
+    initCuentaSelect($cuentaDesde);
+    initCuentaSelect($cuentaHasta);
+
+    const tabla = $("#tablaBalanceComprobacion").DataTable({
+      data: [],
+      responsive: false,
+      autoWidth: false,
+      pageLength: 25,
+      order: [[0, "asc"], [1, "asc"]],
+      language: {
+        decimal: ",",
+        thousands: ".",
+        emptyTable: "Sin datos",
+        info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+        infoEmpty: "Mostrando 0 a 0 de 0 registros",
+        infoFiltered: "(filtrado de _MAX_ registros)",
+        lengthMenu: "Mostrar _MENU_ registros",
+        loadingRecords: "Cargando...",
+        processing: "Procesando...",
+        search: "Buscar:",
+        zeroRecords: "No se encontraron cuentas",
+        paginate: {
+          first: "Primero",
+          last: "Último",
+          next: "Siguiente",
+          previous: "Anterior",
+        },
+      },
+      columns: [
+        { data: "cuenta_codigo" },
+        { data: "moneda_codigo" },
+        { data: "cuenta_nombre" },
+        { data: "saldo_anterior_deudor", className: "bc-money", render: (data) => formatMoney(data) },
+        { data: "saldo_anterior_acreedor", className: "bc-money", render: (data) => formatMoney(data) },
+        { data: "debe_periodo", className: "bc-money", render: (data) => formatMoney(data) },
+        { data: "haber_periodo", className: "bc-money", render: (data) => formatMoney(data) },
+        { data: "saldo_final_deudor", className: "bc-money", render: (data) => formatMoney(data) },
+        { data: "saldo_final_acreedor", className: "bc-money", render: (data) => formatMoney(data) },
+      ],
+    });
+
+    function resetSummary() {
+      periodoBadge.innerHTML = '<i class="fas fa-calendar-days"></i> Sin consulta realizada';
+      cuentasBadge.innerHTML = '<i class="fas fa-sitemap"></i> Todas las cuentas';
+      unidadBadge.innerHTML = '<i class="fas fa-building"></i> Todas las unidades';
+      estadoBadge.className = "bc-chip";
+      estadoBadge.innerHTML = '<i class="fas fa-balance-scale"></i> Estado pendiente';
+
+      sumCuentas.textContent = "0";
+      sumUnidades.textContent = "0";
+      sumMonedas.textContent = "0";
+      sumDebe.textContent = "0,00";
+      sumHaber.textContent = "0,00";
+      sumSaldoDeudor.textContent = "0,00";
+      sumSaldoAcreedor.textContent = "0,00";
+      renderTotalesMoneda([]);
+    }
+
+    function clearTable(message) {
+      tabla.clear().draw();
+      emptyState.classList.remove("bc-hidden");
+      if (message) {
+        emptyState.innerHTML = '<i class="fas fa-folder-open fa-2x mb-3"></i><div>' + message + '</div>';
+      }
+    }
+
+    function currentParams() {
+      const desdeData = $cuentaDesde.select2("data") || [];
+      const hastaData = $cuentaHasta.select2("data") || [];
+
+      return {
+        modo_periodo: modoPeriodo.value || "gestion",
+        gestion: gestion.value || boot.gestion_actual,
+        fecha_desde: fechaDesde.value || boot.fecha_hoy,
+        fecha_hasta: fechaHasta.value || boot.fecha_hoy,
+        cuenta_desde: desdeData.length ? desdeData[0].id : "",
+        cuenta_hasta: hastaData.length ? hastaData[0].id : "",
+        unidad_negocio_id: unidadNegocio.value || "",
+      };
+    }
+
+    function formatRangeText(params) {
+      if (params.cuenta_desde && params.cuenta_hasta) {
+        return `Cuentas: ${params.cuenta_desde} a ${params.cuenta_hasta}`;
+      }
+      if (params.cuenta_desde) {
+        return `Desde cuenta ${params.cuenta_desde}`;
+      }
+      if (params.cuenta_hasta) {
+        return `Hasta cuenta ${params.cuenta_hasta}`;
+      }
+      return "Todas las cuentas";
+    }
+
+    function currencyLabel(item) {
+      if (!item) {
+        return "";
+      }
+      const codigo = item.moneda_codigo || "";
+      const simbolo = item.moneda_simbolo || "";
+      return simbolo && simbolo !== codigo ? `${codigo} (${simbolo})` : codigo;
+    }
+
+    function renderTotalesMoneda(items) {
+      const rows = Array.isArray(items) ? items : [];
+      if (!rows.length) {
+        totalesMonedaBody.innerHTML = "";
+        totalesMonedaWrap.classList.add("bc-hidden");
+        return;
+      }
+
+      totalesMonedaBody.innerHTML = rows.map((item) => {
+        const estado = item.cuadrado
+          ? '<span class="bc-chip ok"><i class="fas fa-circle-check"></i> OK</span>'
+          : '<span class="bc-chip bad"><i class="fas fa-triangle-exclamation"></i> Revisar</span>';
+        return `
+          <tr>
+            <td><strong>${currencyLabel(item)}</strong></td>
+            <td class="money">${formatMoney(item.total_saldo_anterior_deudor)}</td>
+            <td class="money">${formatMoney(item.total_saldo_anterior_acreedor)}</td>
+            <td class="money">${formatMoney(item.total_debe)}</td>
+            <td class="money">${formatMoney(item.total_haber)}</td>
+            <td class="money">${formatMoney(item.total_saldo_final_deudor)}</td>
+            <td class="money">${formatMoney(item.total_saldo_final_acreedor)}</td>
+            <td class="center">${estado}</td>
+          </tr>`;
+      }).join("");
+      totalesMonedaWrap.classList.remove("bc-hidden");
+    }
+
+    function setSummaryMoney(resumen) {
+      const monedas = Array.isArray(resumen.total_por_moneda) ? resumen.total_por_moneda : [];
+      if (monedas.length === 1) {
+        const item = monedas[0];
+        const codigo = item.moneda_codigo || "";
+        sumDebe.textContent = `${formatMoney(item.total_debe)} ${codigo}`.trim();
+        sumHaber.textContent = `${formatMoney(item.total_haber)} ${codigo}`.trim();
+        sumSaldoDeudor.textContent = `${formatMoney(item.total_saldo_final_deudor)} ${codigo}`.trim();
+        sumSaldoAcreedor.textContent = `${formatMoney(item.total_saldo_final_acreedor)} ${codigo}`.trim();
+      } else if (monedas.length > 1) {
+        sumDebe.textContent = "Por moneda";
+        sumHaber.textContent = "Por moneda";
+        sumSaldoDeudor.textContent = "Por moneda";
+        sumSaldoAcreedor.textContent = "Por moneda";
+      } else {
+        sumDebe.textContent = "0,00";
+        sumHaber.textContent = "0,00";
+        sumSaldoDeudor.textContent = "0,00";
+        sumSaldoAcreedor.textContent = "0,00";
+      }
+      renderTotalesMoneda(monedas);
+    }
+
+    function setLoading(isLoading) {
+      btnConsultar.disabled = isLoading;
+      btnPdf.disabled = isLoading;
+      btnLimpiar.disabled = isLoading;
+      btnConsultar.innerHTML = isLoading
+        ? '<span class="spinner-border spinner-border-sm me-1"></span> Consultando...'
+        : '<i class="fas fa-search me-1"></i> Consultar';
+    }
+
+    async function consultar() {
+      const params = currentParams();
+      setLoading(true);
+
+      try {
+        const query = new URLSearchParams(params);
+        const response = await fetch(`${boot.urls.datos}?${query.toString()}`, {
+          headers: {
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        });
+
+        const payload = await response.json();
+
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.message || "No se pudo consultar el balance de comprobación.");
+        }
+
+        const resumen = payload.resumen || {};
+        const rows = payload.rows || [];
+
+        periodoBadge.innerHTML = `<i class="fas fa-calendar-days"></i> ${resumen.descripcion_periodo || "Sin período"}`;
+        cuentasBadge.innerHTML = `<i class="fas fa-sitemap"></i> ${formatRangeText(params)}`;
+        unidadBadge.innerHTML = `<i class="fas fa-building"></i> ${resumen.unidad_negocio_label || "Todas las unidades"}`;
+
+        estadoBadge.className = resumen.cuadrado ? "bc-chip ok" : "bc-chip bad";
+        estadoBadge.innerHTML = resumen.cuadrado
+          ? '<i class="fas fa-circle-check"></i> Cuadrado'
+          : '<i class="fas fa-triangle-exclamation"></i> Descuadrado';
+
+        sumCuentas.textContent = String(resumen.cantidad_cuentas || 0);
+        sumUnidades.textContent = String(resumen.cantidad_unidades || 0);
+        sumMonedas.textContent = String(resumen.cantidad_monedas || 0);
+        setSummaryMoney(resumen);
+
+        tabla.clear();
+        tabla.rows.add(rows).draw();
+
+        emptyState.classList.toggle("bc-hidden", rows.length > 0);
+        if (!rows.length) {
+          emptyState.innerHTML = '<i class="fas fa-folder-open fa-2x mb-3"></i><div>No existen cuentas con movimiento o saldo para el filtro consultado.</div>';
+        }
+
+        ultimaConsulta = params;
+      } catch (error) {
+        clearTable("No se pudo consultar el balance de comprobación.");
+        resetSummary();
+        ultimaConsulta = null;
+        showError(error.message || "No se pudo consultar el balance de comprobación.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    btnConsultar.addEventListener("click", consultar);
+
+    btnLimpiar.addEventListener("click", function () {
+      setMode("gestion");
+      fpDesde.setDate(boot.fecha_hoy, true);
+      fpHasta.setDate(boot.fecha_hoy, true);
+      gestion.value = String(boot.gestion_actual || "");
+      unidadNegocio.value = "";
+      $cuentaDesde.val(null).trigger("change");
+      $cuentaHasta.val(null).trigger("change");
+      ultimaConsulta = null;
+      resetSummary();
+      clearTable("Consulta el período para visualizar el Balance de Comprobación.");
+    });
+
+    btnPdf.addEventListener("click", function () {
+      const params = ultimaConsulta || currentParams();
+      const query = new URLSearchParams(params);
+      window.open(`${boot.urls.pdf}?${query.toString()}`, "_blank");
+    });
+
+    resetSummary();
+    clearTable("Consulta el período para visualizar el Balance de Comprobación.");
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,757 @@
+{% extends "layout.html" %}
+{% block title %}Agenda Financiera{% endblock %}
+{% block page_help_url %}{{ url_for('agenda_financiera.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  #agendaFinancieraPage {
+    --af-navy: #0f2340;
+    --af-blue: #2d7dd2;
+    --af-border: #dbe6f1;
+    --af-card: #ffffff;
+    --af-text: #183042;
+    --af-muted: #6b7c8e;
+    --af-green: #177a53;
+    --af-red: #b42318;
+    --af-surface: #f7fbff;
+    --af-radius: 18px;
+    color: var(--af-text);
+  }
+
+  #agendaFinancieraPage .af-header {
+    background: linear-gradient(135deg, var(--af-navy) 0%, #1b4675 55%, #2d7dd2 100%);
+    color: #fff;
+    border-radius: var(--af-radius);
+    padding: 1.25rem 1.4rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 16px 38px rgba(15, 35, 64, .18);
+    margin-bottom: 1rem;
+  }
+
+  #agendaFinancieraPage .af-header-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+
+  #agendaFinancieraPage .af-header-subtitle {
+    margin-top: .2rem;
+    color: rgba(255, 255, 255, .82);
+    font-size: .88rem;
+  }
+
+  #agendaFinancieraPage .af-header-side {
+    display: flex;
+    gap: .65rem;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  #agendaFinancieraPage .af-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .62rem .9rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .16);
+    font-size: .82rem;
+    font-weight: 800;
+  }
+
+  #agendaFinancieraPage .af-filters {
+    position: sticky;
+    top: 76px;
+    z-index: 30;
+    background: var(--af-card);
+    border: 1px solid var(--af-border);
+    border-radius: var(--af-radius);
+    padding: 1rem 1.1rem;
+    box-shadow: 0 8px 24px rgba(15, 35, 64, .08);
+    margin-bottom: 1rem;
+  }
+
+  #agendaFinancieraPage .af-filters-grid {
+    display: grid;
+    grid-template-columns: 220px 320px auto;
+    gap: 1rem;
+    align-items: end;
+  }
+
+  #agendaFinancieraPage .af-label {
+    display: block;
+    margin-bottom: .45rem;
+    font-weight: 700;
+    font-size: .86rem;
+    color: var(--af-text);
+  }
+
+  #agendaFinancieraPage .af-input,
+  #agendaFinancieraPage .select2-container--default .select2-selection--single {
+    width: 100%;
+    border: 1px solid var(--af-border);
+    border-radius: 14px;
+    background: #fff;
+    padding: .8rem .95rem;
+    outline: none;
+    transition: all .18s ease;
+    min-height: 48px;
+  }
+
+  #agendaFinancieraPage .af-input:focus {
+    border-color: var(--af-blue);
+    box-shadow: 0 0 0 4px rgba(45, 125, 210, .12);
+  }
+
+  #agendaFinancieraPage .select2-container {
+    width: 100% !important;
+  }
+
+  #agendaFinancieraPage .select2-container--default .select2-selection--single {
+    display: flex;
+    align-items: center;
+    padding: .3rem .95rem;
+    box-shadow: none;
+  }
+
+  #agendaFinancieraPage .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 1.45;
+    padding-left: 0;
+    color: var(--af-text);
+  }
+
+  #agendaFinancieraPage .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 46px;
+    right: 10px;
+  }
+
+  #agendaFinancieraPage .af-actions {
+    display: flex;
+    gap: .7rem;
+    flex-wrap: wrap;
+  }
+
+  #agendaFinancieraPage .af-btn {
+    border: none;
+    border-radius: 14px;
+    padding: .82rem 1rem;
+    font-size: .88rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: .55rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all .18s ease;
+  }
+
+  #agendaFinancieraPage .af-btn-primary {
+    background: var(--af-blue);
+    color: #fff;
+    box-shadow: 0 12px 22px rgba(45, 125, 210, .22);
+  }
+
+  #agendaFinancieraPage .af-btn-primary:hover {
+    background: #2167b0;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  #agendaFinancieraPage .af-btn-soft {
+    background: #eef3f9;
+    color: var(--af-text);
+    border: 1px solid var(--af-border);
+  }
+
+  #agendaFinancieraPage .af-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  #agendaFinancieraPage .af-card {
+    background: var(--af-card);
+    border: 1px solid var(--af-border);
+    border-radius: var(--af-radius);
+    box-shadow: 0 8px 24px rgba(15, 35, 64, .06);
+    overflow: hidden;
+    min-height: 520px;
+    max-height: 520px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  #agendaFinancieraPage .af-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 4px;
+  }
+
+  #agendaFinancieraPage .af-card.variant-1::before { background: #2d7dd2; }
+  #agendaFinancieraPage .af-card.variant-2::before { background: #177a53; }
+  #agendaFinancieraPage .af-card.variant-3::before { background: #b45309; }
+  #agendaFinancieraPage .af-card.variant-4::before { background: #7c3aed; }
+
+  #agendaFinancieraPage .af-card-head {
+    padding: .95rem 1rem;
+    border-bottom: 1px solid var(--af-border);
+    background: linear-gradient(180deg, #fff 0%, var(--af-surface) 100%);
+    flex: 0 0 auto;
+  }
+
+  #agendaFinancieraPage .af-card-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .8rem;
+  }
+
+  #agendaFinancieraPage .af-card-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--af-text);
+  }
+
+  #agendaFinancieraPage .af-card-subtitle {
+    margin-top: .18rem;
+    color: var(--af-muted);
+    font-size: .82rem;
+  }
+
+  #agendaFinancieraPage .af-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    border-radius: 999px;
+    padding: .42rem .72rem;
+    font-size: .76rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  #agendaFinancieraPage .af-badge.green { background: rgba(23, 122, 83, .12); color: var(--af-green); }
+  #agendaFinancieraPage .af-badge.red { background: rgba(180, 35, 24, .12); color: var(--af-red); }
+
+  #agendaFinancieraPage .af-summary {
+    display: flex;
+    gap: .85rem;
+    flex-wrap: wrap;
+    margin-top: .8rem;
+  }
+
+  #agendaFinancieraPage .af-summary-item {
+    background: #fff;
+    border: 1px solid var(--af-border);
+    border-radius: 14px;
+    padding: .65rem .8rem;
+    min-width: 112px;
+  }
+
+  #agendaFinancieraPage .af-summary-label {
+    color: var(--af-muted);
+    font-size: .74rem;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: .03em;
+  }
+
+  #agendaFinancieraPage .af-summary-value {
+    margin-top: .14rem;
+    color: var(--af-text);
+    font-size: .96rem;
+    font-weight: 800;
+  }
+
+  #agendaFinancieraPage .af-card-body {
+    padding: 1rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    overflow-x: auto;
+    background: #fbfdff;
+  }
+
+  #agendaFinancieraPage .af-list {
+    display: grid;
+    gap: .8rem;
+    min-width: 0;
+  }
+
+  #agendaFinancieraPage .af-item {
+    border: 1px solid var(--af-border);
+    border-left-width: 4px;
+    border-radius: 16px;
+    background: #fff;
+    padding: .95rem;
+  }
+
+  #agendaFinancieraPage .af-item.variant-1 { border-left-color: #2d7dd2; }
+  #agendaFinancieraPage .af-item.variant-2 { border-left-color: #177a53; }
+  #agendaFinancieraPage .af-item.variant-3 { border-left-color: #b45309; }
+  #agendaFinancieraPage .af-item.variant-4 { border-left-color: #7c3aed; }
+  #agendaFinancieraPage .af-item.variant-5 { border-left-color: #dc2626; }
+
+  #agendaFinancieraPage .af-item-top {
+    display: flex;
+    justify-content: space-between;
+    gap: .8rem;
+    align-items: flex-start;
+  }
+
+  #agendaFinancieraPage .af-item-top-left {
+    min-width: 0;
+  }
+
+  #agendaFinancieraPage .af-party {
+    font-size: .94rem;
+    font-weight: 800;
+    color: var(--af-text);
+  }
+
+  #agendaFinancieraPage .af-code {
+    color: var(--af-muted);
+    font-size: .76rem;
+    font-weight: 700;
+    margin-top: .16rem;
+  }
+
+  #agendaFinancieraPage .af-unit-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    margin-top: .5rem;
+    padding: .3rem .62rem;
+    border-radius: 999px;
+    background: #eef5fd;
+    color: #215f9f;
+    border: 1px solid #d5e5f5;
+    font-size: .74rem;
+    font-weight: 800;
+    max-width: 100%;
+  }
+
+  #agendaFinancieraPage .af-amount {
+    font-size: 1rem;
+    font-weight: 900;
+    color: var(--af-text);
+    white-space: nowrap;
+  }
+
+  #agendaFinancieraPage .af-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .55rem 1rem;
+    margin-top: .7rem;
+    font-size: .8rem;
+    color: var(--af-muted);
+  }
+
+  #agendaFinancieraPage .af-meta strong {
+    color: var(--af-text);
+    font-weight: 800;
+  }
+
+  #agendaFinancieraPage .af-item-actions {
+    margin-top: .8rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  #agendaFinancieraPage .af-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: .82rem;
+    color: var(--af-blue);
+  }
+
+  #agendaFinancieraPage .af-empty {
+    height: 100%;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: var(--af-muted);
+    gap: .6rem;
+  }
+
+  #agendaFinancieraPage .af-empty i {
+    font-size: 1.7rem;
+    color: #9db5cc;
+  }
+
+  #agendaFinancieraPage .af-loader {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 5500;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: rgba(15, 23, 42, .58);
+    backdrop-filter: blur(4px);
+  }
+
+  #agendaFinancieraPage .af-loader.is-visible {
+    display: flex;
+  }
+
+  #agendaFinancieraPage .af-loader-card {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid rgba(148, 163, 184, .24);
+    box-shadow: 0 30px 60px rgba(15, 23, 42, .28);
+    padding: 1.35rem;
+    text-align: center;
+  }
+
+  #agendaFinancieraPage .af-spinner {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto .9rem;
+    border-radius: 50%;
+    border: 5px solid rgba(45, 125, 210, .14);
+    border-top-color: var(--af-blue);
+    animation: afSpin .9s linear infinite;
+  }
+
+  #agendaFinancieraPage .af-card-body::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  #agendaFinancieraPage .af-card-body::-webkit-scrollbar-track {
+    background: #eef3f9;
+    border-radius: 999px;
+  }
+
+  #agendaFinancieraPage .af-card-body::-webkit-scrollbar-thumb {
+    background: #b9c8d8;
+    border-radius: 999px;
+  }
+
+  @keyframes afSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  @media (max-width:991.98px) {
+    #agendaFinancieraPage .af-grid,
+    #agendaFinancieraPage .af-filters-grid {
+      grid-template-columns: 1fr;
+    }
+
+    #agendaFinancieraPage .af-card {
+      min-height: 420px;
+      max-height: 420px;
+    }
+
+    #agendaFinancieraPage .af-filters {
+      top: 68px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="agendaFinancieraPage">
+  <div class="af-header">
+    <div>
+      <h1 class="af-header-title">Agenda financiera operativa</h1>
+      <div class="af-header-subtitle">Consulta rápida de qué debes cobrar o pagar en una fecha y qué se encuentra vencido.</div>
+    </div>
+    <div class="af-header-side">
+      <div class="af-chip"><i class="fas fa-calendar-day"></i><span id="afFechaChip">{{ payload.fecha_corte_label }}</span></div>
+      <div class="af-chip"><i class="fas fa-building"></i><span id="afUnidadChip">{{ payload.filtro_unidad_negocio_label }}</span></div>
+    </div>
+  </div>
+
+  <section class="af-filters">
+    <div class="af-filters-grid">
+      <div>
+        <label class="af-label" for="afFecha">Fecha de trabajo</label>
+        <input id="afFecha" class="af-input" type="text" value="{{ payload.fecha_corte }}">
+      </div>
+      <div>
+        <label class="af-label" for="afUnidadNegocio">Unidad de negocio</label>
+        <select id="afUnidadNegocio" class="af-input">
+          <option value="">Todas las unidades</option>
+          {% for unidad in payload.unidades_negocio %}
+          <option value="{{ unidad.id }}" {% if payload.filtro_unidad_negocio_id and unidad.id == payload.filtro_unidad_negocio_id %}selected{% endif %}>
+            {{ unidad.label }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="af-label">Acciones</label>
+        <div class="af-actions">
+          <button id="btnActualizarAgenda" type="button" class="af-btn af-btn-primary"><i class="fas fa-arrows-rotate"></i><span>Actualizar vista</span></button>
+          <button id="btnFechaHoy" type="button" class="af-btn af-btn-soft"><i class="fas fa-calendar-check"></i><span>Ir a hoy</span></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="afGrid" class="af-grid"></div>
+
+  <div id="afLoader" class="af-loader" aria-hidden="true">
+    <div class="af-loader-card">
+      <div class="af-spinner"></div>
+      <h3 style="margin:0;font-size:1.02rem;font-weight:800;color:#183042;">Cargando agenda financiera</h3>
+      <p style="margin:.55rem 0 0;color:#6b7c8e;font-size:.9rem;">Estamos preparando los compromisos pendientes para la fecha seleccionada.</p>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="agendaFinancieraBootstrap">
+{{ {
+  'apiUrl': url_for('agenda_financiera.api_resumen')
+} | tojson }}
+</script>
+<script type="application/json" id="agendaFinancieraInitialData">
+{{ payload | tojson }}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const boot = JSON.parse(document.getElementById('agendaFinancieraBootstrap').textContent || '{}');
+    const fechaInput = document.getElementById('afFecha');
+    const unidadInput = document.getElementById('afUnidadNegocio');
+    const btnActualizar = document.getElementById('btnActualizarAgenda');
+    const btnHoy = document.getElementById('btnFechaHoy');
+    const grid = document.getElementById('afGrid');
+    const fechaChip = document.getElementById('afFechaChip');
+    const unidadChip = document.getElementById('afUnidadChip');
+    const loader = document.getElementById('afLoader');
+    const initialData = JSON.parse(
+      document.getElementById('agendaFinancieraInitialData').textContent || '{}'
+    );
+    const cardVariants = ['variant-1', 'variant-2', 'variant-3', 'variant-4'];
+    const itemVariants = ['variant-1', 'variant-2', 'variant-3', 'variant-4', 'variant-5'];
+
+    if (window.flatpickr && fechaInput) {
+      window.DXTBase.initFlatpickrDate(fechaInput, {
+        defaultDate: fechaInput.value || null
+      });
+    }
+
+    if (window.jQuery && unidadInput && window.jQuery.fn.select2) {
+      window.jQuery(unidadInput).select2({
+        width: '100%',
+        placeholder: 'Todas las unidades',
+        allowClear: true,
+        language: 'es'
+      });
+    }
+
+    function showLoader() {
+      loader?.classList.add('is-visible');
+      loader?.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideLoader() {
+      loader?.classList.remove('is-visible');
+      loader?.setAttribute('aria-hidden', 'true');
+    }
+
+    function money(value) {
+      return new Intl.NumberFormat('es-BO', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(Number(value || 0));
+    }
+
+    function escHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function badgeClass(kind) {
+      return kind === 'green' ? 'green' : 'red';
+    }
+
+    function renderCard(card, kind, variantClass) {
+      const items = Array.isArray(card.items) ? card.items : [];
+      const body = items.length
+        ? `<div class="af-list">${items.map((item, index) => renderItem(item, itemVariants[index % itemVariants.length])).join('')}</div>`
+        : `<div class="af-empty"><i class="fas fa-inbox"></i><div>${escHtml(card.empty || 'Sin datos')}</div></div>`;
+
+      return `
+      <section class="af-card ${variantClass}">
+        <div class="af-card-head">
+          <div class="af-card-title-row">
+            <div>
+              <h2 class="af-card-title">${escHtml(card.title || '')}</h2>
+              <div class="af-card-subtitle">${escHtml(card.subtitle || '')}</div>
+            </div>
+            <div class="af-badge ${badgeClass(kind)}">
+              <i class="fas ${kind === 'green' ? 'fa-arrow-down' : 'fa-arrow-up'}"></i>
+              <span>${Number(card.summary?.cantidad || 0)} registro(s)</span>
+            </div>
+          </div>
+          <div class="af-summary">
+            <div class="af-summary-item">
+              <div class="af-summary-label">Cantidad</div>
+              <div class="af-summary-value">${Number(card.summary?.cantidad || 0)}</div>
+            </div>
+            <div class="af-summary-item">
+              <div class="af-summary-label">Monto pendiente</div>
+              <div class="af-summary-value">Bs ${money(card.summary?.monto_total || 0)}</div>
+            </div>
+          </div>
+        </div>
+        <div class="af-card-body">${body}</div>
+      </section>
+    `;
+    }
+
+    function renderItem(item, variantClass) {
+      const atraso = item.dias_atraso > 0
+        ? `<span><strong>Atraso:</strong> ${Number(item.dias_atraso)} día(s)</span>`
+        : `<span><strong>Vence:</strong> ${escHtml(item.fecha_vencimiento_label || '—')}</span>`;
+
+      const observacion = item.observacion
+        ? `<span><strong>Obs.:</strong> ${escHtml(item.observacion)}</span>`
+        : '';
+
+      const referencia = item.descripcion
+        ? `<span><strong>Concepto:</strong> ${escHtml(item.descripcion)}</span>`
+        : `<span><strong>Compromiso:</strong> ${escHtml(item.nombre || '')}</span>`;
+
+      const unidad = item.unidad_negocio_label
+        ? `<span><strong>Unidad:</strong> ${escHtml(item.unidad_negocio_label)}</span>`
+        : '';
+
+      const unidadChipHtml = item.unidad_negocio_label
+        ? `<div class="af-unit-chip"><i class="fas fa-building"></i><span>${escHtml(item.unidad_negocio_label)}</span></div>`
+        : '';
+
+      return `
+      <article class="af-item ${variantClass}">
+        <div class="af-item-top">
+          <div class="af-item-top-left">
+            <div class="af-party">${escHtml(item.contraparte || '')}</div>
+            <div class="af-code">Compromiso ${escHtml(item.codigo || '')}</div>
+            ${unidadChipHtml}
+          </div>
+          <div class="af-amount">Bs ${money(item.monto_pendiente)}</div>
+        </div>
+        <div class="af-meta">
+          <span><strong>Fecha:</strong> ${escHtml(item.fecha_vencimiento_label || '—')}</span>
+          ${atraso}
+          ${unidad}
+          ${referencia}
+          ${observacion}
+        </div>
+        <div class="af-item-actions">
+          <a class="af-link" href="${escHtml(item.detalle_url || '#')}">
+            <i class="fas fa-arrow-up-right-from-square"></i>
+            <span>Ver compromiso</span>
+          </a>
+        </div>
+      </article>
+    `;
+    }
+
+    function render(payload) {
+      if (fechaChip) {
+        fechaChip.textContent = payload.fecha_corte_label || '';
+      }
+      if (unidadChip) {
+        unidadChip.textContent = payload.filtro_unidad_negocio_label || 'Todas las unidades';
+      }
+      if (unidadInput) {
+        const value = payload.filtro_unidad_negocio_id ? String(payload.filtro_unidad_negocio_id) : '';
+        if (window.jQuery && window.jQuery.fn.select2) {
+          window.jQuery(unidadInput).val(value).trigger('change.select2');
+        } else {
+          unidadInput.value = value;
+        }
+      }
+
+      const cards = payload.cards || {};
+      grid.innerHTML = [
+        renderCard(cards.cobrar_hoy || { items: [], summary: { cantidad: 0, monto_total: 0 }, title: 'Cobrar', subtitle: '', empty: 'Sin datos' }, 'green', cardVariants[0]),
+        renderCard(cards.pagar_hoy || { items: [], summary: { cantidad: 0, monto_total: 0 }, title: 'Pagar', subtitle: '', empty: 'Sin datos' }, 'red', cardVariants[1]),
+        renderCard(cards.cobrar_vencido || { items: [], summary: { cantidad: 0, monto_total: 0 }, title: 'Cobros vencidos', subtitle: '', empty: 'Sin datos' }, 'green', cardVariants[2]),
+        renderCard(cards.pagar_vencido || { items: [], summary: { cantidad: 0, monto_total: 0 }, title: 'Pagos vencidos', subtitle: '', empty: 'Sin datos' }, 'red', cardVariants[3])
+      ].join('');
+    }
+
+    async function cargarAgenda() {
+      const fecha = (fechaInput?.value || '').trim();
+      const unidadNegocioId = (unidadInput?.value || '').trim();
+
+      if (!fecha) {
+        await Swal.fire({ icon: 'warning', title: 'Fecha requerida', text: 'Debes seleccionar una fecha de trabajo.' });
+        return;
+      }
+
+      showLoader();
+      try {
+        const params = new URLSearchParams();
+        params.set('fecha', fecha);
+        if (unidadNegocioId) {
+          params.set('unidad_negocio_id', unidadNegocioId);
+        }
+
+        const response = await fetch(`${boot.apiUrl}?${params.toString()}`, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || 'No se pudo cargar la agenda financiera.');
+        }
+
+        render(data.data || {});
+      } catch (error) {
+        await Swal.fire({
+          icon: 'error',
+          title: 'No se pudo cargar la vista',
+          text: error.message || 'Ocurrió un problema al consultar la agenda financiera.'
+        });
+      } finally {
+        hideLoader();
+      }
+    }
+
+    btnActualizar?.addEventListener('click', cargarAgenda);
+
+    btnHoy?.addEventListener('click', function () {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      if (fechaInput) {
+        fechaInput.value = `${yyyy}-${mm}-${dd}`;
+      }
+      cargarAgenda();
+    });
+
+    render(initialData || {});
+  });
+</script>
+{% endblock %}

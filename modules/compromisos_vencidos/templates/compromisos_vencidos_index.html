@@ -1,0 +1,806 @@
+{% extends "layout.html" %}
+{% block title %}Compromisos Vencidos{% endblock title %}
+{% block page_help_url %}{{ url_for('compromisos_vencidos.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .cv-page {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .cv-header {
+    background: linear-gradient(135deg, #0f2340, #173b68);
+    border-radius: 1.15rem;
+    box-shadow: 0 18px 38px rgba(15, 35, 64, 0.18);
+    color: #fff;
+    padding: 1.2rem 1.35rem;
+  }
+
+  .cv-kicker {
+    align-items: center;
+    color: rgba(255, 255, 255, 0.82);
+    display: flex;
+    font-size: 0.78rem;
+    font-weight: 850;
+    gap: 0.45rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .cv-title {
+    font-size: clamp(1.35rem, 2vw, 2rem);
+    font-weight: 900;
+    margin: 0.35rem 0 0.1rem;
+  }
+
+  .cv-subtitle {
+    color: rgba(255, 255, 255, 0.76);
+    margin: 0;
+    max-width: 920px;
+  }
+
+  .cv-card {
+    background: #fff;
+    border: 1px solid #dfe7f1;
+    border-radius: 1.15rem;
+    box-shadow: 0 14px 34px rgba(15, 35, 64, 0.08);
+  }
+
+  .cv-filter-card {
+    padding: 1rem;
+  }
+
+  .cv-filter-grid {
+    align-items: end;
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: 0.85fr 1fr 1fr 0.85fr 1.55fr auto auto auto;
+  }
+
+  .cv-field label {
+    color: #334155;
+    font-size: 0.78rem;
+    font-weight: 850;
+    margin-bottom: 0.3rem;
+  }
+
+  .cv-field .form-control,
+  .cv-field .form-select {
+    border-color: #d5deea;
+    border-radius: 0.8rem;
+    min-height: 40px;
+  }
+
+  .cv-action-btn {
+    align-items: center;
+    border-radius: 0.85rem;
+    display: inline-flex;
+    font-weight: 850;
+    gap: 0.45rem;
+    min-height: 40px;
+    padding-inline: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .cv-summary {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .cv-summary-card {
+    border-left: 5px solid #2563eb;
+    padding: 0.95rem 1rem;
+  }
+
+  .cv-summary-card.is-critical {
+    border-left-color: #dc2626;
+  }
+
+  .cv-summary-card.is-high {
+    border-left-color: #f97316;
+  }
+
+  .cv-summary-card.is-medium {
+    border-left-color: #eab308;
+  }
+
+  .cv-summary-card.is-low {
+    border-left-color: #22c55e;
+  }
+
+  .cv-summary-label {
+    color: #64748b;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .cv-summary-value {
+    color: #0f2340;
+    font-size: 1.25rem;
+    font-weight: 900;
+    line-height: 1.15;
+    margin-top: 0.2rem;
+  }
+
+  .cv-summary-note {
+    color: #64748b;
+    font-size: 0.74rem;
+    margin-top: 0.1rem;
+  }
+
+  .cv-results-card {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .cv-results-toolbar {
+    align-items: flex-start;
+    border-bottom: 1px solid #dfe7f1;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 1rem 1.05rem;
+  }
+
+  .cv-results-title {
+    color: #0f2340;
+    font-weight: 900;
+    margin: 0;
+  }
+
+  .cv-results-meta {
+    color: #64748b;
+    font-size: 0.82rem;
+    margin-top: 0.15rem;
+  }
+
+  .cv-grid-tools {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+
+  .cv-page-size {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.5rem;
+  }
+
+  .cv-page-size label {
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 850;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .cv-page-size .form-select {
+    border-color: #d5deea;
+    border-radius: 0.75rem;
+    font-weight: 850;
+    min-height: 38px;
+    width: 86px;
+  }
+
+  .cv-table-wrap {
+    max-height: 62vh;
+    min-height: 360px;
+    overflow: auto;
+    position: relative;
+  }
+
+  .cv-table {
+    margin: 0;
+    min-width: 1420px;
+  }
+
+  .cv-table thead th {
+    background: #f1f5f9;
+    color: #243447;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.025em;
+    position: sticky;
+    text-transform: uppercase;
+    top: 0;
+    vertical-align: middle;
+    white-space: nowrap;
+    z-index: 3;
+  }
+
+  .cv-table tbody td {
+    color: #263445;
+    font-size: 0.85rem;
+    vertical-align: top;
+  }
+
+  .cv-text-strong {
+    color: #0f2340;
+    font-weight: 850;
+  }
+
+  .cv-badge {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.71rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    padding: 0.32rem 0.55rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .cv-badge-critical,
+  .cv-badge-vencido {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .cv-badge-high,
+  .cv-badge-pagar {
+    background: #ffedd5;
+    color: #9a3412;
+  }
+
+  .cv-badge-medium,
+  .cv-badge-hoy {
+    background: #fef9c3;
+    color: #854d0e;
+  }
+
+  .cv-badge-low,
+  .cv-badge-cobrar,
+  .cv-badge-por-vencer {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .cv-badge-default {
+    background: #e2e8f0;
+    color: #334155;
+  }
+
+  .cv-empty {
+    color: #64748b;
+    display: none;
+    padding: 4rem 1rem;
+    text-align: center;
+  }
+
+  .cv-empty.is-visible {
+    display: block;
+  }
+
+  .cv-empty i {
+    color: #22c55e;
+    font-size: 2.6rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .cv-loader {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(2px);
+    display: none;
+    inset: 0;
+    justify-content: center;
+    position: absolute;
+    z-index: 5;
+  }
+
+  .cv-loader.is-visible {
+    display: flex;
+  }
+
+  .cv-loader-card {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #dfe7f1;
+    border-radius: 999px;
+    box-shadow: 0 12px 30px rgba(15, 35, 64, 0.14);
+    color: #0f2340;
+    display: inline-flex;
+    font-weight: 850;
+    gap: 0.65rem;
+    padding: 0.7rem 1rem;
+  }
+
+  .cv-loader-card i {
+    color: #ea6f1b;
+  }
+
+  .cv-pagination-bar {
+    align-items: center;
+    border-top: 1px solid #dfe7f1;
+    display: flex;
+    gap: 0.85rem;
+    justify-content: space-between;
+    padding: 0.8rem 1.05rem;
+  }
+
+  .cv-pagination-info {
+    color: #64748b;
+    font-size: 0.82rem;
+    font-weight: 750;
+  }
+
+  .cv-pagination-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: flex-end;
+  }
+
+  .cv-page-btn {
+    align-items: center;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    font-weight: 850;
+    justify-content: center;
+    min-height: 36px;
+    min-width: 40px;
+  }
+
+  .cv-page-indicator {
+    color: #0f2340;
+    font-size: 0.82rem;
+    font-weight: 900;
+    padding-inline: 0.35rem;
+    white-space: nowrap;
+  }
+
+  .cv-footer-note {
+    color: #64748b;
+    font-size: 0.78rem;
+    padding: 0.75rem 1.05rem 1rem;
+  }
+
+  @media (max-width: 1360px) {
+    .cv-filter-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 900px) {
+    .cv-filter-grid,
+    .cv-summary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .cv-filter-grid,
+    .cv-summary {
+      grid-template-columns: 1fr;
+    }
+
+    .cv-results-toolbar,
+    .cv-pagination-bar {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .cv-grid-tools,
+    .cv-pagination-actions {
+      justify-content: stretch;
+    }
+
+    .cv-page-size,
+    .cv-page-size .form-select {
+      width: 100%;
+    }
+
+    .cv-action-btn {
+      justify-content: center;
+      width: 100%;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="cv-page">
+  <section class="cv-header">
+    <div class="cv-kicker">
+      <i class="fas fa-calendar-xmark"></i>
+      <span>Herramientas</span>
+    </div>
+    <h1 class="cv-title">Compromisos Vencidos</h1>
+    <p class="cv-subtitle">Seguimiento de obligaciones por pagar y cuentas por cobrar pendientes, vencidas o próximas a vencer.</p>
+  </section>
+
+  <section class="cv-card cv-filter-card">
+    <div class="cv-filter-grid">
+      <div class="cv-field">
+        <label for="gestion">Gestión</label>
+        <select id="gestion" class="form-select">
+          {% for gestion in gestiones %}
+          {% if gestion == gestion_preferida %}
+          <option value="{{ gestion }}" selected>{{ gestion }}</option>
+          {% else %}
+          <option value="{{ gestion }}">{{ gestion }}</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="cv-field">
+        <label for="tipo">Tipo</label>
+        <select id="tipo" class="form-select">
+          {% for tipo in tipos %}
+          <option value="{{ tipo.value }}">{{ tipo.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="cv-field">
+        <label for="rango">Rango</label>
+        <select id="rango" class="form-select">
+          {% for rango in rangos %}
+          <option value="{{ rango.value }}">{{ rango.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="cv-field">
+        <label for="dias">Días</label>
+        <select id="dias" class="form-select">
+          {% for dia in horizontes %}
+          {% if dia == 7 %}
+          <option value="{{ dia }}" selected>{{ dia }}</option>
+          {% else %}
+          <option value="{{ dia }}">{{ dia }}</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="cv-field">
+        <label for="unidadNegocio">Unidad de negocio</label>
+        <select id="unidadNegocio" class="form-select">
+          <option value="">Todas</option>
+          {% for unidad in unidades_negocio %}
+          <option value="{{ unidad.id }}">{{ unidad.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button id="btnActualizar" type="button" class="btn btn-primary cv-action-btn">
+        <i class="fas fa-rotate"></i>
+        <span>Actualizar</span>
+      </button>
+
+      <a id="btnExcel" class="btn btn-success cv-action-btn" href="#" role="button">
+        <i class="fas fa-file-excel"></i>
+        <span>Excel</span>
+      </a>
+
+      <a id="btnPdf" class="btn btn-danger cv-action-btn" href="#" role="button" target="_blank" rel="noopener">
+        <i class="fas fa-file-pdf"></i>
+        <span>PDF</span>
+      </a>
+    </div>
+  </section>
+
+  <section id="summaryGrid" class="cv-summary" aria-label="Resumen de compromisos vencidos"></section>
+
+  <section class="cv-card cv-results-card">
+    <div class="cv-loader" id="loaderResultados">
+      <div class="cv-loader-card">
+        <i class="fas fa-circle-notch fa-spin"></i>
+        <span>Revisando compromisos</span>
+      </div>
+    </div>
+
+    <div class="cv-results-toolbar">
+      <div>
+        <h2 class="cv-results-title">Compromisos pendientes</h2>
+        <div id="resultadoMeta" class="cv-results-meta">Cargando información...</div>
+      </div>
+      <div class="cv-grid-tools" aria-label="Controles del listado">
+        <div class="cv-page-size">
+          <label for="pageSize">Filas por página</label>
+          <select id="pageSize" class="form-select">
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="cv-table-wrap">
+      <table class="table table-hover cv-table">
+        <thead>
+          <tr id="resultadosHead"></tr>
+        </thead>
+        <tbody id="resultadosBody"></tbody>
+      </table>
+      <div id="emptyState" class="cv-empty">
+        <i id="emptyIcon" class="fas fa-circle-check"></i>
+        <h3 id="emptyTitle">No hay compromisos pendientes para los filtros seleccionados</h3>
+      </div>
+    </div>
+
+    <div id="paginationBar" class="cv-pagination-bar" aria-label="Paginación de compromisos">
+      <div id="paginationInfo" class="cv-pagination-info">0 registros</div>
+      <div class="cv-pagination-actions">
+        <button id="btnFirstPage" type="button" class="btn btn-outline-secondary btn-sm cv-page-btn" aria-label="Primera página">
+          <i class="fas fa-angles-left"></i>
+        </button>
+        <button id="btnPrevPage" type="button" class="btn btn-outline-secondary btn-sm cv-page-btn" aria-label="Página anterior">
+          <i class="fas fa-angle-left"></i>
+        </button>
+        <span id="pageIndicator" class="cv-page-indicator">Página 1 de 1</span>
+        <button id="btnNextPage" type="button" class="btn btn-outline-secondary btn-sm cv-page-btn" aria-label="Página siguiente">
+          <i class="fas fa-angle-right"></i>
+        </button>
+        <button id="btnLastPage" type="button" class="btn btn-outline-secondary btn-sm cv-page-btn" aria-label="Última página">
+          <i class="fas fa-angles-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="footerNote" class="cv-footer-note"></div>
+  </section>
+</div>
+
+<script type="application/json" id="compromisosVencidosBootstrap">
+  {{ {
+    'urls': {
+      'api': url_for('compromisos_vencidos.api_compromisos_vencidos'),
+      'excel': url_for('compromisos_vencidos.excel_compromisos_vencidos'),
+      'pdf': url_for('compromisos_vencidos.pdf_compromisos_vencidos')
+    }
+  } | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const bootEl = document.getElementById("compromisosVencidosBootstrap");
+    const boot = JSON.parse(bootEl.textContent || "{}");
+
+    const el = {
+      gestion: document.getElementById("gestion"),
+      tipo: document.getElementById("tipo"),
+      rango: document.getElementById("rango"),
+      dias: document.getElementById("dias"),
+      unidadNegocio: document.getElementById("unidadNegocio"),
+      pageSize: document.getElementById("pageSize"),
+      btnActualizar: document.getElementById("btnActualizar"),
+      btnExcel: document.getElementById("btnExcel"),
+      btnPdf: document.getElementById("btnPdf"),
+      btnFirstPage: document.getElementById("btnFirstPage"),
+      btnPrevPage: document.getElementById("btnPrevPage"),
+      btnNextPage: document.getElementById("btnNextPage"),
+      btnLastPage: document.getElementById("btnLastPage"),
+      summaryGrid: document.getElementById("summaryGrid"),
+      resultadosHead: document.getElementById("resultadosHead"),
+      resultadosBody: document.getElementById("resultadosBody"),
+      resultadoMeta: document.getElementById("resultadoMeta"),
+      emptyState: document.getElementById("emptyState"),
+      emptyTitle: document.getElementById("emptyTitle"),
+      emptyIcon: document.getElementById("emptyIcon"),
+      footerNote: document.getElementById("footerNote"),
+      paginationInfo: document.getElementById("paginationInfo"),
+      pageIndicator: document.getElementById("pageIndicator"),
+      paginationBar: document.getElementById("paginationBar"),
+      loader: document.getElementById("loaderResultados"),
+    };
+
+    let currentRows = [];
+    let currentColumns = [];
+    let currentPage = 1;
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function params() {
+      const data = new URLSearchParams();
+      data.set("gestion", el.gestion.value || "");
+      data.set("tipo", el.tipo.value || "");
+      data.set("rango", el.rango.value || "VENCIDOS");
+      data.set("dias", el.dias.value || "7");
+      data.set("unidad_negocio_id", el.unidadNegocio.value || "");
+      return data;
+    }
+
+    function updateExportLinks() {
+      const query = params().toString();
+      el.btnExcel.href = `${boot.urls.excel}?${query}`;
+      el.btnPdf.href = `${boot.urls.pdf}?${query}`;
+    }
+
+    function badgeClass(code) {
+      const normalized = String(code || "").toUpperCase();
+      if (normalized === "CRITICA") return "cv-badge-critical";
+      if (normalized === "ALTA") return "cv-badge-high";
+      if (normalized === "MEDIA") return "cv-badge-medium";
+      if (normalized === "BAJA") return "cv-badge-low";
+      if (normalized === "PAGAR") return "cv-badge-pagar";
+      if (normalized === "COBRAR") return "cv-badge-cobrar";
+      if (normalized === "VENCIDO") return "cv-badge-vencido";
+      if (normalized === "HOY") return "cv-badge-hoy";
+      if (normalized === "POR_VENCER") return "cv-badge-por-vencer";
+      return "cv-badge-default";
+    }
+
+    function renderSummary(cards) {
+      el.summaryGrid.innerHTML = "";
+      (cards || []).forEach((card) => {
+        const item = document.createElement("article");
+        item.className = `cv-card cv-summary-card is-${escapeHtml(card.kind || "group")}`;
+        item.innerHTML = `
+          <div class="cv-summary-label">${escapeHtml(card.label)}</div>
+          <div class="cv-summary-value">${escapeHtml(card.value)}</div>
+          <div class="cv-summary-note">${escapeHtml(card.note || "")}</div>
+        `;
+        el.summaryGrid.appendChild(item);
+      });
+    }
+
+    function renderHead(columns) {
+      el.resultadosHead.innerHTML = "";
+      (columns || []).forEach((column) => {
+        const th = document.createElement("th");
+        th.textContent = column.label || "";
+        if (column.align === "right") th.classList.add("text-end");
+        if (column.align === "center") th.classList.add("text-center");
+        el.resultadosHead.appendChild(th);
+      });
+    }
+
+    function renderCell(row, column) {
+      const td = document.createElement("td");
+      if (column.align === "right") td.classList.add("text-end");
+      if (column.align === "center") td.classList.add("text-center");
+
+      if (column.type === "badge") {
+        const code = row[column.code_key] || row[column.key];
+        td.innerHTML = `<span class="cv-badge ${badgeClass(code)}">${escapeHtml(row[column.key])}</span>`;
+        return td;
+      }
+
+      if (column.type === "money") {
+        td.innerHTML = `<span class="cv-text-strong">${escapeHtml(row.saldo_pendiente_label || "0.00")}</span>`;
+        return td;
+      }
+
+      const text = escapeHtml(row[column.key]);
+      td.innerHTML = column.strong ? `<span class="cv-text-strong">${text}</span>` : text;
+      return td;
+    }
+
+    function pageSizeValue() {
+      const value = Number.parseInt(el.pageSize.value || "10", 10);
+      return [10, 20, 50].includes(value) ? value : 10;
+    }
+
+    function totalPages() {
+      return Math.max(1, Math.ceil(currentRows.length / pageSizeValue()));
+    }
+
+    function clampCurrentPage() {
+      currentPage = Math.min(Math.max(1, currentPage), totalPages());
+    }
+
+    function updatePaginationControls() {
+      const total = currentRows.length;
+      const pages = totalPages();
+      clampCurrentPage();
+
+      const start = total === 0 ? 0 : (currentPage - 1) * pageSizeValue() + 1;
+      const end = Math.min(total, currentPage * pageSizeValue());
+      el.paginationInfo.textContent = total === 0
+        ? "0 registros"
+        : `${start}-${end} de ${total} registros`;
+      el.pageIndicator.textContent = `Página ${currentPage} de ${pages}`;
+
+      const disableBack = currentPage <= 1 || total === 0;
+      const disableNext = currentPage >= pages || total === 0;
+      el.btnFirstPage.disabled = disableBack;
+      el.btnPrevPage.disabled = disableBack;
+      el.btnNextPage.disabled = disableNext;
+      el.btnLastPage.disabled = disableNext;
+      el.paginationBar.classList.toggle("d-none", total === 0);
+    }
+
+    function renderRows() {
+      el.resultadosBody.innerHTML = "";
+      clampCurrentPage();
+      const size = pageSizeValue();
+      const start = (currentPage - 1) * size;
+      const rows = currentRows.slice(start, start + size);
+
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+        currentColumns.forEach((column) => {
+          tr.appendChild(renderCell(row, column));
+        });
+        el.resultadosBody.appendChild(tr);
+      });
+
+      updatePaginationControls();
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderRows();
+    }
+
+    function showError(message) {
+      if (window.Swal) {
+        window.Swal.fire({
+          icon: "error",
+          title: "No se pudo completar",
+          text: message,
+          confirmButtonColor: "#0f2340",
+        });
+        return;
+      }
+      alert(message);
+    }
+
+    async function cargarCompromisos() {
+      updateExportLinks();
+      el.loader.classList.add("is-visible");
+      try {
+        const response = await fetch(`${boot.urls.api}?${params().toString()}`, {
+          headers: { Accept: "application/json" },
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.msg || "No se pudo generar el seguimiento.");
+        }
+
+        currentRows = Array.isArray(payload.rows) ? payload.rows : [];
+        currentColumns = Array.isArray(payload.columns) ? payload.columns : [];
+        currentPage = 1;
+        renderSummary(payload.summary_cards || []);
+        renderHead(currentColumns);
+        renderRows();
+
+        el.emptyTitle.textContent = payload.empty_title || "No hay compromisos pendientes";
+        el.emptyIcon.className = payload.empty_icon || "fas fa-circle-check";
+        el.emptyState.classList.toggle("is-visible", currentRows.length === 0);
+        el.resultadoMeta.textContent = `${payload.descripcion_periodo || ""} - ${payload.rango_label || ""} - Unidad: ${payload.unidad_label || ""}`;
+        el.footerNote.textContent = currentRows.length > 0
+          ? "Priorice vencidos y vencimientos del día. El Excel contiene el detalle completo para seguimiento."
+          : "No se encontraron compromisos pendientes con los filtros actuales.";
+      } catch (error) {
+        showError(error.message || "Error inesperado al generar el seguimiento.");
+      } finally {
+        el.loader.classList.remove("is-visible");
+      }
+    }
+
+    [el.gestion, el.tipo, el.rango, el.dias, el.unidadNegocio].forEach((control) => {
+      control.addEventListener("change", cargarCompromisos);
+    });
+    el.pageSize.addEventListener("change", () => goToPage(1));
+    el.btnFirstPage.addEventListener("click", () => goToPage(1));
+    el.btnPrevPage.addEventListener("click", () => goToPage(currentPage - 1));
+    el.btnNextPage.addEventListener("click", () => goToPage(currentPage + 1));
+    el.btnLastPage.addEventListener("click", () => goToPage(totalPages()));
+    el.btnActualizar.addEventListener("click", cargarCompromisos);
+
+    updateExportLinks();
+    cargarCompromisos();
+  });
+</script>
+{% endblock extra_js %}

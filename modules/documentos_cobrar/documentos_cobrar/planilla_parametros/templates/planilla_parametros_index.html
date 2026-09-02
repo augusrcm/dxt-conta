@@ -1,0 +1,200 @@
+{% extends "layout.html" %}
+{% block title %}Parámetros de Planilla{% endblock title %}
+{% block page_help_url %}{{ url_for('planilla_parametros.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  #parametrosPlanillaPage{display:grid;gap:1rem}.ppar-header{align-items:center;background:linear-gradient(135deg,#0f2340,#17406f);border-radius:1rem;box-shadow:0 18px 38px rgba(15,35,64,.18);color:#fff;display:flex;justify-content:space-between;padding:1.15rem 1.3rem}.ppar-title{font-size:1.45rem;font-weight:900;margin:0}.ppar-sub{color:rgba(255,255,255,.75);font-size:.85rem;margin:0}.ppar-card{background:#fff;border:1px solid #dfe7f1;border-radius:1rem;box-shadow:0 12px 28px rgba(15,35,64,.08);padding:1rem}.ppar-toolbar{display:grid;gap:.75rem;grid-template-columns:220px 1fr auto}.ppar-table-wrap{overflow:auto}.ppar-badge{border-radius:999px;font-size:.72rem;font-weight:900;padding:.25rem .55rem}.is-on{background:#ecfdf5;color:#0f766e}.is-off{background:#fff1f2;color:#dc2626}.modal-header.ppar-modal-head{background:linear-gradient(135deg,#0f2340,#17406f);color:#fff}.modal-header .btn-close{filter:invert(1)}.ppar-grid{display:grid;gap:.75rem;grid-template-columns:repeat(12,1fr)}.ppar-col-3{grid-column:span 3}.ppar-col-4{grid-column:span 4}.ppar-col-6{grid-column:span 6}.ppar-col-12{grid-column:span 12}.ppar-section{border:1px solid #e3eaf4;border-radius:.9rem;margin-bottom:1rem;padding:1rem}.ppar-section-title{align-items:center;color:#0f2340;display:flex;font-weight:900;gap:.45rem;margin-bottom:.8rem}.ppar-section-head{align-items:center;display:flex;gap:.6rem;justify-content:space-between;margin-bottom:.8rem}.ppar-section-head .ppar-section-title{margin-bottom:0}.ppar-hint{color:#64748b;font-size:.78rem;font-weight:700;margin-top:.35rem}.ppar-grid label{font-size:.75rem;font-weight:850;color:#334155}.form-control,.form-select{border-radius:.8rem;min-height:40px}.select2-container .select2-selection--single{height:40px;border:1px solid #ced4da;border-radius:.8rem}.select2-container--default .select2-selection--single .select2-selection__rendered{line-height:38px;font-weight:700}.select2-container--default .select2-selection--single .select2-selection__arrow{height:38px}@media(max-width:900px){.ppar-toolbar,.ppar-grid{grid-template-columns:1fr}.ppar-col-3,.ppar-col-4,.ppar-col-6,.ppar-col-12{grid-column:span 1}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="parametrosPlanillaPage">
+  <div class="ppar-header">
+    <div>
+      <div style="font-size:.75rem;font-weight:900;opacity:.75;text-transform:uppercase">Planillas</div>
+      <h1 class="ppar-title">Parámetros de Planilla</h1>
+      <p class="ppar-sub">Configuración anual. La planilla mensual reutiliza estos valores automáticamente.</p>
+    </div>
+    {% if puede_editar %}<button class="btn btn-light fw-bold" id="btnNuevoParametro"><i class="fas fa-plus me-1"></i>Nueva gestión</button>{% endif %}
+  </div>
+
+  {% if error %}<div class="alert alert-danger fw-bold">{{ error }}</div>{% endif %}
+
+  <div class="ppar-card">
+    <div class="ppar-toolbar">
+      <select id="filtroEstado" class="form-select"><option value="ACTIVOS">Activos</option><option value="TODOS">Todos</option><option value="INACTIVOS">Inactivos</option></select>
+      <input id="filtroBusqueda" class="form-control" placeholder="Buscar gestión u observación">
+      <button class="btn btn-outline-secondary" id="btnLimpiar"><i class="fas fa-eraser"></i></button>
+    </div>
+    <div class="ppar-table-wrap mt-3">
+      <table id="tablaParametros" class="table table-hover align-middle w-100">
+        <thead><tr><th>Gestión</th><th>SMN</th><th>Bono antigüedad</th><th>AFP/Gestora</th><th>Jornada</th><th>Cuentas</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalParametro" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header ppar-modal-head">
+        <div><h5 class="modal-title fw-bold mb-0" id="modalTitle">Nueva gestión</h5><small>Configura una vez y reutiliza en planillas mensuales.</small></div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formParametro">
+        <div class="modal-body">
+          <input type="hidden" id="parametroId">
+          <div class="ppar-section">
+            <div class="ppar-section-title"><i class="fas fa-scale-balanced"></i> Parámetros laborales</div>
+            <div class="ppar-grid">
+              <div class="ppar-col-3"><label>Gestión</label><input id="gestion" type="number" class="form-control" min="2000" required></div>
+              <div class="ppar-col-3"><label>SMN</label><input id="salarioMinimo" type="number" step="0.01" min="0" class="form-control" required></div>
+              <div class="ppar-col-3"><label>Jornada semanal</label><input id="jornadaSemanal" type="number" step="0.01" min="0" class="form-control" value="48"></div>
+              <div class="ppar-col-3"><label>% AFP/Gestora</label><input id="porcentajeAfp" type="number" step="0.000001" min="0" class="form-control" value="12.71"></div>
+              <div class="ppar-col-6"><label>Tipo empresa bono antigüedad</label><select id="tipoEmpresa" class="form-select"><option value="SERVICIOS_COMERCIAL">Servicios / Comercial</option><option value="PRODUCTIVA_INDUSTRIAL">Productiva / Industrial</option><option value="PERSONALIZADA">Personalizada</option></select></div>
+              <div class="ppar-col-3"><label>Base bono x SMN</label><input id="baseBono" type="number" step="0.01" min="0" class="form-control" value="1"></div>
+              <div class="ppar-col-3"><label>Múltiplo RC-IVA x SMN</label><input id="multiploRcIva" type="number" step="0.01" min="0" class="form-control" value="4"></div>
+              <div class="ppar-col-6"><div class="form-check form-switch mt-4"><input class="form-check-input" id="aplicaBono" type="checkbox" checked><label class="form-check-label fw-bold" for="aplicaBono">Aplicar cálculo asistido de bono de antigüedad</label></div></div>
+              <div class="ppar-col-6"><div class="form-check form-switch mt-4"><input class="form-check-input" id="aplicaAfp" type="checkbox" checked><label class="form-check-label fw-bold" for="aplicaAfp">Aplicar cálculo asistido de AFP/Gestora</label></div></div>
+            </div>
+          </div>
+
+          <div class="ppar-section">
+            <div class="ppar-section-head">
+              <div>
+                <div class="ppar-section-title"><i class="fas fa-file-invoice-dollar"></i> Cuentas para devengamiento de planilla</div>
+                <div class="ppar-hint">El sistema puede sugerir cuentas del plan actual; el contador puede modificarlas.</div>
+              </div>
+              <div class="d-flex gap-2 flex-wrap justify-content-end">
+                <button type="button" class="btn btn-outline-secondary btn-sm fw-bold" id="btnCopiarAnterior"><i class="fas fa-copy me-1"></i>Copiar anterior</button>
+                <button type="button" class="btn btn-outline-primary btn-sm fw-bold" id="btnSugerirCuentas"><i class="fas fa-wand-magic-sparkles me-1"></i>Sugerir cuentas</button>
+              </div>
+            </div>
+            <div class="ppar-grid">
+              <div class="ppar-col-6"><label>Gasto sueldos / salarios</label><select id="cuentaGastoSueldos" class="form-select cuenta-select"></select></div>
+              <div class="ppar-col-6"><label>Sueldos por pagar</label><select id="cuentaSueldosPagar" class="form-select cuenta-select"></select></div>
+              <div class="ppar-col-6"><label>AFP/Gestora por pagar</label><select id="cuentaAfpPagar" class="form-select cuenta-select"></select></div>
+              <div class="ppar-col-6"><label>RC-IVA por pagar</label><select id="cuentaRcIvaPagar" class="form-select cuenta-select"></select></div>
+              <div class="ppar-col-6"><label>Descuentos por pagar / compensar</label><select id="cuentaDescuentosPagar" class="form-select cuenta-select"></select></div>
+              <div class="ppar-col-6"><label>Gasto aportes patronales</label><select id="cuentaGastoAportes" class="form-select cuenta-select"></select></div>
+              <div class="ppar-col-6"><label>Aportes patronales por pagar</label><select id="cuentaAportesPagar" class="form-select cuenta-select"></select></div>
+              <div class="ppar-col-6"><label>Gasto honorarios colaboradores</label><select id="cuentaGastoHonorarios" class="form-select cuenta-select"></select></div>
+              <div class="ppar-col-6"><label>Honorarios por pagar</label><select id="cuentaHonorariosPagar" class="form-select cuenta-select"></select></div>
+              <div class="ppar-col-6"><label>Retenciones honorarios por pagar</label><select id="cuentaRetencionesHonorarios" class="form-select cuenta-select"></select></div>
+            </div>
+          </div>
+
+          <div class="ppar-section mb-0">
+            <div class="ppar-section-title"><i class="fas fa-note-sticky"></i> Observación</div>
+            <textarea id="observacion" class="form-control" rows="2" maxlength="800"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(() => {
+  const URLS = {
+    listar: {{ url_for('planilla_parametros.listar')|tojson }},
+    guardar: {{ url_for('planilla_parametros.guardar')|tojson }},
+    obtener: {{ url_for('planilla_parametros.obtener', parametro_id=0)|tojson }},
+    estado: {{ url_for('planilla_parametros.estado', parametro_id=0)|tojson }},
+    cuentas: {{ url_for('planilla_parametros.api_cuentas')|tojson }},
+    sugerirCuentas: {{ url_for('planilla_parametros.sugerir_cuentas')|tojson }},
+    copiarAnterior: {{ url_for('planilla_parametros.copiar_anterior')|tojson }}
+  };
+  const puedeEditar = {{ 'true' if puede_editar else 'false' }};
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  let tabla, modal;
+  const toastError = (msg) => Swal.fire({ icon:'error', title:'No se pudo completar', text: msg });
+  const api = async (url, options={}) => {
+    const method = String(options.method || 'GET').toUpperCase();
+    const headers = Object.assign({'Content-Type':'application/json'}, options.headers || {});
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method) && csrfToken) {
+      headers['X-CSRFToken'] = csrfToken;
+    }
+    const r = await fetch(url, Object.assign({}, options, {headers}));
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok||d.success===false) throw new Error(d.message||'Respuesta inválida del servidor.');
+    return d;
+  };
+  const fmt = (v) => Number(v||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const byId = id => document.getElementById(id);
+  const endpoint = (base,id)=>base.replace(/0(?=($|\/))/, id);
+  const accountFields = {
+    cuentaGastoSueldos: 'cuenta_gasto_sueldos_codigo',
+    cuentaSueldosPagar: 'cuenta_sueldos_por_pagar_codigo',
+    cuentaAfpPagar: 'cuenta_afp_por_pagar_codigo',
+    cuentaRcIvaPagar: 'cuenta_rc_iva_por_pagar_codigo',
+    cuentaDescuentosPagar: 'cuenta_descuentos_por_pagar_codigo',
+    cuentaGastoAportes: 'cuenta_gasto_aportes_patronales_codigo',
+    cuentaAportesPagar: 'cuenta_aportes_patronales_por_pagar_codigo',
+    cuentaGastoHonorarios: 'cuenta_gasto_honorarios_codigo',
+    cuentaHonorariosPagar: 'cuenta_honorarios_por_pagar_codigo',
+    cuentaRetencionesHonorarios: 'cuenta_retenciones_honorarios_por_pagar_codigo'
+  };
+  function initSelects(){
+    if(!window.jQuery || !$.fn.select2) return;
+    $('.cuenta-select').select2({ dropdownParent: $('#modalParametro'), width:'100%', allowClear:true, placeholder:'Seleccionar cuenta', ajax:{ url:URLS.cuentas, dataType:'json', delay:250, data:p=>({q:p.term||''}), processResults:d=>({results:d.results||[]}) }});
+  }
+  function setCuenta(id, codigo, label){
+    const el = $('#'+id);
+    el.empty();
+    if(codigo){ el.append(new Option(label || codigo, codigo, true, true)).trigger('change'); }
+    else { el.val(null).trigger('change'); }
+  }
+  function fill(d={}){
+    byId('parametroId').value=d.id||''; byId('gestion').value=d.gestion||new Date().getFullYear(); byId('salarioMinimo').value=d.salario_minimo_nacional||'0.00'; byId('jornadaSemanal').value=d.jornada_semanal_horas||'48'; byId('porcentajeAfp').value=d.porcentaje_afp_laboral||'12.71'; byId('tipoEmpresa').value=d.tipo_empresa_bono||'SERVICIOS_COMERCIAL'; byId('baseBono').value=d.base_bono_smn_multiplicador||'1'; byId('multiploRcIva').value=d.multiplo_rc_iva_smn||'4'; byId('aplicaBono').checked=d.aplica_bono_antiguedad!==false; byId('aplicaAfp').checked=d.aplica_afp_laboral!==false; byId('observacion').value=d.observacion||'';
+    const labels = d.cuentas_labels || {}; Object.keys(accountFields).forEach(id => setCuenta(id, d[accountFields[id]] || '', labels[accountFields[id]] || ''));
+  }
+  function payload(){ const out={ id:byId('parametroId').value, gestion:byId('gestion').value, salario_minimo_nacional:byId('salarioMinimo').value, jornada_semanal_horas:byId('jornadaSemanal').value, porcentaje_afp_laboral:byId('porcentajeAfp').value, tipo_empresa_bono:byId('tipoEmpresa').value, base_bono_smn_multiplicador:byId('baseBono').value, multiplo_rc_iva_smn:byId('multiploRcIva').value, aplica_bono_antiguedad:byId('aplicaBono').checked, aplica_afp_laboral:byId('aplicaAfp').checked, activo:true, observacion:byId('observacion').value }; Object.keys(accountFields).forEach(id => out[accountFields[id]] = $('#'+id).val() || ''); return out; }
+  function init(){
+    modal = new bootstrap.Modal(byId('modalParametro')); initSelects();
+    tabla = $('#tablaParametros').DataTable({ ajax:{url:URLS.listar,data:d=>{d.estado=byId('filtroEstado').value; d.q=byId('filtroBusqueda').value},dataSrc:'data'}, order:[[0,'desc']], language:{decimal:',',thousands:'.',search:'Buscar:',lengthMenu:'Mostrar _MENU_',info:'Mostrando _START_ a _END_ de _TOTAL_',emptyTable:'Sin datos',zeroRecords:'Sin resultados',paginate:{first:'Primero',last:'Último',next:'Siguiente',previous:'Anterior'}}, columns:[{data:'gestion'}, {data:'salario_minimo_nacional',render:v=>'Bs '+fmt(v)}, {data:null,render:r=>`${r.tipo_empresa_label}<br><small>${fmt(r.base_bono_smn_multiplicador)} x SMN</small>`}, {data:'porcentaje_afp_laboral',render:v=>fmt(v)+'%'}, {data:'jornada_semanal_horas',render:v=>fmt(v)+' h/sem'}, {data:null,render:r=>(r.cuenta_gasto_sueldos_codigo&&r.cuenta_sueldos_por_pagar_codigo)?'<span class="ppar-badge is-on">Config.</span>':'<span class="ppar-badge is-off">Pendiente</span>'}, {data:'activo',render:v=>v?'<span class="ppar-badge is-on">Activo</span>':'<span class="ppar-badge is-off">Inactivo</span>'}, {data:null,className:'text-end',orderable:false,render:r=>!puedeEditar?'':`<button class="btn btn-sm btn-outline-primary editar" data-id="${r.id}"><i class="fas fa-pen"></i></button> <button class="btn btn-sm ${r.activo?'btn-outline-danger':'btn-outline-success'} estado" data-id="${r.id}" data-activo="${r.activo?0:1}"><i class="fas ${r.activo?'fa-ban':'fa-check'}"></i></button>`}] });
+  }
+  byId('btnNuevoParametro')?.addEventListener('click',()=>{fill({}); byId('modalTitle').textContent='Nueva gestión'; modal.show();});
+  byId('btnSugerirCuentas')?.addEventListener('click', async () => {
+    try {
+      const d = await api(URLS.sugerirCuentas);
+      const data = d.data || {};
+      Object.keys(accountFields).forEach(id => {
+        const sug = data[accountFields[id]];
+        if (sug) setCuenta(id, sug.codigo, sug.label);
+      });
+      const faltantes = d.faltantes || [];
+      if (faltantes.length) {
+        Swal.fire({icon:'warning', title:'Sugerencia parcial', text:'Algunas cuentas sugeridas no existen o no son postables en el plan de cuentas.'});
+      } else {
+        Swal.fire({icon:'success', title:'Cuentas sugeridas cargadas', timer:1300, showConfirmButton:false});
+      }
+    } catch(err) { toastError(err.message); }
+  });
+
+  byId('btnCopiarAnterior')?.addEventListener('click', async () => {
+    try {
+      const gestion = byId('gestion').value || '';
+      const d = await api(`${URLS.copiarAnterior}?gestion=${encodeURIComponent(gestion)}`);
+      fill(d.data || {});
+      byId('modalTitle').textContent = 'Nueva gestión';
+      Swal.fire({icon:'success', title:'Parámetros copiados', text:'Revise y ajuste solo lo necesario.', timer:1600, showConfirmButton:false});
+    } catch(err) { toastError(err.message); }
+  });
+
+  byId('formParametro').addEventListener('submit',async e=>{e.preventDefault(); try{const d=await api(URLS.guardar,{method:'POST',body:JSON.stringify(payload())}); modal.hide(); tabla.ajax.reload(null,false); Swal.fire({icon:'success',title:d.message,timer:1300,showConfirmButton:false});}catch(err){toastError(err.message)}});
+  $('#tablaParametros').on('click','.editar',async function(){try{const d=await api(endpoint(URLS.obtener,this.dataset.id)); fill(d.data); byId('modalTitle').textContent='Editar gestión'; modal.show();}catch(err){toastError(err.message)}});
+  $('#tablaParametros').on('click','.estado',async function(){try{const d=await api(endpoint(URLS.estado,this.dataset.id),{method:'POST',body:JSON.stringify({activo:this.dataset.activo==='1'})}); tabla.ajax.reload(null,false); Swal.fire({icon:'success',title:d.message,timer:1200,showConfirmButton:false});}catch(err){toastError(err.message)}});
+  let timer; ['filtroEstado','filtroBusqueda'].forEach(id=>byId(id).addEventListener(id==='filtroBusqueda'?'input':'change',()=>{clearTimeout(timer); timer=setTimeout(()=>tabla.ajax.reload(),250)})); byId('btnLimpiar').addEventListener('click',()=>{byId('filtroEstado').value='ACTIVOS';byId('filtroBusqueda').value='';tabla.ajax.reload()}); byId('tipoEmpresa').addEventListener('change',()=>{ if(byId('tipoEmpresa').value==='SERVICIOS_COMERCIAL') byId('baseBono').value='1'; if(byId('tipoEmpresa').value==='PRODUCTIVA_INDUSTRIAL') byId('baseBono').value='3'; });
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,2252 @@
+{% extends "layout.html" %}
+{% block title %}Comprobantes · Formulario{% endblock title %}
+{% block page_help_url %}{{ url_for('comprobantes.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  #comprobantesFormPage {
+    --cf-navy: #0f2340;
+    --cf-blue: #173f6a;
+    --cf-accent: #2d7dd2;
+    --cf-accent-soft: #ebf4ff;
+    --cf-success: #177a53;
+    --cf-success-soft: #e8f8f0;
+    --cf-warning: #c78a1b;
+    --cf-warning-soft: #fff7df;
+    --cf-danger: #c03b35;
+    --cf-danger-soft: #fdecec;
+    --cf-surface: #f5f8fc;
+    --cf-surface-2: #f9fbff;
+    --cf-border: #dde5ef;
+    --cf-text: #1d2c3c;
+    --cf-muted: #6b7c8f;
+    --cf-radius: 16px;
+    --cf-navbar-h: 56px;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    color: var(--cf-text);
+  }
+
+  #comprobantesFormPage .cf-header {
+    position: sticky;
+    top: var(--cf-navbar-h);
+    z-index: 40;
+    background: linear-gradient(130deg, var(--cf-navy) 0%, var(--cf-blue) 55%, #1f5d9e 100%);
+    border-radius: 14px;
+    padding: 1rem 1.3rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+    box-shadow: 0 10px 28px rgba(15, 35, 64, 0.18);
+    overflow: hidden;
+  }
+
+  #comprobantesFormPage .cf-header::before {
+    content: "";
+    position: absolute;
+    top: -42px;
+    right: -42px;
+    width: 190px;
+    height: 190px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+  }
+
+  #comprobantesFormPage .cf-header::after {
+    content: "";
+    position: absolute;
+    bottom: -48px;
+    right: 92px;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.03);
+    pointer-events: none;
+  }
+
+  #comprobantesFormPage .cf-header-main,
+  #comprobantesFormPage .cf-header-actions {
+    position: relative;
+    z-index: 1;
+  }
+
+  #comprobantesFormPage .cf-header-main {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  #comprobantesFormPage .cf-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.14);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+  }
+
+  #comprobantesFormPage .cf-header-title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.12rem;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+
+  #comprobantesFormPage .cf-header-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+
+  #comprobantesFormPage .cf-header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  #comprobantesFormPage .cf-header-actions .btn-outline-light {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+    background: transparent;
+  }
+
+  #comprobantesFormPage .cf-header-actions .btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.46);
+    color: #fff;
+  }
+
+  #comprobantesFormPage .cf-header-actions .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+  }
+
+  #comprobantesFormPage .cf-page-shell {
+    display: block;
+  }
+
+  #comprobantesFormPage .cf-top-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 248px;
+    gap: 0.85rem;
+    align-items: start;
+  }
+
+  #comprobantesFormPage .cf-main-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  #comprobantesFormPage .cf-sidebar-card,
+  #comprobantesFormPage .cf-card,
+  #comprobantesFormPage details {
+    background: #fff;
+    border: 1px solid var(--cf-border);
+    border-radius: var(--cf-radius);
+    box-shadow: 0 4px 18px rgba(15, 35, 64, 0.07);
+  }
+
+  #comprobantesFormPage .cf-sidebar-card {
+    position: static;
+    top: auto;
+    padding: 0.72rem;
+    border-top: 3px solid var(--cf-accent);
+    max-height: 420px;
+    overflow: auto;
+    scrollbar-gutter: stable both-edges;
+  }
+
+  #comprobantesFormPage .cf-sidebar-card::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  #comprobantesFormPage .cf-sidebar-card::-webkit-scrollbar-thumb {
+    background: #c7d4e4;
+    border-radius: 999px;
+    border: 2px solid #f5f8fc;
+  }
+
+  #comprobantesFormPage .cf-sidebar-card::-webkit-scrollbar-track {
+    background: #f5f8fc;
+    border-radius: 999px;
+  }
+
+  #comprobantesFormPage .cf-card {
+    overflow: hidden;
+    margin: 0;
+    border-top: 3px solid var(--cf-accent);
+  }
+
+  #comprobantesFormPage .cf-card.cf-card-source {
+    border-top-color: var(--cf-success);
+  }
+
+  #comprobantesFormPage .cf-block-title,
+  #comprobantesFormPage .cf-card-title,
+  #comprobantesFormPage details summary {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  #comprobantesFormPage .cf-block-title {
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.64px;
+    text-transform: uppercase;
+    color: #7e92a8;
+    margin-bottom: 0.55rem;
+  }
+
+  #comprobantesFormPage .cf-block-title::before {
+    content: "";
+    width: 3px;
+    height: 13px;
+    border-radius: 2px;
+    background: var(--cf-accent);
+    display: block;
+  }
+
+  #comprobantesFormPage .cf-card-head {
+    padding: 0.9rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    background: var(--cf-surface);
+    border-bottom: 1px solid var(--cf-border);
+  }
+
+  #comprobantesFormPage .cf-card-title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--cf-text);
+  }
+
+  #comprobantesFormPage .cf-card-title i {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    color: var(--cf-accent);
+    border: 1px solid var(--cf-border);
+    font-size: 0.82rem;
+    flex-shrink: 0;
+  }
+
+  #comprobantesFormPage .cf-card-title small {
+    display: block;
+    font-size: 0.74rem;
+    color: var(--cf-muted);
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  #comprobantesFormPage .cf-card-actions {
+    display: flex;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  #comprobantesFormPage .cf-body {
+    padding: 0.95rem 1rem 1rem;
+  }
+
+  #comprobantesFormPage .cf-master-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0.8rem 0.9rem;
+    margin-top: 0.95rem;
+  }
+
+  #comprobantesFormPage .cf-col-3 {
+    grid-column: span 3;
+  }
+
+  #comprobantesFormPage .cf-col-4 {
+    grid-column: span 4;
+  }
+
+  #comprobantesFormPage .cf-col-5 {
+    grid-column: span 5;
+  }
+
+  #comprobantesFormPage .cf-col-6 {
+    grid-column: span 6;
+  }
+
+  #comprobantesFormPage .cf-col-7 {
+    grid-column: span 7;
+  }
+
+  #comprobantesFormPage .cf-col-8 {
+    grid-column: span 8;
+  }
+
+  #comprobantesFormPage .cf-col-9 {
+    grid-column: span 9;
+  }
+
+  #comprobantesFormPage .cf-col-12 {
+    grid-column: span 12;
+  }
+
+  #comprobantesFormPage .cf-field {
+    min-width: 0;
+  }
+
+  #comprobantesFormPage .cf-rubro-panel {
+    margin-top: 0.15rem;
+    padding: 0.9rem;
+    border: 1px dashed #cfd8e3;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #f9fbfe 0%, #f4f7fb 100%);
+  }
+
+  #comprobantesFormPage .cf-rubro-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 4.4fr) minmax(110px, 1fr) minmax(165px, 1.5fr) minmax(165px, 1.5fr);
+    gap: 0.75rem 0.85rem;
+    align-items: end;
+  }
+
+  #comprobantesFormPage .cf-rubro-grid>.cf-field {
+    grid-column: auto !important;
+    min-width: 0;
+  }
+
+  #comprobantesFormPage .cf-rubro-note {
+    font-size: 0.78rem;
+    color: var(--cf-muted);
+    margin: 0 0 0.75rem;
+  }
+
+  #comprobantesFormPage .cf-rubro-grid .flatpickr-input,
+  #comprobantesFormPage .cf-rubro-grid input.form-control,
+  #comprobantesFormPage .cf-rubro-grid .select2-container,
+  #comprobantesFormPage .cf-rubro-grid .select2-selection--single {
+    min-width: 0;
+    width: 100% !important;
+  }
+
+  #comprobantesFormPage .cf-summary-value.cf-summary-subtle {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #5e7389;
+  }
+
+  #comprobantesFormPage .form-label {
+    font-size: 0.71rem;
+    font-weight: 700;
+    letter-spacing: 0.58px;
+    text-transform: uppercase;
+    color: #4d6175;
+    margin-bottom: 0.32rem;
+  }
+
+  #comprobantesFormPage .form-control,
+  #comprobantesFormPage .form-select,
+  #comprobantesFormPage .select2-container .select2-selection--single {
+    border-radius: 10px;
+    border: 1.5px solid var(--cf-border);
+    min-height: 38px;
+    font-size: 0.9rem;
+  }
+
+  #comprobantesFormPage textarea.form-control {
+    min-height: 72px;
+    resize: vertical;
+  }
+
+  #comprobantesFormPage .form-control:focus,
+  #comprobantesFormPage .form-select:focus {
+    border-color: var(--cf-accent);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.11);
+  }
+
+  #comprobantesFormPage .cf-select-shell .select2-container {
+    width: 100% !important;
+  }
+
+  #comprobantesFormPage .cf-select-shell .select2-selection--single {
+    height: 38px;
+  }
+
+  #comprobantesFormPage .cf-select-shell .select2-selection__rendered {
+    line-height: 36px;
+    padding-left: 12px;
+    padding-right: 28px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #comprobantesFormPage .cf-select-shell .select2-selection__arrow {
+    height: 36px;
+  }
+
+  #comprobantesFormPage .cf-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    padding: 0.8rem 0.9rem;
+    border-radius: 13px;
+    font-size: 0.83rem;
+    line-height: 1.35;
+    margin-bottom: 0.9rem;
+  }
+
+  #comprobantesFormPage .cf-note-edit {
+    background: var(--cf-accent-soft);
+    border: 1px solid #c7ddff;
+    color: #1f4f84;
+  }
+
+  #comprobantesFormPage .cf-note-view {
+    background: var(--cf-warning-soft);
+    border: 1px solid #efd491;
+    color: #7c5600;
+  }
+
+  #comprobantesFormPage .cf-hidden {
+    display: none !important;
+  }
+
+  #comprobantesFormPage .cf-summary-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  #comprobantesFormPage .cf-chip-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  #comprobantesFormPage .cf-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.26rem 0.68rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+    line-height: 1.2;
+  }
+
+  #comprobantesFormPage .cf-badge-state-borrador {
+    background: var(--cf-warning-soft);
+    color: var(--cf-warning);
+    border-color: #f3d79b;
+  }
+
+  #comprobantesFormPage .cf-badge-state-confirmado {
+    background: var(--cf-success-soft);
+    color: var(--cf-success);
+    border-color: #aee2c8;
+  }
+
+  #comprobantesFormPage .cf-badge-state-anulado {
+    background: var(--cf-danger-soft);
+    color: var(--cf-danger);
+    border-color: #f2bbbb;
+  }
+
+  #comprobantesFormPage .cf-badge-origin-manual {
+    background: #eef2ff;
+    color: #5b5bd6;
+    border-color: #d7dcff;
+  }
+
+  #comprobantesFormPage .cf-badge-origin-tesoreria {
+    background: var(--cf-accent-soft);
+    color: var(--cf-accent);
+    border-color: #c7ddff;
+  }
+
+  #comprobantesFormPage .cf-badge-origin-factura {
+    background: #f5edff;
+    color: #7c3aed;
+    border-color: #ddc7ff;
+  }
+
+  #comprobantesFormPage .cf-badge-origin-sistema {
+    background: #eef6f7;
+    color: #1f6f78;
+    border-color: #c6e3e8;
+  }
+
+  #comprobantesFormPage .cf-badge-origin-cierre {
+    background: #fff4e8;
+    color: #b65f16;
+    border-color: #ffd7aa;
+  }
+
+  #comprobantesFormPage .cf-summary-list,
+  #comprobantesFormPage .cf-balance-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+  }
+
+  #comprobantesFormPage .cf-summary-item,
+  #comprobantesFormPage .cf-balance-item {
+    border: 1px solid var(--cf-border);
+    border-radius: 11px;
+    background: var(--cf-surface-2);
+    padding: 0.55rem 0.6rem;
+    min-width: 0;
+  }
+
+  #comprobantesFormPage .cf-summary-item.cf-span-2,
+  #comprobantesFormPage .cf-balance-item.cf-span-2 {
+    grid-column: 1 / -1;
+  }
+
+  #comprobantesFormPage .cf-summary-label,
+  #comprobantesFormPage .cf-balance-label {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--cf-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.55px;
+    line-height: 1.15;
+  }
+
+  #comprobantesFormPage .cf-summary-value,
+  #comprobantesFormPage .cf-balance-value {
+    font-size: 0.78rem;
+    font-weight: 800;
+    margin-top: 0.15rem;
+    color: var(--cf-text);
+    word-break: break-word;
+    line-height: 1.18;
+  }
+
+  #comprobantesFormPage .cf-balance-value.is-success {
+    color: var(--cf-success);
+  }
+
+  #comprobantesFormPage .cf-balance-value.is-danger {
+    color: var(--cf-danger);
+  }
+
+  #comprobantesFormPage .cf-balance-value.is-neutral {
+    color: var(--cf-muted);
+  }
+
+  #comprobantesFormPage .cf-detail-wrap,
+  #comprobantesFormPage .cf-source-wrap {
+    overflow: auto;
+  }
+
+  #comprobantesFormPage .cf-detail-table,
+  #comprobantesFormPage .cf-source-table {
+    width: 100%;
+    min-width: 1320px;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  #comprobantesFormPage .cf-detail-table thead th,
+  #comprobantesFormPage .cf-source-table thead th {
+    background: var(--cf-surface);
+    color: var(--cf-muted);
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.58px;
+    white-space: nowrap;
+    padding: 8px 10px;
+    border-bottom: 2px solid var(--cf-border);
+  }
+
+  #comprobantesFormPage .cf-detail-table tbody td,
+  #comprobantesFormPage .cf-source-table tbody td {
+    padding: 7px 10px;
+    font-size: 0.81rem;
+    vertical-align: middle;
+    color: var(--cf-text);
+    border-bottom: 1px solid #edf1f6;
+  }
+
+  #comprobantesFormPage .cf-detail-table tbody .form-control,
+  #comprobantesFormPage .cf-detail-table tbody .form-select,
+  #comprobantesFormPage .cf-detail-table tbody .select2-selection--single {
+    min-height: 34px;
+    font-size: 0.82rem;
+  }
+
+  #comprobantesFormPage .cf-detail-table tbody tr:nth-child(even),
+  #comprobantesFormPage .cf-source-table tbody tr:nth-child(even) {
+    background: var(--cf-surface-2);
+  }
+
+  #comprobantesFormPage .cf-detail-table tbody tr:hover td,
+  #comprobantesFormPage .cf-source-table tbody tr:hover td {
+    background: #edf5ff;
+  }
+
+  #comprobantesFormPage .cf-detail-row textarea {
+    min-height: 58px;
+    min-width: 230px;
+    resize: vertical;
+    line-height: 1.25;
+  }
+
+  #comprobantesFormPage .cf-detail-table th:nth-child(2),
+  #comprobantesFormPage .cf-detail-table td:nth-child(2) {
+    min-width: 240px;
+  }
+
+  #comprobantesFormPage .cf-detail-table th:nth-child(3),
+  #comprobantesFormPage .cf-detail-table td:nth-child(3) {
+    min-width: 210px;
+  }
+
+  #comprobantesFormPage .cf-detail-table th:nth-child(4),
+  #comprobantesFormPage .cf-detail-table td:nth-child(4) {
+    min-width: 160px;
+  }
+
+  #comprobantesFormPage .cf-detail-table th:nth-child(5),
+  #comprobantesFormPage .cf-detail-table td:nth-child(5) {
+    min-width: 250px;
+  }
+
+  #comprobantesFormPage .cf-detail-table th:nth-child(6),
+  #comprobantesFormPage .cf-detail-table td:nth-child(6),
+  #comprobantesFormPage .cf-detail-table th:nth-child(7),
+  #comprobantesFormPage .cf-detail-table td:nth-child(7) {
+    min-width: 140px;
+  }
+
+  #comprobantesFormPage .cf-detail-table th:nth-child(8),
+  #comprobantesFormPage .cf-detail-table td:nth-child(8) {
+    min-width: 110px;
+  }
+
+  #comprobantesFormPage .cf-amount {
+    text-align: right;
+    min-width: 132px;
+  }
+
+  #comprobantesFormPage .cf-row-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.35rem;
+  }
+
+  #comprobantesFormPage .cf-mini-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.48rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    border: 1px solid #d9e3ef;
+    color: #587089;
+    background: #f8fbff;
+  }
+
+  #comprobantesFormPage .cf-detail-empty {
+    text-align: center;
+    padding: 1.1rem 0.8rem;
+    color: var(--cf-muted);
+    font-size: 0.86rem;
+  }
+
+
+  #comprobantesFormPage .cf-locked .form-control,
+  #comprobantesFormPage .cf-locked .form-select,
+  #comprobantesFormPage .cf-locked .select2-selection--single,
+  #comprobantesFormPage .cf-locked textarea {
+    background: #f5f7fb;
+  }
+
+  #comprobantesFormPage .cf-btn-row-delete {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    border: 1px solid #eccccc;
+    background: #fff;
+    color: var(--cf-danger);
+  }
+
+  #comprobantesFormPage .cf-btn-row-delete:hover {
+    background: var(--cf-danger-soft);
+  }
+
+  #comprobantesFormPage details {
+    overflow: hidden;
+  }
+
+  #comprobantesFormPage details summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 0.9rem 1rem;
+    font-weight: 700;
+    background: var(--cf-surface);
+    border-radius: 14px;
+  }
+
+  #comprobantesFormPage details[open] summary {
+    border-bottom: 1px solid var(--cf-border);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  #comprobantesFormPage .cf-technical-body {
+    padding: 1rem;
+  }
+
+  #comprobantesFormPage .cf-technical-pre {
+    background: #f7f9fc;
+    border: 1px solid var(--cf-border);
+    border-radius: 12px;
+    padding: 0.85rem;
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+  }
+
+  @media (max-width: 1280px) {
+    #comprobantesFormPage .cf-top-grid {
+      grid-template-columns: minmax(0, 1fr) 232px;
+    }
+
+    #comprobantesFormPage .cf-col-3,
+    #comprobantesFormPage .cf-col-4 {
+      grid-column: span 6;
+    }
+
+    #comprobantesFormPage .cf-col-5,
+    #comprobantesFormPage .cf-col-7,
+    #comprobantesFormPage .cf-col-8,
+    #comprobantesFormPage .cf-col-9 {
+      grid-column: span 12;
+    }
+  }
+
+  @media (max-width: 1080px) {
+    #comprobantesFormPage .cf-top-grid {
+      grid-template-columns: 1fr;
+    }
+
+    #comprobantesFormPage .cf-sidebar-card {
+      max-height: none;
+      overflow: visible;
+    }
+  }
+
+  @media (max-width: 768px) {
+
+    #comprobantesFormPage .cf-header,
+    #comprobantesFormPage .cf-card-head {
+      align-items: stretch;
+    }
+
+    #comprobantesFormPage .cf-header-actions,
+    #comprobantesFormPage .cf-card-actions {
+      width: 100%;
+    }
+
+    #comprobantesFormPage .cf-header-actions .btn,
+    #comprobantesFormPage .cf-card-actions .btn {
+      flex: 1 1 auto;
+    }
+
+    #comprobantesFormPage .cf-master-grid {
+      grid-template-columns: 1fr;
+    }
+
+    #comprobantesFormPage .cf-col-3,
+    #comprobantesFormPage .cf-col-4,
+    #comprobantesFormPage .cf-col-5,
+    #comprobantesFormPage .cf-col-6,
+    #comprobantesFormPage .cf-col-7,
+    #comprobantesFormPage .cf-col-8,
+    #comprobantesFormPage .cf-col-9,
+    #comprobantesFormPage .cf-col-12 {
+      grid-column: span 1;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div id="comprobantesFormPage">
+  <div class="cf-header">
+    <div class="cf-header-main">
+      <div class="cf-header-icon">
+        <i class="fas fa-file-pen"></i>
+      </div>
+      <div>
+        <h1 id="pageTitle" class="cf-header-title">Comprobante</h1>
+        <div id="pageSubtitle" class="cf-header-subtitle">Registro y consulta del asiento contable</div>
+      </div>
+    </div>
+    <div class="cf-header-actions">
+      <a href="{{ url_for('comprobantes.index') }}" class="btn btn-outline-light btn-sm">
+        <i class="fas fa-arrow-left me-1"></i>
+        Volver al listado
+      </a>
+      <a
+        id="btnPdf"
+        href="{{ url_for('comprobantes.pdf', asiento_id=asiento_id or 0) }}"
+        class="btn btn-outline-light btn-sm {% if not asiento_id %}cf-hidden{% endif %}"
+        target="_blank"
+        rel="noopener"
+      >
+        <i class="fas fa-file-pdf me-1"></i>
+        PDF
+      </a>
+      <button id="btnGuardar" type="button" class="btn btn-primary btn-sm">
+        <i class="fas fa-floppy-disk me-1"></i>
+        Guardar borrador
+      </button>
+      <button id="btnConfirmar" type="button" class="btn btn-success btn-sm">
+        <i class="fas fa-circle-check me-1"></i>
+        Confirmar
+      </button>
+      <button id="btnEliminar" type="button" class="btn btn-outline-danger btn-sm cf-hidden">
+        <i class="fas fa-trash-can me-1"></i>
+        Eliminar
+      </button>
+    </div>
+  </div>
+
+  <div class="cf-page-shell">
+    <div class="cf-main-stack">
+      <div class="cf-top-grid">
+        <div class="cf-card cf-card-data">
+          <div class="cf-card-head">
+            <div class="cf-card-title">
+              <i class="fas fa-pen-ruler"></i>
+              <div>
+                Datos del comprobante
+                <small>Información principal del asiento</small>
+              </div>
+            </div>
+          </div>
+          <div id="formBody" class="cf-body">
+            <input id="asientoId" type="hidden" />
+
+            <div id="noteEdit" class="cf-note cf-note-edit cf-hidden">
+              <i class="fas fa-circle-info"></i>
+              <div>Los comprobantes manuales en BORRADOR pueden modificarse.</div>
+            </div>
+            <div id="noteView" class="cf-note cf-note-view cf-hidden">
+              <i class="fas fa-lock"></i>
+              <div>Este comprobante se encuentra en modo consulta.</div>
+            </div>
+
+            <div class="cf-master-grid">
+              <div class="cf-field cf-col-3">
+                <label class="form-label" for="fecha">Fecha</label>
+                <input id="fecha" type="text" class="form-control" autocomplete="off" placeholder="dd/mm/aaaa" inputmode="numeric" />
+              </div>
+              <div class="cf-field cf-col-3">
+                <label class="form-label" for="monedaCodigo">Moneda</label>
+                <select id="monedaCodigo" class="form-select"></select>
+              </div>
+              <div class="cf-field cf-col-3">
+                <label class="form-label" for="tipoCambio">Tipo de cambio</label>
+                <input id="tipoCambio" type="number" step="0.000001" class="form-control" />
+              </div>
+              <div class="cf-field cf-col-3 cf-select-shell">
+                <label class="form-label" for="unidadNegocioId">Unidad de negocio</label>
+                <select id="unidadNegocioId" class="form-select"></select>
+              </div>
+              <div class="cf-field cf-col-4 cf-select-shell">
+                <label class="form-label" for="rubroId">Rubro</label>
+                <select id="rubroId" class="form-select">
+                  <option value="">Sin rubro</option>
+                </select>
+              </div>
+              <div class="cf-field cf-col-4">
+                <label class="form-label" for="documentoRelacionado">Documento relacionado</label>
+                <input id="documentoRelacionado" type="text" class="form-control" maxlength="150"
+                  placeholder="Sin documento externo" />
+              </div>
+              <div class="cf-field cf-col-4">
+                <label class="form-label" for="referencia">Referencia</label>
+                <input id="referencia" type="text" class="form-control" maxlength="150" />
+              </div>
+              <div class="cf-field cf-col-12">
+                <label class="form-label" for="glosa">Glosa</label>
+                <textarea id="glosa" class="form-control" rows="2" maxlength="500"></textarea>
+              </div>
+              <div id="panelPublicidad" class="cf-col-12 cf-rubro-panel cf-hidden">
+                <div class="cf-block-title">Parámetros de rubro</div>
+                <p class="cf-rubro-note">Cuando selecciones un rubro, debes asociar el elemento publicitario y su
+                  vigencia.</p>
+                <div class="cf-rubro-grid">
+                  <div class="cf-field cf-col-4 cf-select-shell">
+                    <label class="form-label" for="publicidadElementoIdRef">Referencia publicitaria</label>
+                    <select id="publicidadElementoIdRef" class="form-select">
+                      <option value="">Seleccione una referencia publicitaria</option>
+                    </select>
+                  </div>
+                  <div class="cf-field cf-col-2">
+                    <label class="form-label" for="publicidadElementoCodigoRef">Código GAMLP</label>
+                    <input id="publicidadElementoCodigoRef" type="text" class="form-control" readonly />
+                  </div>
+                  <div class="cf-field cf-col-3">
+                    <label class="form-label" for="vigenciaDesde">Vigencia desde</label>
+                    <input id="vigenciaDesde" type="text" class="form-control" autocomplete="off" placeholder="dd/mm/aaaa" inputmode="numeric" />
+                  </div>
+                  <div class="cf-field cf-col-3">
+                    <label class="form-label" for="vigenciaHasta">Vigencia hasta</label>
+                    <input id="vigenciaHasta" type="text" class="form-control" autocomplete="off" placeholder="dd/mm/aaaa" inputmode="numeric" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="cf-sidebar-card">
+          <div class="cf-block-title">Resumen del comprobante</div>
+          <div class="cf-summary-stack">
+            <div class="cf-chip-wrap">
+              <span id="badgeEstado" class="cf-badge cf-badge-state-borrador">BORRADOR</span>
+              <span id="badgeOrigen" class="cf-badge cf-badge-origin-manual">MANUAL</span>
+            </div>
+
+            <div class="cf-summary-list">
+              <div class="cf-summary-item">
+                <div class="cf-summary-label">Comprobante</div>
+                <div id="resumenComprobante" class="cf-summary-value">Nuevo</div>
+              </div>
+              <div class="cf-summary-item">
+                <div class="cf-summary-label">Estado</div>
+                <div id="resumenEstado" class="cf-summary-value">BORRADOR</div>
+              </div>
+              <div class="cf-summary-item">
+                <div class="cf-summary-label">Generado desde</div>
+                <div id="resumenOrigen" class="cf-summary-value">Manual</div>
+              </div>
+              <div class="cf-summary-item">
+                <div class="cf-summary-label">Tipo de operación</div>
+                <div id="resumenOperacion" class="cf-summary-value">Manual</div>
+              </div>
+              <div class="cf-summary-item cf-span-2">
+                <div class="cf-summary-label">Unidad de negocio</div>
+                <div id="resumenUnidadNegocio" class="cf-summary-value">Sin asignar</div>
+              </div>
+              <div class="cf-summary-item cf-span-2">
+                <div class="cf-summary-label">Rubro</div>
+                <div id="resumenRubro" class="cf-summary-value">Sin rubro</div>
+                <div id="resumenElementoPublicidad" class="cf-summary-value cf-summary-subtle">Sin elemento publicitario
+                </div>
+              </div>
+            </div>
+
+            <div class="cf-block-title">Balance actual</div>
+            <div class="cf-balance-list">
+              <div class="cf-balance-item">
+                <div class="cf-balance-label">Total Debe</div>
+                <div id="sumDebe" class="cf-balance-value">0.00</div>
+              </div>
+              <div class="cf-balance-item">
+                <div class="cf-balance-label">Total Haber</div>
+                <div id="sumHaber" class="cf-balance-value">0.00</div>
+              </div>
+              <div class="cf-balance-item cf-span-2">
+                <div class="cf-balance-label">Balance</div>
+                <div id="sumBalance" class="cf-balance-value is-neutral">Sin movimientos</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="cf-card">
+        <div class="cf-card-head">
+          <div class="cf-card-title">
+            <i class="fas fa-table-cells"></i>
+            <div>
+              Detalle contable
+              <small>Líneas del asiento</small>
+            </div>
+          </div>
+          <div class="cf-card-actions">
+            <button id="btnAgregarLinea" type="button" class="btn btn-outline-primary btn-sm">
+              <i class="fas fa-plus me-1"></i>
+              Agregar línea
+            </button>
+          </div>
+        </div>
+        <div class="cf-body">
+          <div class="cf-detail-wrap">
+            <table class="cf-detail-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Cuenta</th>
+                  <th>Auxiliar</th>
+                  <th>Centro de costo</th>
+                  <th>Glosa línea</th>
+                  <th>Debe</th>
+                  <th>Haber</th>
+                  <th>Referencia</th>
+                  <th class="text-center">Quitar</th>
+                </tr>
+              </thead>
+              <tbody id="detalleBody"></tbody>
+            </table>
+          </div>
+          <div id="detalleVacio" class="cf-detail-empty cf-hidden">Aún no hay líneas contables. Registra al menos dos.
+          </div>
+        </div>
+      </div>
+
+      <div id="sourceCard" class="cf-card cf-card-source cf-hidden">
+        <div class="cf-card-head">
+          <div class="cf-card-title">
+            <i class="fas fa-list-check"></i>
+            <div>
+              Documento origen
+              <small>Detalle proveniente de Tesorería</small>
+            </div>
+          </div>
+        </div>
+        <div class="cf-body">
+          <div class="cf-source-wrap">
+            <table class="cf-source-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Tipo línea</th>
+                  <th>Descripción</th>
+                  <th>Cantidad</th>
+                  <th>P. Unitario</th>
+                  <th>Subtotal</th>
+                  <th>Observación</th>
+                </tr>
+              </thead>
+              <tbody id="sourceBody"></tbody>
+            </table>
+          </div>
+          <div id="sourceVacio" class="cf-detail-empty cf-hidden">No existe detalle adicional del documento origen.
+          </div>
+        </div>
+      </div>
+
+      <details id="technicalDetails" class="cf-hidden">
+        <summary>Auditoría técnica</summary>
+        <div class="cf-technical-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="campoTablaOrigen">Tabla origen</label>
+              <input id="campoTablaOrigen" type="text" class="form-control" readonly />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="campoOrigenId">Origen ID</label>
+              <input id="campoOrigenId" type="text" class="form-control" readonly />
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="campoAtributos">Atributos</label>
+              <pre id="campoAtributos" class="cf-technical-pre"></pre>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+
+  </div>
+
+  <template id="tplDetalleRow">
+    <tr class="cf-detail-row">
+      <td>
+        <div class="fw-bold js-secuencia">1</div>
+      </td>
+      <td>
+        <div class="cf-select-shell">
+          <select class="form-select js-cuenta"></select>
+        </div>
+        <div class="cf-row-meta js-meta-cuenta"></div>
+      </td>
+      <td>
+        <div class="cf-select-shell">
+          <select class="form-select js-auxiliar"></select>
+        </div>
+      </td>
+      <td>
+        <div class="cf-select-shell">
+          <select class="form-select js-centro-costo"></select>
+        </div>
+      </td>
+      <td>
+        <textarea class="form-control js-glosa" rows="2" maxlength="300"></textarea>
+      </td>
+      <td>
+        <input class="form-control cf-amount js-debe" type="number" step="0.01" min="0" />
+      </td>
+      <td>
+        <input class="form-control cf-amount js-haber" type="number" step="0.01" min="0" />
+      </td>
+      <td>
+        <input class="form-control js-referencia" type="text" maxlength="150" />
+      </td>
+      <td class="text-center">
+        <button type="button" class="cf-btn-row-delete js-remove-row" aria-label="Quitar línea">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    </tr>
+  </template>
+</div>
+
+<script id="comprobantesFormBootstrap" type="application/json">
+  {{ {
+    "fecha_hoy": fecha_hoy,
+    "vista_modo": vista_modo,
+    "asiento_id": asiento_id,
+    "urls": {
+      "obtener": url_for('comprobantes.obtener', asiento_id=0),
+      "crear": url_for('comprobantes.crear'),
+      "actualizar_base": url_for('comprobantes.actualizar', asiento_id=0),
+      "confirmar_base": url_for('comprobantes.confirmar', asiento_id=0),
+      "eliminar_base": url_for('comprobantes.eliminar', asiento_id=0),
+      "pdf_base": url_for('comprobantes.pdf', asiento_id=0),
+      "buscar_cuentas": url_for('comprobantes.buscar_cuentas'),
+      "buscar_auxiliares": url_for('comprobantes.buscar_auxiliares'),
+      "buscar_centros_costo": url_for('comprobantes.buscar_centros_costo'),
+      "catalogos": url_for('comprobantes.catalogos'),
+      "tipo_cambio": url_for('comprobantes.tipo_cambio_sugerido'),
+      "index": url_for('comprobantes.index')
+    }
+  } | tojson }}
+</script>
+{% endblock content %} {% block extra_js %}
+<script>
+  (function () {
+    const bootEl = document.getElementById("comprobantesFormBootstrap");
+    if (!bootEl) {
+      console.error("No se encontró el bloque comprobantesFormBootstrap.");
+      return;
+    }
+
+    const boot = JSON.parse(bootEl.textContent || "{}");
+
+    const state = {
+      mode: boot.vista_modo || "new",
+      asientoId: boot.asiento_id || null,
+      locked: boot.vista_modo === "view",
+      requestBusy: false,
+      idempotencyKey:
+        boot.vista_modo === "new"
+          ? (window.crypto && window.crypto.randomUUID
+              ? window.crypto.randomUUID()
+              : `cmp-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+          : null,
+      catalogs: {
+        rubros: [],
+        publicidad_elementos: [],
+      },
+    };
+
+    const fieldAsientoId = document.getElementById("asientoId");
+    const fieldFecha = document.getElementById("fecha");
+    const fieldMonedaCodigo = document.getElementById("monedaCodigo");
+    const fieldTipoCambio = document.getElementById("tipoCambio");
+    const fieldGlosa = document.getElementById("glosa");
+    const fieldReferencia = document.getElementById("referencia");
+    const fieldDocumentoRelacionado = document.getElementById(
+      "documentoRelacionado",
+    );
+    const fieldUnidadNegocioId = document.getElementById("unidadNegocioId");
+    const fieldRubroId = document.getElementById("rubroId");
+    const fieldPublicidadElementoIdRef = document.getElementById("publicidadElementoIdRef");
+    const fieldPublicidadElementoCodigoRef = document.getElementById("publicidadElementoCodigoRef");
+    const fieldVigenciaDesde = document.getElementById("vigenciaDesde");
+    const fieldVigenciaHasta = document.getElementById("vigenciaHasta");
+    const panelPublicidad = document.getElementById("panelPublicidad");
+
+    const pageTitle = document.getElementById("pageTitle");
+    const pageSubtitle = document.getElementById("pageSubtitle");
+    const badgeEstado = document.getElementById("badgeEstado");
+    const badgeOrigen = document.getElementById("badgeOrigen");
+    const noteEdit = document.getElementById("noteEdit");
+    const noteView = document.getElementById("noteView");
+    const technicalDetails = document.getElementById("technicalDetails");
+    const fieldCampoTablaOrigen = document.getElementById("campoTablaOrigen");
+    const fieldCampoOrigenId = document.getElementById("campoOrigenId");
+    const fieldCampoAtributos = document.getElementById("campoAtributos");
+
+    const resumenComprobante = document.getElementById("resumenComprobante");
+    const resumenEstado = document.getElementById("resumenEstado");
+    const resumenOrigen = document.getElementById("resumenOrigen");
+    const resumenOperacion = document.getElementById("resumenOperacion");
+    const resumenUnidadNegocio = document.getElementById("resumenUnidadNegocio");
+    const resumenRubro = document.getElementById("resumenRubro");
+    const resumenElementoPublicidad = document.getElementById("resumenElementoPublicidad");
+
+    const sumDebe = document.getElementById("sumDebe");
+    const sumHaber = document.getElementById("sumHaber");
+    const sumBalance = document.getElementById("sumBalance");
+
+    const detalleBody = document.getElementById("detalleBody");
+    const detalleTemplate = document.getElementById("tplDetalleRow");
+    const detalleVacio = document.getElementById("detalleVacio");
+    const sourceCard = document.getElementById("sourceCard");
+    const sourceBody = document.getElementById("sourceBody");
+    const sourceVacio = document.getElementById("sourceVacio");
+    const formBody = document.getElementById("formBody");
+
+    const btnAgregarLinea = document.getElementById("btnAgregarLinea");
+    const btnGuardar = document.getElementById("btnGuardar");
+    const btnConfirmar = document.getElementById("btnConfirmar");
+    const btnEliminar = document.getElementById("btnEliminar");
+    const btnPdf = document.getElementById("btnPdf");
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("es-BO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    function normalizeIsoDate(value) {
+      if (!value) return "";
+      const raw = String(value).trim().slice(0, 10);
+      const local = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (local) return `${local[3]}-${local[2]}-${local[1]}`;
+      return raw;
+    }
+
+    function showAlert(icon, title, text) {
+      return Swal.fire({
+        icon,
+        title,
+        text,
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#1d4ed8",
+      });
+    }
+
+    function getJson(url, options) {
+      return fetch(url, options).then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.ok === false) {
+          throw new Error(data.msg || "Ocurrió un error inesperado.");
+        }
+        return data;
+      });
+    }
+
+    function postJson(url, method, payload) {
+      return getJson(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify(payload || {}),
+      });
+    }
+
+    function stateClass(estado) {
+      if (estado === "CONFIRMADO") return "cf-badge cf-badge-state-confirmado";
+      if (estado === "ANULADO") return "cf-badge cf-badge-state-anulado";
+      return "cf-badge cf-badge-state-borrador";
+    }
+
+    function originClass(origen) {
+      if (origen === "MANUAL") return "cf-badge cf-badge-origin-manual";
+      if (origen === "FACTURA_ELECTRONICA") return "cf-badge cf-badge-origin-factura";
+      if (origen === "SALDOS_INICIALES") return "cf-badge cf-badge-origin-sistema";
+      if (origen === "CIERRE_GESTION") return "cf-badge cf-badge-origin-cierre";
+      return "cf-badge cf-badge-origin-tesoreria";
+    }
+
+    function labelOrigen(origen) {
+      if (origen === "TESORERIA_PAGOS") return "Tesorería Pagos";
+      if (origen === "TESORERIA_COBROS") return "Tesorería Cobros";
+      if (origen === "TESORERIA_MOVIMIENTOS") return "Tesorería Caja/Bancos";
+      if (origen === "FACTURA_ELECTRONICA") return "Facturas electrónicas";
+      if (origen === "SALDOS_INICIALES") return "Saldos iniciales";
+      if (origen === "CIERRE_GESTION") return "Cierre de gestión";
+      if (origen === "PLANILLAS_REVERSO_PAGO") return "Planillas - Reverso de pago";
+      return "Manual";
+    }
+
+    function labelDocumento(asiento) {
+      if (!asiento || !asiento.tabla_origen || !asiento.origen_id) {
+        return "Sin documento externo";
+      }
+      if (asiento.tabla_origen === "contabilidad.pago") {
+        return `Pago #${asiento.origen_id}`;
+      }
+      if (asiento.tabla_origen === "contabilidad.cobro") {
+        return `Cobro #${asiento.origen_id}`;
+      }
+      if (asiento.tabla_origen === "contabilidad.factura_electronica") {
+        return `Factura electrónica #${asiento.origen_id}`;
+      }
+      if (asiento.tabla_origen === "contabilidad.movimiento_tesoreria") {
+        return `Movimiento tesorería #${asiento.origen_id}`;
+      }
+      if (asiento.tabla_origen === "contabilidad.gestion_control") {
+        return `Cierre gestión #${asiento.origen_id}`;
+      }
+      return `Registro #${asiento.origen_id}`;
+    }
+
+    function setFlatpickrValue(input, value) {
+      if (!input) return;
+      const normalized = normalizeIsoDate(value);
+      if (input._flatpickr) {
+        if (normalized) {
+          input._flatpickr.setDate(normalized, true, "Y-m-d");
+        } else {
+          input._flatpickr.clear();
+          input.value = "";
+          if (input._flatpickr.altInput) {
+            input._flatpickr.altInput.value = "";
+          }
+        }
+        return;
+      }
+      input.value = normalized;
+    }
+
+    function setFlatpickrDisabled(input, disabled) {
+      if (!input) return;
+      input.disabled = disabled;
+      if (input._flatpickr && input._flatpickr.altInput) {
+        input._flatpickr.altInput.disabled = disabled;
+        input._flatpickr.altInput.readOnly = disabled;
+      }
+    }
+
+    function applyLockedState(locked) {
+      state.locked = locked;
+      formBody.classList.toggle("cf-locked", locked);
+      noteEdit.classList.toggle("cf-hidden", locked);
+      noteView.classList.toggle("cf-hidden", !locked);
+      btnAgregarLinea.classList.toggle("cf-hidden", locked);
+      btnGuardar.disabled = locked;
+      btnConfirmar.disabled = locked;
+
+      [
+        fieldMonedaCodigo,
+        fieldTipoCambio,
+        fieldGlosa,
+        fieldReferencia,
+        fieldUnidadNegocioId,
+        fieldRubroId,
+        fieldPublicidadElementoIdRef,
+        fieldDocumentoRelacionado,
+        fieldPublicidadElementoCodigoRef,
+      ].forEach((el) => {
+        el.disabled = locked;
+      });
+
+      [fieldFecha, fieldVigenciaDesde, fieldVigenciaHasta].forEach((el) => {
+        setFlatpickrDisabled(el, locked);
+      });
+
+      if (window.jQuery && window.jQuery.fn.select2) {
+        $(fieldUnidadNegocioId).trigger("change.select2");
+      }
+
+      detalleBody
+        .querySelectorAll("input, textarea, select, button")
+        .forEach((el) => {
+          el.disabled = locked;
+        });
+    }
+
+
+    function applyDateOnlyState() {
+      state.locked = false;
+      formBody.classList.remove("cf-locked");
+      noteEdit.classList.remove("cf-hidden");
+      noteView.classList.add("cf-hidden");
+      const noteText = noteEdit.querySelector("div");
+      if (noteText) {
+        noteText.textContent = "Reverso de pago de planilla: por seguridad solo puede corregirse la fecha contable.";
+      }
+
+      btnAgregarLinea.classList.add("cf-hidden");
+      btnGuardar.disabled = false;
+      btnConfirmar.disabled = false;
+
+      [
+        fieldMonedaCodigo,
+        fieldTipoCambio,
+        fieldGlosa,
+        fieldReferencia,
+        fieldUnidadNegocioId,
+        fieldRubroId,
+        fieldPublicidadElementoIdRef,
+        fieldDocumentoRelacionado,
+        fieldPublicidadElementoCodigoRef,
+        fieldVigenciaDesde,
+        fieldVigenciaHasta,
+      ].forEach((el) => {
+        if (!el) return;
+        if (el === fieldVigenciaDesde || el === fieldVigenciaHasta) {
+          setFlatpickrDisabled(el, true);
+        } else {
+          el.disabled = true;
+        }
+      });
+
+      setFlatpickrDisabled(fieldFecha, false);
+      detalleBody
+        .querySelectorAll("input, textarea, select, button")
+        .forEach((el) => {
+          el.disabled = true;
+        });
+
+      if (window.jQuery && window.jQuery.fn.select2) {
+        $(fieldUnidadNegocioId).trigger("change.select2");
+      }
+    }
+
+
+    function currentSelectedText(selectEl, fallback = "") {
+      if (!selectEl || !selectEl.value) return fallback;
+      const selected = selectEl.options[selectEl.selectedIndex];
+      return selected ? selected.textContent.trim() : fallback;
+    }
+
+    function syncElementoPublicidad() {
+      const selected = fieldPublicidadElementoIdRef.options[fieldPublicidadElementoIdRef.selectedIndex];
+      fieldPublicidadElementoCodigoRef.value = selected && fieldPublicidadElementoIdRef.value
+        ? (selected.dataset.codigoGamlp || "")
+        : "";
+      resumenElementoPublicidad.textContent = fieldPublicidadElementoIdRef.value
+        ? (selected ? selected.textContent.trim() : "Sin referencia publicitaria")
+        : "Sin referencia publicitaria";
+    }
+
+    function renderPublicidadOptions(selectedId = "") {
+      const unidadId = fieldUnidadNegocioId.value || "";
+      const previousValue = selectedId || fieldPublicidadElementoIdRef.value || "";
+      fieldPublicidadElementoIdRef.innerHTML = '<option value="">Seleccione una referencia publicitaria</option>';
+
+      (state.catalogs.publicidad_elementos || []).forEach((item) => {
+        const sameUnit = !unidadId || String(item.unidad_negocio_id || "") === String(unidadId);
+        const itemValue = String(item.ref_key || item.id || "");
+        const keepSelected = previousValue && itemValue === String(previousValue);
+        if (!sameUnit && !keepSelected) return;
+        const option = document.createElement("option");
+        option.value = item.ref_key || item.id || "";
+        option.dataset.refTipo = item.ref_tipo || "";
+        option.dataset.refId = item.ref_id || "";
+        option.textContent = item.etiqueta || item.codigo_gamlp || "";
+        option.dataset.codigoGamlp = item.codigo_gamlp || "";
+        option.dataset.unidadId = item.unidad_negocio_id || "";
+        fieldPublicidadElementoIdRef.appendChild(option);
+      });
+
+      fieldPublicidadElementoIdRef.value = previousValue || "";
+      syncElementoPublicidad();
+    }
+
+    function syncRubroUI() {
+      const hasRubro = Boolean(fieldRubroId && fieldRubroId.value);
+      panelPublicidad.classList.toggle("cf-hidden", !hasRubro);
+      if (!hasRubro) {
+        fieldPublicidadElementoIdRef.value = "";
+        fieldPublicidadElementoCodigoRef.value = "";
+        setFlatpickrValue(fieldVigenciaDesde, "");
+        setFlatpickrValue(fieldVigenciaHasta, "");
+        resumenRubro.textContent = "Sin rubro";
+        resumenElementoPublicidad.textContent = "Sin referencia publicitaria";
+        return;
+      }
+      resumenRubro.textContent = currentSelectedText(fieldRubroId, "Sin rubro");
+      renderPublicidadOptions();
+    }
+
+    function resetNewPage() {
+      fieldAsientoId.value = "";
+      setFlatpickrValue(fieldFecha, boot.fecha_hoy || "");
+      fieldTipoCambio.value = "1.000000";
+      fieldGlosa.value = "";
+      fieldReferencia.value = "";
+      fieldUnidadNegocioId.value = "";
+      fieldRubroId.value = "";
+      fieldPublicidadElementoIdRef.innerHTML = '<option value="">Seleccione una referencia publicitaria</option>';
+      fieldPublicidadElementoCodigoRef.value = "";
+      setFlatpickrValue(fieldVigenciaDesde, "");
+      setFlatpickrValue(fieldVigenciaHasta, "");
+      fieldDocumentoRelacionado.value = "";
+      resumenComprobante.textContent = "Nuevo";
+      resumenEstado.textContent = "BORRADOR";
+      resumenOrigen.textContent = "Manual";
+      resumenOperacion.textContent = "Manual";
+      resumenUnidadNegocio.textContent = "Sin asignar";
+      resumenRubro.textContent = "Sin rubro";
+      resumenElementoPublicidad.textContent = "Sin referencia publicitaria";
+      pageTitle.textContent = "Nuevo comprobante";
+      pageSubtitle.textContent = "Registro manual del asiento contable";
+      badgeEstado.textContent = "BORRADOR";
+      badgeEstado.className = "cf-badge cf-badge-state-borrador";
+      badgeOrigen.textContent = "MANUAL";
+      badgeOrigen.className = "cf-badge cf-badge-origin-manual";
+      technicalDetails.classList.add("cf-hidden");
+      fieldCampoTablaOrigen.value = "";
+      fieldCampoOrigenId.value = "";
+      fieldCampoAtributos.textContent = "";
+      detalleBody.innerHTML = "";
+      addDetailRow();
+      addDetailRow();
+      sourceCard.classList.add("cf-hidden");
+      sourceBody.innerHTML = "";
+      sourceVacio.classList.add("cf-hidden");
+      btnConfirmar.classList.remove("cf-hidden");
+      btnEliminar.classList.add("cf-hidden");
+      if (btnPdf) {
+        btnPdf.classList.add("cf-hidden");
+        btnPdf.href = boot.urls.pdf_base;
+      }
+      applyLockedState(false);
+      if (window.jQuery && window.jQuery.fn.select2) {
+        $(fieldUnidadNegocioId).trigger("change.select2");
+      }
+      renderPublicidadOptions();
+      syncRubroUI();
+      recalcSummary();
+    }
+
+    function updateLineNumbers() {
+      const rows = Array.from(detalleBody.querySelectorAll("tr.cf-detail-row"));
+      rows.forEach((row, index) => {
+        row.querySelector(".js-secuencia").textContent = String(index + 1);
+      });
+      detalleVacio.classList.toggle("cf-hidden", rows.length > 0);
+    }
+
+    function toggleTipoCambioInput() {
+      const esBase = fieldMonedaCodigo.value === "BOB";
+      fieldTipoCambio.disabled = esBase || state.locked;
+      if (esBase) {
+        fieldTipoCambio.value = "1.000000";
+      }
+    }
+
+    function recalcSummary() {
+      const rows = Array.from(detalleBody.querySelectorAll("tr.cf-detail-row"));
+      let debe = 0;
+      let haber = 0;
+      rows.forEach((row) => {
+        debe += Number(row.querySelector(".js-debe").value || 0);
+        haber += Number(row.querySelector(".js-haber").value || 0);
+      });
+      sumDebe.textContent = formatMoney(debe);
+      sumHaber.textContent = formatMoney(haber);
+      const difference = Math.abs(debe - haber);
+
+      sumBalance.classList.remove("is-success", "is-danger", "is-neutral");
+
+      if (debe === 0 && haber === 0) {
+        sumBalance.textContent = "Sin movimientos";
+        sumBalance.classList.add("is-neutral");
+      } else if (rows.length >= 2 && difference < 0.00001) {
+        sumBalance.textContent = "Balanceado";
+        sumBalance.classList.add("is-success");
+      } else {
+        sumBalance.textContent = "Descuadrado";
+        sumBalance.classList.add("is-danger");
+      }
+    }
+
+    function setSelect2Value(selectEl, optionData) {
+      if (!optionData || !optionData.id) return;
+      const $select = $(selectEl);
+      const option = new Option(optionData.text, optionData.id, true, true);
+      $select.append(option).trigger("change");
+    }
+
+    function updateRowRequirements(row) {
+      const metaEl = row.querySelector(".js-meta-cuenta");
+      metaEl.innerHTML = "";
+      const cuentaData = row.querySelector(".js-cuenta").dataset;
+      const items = [];
+      if (cuentaData.requiereAuxiliar === "1") items.push("Requiere auxiliar");
+      if (cuentaData.requiereCc === "1") items.push("Requiere C.C.");
+      if (cuentaData.naturaleza)
+        items.push(`Naturaleza: ${cuentaData.naturaleza}`);
+
+      items.forEach((text) => {
+        const span = document.createElement("span");
+        span.className = "cf-mini-badge";
+        span.textContent = text;
+        metaEl.appendChild(span);
+      });
+    }
+
+    function initCuentaSelect(selectEl, detailData) {
+      $(selectEl).select2({
+        width: "100%",
+        language: "es",
+        placeholder: "Selecciona una cuenta",
+        allowClear: true,
+        dropdownAutoWidth: true,
+        dropdownCssClass: "cf-dropdown-cuenta",
+        ajax: {
+          url: boot.urls.buscar_cuentas,
+          dataType: "json",
+          delay: 200,
+          data: (params) => ({ q: params.term || "" }),
+          processResults: (data) => ({ results: data.results || [] }),
+        },
+      });
+
+      $(selectEl).on("select2:select", function (event) {
+        const selected = event.params.data || {};
+        selectEl.dataset.requiereAuxiliar = selected.requiere_auxiliar
+          ? "1"
+          : "0";
+        selectEl.dataset.requiereCc = selected.requiere_cc ? "1" : "0";
+        selectEl.dataset.naturaleza = selected.naturaleza || "";
+        const row = selectEl.closest("tr");
+        const auxiliarEl = row.querySelector(".js-auxiliar");
+        $(auxiliarEl).val(null).trigger("change");
+        updateRowRequirements(row);
+      });
+
+      $(selectEl).on("select2:clear", function () {
+        selectEl.dataset.requiereAuxiliar = "0";
+        selectEl.dataset.requiereCc = "0";
+        selectEl.dataset.naturaleza = "";
+        const row = selectEl.closest("tr");
+        const auxiliarEl = row.querySelector(".js-auxiliar");
+        $(auxiliarEl).val(null).trigger("change");
+        updateRowRequirements(row);
+      });
+
+      if (detailData && detailData.cuenta_codigo) {
+        setSelect2Value(selectEl, {
+          id: detailData.cuenta_codigo,
+          text:
+            detailData.cuenta_text ||
+            `${detailData.cuenta_codigo} | ${detailData.cuenta_nombre || ""}`,
+        });
+        selectEl.dataset.requiereAuxiliar = detailData.requiere_auxiliar
+          ? "1"
+          : "0";
+        selectEl.dataset.requiereCc = detailData.requiere_cc ? "1" : "0";
+        selectEl.dataset.naturaleza = detailData.naturaleza || "";
+      }
+    }
+
+    function initAuxiliarSelect(selectEl, detailData) {
+      $(selectEl).select2({
+        width: "100%",
+        language: "es",
+        placeholder: "Opcional",
+        allowClear: true,
+        dropdownAutoWidth: true,
+        dropdownCssClass: "cf-dropdown-aux",
+        ajax: {
+          url: boot.urls.buscar_auxiliares,
+          dataType: "json",
+          delay: 200,
+          data: (params) => {
+            const row = selectEl.closest("tr");
+            const cuentaCodigo = $(row.querySelector(".js-cuenta")).val() || "";
+            return {
+              q: params.term || "",
+              cuenta_codigo: cuentaCodigo,
+              unidad_negocio_id: fieldUnidadNegocioId.value || "",
+              moneda_codigo: fieldMonedaCodigo.value || "",
+            };
+          },
+          processResults: (data) => ({ results: data.results || [] }),
+        },
+      });
+
+      if (detailData && detailData.auxiliar_id) {
+        setSelect2Value(selectEl, {
+          id: detailData.auxiliar_id,
+          text:
+            detailData.auxiliar_text || `${detailData.auxiliar_nombre || ""}`,
+        });
+      }
+    }
+
+    function initCentroCostoSelect(selectEl, detailData) {
+      $(selectEl).select2({
+        width: "100%",
+        language: "es",
+        placeholder: "Opcional",
+        allowClear: true,
+        dropdownAutoWidth: true,
+        dropdownCssClass: "cf-dropdown-cc",
+        ajax: {
+          url: boot.urls.buscar_centros_costo,
+          dataType: "json",
+          delay: 200,
+          data: (params) => ({ q: params.term || "" }),
+          processResults: (data) => ({ results: data.results || [] }),
+        },
+      });
+
+      if (detailData && detailData.centro_costo_id) {
+        setSelect2Value(selectEl, {
+          id: detailData.centro_costo_id,
+          text:
+            detailData.centro_costo_text ||
+            `${detailData.centro_costo_codigo || ""}`,
+        });
+      }
+    }
+
+    function addDetailRow(detailData) {
+      const fragment = detalleTemplate.content.cloneNode(true);
+      const row = fragment.querySelector("tr");
+      const cuentaEl = row.querySelector(".js-cuenta");
+      const auxiliarEl = row.querySelector(".js-auxiliar");
+      const centroCostoEl = row.querySelector(".js-centro-costo");
+      const glosaEl = row.querySelector(".js-glosa");
+      const debeEl = row.querySelector(".js-debe");
+      const haberEl = row.querySelector(".js-haber");
+      const referenciaEl = row.querySelector(".js-referencia");
+      const removeBtn = row.querySelector(".js-remove-row");
+
+      initCuentaSelect(cuentaEl, detailData || null);
+      initAuxiliarSelect(auxiliarEl, detailData || null);
+      initCentroCostoSelect(centroCostoEl, detailData || null);
+
+      glosaEl.value = (detailData && detailData.glosa) || "";
+      debeEl.value =
+        detailData && Number(detailData.debe || 0) > 0
+          ? Number(detailData.debe).toFixed(2)
+          : "";
+      haberEl.value =
+        detailData && Number(detailData.haber || 0) > 0
+          ? Number(detailData.haber).toFixed(2)
+          : "";
+      referenciaEl.value = (detailData && detailData.referencia) || "";
+
+      [glosaEl, debeEl, haberEl, referenciaEl].forEach((input) =>
+        input.addEventListener("input", recalcSummary),
+      );
+      debeEl.addEventListener("input", function () {
+        if (Number(this.value || 0) > 0) haberEl.value = "";
+        recalcSummary();
+      });
+      haberEl.addEventListener("input", function () {
+        if (Number(this.value || 0) > 0) debeEl.value = "";
+        recalcSummary();
+      });
+      removeBtn.addEventListener("click", function () {
+        if (state.locked) return;
+        row.remove();
+        updateLineNumbers();
+        recalcSummary();
+      });
+
+      detalleBody.appendChild(fragment);
+      updateRowRequirements(detalleBody.lastElementChild);
+      updateLineNumbers();
+      recalcSummary();
+      applyLockedState(state.locked);
+    }
+
+    function collectPayload() {
+      const detalles = [];
+      Array.from(detalleBody.querySelectorAll("tr.cf-detail-row")).forEach(
+        (row) => {
+          const cuentaCodigo = $(row.querySelector(".js-cuenta")).val();
+          const auxiliarId = $(row.querySelector(".js-auxiliar")).val();
+          const centroCostoId = $(row.querySelector(".js-centro-costo")).val();
+          const glosaLinea = row.querySelector(".js-glosa").value.trim();
+          const debe = row.querySelector(".js-debe").value;
+          const haber = row.querySelector(".js-haber").value;
+          const referencia = row.querySelector(".js-referencia").value.trim();
+          const hasData =
+            cuentaCodigo ||
+            auxiliarId ||
+            centroCostoId ||
+            glosaLinea ||
+            debe ||
+            haber ||
+            referencia;
+          if (!hasData) return;
+          detalles.push({
+            cuenta_codigo: cuentaCodigo,
+            auxiliar_id: auxiliarId,
+            centro_costo_id: centroCostoId,
+            glosa: glosaLinea,
+            debe,
+            haber,
+            referencia,
+          });
+        },
+      );
+      return {
+        fecha: fieldFecha.value,
+        moneda_codigo: fieldMonedaCodigo.value,
+        tipo_cambio: fieldTipoCambio.value,
+        glosa: fieldGlosa.value.trim(),
+        referencia: fieldReferencia.value.trim(),
+        documento_relacionado: fieldDocumentoRelacionado.value.trim(),
+        unidad_negocio_id: fieldUnidadNegocioId.value || null,
+        rubro_id: fieldRubroId.value || null,
+        publicidad_elemento_id_ref: fieldPublicidadElementoIdRef.value || null,
+        publicidad_elemento_codigo_ref: fieldPublicidadElementoCodigoRef.value || null,
+        vigencia_desde: fieldVigenciaDesde.value || null,
+        vigencia_hasta: fieldVigenciaHasta.value || null,
+        idempotency_key: state.idempotencyKey,
+        detalles,
+      };
+    }
+
+    function renderSourceRows(rows) {
+      sourceBody.innerHTML = "";
+      if (!rows || !rows.length) {
+        sourceCard.classList.add("cf-hidden");
+        sourceVacio.classList.add("cf-hidden");
+        return;
+      }
+      rows.forEach((item) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.secuencia}</td>
+          <td>${item.tipo_linea}</td>
+          <td>${item.descripcion}</td>
+          <td class="text-end">${formatMoney(item.cantidad)}</td>
+          <td class="text-end">${formatMoney(item.precio_unitario)}</td>
+          <td class="text-end fw-bold">${formatMoney(item.subtotal)}</td>
+          <td>${item.observacion || ""}</td>
+        `;
+        sourceBody.appendChild(tr);
+      });
+      sourceVacio.classList.add("cf-hidden");
+      sourceCard.classList.remove("cf-hidden");
+    }
+
+    function applyAsiento(data) {
+      const asiento = data.asiento || {};
+      const detalles = data.detalles || [];
+      fieldAsientoId.value = asiento.id || "";
+      state.asientoId = asiento.id || null;
+      if (btnPdf && asiento.id) {
+        btnPdf.href = boot.urls.pdf_base.replace(/0\/pdf$/, `${asiento.id}/pdf`);
+        btnPdf.classList.remove("cf-hidden");
+      }
+      setFlatpickrValue(fieldFecha, asiento.fecha || boot.fecha_hoy || "");
+      fieldMonedaCodigo.value = asiento.moneda_codigo || "BOB";
+      fieldTipoCambio.value = Number(asiento.tipo_cambio || 1).toFixed(6);
+      fieldGlosa.value = asiento.glosa || "";
+      fieldReferencia.value = asiento.referencia || "";
+      fieldUnidadNegocioId.value = asiento.unidad_negocio_id || "";
+      fieldRubroId.value = asiento.rubro_id || "";
+      setFlatpickrValue(fieldVigenciaDesde, asiento.vigencia_desde || "");
+      setFlatpickrValue(fieldVigenciaHasta, asiento.vigencia_hasta || "");
+      fieldDocumentoRelacionado.value = asiento.es_manual
+        ? (asiento.documento_relacionado || "")
+        : labelDocumento(asiento);
+
+      if (window.jQuery && window.jQuery.fn.select2) {
+        $(fieldUnidadNegocioId).trigger("change.select2");
+      }
+      renderPublicidadOptions(
+        asiento.publicidad_referencia_ref ||
+          (asiento.publicidad_elemento_id_ref
+            ? `E:${asiento.publicidad_elemento_id_ref}`
+            : (asiento.publicidad_estructura_id_ref
+                ? `S:${asiento.publicidad_estructura_id_ref}`
+                : "")),
+      );
+      fieldPublicidadElementoCodigoRef.value = asiento.publicidad_elemento_codigo_ref || "";
+
+      resumenComprobante.textContent = asiento.id ? `#${asiento.id}` : "Nuevo";
+      resumenEstado.textContent = asiento.estado || "BORRADOR";
+      resumenOrigen.textContent = labelOrigen(asiento.origen);
+      resumenOperacion.textContent = asiento.origen_operacion || "Manual";
+      resumenUnidadNegocio.textContent = asiento.unidad_negocio_codigo
+        ? `${asiento.unidad_negocio_codigo} · ${asiento.unidad_negocio_nombre || ""}`
+        : "Sin asignar";
+      resumenRubro.textContent = asiento.rubro_codigo
+        ? `${asiento.rubro_codigo} · ${asiento.rubro_nombre || ""}`
+        : "Sin rubro";
+      resumenElementoPublicidad.textContent = asiento.publicidad_elemento_etiqueta || "Sin referencia publicitaria";
+
+      badgeEstado.textContent = asiento.estado || "BORRADOR";
+      badgeEstado.className = stateClass(asiento.estado || "BORRADOR");
+      badgeOrigen.textContent = labelOrigen(asiento.origen);
+      badgeOrigen.className = originClass(asiento.origen || "MANUAL");
+
+      fieldCampoTablaOrigen.value = asiento.tabla_origen || "";
+      fieldCampoOrigenId.value = asiento.origen_id || "";
+      fieldCampoAtributos.textContent = JSON.stringify(
+        asiento.atributos || {},
+        null,
+        2,
+      );
+      technicalDetails.classList.remove("cf-hidden");
+
+      detalleBody.innerHTML = "";
+      if (detalles.length) {
+        detalles.forEach((item) => addDetailRow(item));
+      } else {
+        addDetailRow();
+        addDetailRow();
+      }
+
+      sumDebe.textContent = formatMoney(data.resumen.total_debe || 0);
+      sumHaber.textContent = formatMoney(data.resumen.total_haber || 0);
+      recalcSummary();
+
+      if (asiento.origen === "MANUAL") {
+        sourceCard.classList.add("cf-hidden");
+      } else {
+        renderSourceRows(data.detalle_fuente || []);
+      }
+
+      let locked = state.mode === "view" || !asiento.puede_editar;
+      if (state.mode === "edit" && !asiento.puede_editar) {
+        state.mode = "view";
+        locked = true;
+      }
+
+      pageTitle.textContent = locked
+        ? `Comprobante #${asiento.id}`
+        : `Editar comprobante #${asiento.id}`;
+      pageSubtitle.textContent = locked
+        ? "Consulta del comprobante"
+        : (asiento.es_reverso_pago_planilla
+            ? "Corrección controlada de fecha del reverso de planilla"
+            : "Edición del borrador manual");
+      btnConfirmar.classList.toggle(
+        "cf-hidden",
+        !(asiento.puede_editar && asiento.estado === "BORRADOR"),
+      );
+      btnEliminar.classList.toggle(
+        "cf-hidden",
+        !(asiento.puede_editar && asiento.estado === "BORRADOR" && asiento.es_manual),
+      );
+      syncRubroUI();
+      applyLockedState(locked);
+      toggleTipoCambioInput();
+      if (!locked && asiento.es_reverso_pago_planilla) {
+        applyDateOnlyState();
+      }
+    }
+
+    function loadCatalogos() {
+      return fetch(boot.urls.catalogos)
+        .then((response) => response.json())
+        .then((data) => {
+          fieldMonedaCodigo.innerHTML = "";
+          (data.data.monedas || []).forEach((moneda) => {
+            const option = document.createElement("option");
+            option.value = moneda.codigo;
+            option.textContent = `${moneda.codigo} · ${moneda.nombre}`;
+            fieldMonedaCodigo.appendChild(option);
+          });
+
+          fieldUnidadNegocioId.innerHTML = '<option value="">Seleccione una unidad de negocio</option>';
+          (data.data.unidades_negocio || []).forEach((unidad) => {
+            const option = document.createElement("option");
+            option.value = unidad.id;
+            option.textContent = `${unidad.codigo} · ${unidad.nombre}`;
+            fieldUnidadNegocioId.appendChild(option);
+          });
+
+          state.catalogs.rubros = data.data.rubros || [];
+          state.catalogs.publicidad_elementos = data.data.publicidad_elementos || [];
+
+          fieldRubroId.innerHTML = '<option value="">Sin rubro</option>';
+          state.catalogs.rubros.forEach((rubro) => {
+            const option = document.createElement("option");
+            option.value = rubro.id;
+            option.textContent = `${rubro.codigo} · ${rubro.nombre}`;
+            fieldRubroId.appendChild(option);
+          });
+
+          renderPublicidadOptions();
+
+          if (window.jQuery && window.jQuery.fn.select2) {
+            $(fieldUnidadNegocioId).select2({
+              width: "100%",
+              placeholder: "Seleccione una unidad de negocio",
+              allowClear: true,
+              language: "es",
+            });
+          }
+
+          if (!fieldMonedaCodigo.value) {
+            fieldMonedaCodigo.value = "BOB";
+          }
+          toggleTipoCambioInput();
+        });
+    }
+
+    function initDates() {
+      flatpickr.localize(flatpickr.l10ns.es);
+      flatpickr(fieldFecha, {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
+        allowInput: true,
+        disableMobile: true,
+      });
+      setFlatpickrValue(fieldFecha, boot.fecha_hoy || "");
+      [fieldVigenciaDesde, fieldVigenciaHasta].forEach((input) => {
+        flatpickr(input, {
+          locale: "es",
+          dateFormat: "Y-m-d",
+          altInput: true,
+          altFormat: "d/m/Y",
+          allowInput: true,
+          disableMobile: true,
+        });
+      });
+    }
+
+    async function sugerirTipoCambio() {
+      if (
+        !fieldFecha.value ||
+        !fieldMonedaCodigo.value ||
+        fieldMonedaCodigo.value === "BOB" ||
+        state.locked
+      ) {
+        toggleTipoCambioInput();
+        return;
+      }
+      try {
+        const query = new URLSearchParams({
+          fecha: fieldFecha.value,
+          moneda_codigo: fieldMonedaCodigo.value,
+        });
+        const data = await getJson(
+          `${boot.urls.tipo_cambio}?${query.toString()}`,
+        );
+        fieldTipoCambio.value = Number(data.data.valor || 0).toFixed(6);
+      } catch (error) {
+        fieldTipoCambio.value = "";
+        showAlert("warning", "Tipo de cambio no encontrado", error.message);
+      }
+    }
+
+
+    function setRequestBusy(busy, label) {
+      state.requestBusy = busy;
+      const saveText = btnGuardar.querySelector("span");
+      const confirmText = btnConfirmar.querySelector("span");
+      btnGuardar.disabled = busy || state.locked;
+      btnConfirmar.disabled = busy || state.locked;
+      if (saveText) saveText.textContent = busy && label === "guardar" ? "Guardando..." : "Guardar borrador";
+      if (confirmText) confirmText.textContent = busy && label === "confirmar" ? "Confirmando..." : "Confirmar";
+    }
+
+    async function persistDraft(showSuccess = true) {
+      if (state.locked) return null;
+      const payload = collectPayload();
+      let response;
+      if (state.asientoId) {
+        response = await postJson(
+          boot.urls.actualizar_base.replace(/0$/, String(state.asientoId)),
+          "PUT",
+          payload,
+        );
+      } else {
+        response = await postJson(boot.urls.crear, "POST", payload);
+        state.asientoId = response.asiento_id;
+        fieldAsientoId.value = response.asiento_id;
+        history.replaceState(
+          {},
+          "",
+          `${boot.urls.index.replace(/\/$/, "")}/editar/${response.asiento_id}`,
+        );
+        state.mode = "edit";
+      }
+      const fresh = await getJson(
+        boot.urls.obtener.replace(/0$/, String(state.asientoId)),
+      );
+      applyAsiento(fresh.data);
+      if (showSuccess) {
+        await showAlert(
+          "success",
+          "Operación exitosa",
+          response.msg || "Comprobante guardado.",
+        );
+      }
+      return response;
+    }
+
+    async function saveDraft() {
+      if (state.requestBusy || state.locked) return;
+      setRequestBusy(true, "guardar");
+      try {
+        await persistDraft(true);
+      } catch (error) {
+        await showAlert("error", "No se pudo guardar", error.message);
+      } finally {
+        setRequestBusy(false);
+      }
+    }
+
+    async function confirmCurrent() {
+      if (state.locked || state.requestBusy) return;
+      state.requestBusy = true;
+      btnGuardar.disabled = true;
+      btnConfirmar.disabled = true;
+
+      const result = await Swal.fire({
+        icon: "question",
+        title: "Confirmar comprobante",
+        text: state.asientoId
+          ? "Se guardarán los cambios pendientes y el comprobante dejará de ser editable."
+          : "Se registrará y confirmará el comprobante en un solo paso. Luego dejará de ser editable.",
+        showCancelButton: true,
+        confirmButtonText: "Sí, confirmar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#177a53",
+      });
+      if (!result.isConfirmed) {
+        setRequestBusy(false);
+        return;
+      }
+
+      setRequestBusy(true, "confirmar");
+      try {
+        await persistDraft(false);
+        const response = await postJson(
+          boot.urls.confirmar_base.replace(/0$/, String(state.asientoId)),
+          "POST",
+          {},
+        );
+        window.location.href = boot.urls.index;
+        await showAlert(
+          "success",
+          "Confirmado",
+          response.msg || "Comprobante confirmado.",
+        );
+      } catch (error) {
+        await showAlert("error", "No se pudo confirmar", error.message);
+        setRequestBusy(false);
+      }
+    }
+
+    async function deleteCurrent() {
+      if (!state.asientoId) {
+        showAlert(
+          "warning",
+          "Sin comprobante",
+          "No existe un comprobante guardado para eliminar.",
+        );
+        return;
+      }
+      const result = await Swal.fire({
+        icon: "warning",
+        title: "¿Eliminar borrador?",
+        text: "Esta acción eliminará definitivamente el comprobante manual en borrador y sus líneas contables.",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#c03b35",
+      });
+      if (!result.isConfirmed) return;
+      try {
+        const response = await postJson(
+          boot.urls.eliminar_base.replace(/0$/, String(state.asientoId)),
+          "POST",
+          {},
+        );
+        await showAlert(
+          "success",
+          "Eliminado",
+          response.msg || "Comprobante eliminado.",
+        );
+        window.location.href = boot.urls.index;
+      } catch (error) {
+        showAlert("error", "No se pudo eliminar", error.message);
+      }
+    }
+
+    function bindEvents() {
+      btnAgregarLinea.addEventListener("click", () => addDetailRow());
+      [btnGuardar].forEach((btn) =>
+        btn.addEventListener("click", saveDraft),
+      );
+      [btnConfirmar].forEach((btn) =>
+        btn.addEventListener("click", confirmCurrent),
+      );
+      [btnEliminar].forEach((btn) =>
+        btn.addEventListener("click", deleteCurrent),
+      );
+      fieldMonedaCodigo.addEventListener("change", async () => {
+        toggleTipoCambioInput();
+        Array.from(detalleBody.querySelectorAll(".js-auxiliar")).forEach((auxiliarEl) => {
+          $(auxiliarEl).val(null).trigger("change");
+        });
+        await sugerirTipoCambio();
+      });
+      fieldFecha.addEventListener("change", sugerirTipoCambio);
+      fieldUnidadNegocioId.addEventListener("change", () => {
+        const selected = fieldUnidadNegocioId.options[fieldUnidadNegocioId.selectedIndex];
+        resumenUnidadNegocio.textContent = fieldUnidadNegocioId.value
+          ? (selected ? selected.textContent : "Sin asignar")
+          : "Sin asignar";
+        Array.from(detalleBody.querySelectorAll(".js-auxiliar")).forEach((auxiliarEl) => {
+          $(auxiliarEl).val(null).trigger("change");
+        });
+        fieldPublicidadElementoIdRef.value = "";
+        renderPublicidadOptions();
+      });
+      fieldRubroId.addEventListener("change", syncRubroUI);
+      fieldPublicidadElementoIdRef.addEventListener("change", syncElementoPublicidad);
+    }
+
+    async function init() {
+      initDates();
+      await loadCatalogos();
+      bindEvents();
+
+      if (state.mode === "new" || !state.asientoId) {
+        resetNewPage();
+        return;
+      }
+
+      try {
+        const data = await getJson(
+          boot.urls.obtener.replace(/0$/, String(state.asientoId)),
+        );
+        applyAsiento(data.data);
+      } catch (error) {
+        showAlert("error", "No se pudo abrir el comprobante", error.message);
+      }
+    }
+
+    init();
+  })();
+</script>
+{% endblock extra_js %}

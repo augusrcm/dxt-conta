@@ -1,0 +1,13 @@
+{% extends "layouthelp.html" %}
+{% block title %}Ayuda - Planilla de Honorarios{% endblock %}
+{% block help_content %}
+<h4>Planilla de Honorarios - Colaboradores</h4>
+<p>Genera una planilla mensual para colaboradores o eventuales, tomando como base las personas activas de tipo <strong>COLABORADOR</strong>.</p>
+<ul>
+  <li>El monto base se toma del mínimo mensual referencial registrado en Personas de Planilla.</li>
+  <li>La factura o respaldo se define en el borrador por cada colaborador, porque puede cambiar cada mes.</li>
+  <li>Los anticipos y préstamos programados se incorporan automáticamente como descuento.</li>
+  <li>Al consolidar se genera asiento de devengamiento usando las cuentas configuradas en Parámetros de Planilla.</li>
+  <li>Si la planilla aún no tiene pagos, puede revertirse a borrador con justificativo.</li>
+</ul>
+{% endblock %}

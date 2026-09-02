@@ -1,0 +1,1045 @@
+{% extends "layout.html" %}
+{% block title %}Unidad de Negocio{% endblock %}
+{% block page_help_url %}{{ url_for('unidad_negocio.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  #unidadNegocioPage {
+    --un-accent: #2563eb;
+    --un-accent-lt: #eaf2ff;
+    --un-success: #15803d;
+    --un-success-lt: #e9f8ee;
+    --un-warning: #d97706;
+    --un-warning-lt: #fff7ed;
+    --un-border: #e2e8f0;
+    --un-surface: #f8fafc;
+    --un-text: #334155;
+    --un-muted: #64748b;
+    --un-radius: 14px;
+  }
+
+  #unidadNegocioPage .un-header {
+    background: linear-gradient(120deg, #0f2340 0%, #153d6f 60%, #1d4ed8 100%);
+    border-radius: var(--un-radius);
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15, 35, 64, 0.14);
+    position: sticky;
+    top: 72px;
+    z-index: 30;
+    overflow: hidden;
+  }
+
+  #unidadNegocioPage .un-header::before {
+    content: "";
+    position: absolute;
+    top: -45px;
+    right: -35px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+  }
+
+  #unidadNegocioPage .un-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  #unidadNegocioPage .un-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.12rem;
+    flex-shrink: 0;
+  }
+
+  #unidadNegocioPage .un-header-title {
+    color: #fff;
+    font-size: 1.08rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.2px;
+  }
+
+  #unidadNegocioPage .un-header-sub {
+    color: rgba(255, 255, 255, 0.66);
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+
+  #unidadNegocioPage .un-header .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+    font-size: 0.82rem;
+    z-index: 1;
+    position: relative;
+  }
+
+  #unidadNegocioPage .un-header .btn-primary:hover {
+    background: #eff6ff;
+    border-color: #eff6ff;
+  }
+
+  #unidadNegocioPage .un-card {
+    background: #fff;
+    border: 1px solid var(--un-border);
+    border-radius: var(--un-radius);
+    box-shadow: 0 4px 18px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+  }
+
+  #unidadNegocioPage .un-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.95rem 1.1rem;
+    background: var(--un-surface);
+    border-bottom: 1px solid var(--un-border);
+  }
+
+  #unidadNegocioPage .un-toolbar-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--un-muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  #unidadNegocioPage .un-toolbar-title-bar {
+    display: block;
+    width: 3px;
+    height: 13px;
+    background: var(--un-accent);
+    border-radius: 2px;
+  }
+
+  #unidadNegocioPage .un-note {
+    font-size: 0.78rem;
+    color: #475569;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    padding: 6px 10px;
+    border-radius: 999px;
+  }
+
+  #unidadNegocioPage .badge-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 999px;
+    padding: 5px 9px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+    max-width: 180px;
+  }
+
+  #unidadNegocioPage .badge-logo.empty {
+    border-color: #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+  }
+
+  #unidadNegocioModal .un-logo-field {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+
+  #unidadNegocioModal .un-logo-field .form-label {
+    margin-bottom: 0.35rem;
+  }
+
+  #unidadNegocioModal .logo-dropzone {
+    border: 1px dashed #bfdbfe;
+    border-radius: 10px;
+    padding: 0.7rem 0.75rem;
+    min-height: 104px;
+    flex: 1 1 auto;
+    background: #f8fbff;
+    cursor: pointer;
+    transition: 0.15s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  #unidadNegocioModal .logo-dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+  }
+
+  #unidadNegocioModal .logo-dropzone:hover,
+  #unidadNegocioModal .logo-dropzone.dragover {
+    background: #eff6ff;
+    border-color: #2563eb;
+  }
+
+  #unidadNegocioModal .logo-drop-title {
+    font-weight: 800;
+    color: #0f2340;
+    font-size: 0.8rem;
+    line-height: 1.15;
+  }
+
+  #unidadNegocioModal .logo-drop-sub {
+    font-size: 0.7rem;
+    color: #64748b;
+    line-height: 1.2;
+    margin-top: 3px;
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  #unidadNegocioPage .un-table-wrap {
+    padding: 0.8rem 1rem 1rem;
+  }
+
+  #unidadNegocioPage #tblUnidadNegocio {
+    width: 100% !important;
+  }
+
+  #unidadNegocioPage #tblUnidadNegocio thead th {
+    background: var(--un-surface);
+    color: var(--un-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.55px;
+    border-bottom: 2px solid var(--un-border);
+    padding: 11px 12px;
+    white-space: nowrap;
+  }
+
+  #unidadNegocioPage #tblUnidadNegocio tbody td {
+    padding: 10px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eef2f7;
+    font-size: 0.86rem;
+    color: var(--un-text);
+  }
+
+  #unidadNegocioPage #tblUnidadNegocio tbody tr:nth-child(even) {
+    background: #fbfdff;
+  }
+
+  #unidadNegocioPage #tblUnidadNegocio tbody tr:hover td {
+    background: var(--un-accent-lt) !important;
+  }
+
+  #unidadNegocioPage .badge-codigo {
+    display: inline-flex;
+    align-items: center;
+    font-family: Consolas, monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.45px;
+    background: var(--un-accent-lt);
+    color: var(--un-accent);
+    border: 1px solid #bfdbfe;
+    padding: 3px 10px;
+    border-radius: 7px;
+  }
+
+  #unidadNegocioPage .badge-bool {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+  }
+
+  #unidadNegocioPage .badge-bool.si {
+    background: var(--un-success-lt);
+    color: var(--un-success);
+    border-color: #b7e4c7;
+  }
+
+  #unidadNegocioPage .badge-bool.no {
+    background: var(--un-warning-lt);
+    color: var(--un-warning);
+    border-color: #fed7aa;
+  }
+
+  #unidadNegocioPage .badge-nit {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #dbe3ee;
+  }
+
+  #unidadNegocioPage .badge-nit.empty {
+    background: #fff7ed;
+    color: #b45309;
+    border-color: #fed7aa;
+  }
+
+  #unidadNegocioPage .badge-vinculacion {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  #unidadNegocioPage .badge-vinculacion.publicidad {
+    background: #ecfdf5;
+    color: #047857;
+    border-color: #a7f3d0;
+  }
+
+  #unidadNegocioPage .badge-vinculacion.none {
+    background: #f8fafc;
+    color: #64748b;
+    border-color: #dbe3ee;
+  }
+
+  #unidadNegocioPage .un-btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid var(--un-border);
+    background: #fff;
+    color: var(--un-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.8rem;
+    padding: 0;
+  }
+
+  #unidadNegocioPage .un-btn-action:hover {
+    transform: translateY(-1px);
+  }
+
+  #unidadNegocioPage .un-btn-edit:hover {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+  }
+
+  #unidadNegocioPage .un-btn-toggle:hover {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #d97706;
+  }
+
+  #unidadNegocioPage div.dataTables_wrapper div.dataTables_filter input,
+  #unidadNegocioPage div.dataTables_wrapper div.dataTables_length select {
+    border: 1.5px solid var(--un-border);
+    border-radius: 8px;
+    font-size: 0.84rem;
+    padding: 5px 10px;
+  }
+
+  #unidadNegocioPage div.dataTables_wrapper div.dataTables_filter label,
+  #unidadNegocioPage div.dataTables_wrapper div.dataTables_length label,
+  #unidadNegocioPage div.dataTables_wrapper div.dataTables_info {
+    font-size: 0.8rem;
+    color: var(--un-muted);
+  }
+
+  #unidadNegocioPage div.dataTables_wrapper div.dataTables_paginate .paginate_button {
+    border-radius: 7px !important;
+    font-size: 0.82rem;
+    padding: 4px 10px !important;
+    border: 1px solid transparent !important;
+    color: var(--un-muted) !important;
+  }
+
+  #unidadNegocioPage div.dataTables_wrapper div.dataTables_paginate .paginate_button.current,
+  #unidadNegocioPage div.dataTables_wrapper div.dataTables_paginate .paginate_button.current:hover {
+    background: var(--un-accent) !important;
+    border-color: var(--un-accent) !important;
+    color: #fff !important;
+    font-weight: 600;
+  }
+
+  #unidadNegocioPage div.dataTables_wrapper div.dataTables_paginate .paginate_button:hover {
+    background: var(--un-accent-lt) !important;
+    border-color: var(--un-accent-lt) !important;
+    color: var(--un-accent) !important;
+  }
+
+  #unidadNegocioModal .modal-dialog {
+    max-width: 760px;
+  }
+
+  #unidadNegocioModal .modal-content {
+    border: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+  }
+
+  #unidadNegocioModal .modal-header {
+    background: linear-gradient(120deg, #0f2340 0%, #153d6f 60%, #1d4ed8 100%);
+    color: #fff;
+    border-bottom: 0;
+    padding: 1rem 1.2rem;
+  }
+
+  #unidadNegocioModal .modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  #unidadNegocioModal .btn-close {
+    filter: invert(1);
+    opacity: 0.9;
+  }
+
+  #unidadNegocioModal .modal-body {
+    padding: 1.1rem 1.2rem 1rem;
+    background: #f8fafc;
+  }
+
+  #unidadNegocioModal .modal-footer {
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+    padding: 0.9rem 1.2rem;
+  }
+
+  #unidadNegocioModal .card-form {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #fff;
+    padding: 1rem;
+  }
+
+  #unidadNegocioModal .card-form-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.55px;
+    color: #64748b;
+    font-weight: 800;
+    margin-bottom: 0.85rem;
+  }
+
+  #unidadNegocioModal .form-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 0.32rem;
+  }
+
+  #unidadNegocioModal .form-control,
+  #unidadNegocioModal .form-select {
+    border-radius: 10px;
+    border: 1.5px solid #dbe3ee;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+
+  #unidadNegocioModal .form-text {
+    font-size: 0.77rem;
+    color: #64748b;
+  }
+
+  #unidadNegocioModal .campo-autogenerado {
+    background: #eef2f7 !important;
+    color: #64748b !important;
+    cursor: not-allowed;
+    font-weight: 700;
+    border-color: #d6dee8 !important;
+  }
+
+  #unidadNegocioModal .campo-autogenerado:focus {
+    background: #eef2f7 !important;
+    color: #64748b !important;
+    border-color: #d6dee8 !important;
+    box-shadow: none !important;
+  }
+
+  #unidadNegocioPage .col-codigo {
+    width: 130px;
+  }
+
+  #unidadNegocioPage .col-nombre {
+    width: 260px;
+  }
+
+  #unidadNegocioPage .col-nit {
+    width: 180px;
+  }
+
+  #unidadNegocioPage .col-activo {
+    width: 90px;
+  }
+
+  #unidadNegocioPage .col-vinculacion {
+    width: 170px;
+  }
+
+  #unidadNegocioPage .col-acciones {
+    width: 110px;
+  }
+
+  @media (max-width: 768px) {
+    #unidadNegocioModal .modal-dialog {
+      max-width: 96vw;
+      margin: 0.8rem auto;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="unidadNegocioPage">
+  <div class="un-header">
+    <div class="un-header-left">
+      <div class="un-header-icon">
+        <i class="fas fa-building"></i>
+      </div>
+      <div>
+        <h4 class="un-header-title">Unidad de Negocio</h4>
+        <div class="un-header-sub">Catálogo maestro transversal del sistema</div>
+      </div>
+    </div>
+
+    <button id="btnNuevaUnidad" type="button" class="btn btn-primary">
+      <i class="fas fa-plus me-1"></i>
+      Nuevo registro
+    </button>
+  </div>
+
+  <div class="un-card">
+    <div class="un-toolbar">
+      <span class="un-toolbar-title">
+        <span class="un-toolbar-title-bar"></span>
+        Listado de unidades de negocio
+      </span>
+      <span class="un-note">
+        <i class="fas fa-link me-1"></i>
+        La vinculación se define desde el modal de creación o edición.
+      </span>
+    </div>
+
+    <div class="un-table-wrap">
+      <div class="table-responsive">
+        <table id="tblUnidadNegocio" class="table table-hover w-100">
+          <thead>
+            <tr>
+              <th class="col-codigo">Código</th>
+              <th class="col-nombre">Nombre</th>
+              <th class="col-nit">NIT</th>
+              <th class="col-logo">Logo</th>
+              <th class="col-activo">Activo</th>
+              <th class="col-vinculacion">Vinculación</th>
+              <th class="col-acciones text-center no-sort">Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="unidadNegocioModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Unidad de negocio</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="formUnidadNegocio" novalidate>
+          <input type="hidden" id="unidad_negocio_id" />
+
+          <div class="card-form">
+            <div class="card-form-title">Datos principales</div>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="codigo">Código</label>
+                <input type="text" id="codigo" class="form-control campo-autogenerado" maxlength="30" readonly
+                  tabindex="-1" />
+                <div id="codigoHelpText" class="form-text">Se generará automáticamente al guardar por primera vez.</div>
+              </div>
+
+              <div class="col-md-8">
+                <label class="form-label" for="nombre">Nombre</label>
+                <input type="text" id="nombre" class="form-control" maxlength="150" />
+              </div>
+
+              <div class="col-md-6">
+                <div class="row g-3">
+                  <div class="col-12">
+                    <label class="form-label" for="nit">NIT</label>
+                    <input type="text" id="nit" class="form-control" maxlength="50" />
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label" for="activo">Activo</label>
+                    <select id="activo" class="form-select">
+                      <option value="true">Sí</option>
+                      <option value="false">No</option>
+                    </select>
+                  </div>
+
+                  <div class="col-sm-6">
+                    <label class="form-label" for="vinculacion">Vinculación</label>
+                    <select id="vinculacion" class="form-select">
+                      <option value="NINGUNO">Ninguno</option>
+                      <option value="PUBLICIDAD">Publicidad</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6 d-flex">
+                <div class="un-logo-field">
+                  <label class="form-label" for="logo_archivo">Logo para documentos</label>
+                  <div id="logoDropzone" class="logo-dropzone" tabindex="0">
+                    <input type="file" id="logo_archivo" accept="image/png,image/jpeg,image/webp" />
+                    <div class="logo-drop-title"><i class="fas fa-cloud-upload-alt me-1"></i> Seleccionar o arrastrar logo</div>
+                    <div id="logoNombreActual" class="logo-drop-sub">PNG, JPG o WEBP. DXT_CONTA_DATA_DIR/logo.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <div class="form-text">
+                  Solo una unidad puede quedar vinculada a un área. Si seleccionas Publicidad, se actualizará la relación operativa de las estructuras publicitarias hacia esta unidad.
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardarUnidadNegocio">
+          <i class="fas fa-save me-1"></i>
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    "use strict";
+
+    let tabla = null;
+    let modalUnidad = null;
+
+    function escHtml(valor) {
+      return String(valor ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function boolBadge(valor) {
+      return valor
+        ? '<span class="badge-bool si"><i class="fas fa-check-circle"></i> Sí</span>'
+        : '<span class="badge-bool no"><i class="fas fa-ban"></i> No</span>';
+    }
+
+    function nitBadge(valor) {
+      if (!valor) {
+        return '<span class="badge-nit empty"><i class="fas fa-minus-circle"></i> Sin NIT</span>';
+      }
+      return `<span class="badge-nit"><i class="fas fa-id-card"></i> ${escHtml(valor)}</span>`;
+    }
+
+    function logoBadge(row) {
+      if (row && row.logo_ruta) {
+        const nombre = row.logo_nombre_original || 'Logo configurado';
+        return `<span class="badge-logo" title="${escHtml(nombre)}"><i class="fas fa-image"></i> Logo</span>`;
+      }
+      return '<span class="badge-logo empty"><i class="fas fa-minus-circle"></i> Sin logo</span>';
+    }
+
+    function vinculacionBadge(row) {
+      const vinculacion = String(row && row.vinculacion ? row.vinculacion : "").toUpperCase();
+      if (vinculacion === "PUBLICIDAD") {
+        return '<span class="badge-vinculacion publicidad"><i class="fas fa-bullhorn"></i> Publicidad</span>';
+      }
+      return '<span class="badge-vinculacion none"><i class="fas fa-minus-circle"></i> Ninguno</span>';
+    }
+
+    function mostrarMensaje(tipo, titulo, texto) {
+      return Swal.fire({
+        icon: tipo,
+        title: titulo,
+        text: texto,
+        confirmButtonText: "Aceptar",
+        allowOutsideClick: false,
+        allowEscapeKey: true,
+        buttonsStyling: false,
+        customClass: {
+          confirmButton: "btn btn-primary",
+        },
+      });
+    }
+
+    function confirmarCambioEstado(activar) {
+      return Swal.fire({
+        icon: "warning",
+        title: activar ? "Activar unidad de negocio" : "Desactivar unidad de negocio",
+        text: activar ? "La unidad será activada." : "La unidad será desactivada. Sus registros históricos se conservarán.",
+        showCancelButton: true,
+        confirmButtonText: activar ? "Activar" : "Desactivar",
+        cancelButtonText: "Cancelar",
+        allowOutsideClick: false,
+        buttonsStyling: false,
+        customClass: {
+          confirmButton: "btn btn-primary",
+          cancelButton: "btn btn-light me-2",
+        },
+      });
+    }
+
+    function ajaxJSON(options) {
+      return $.ajax({
+        url: options.url,
+        method: options.method || "GET",
+        data: options.body ? JSON.stringify(options.body) : null,
+        contentType: "application/json; charset=UTF-8",
+        dataType: "json",
+        processData: false,
+      });
+    }
+
+    function getDtLanguage() {
+      if (window.DXTBase && DXTBase.dtLang) {
+        return typeof DXTBase.dtLang === "function" ? DXTBase.dtLang() : DXTBase.dtLang;
+      }
+
+      return {
+        processing: "Procesando...",
+        search: "Buscar:",
+        lengthMenu: "Mostrar _MENU_ registros",
+        info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+        infoEmpty: "Mostrando 0 a 0 de 0 registros",
+        infoFiltered: "(filtrado de _MAX_ registros totales)",
+        loadingRecords: "Cargando...",
+        zeroRecords: "No se encontraron resultados",
+        emptyTable: "No hay datos disponibles",
+        paginate: {
+          first: "Primero",
+          previous: "Anterior",
+          next: "Siguiente",
+          last: "Último",
+        },
+      };
+    }
+
+    function baseUrl() {
+      return `{{ url_for("unidad_negocio.index") }}`.replace(/\/$/, "");
+    }
+
+    function renderAcciones(row) {
+      const toggleTitle = row.activo ? "Desactivar" : "Activar";
+      const toggleIcon = row.activo ? "fa-toggle-on" : "fa-toggle-off";
+
+      const wrap = document.createElement("div");
+      wrap.className = "d-flex justify-content-center gap-1";
+
+      const btnEditar = document.createElement("button");
+      btnEditar.type = "button";
+      btnEditar.className = "un-btn-action un-btn-edit btn-editar";
+      btnEditar.title = "Editar";
+      btnEditar.setAttribute("data-id", row.id);
+      btnEditar.innerHTML = '<i class="fas fa-pencil-alt"></i>';
+
+      const btnToggle = document.createElement("button");
+      btnToggle.type = "button";
+      btnToggle.className = "un-btn-action un-btn-toggle btn-toggle";
+      btnToggle.title = toggleTitle;
+      btnToggle.setAttribute("data-id", row.id);
+      btnToggle.setAttribute("data-activo", row.activo ? "true" : "false");
+      btnToggle.innerHTML = `<i class="fas ${toggleIcon}"></i>`;
+
+      wrap.appendChild(btnEditar);
+      wrap.appendChild(btnToggle);
+      return wrap.outerHTML;
+    }
+
+    function initTabla() {
+      tabla = $("#tblUnidadNegocio").DataTable({
+        ajax: {
+          url: '{{ url_for("unidad_negocio.data") }}',
+          dataSrc: "data",
+          cache: false,
+        },
+        columns: [
+          {
+            data: "codigo",
+            render: function (valor) {
+              return `<span class="badge-codigo">${escHtml(valor)}</span>`;
+            },
+          },
+          { data: "nombre", render: (valor) => escHtml(valor || "") },
+          { data: "nit", render: (valor) => nitBadge(valor || "") },
+          { data: null, render: (row) => logoBadge(row || {}) },
+          { data: "activo", render: (valor) => boolBadge(Boolean(valor)) },
+          {
+            data: null,
+            render: function (row) {
+              return vinculacionBadge(row || {});
+            },
+          },
+          {
+            data: null,
+            className: "text-center",
+            orderable: false,
+            render: function (row) {
+              return renderAcciones(row);
+            },
+          },
+        ],
+        language: getDtLanguage(),
+        order: [[0, "asc"]],
+        pageLength: 15,
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
+        columnDefs: [{ targets: "no-sort", orderable: false }],
+      });
+    }
+
+    function limpiarFormulario() {
+      $("#unidad_negocio_id").val("");
+      $("#codigo").val("");
+      $("#codigo").prop("readonly", true);
+      $("#codigoHelpText").text("Se generará automáticamente al guardar por primera vez.");
+      $("#nombre").val("");
+      $("#nit").val("");
+      $("#logo_archivo").val("");
+      $("#logoNombreActual").text("PNG, JPG o WEBP. DXT_CONTA_DATA_DIR/logo.");
+      $("#activo").val("true");
+      $("#vinculacion").val("NINGUNO");
+    }
+
+    function payloadFormulario() {
+      return {
+        nombre: ($("#nombre").val() || "").trim(),
+        nit: ($("#nit").val() || "").trim(),
+        activo: $("#activo").val() === "true",
+        vinculacion: $("#vinculacion").val() || "NINGUNO",
+      };
+    }
+
+    function formDataUnidad(payload) {
+      const fd = new FormData();
+      fd.append("nombre", payload.nombre);
+      fd.append("nit", payload.nit || "");
+      fd.append("activo", payload.activo ? "true" : "false");
+      fd.append("vinculacion", payload.vinculacion || "NINGUNO");
+      const file = document.getElementById("logo_archivo").files[0];
+      if (file) fd.append("logo_archivo", file);
+      return fd;
+    }
+
+    function validarPayload(payload) {
+      if (!payload.nombre) return "El nombre es obligatorio.";
+      if (payload.nombre.length > 150) return "El nombre no puede exceder 150 caracteres.";
+      if (payload.nit && payload.nit.length > 50) return "El NIT no puede exceder 50 caracteres.";
+      if (!["NINGUNO", "PUBLICIDAD"].includes(payload.vinculacion)) return "La vinculación seleccionada no es válida.";
+      if (payload.vinculacion === "PUBLICIDAD" && !payload.activo) return "Una unidad vinculada a Publicidad debe estar activa.";
+      return "";
+    }
+
+    function abrirModalNuevo() {
+      limpiarFormulario();
+      $("#unidadNegocioModal .modal-title").text("Nueva unidad de negocio");
+      $("#codigo").prop("readonly", true);
+      $("#codigoHelpText").text("Se generará automáticamente al guardar por primera vez.");
+      modalUnidad.show();
+
+      setTimeout(function () {
+        $("#nombre").trigger("focus");
+      }, 180);
+    }
+
+    function abrirModalEditar(id) {
+      ajaxJSON({
+        url: baseUrl() + "/obtener/" + encodeURIComponent(id),
+        method: "GET",
+      })
+        .done(function (resp) {
+          const row = resp.data || {};
+          limpiarFormulario();
+          $("#unidad_negocio_id").val(row.id || "");
+          $("#codigo").val(row.codigo || "");
+          $("#codigo").prop("readonly", true);
+          $("#codigoHelpText").text("El código es autogenerado y no puede modificarse.");
+          $("#nombre").val(row.nombre || "");
+          $("#nit").val(row.nit || "");
+          $("#logoNombreActual").text(row.logo_nombre_original ? `Logo actual: ${row.logo_nombre_original}. Seleccione otro archivo para reemplazarlo.` : "PNG, JPG o WEBP. DXT_CONTA_DATA_DIR/logo.");
+          $("#activo").val(row.activo ? "true" : "false");
+          $("#vinculacion").val(row.vinculacion || "NINGUNO");
+          $("#unidadNegocioModal .modal-title").text("Editar unidad de negocio");
+          modalUnidad.show();
+
+          setTimeout(function () {
+            $("#nombre").trigger("focus").trigger("select");
+          }, 180);
+        })
+        .fail(function (xhr) {
+          const resp = xhr.responseJSON || {};
+          mostrarMensaje("error", "No se pudo abrir", resp.msg || "Ocurrió un error al cargar la unidad.");
+        });
+    }
+
+    function guardarFormulario() {
+      const payload = payloadFormulario();
+      const error = validarPayload(payload);
+      if (error) {
+        mostrarMensaje("warning", "Datos incompletos", error);
+        return;
+      }
+
+      const id = $("#unidad_negocio_id").val();
+      const esEdicion = !!id;
+
+      $.ajax({
+        url: esEdicion ? baseUrl() + "/editar/" + encodeURIComponent(id) : baseUrl() + "/crear",
+        method: esEdicion ? "PUT" : "POST",
+        data: formDataUnidad(payload),
+        processData: false,
+        contentType: false,
+        dataType: "json",
+      })
+        .done(function (resp) {
+          modalUnidad.hide();
+          tabla.ajax.reload(null, false);
+          mostrarMensaje("success", "Guardado correctamente", resp.msg || "Unidad de negocio guardada correctamente.");
+        })
+        .fail(function (xhr) {
+          const resp = xhr.responseJSON || {};
+          mostrarMensaje("error", "No se pudo guardar", resp.msg || "Ocurrió un error al guardar la unidad de negocio.");
+        });
+    }
+
+    function toggleActivo(id, activoActual) {
+      const activar = !activoActual;
+      confirmarCambioEstado(activar).then(function (result) {
+        if (!result.isConfirmed) return;
+
+        ajaxJSON({
+          url: baseUrl() + "/toggle-activo/" + encodeURIComponent(id),
+          method: "POST",
+        })
+          .done(function (resp) {
+            tabla.ajax.reload(null, false);
+            mostrarMensaje("success", "Actualización correcta", resp.msg || "Estado actualizado correctamente.");
+          })
+          .fail(function (xhr) {
+            const resp = xhr.responseJSON || {};
+            mostrarMensaje("error", "No se pudo actualizar", resp.msg || "Ocurrió un error al actualizar el estado.");
+          });
+      });
+    }
+
+    $(function () {
+      modalUnidad = new bootstrap.Modal(document.getElementById("unidadNegocioModal"));
+      initTabla();
+
+      $("#btnNuevaUnidad").on("click", function () {
+        abrirModalNuevo();
+      });
+
+      $("#btnGuardarUnidadNegocio").on("click", function () {
+        guardarFormulario();
+      });
+
+      $(document).on("click", ".btn-editar", function () {
+        abrirModalEditar($(this).data("id"));
+      });
+
+      $(document).on("click", ".btn-toggle", function () {
+        toggleActivo($(this).data("id"), $(this).data("activo") === true || $(this).data("activo") === "true");
+      });
+
+      $("#logoDropzone").on("keydown", function (ev) {
+        if (ev.key === "Enter" || ev.key === " ") {
+          ev.preventDefault();
+          document.getElementById("logo_archivo").click();
+        }
+      });
+
+      $("#logoDropzone").on("dragover", function (ev) {
+        ev.preventDefault();
+        $(this).addClass("dragover");
+      }).on("dragleave drop", function (ev) {
+        ev.preventDefault();
+        $(this).removeClass("dragover");
+        if (ev.type === "drop" && ev.originalEvent.dataTransfer.files.length) {
+          document.getElementById("logo_archivo").files = ev.originalEvent.dataTransfer.files;
+          $("#logo_archivo").trigger("change");
+        }
+      });
+
+      $("#logo_archivo").on("change", function () {
+        const file = this.files && this.files.length ? this.files[0] : null;
+        $("#logoNombreActual").text(file ? `Archivo seleccionado: ${file.name}` : "PNG, JPG o WEBP. DXT_CONTA_DATA_DIR/logo.");
+      });
+
+      $("#unidadNegocioModal").on("hidden.bs.modal", function () {
+        limpiarFormulario();
+      });
+    });
+  })();
+</script>
+{% endblock %}

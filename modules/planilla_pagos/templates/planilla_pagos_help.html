@@ -1,0 +1,13 @@
+{% extends "layouthelp.html" %}
+{% block title %}Ayuda - Pago de Planillas{% endblock %}
+{% block help_content %}
+<h5>Pago de Planillas</h5>
+<p>Permite pagar planillas consolidadas de Planta y Colaboradores, de forma individual, por selección, por unidad o global.</p>
+<ul>
+  <li><b>Pago individual:</b> registra una persona por vez y permite documentar el medio de entrega al beneficiario: efectivo, transferencia, QR o cheque.</li>
+  <li><b>Pago por selección / unidad / global:</b> registra pagos masivos sin exigir datos de destino individual.</li>
+  <li><b>Reversión:</b> anula el pago, genera asiento reverso y devuelve el saldo a pendiente.</li>
+  <li><b>PDF:</b> permite imprimir boleta o comprobante individual y también todos los documentos de la planilla.</li>
+</ul>
+<p>Una planilla con pagos no debe revertirse a borrador hasta anular primero todos sus pagos desde este módulo.</p>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends "layouthelp.html" %}
+
+{% block title %}Ayuda · Libro Diario{% endblock %}
+{% block help_title %}Ayuda rápida · Libro Diario{% endblock %}
+{% block help_subtitle %}Guía breve para consultar movimientos contables confirmados, filtrar por gestión o rango libre y emitir el reporte PDF.{% endblock %}
+
+{% block help_summary %}
+  <li>Qué muestra el Libro Diario.</li>
+  <li>Cómo usar gestión contable, rango libre y filtro por Unidad de Negocio.</li>
+  <li>Qué significan las columnas principales.</li>
+  <li>Cómo emitir el PDF del reporte.</li>
+  <li>Qué revisar antes de interpretar la información.</li>
+  <li>Cómo interpretar el indicador de cuadre.</li>
+{% endblock %}
+
+{% block help_content %}
+  <section class="help-section">
+    <h2>1. ¿Para qué sirve esta pantalla?</h2>
+    <div class="help-callout">
+      El <strong>Libro Diario</strong> muestra, en orden cronológico, el detalle de los asientos contables
+      <strong>confirmados</strong> registrados en el sistema. Su función es permitir consulta, revisión y emisión del reporte PDF.
+    </div>
+    <p>
+      Cada línea representa un movimiento del asiento: cuenta, auxiliar, glosa de línea, debe, haber y su origen.
+      Esto permite revisar con claridad cómo quedó registrado cada comprobante que ya impacta la contabilidad.
+    </p>
+  </section>
+
+  <section class="help-section">
+    <h2>2. Formas de consulta</h2>
+    <div class="help-grid-2">
+      <div class="help-mini-card">
+        <h3>Rango libre</h3>
+        <p>Permite consultar un período específico indicando <strong>Fecha desde</strong> y <strong>Fecha hasta</strong>.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Gestión contable</h3>
+        <p>Permite consultar toda una gestión o año contable en una sola operación.</p>
+      </div>
+    </div>
+    <div class="help-callout">
+      <strong>Regla importante:</strong> usa <strong>rango libre</strong> cuando necesitas revisar un período puntual,
+      y usa <strong>gestión</strong> cuando deseas ver todo el año contable.
+    </div>
+  </section>
+
+  <section class="help-section">
+    <h2>3. Qué significan los filtros principales</h2>
+    <div class="help-grid-2">
+      <div class="help-mini-card">
+        <h3>Modo de período</h3>
+        <p>Define si la consulta se hará por <strong>rango libre</strong> o por <strong>gestión</strong>.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Gestión</h3>
+        <p>Selecciona el año contable que deseas consultar cuando trabajas en modo gestión.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Unidad de Negocio</h3>
+        <p>Permite ver todo el libro o concentrarte en una sola unidad operativa dentro del mismo sistema.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Fecha desde</h3>
+        <p>Indica la fecha inicial del período a revisar.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Fecha hasta</h3>
+        <p>Indica la fecha final del período a revisar.</p>
+      </div>
+    </div>
+    <p>
+      El sistema valida que la <strong>fecha hasta</strong> no sea menor que la <strong>fecha desde</strong>.
+      Si el filtro es correcto, se listan solo los movimientos comprendidos en ese período.
+    </p>
+  </section>
+
+  <section class="help-section">
+    <h2>4. Qué muestra la tabla</h2>
+    <div class="help-grid-2">
+      <div class="help-mini-card">
+        <h3>Fecha</h3>
+        <p>Fecha contable del asiento confirmado.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Asiento</h3>
+        <p>Número o identificador interno del asiento.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Secuencia</h3>
+        <p>Orden interno de cada línea dentro del asiento.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Cuenta</h3>
+        <p>Código y nombre de la cuenta contable utilizada en la línea.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Auxiliar</h3>
+        <p>Tercero o referencia auxiliar asociada al movimiento, si corresponde.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Centro de costo</h3>
+        <p>Centro de costo aplicado a la línea, cuando existe.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Debe / Haber</h3>
+        <p>Importes del movimiento registrados en la línea contable.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Origen</h3>
+        <p>Indica si el asiento proviene de un módulo como Tesorería o de un registro manual.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Unidad</h3>
+        <p>Muestra la unidad de negocio asociada al asiento para separar la operación por dimensión empresarial interna.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="help-section">
+    <h2>5. Resumen superior</h2>
+    <div class="help-callout">
+      El resumen permite ver rápidamente la cantidad de <strong>asientos</strong>, la cantidad de <strong>líneas</strong>
+      y los totales acumulados de <strong>Debe</strong> y <strong>Haber</strong> del período consultado.
+    </div>
+    <p>
+      Esto ayuda a validar el volumen de movimientos antes de revisar el detalle o emitir el reporte PDF.
+    </p>
+    <div class="help-callout">
+      El indicador de <strong>Cuadre</strong> compara el total Debe contra el total Haber del período consultado.
+      En condiciones normales debe mostrar diferencia cero. Si muestra diferencia, el período debe ser revisado antes de usar el reporte.
+    </div>
+  </section>
+
+  <section class="help-section">
+    <h2>6. Reporte PDF</h2>
+    <ol class="help-steps">
+      <li>Define el período de consulta.</li>
+      <li>Presiona <strong>Consultar</strong> para verificar los movimientos.</li>
+      <li>Si la información es correcta, presiona <strong>PDF</strong>.</li>
+      <li>El sistema emitirá el reporte del Libro Diario con el mismo filtro aplicado en pantalla.</li>
+    </ol>
+    <div class="help-callout">
+      El PDF muestra el reporte institucional del <strong>Libro Diario</strong> y sirve como salida formal para revisión o archivo.
+    </div>
+  </section>
+
+  <section class="help-section">
+    <h2>7. Ejemplo práctico</h2>
+    <div class="help-callout">
+      <strong>Ejemplo:</strong> si deseas revisar los movimientos confirmados del mes de marzo de 2026,
+      usa <strong>rango libre</strong> del <strong>01/03/2026</strong> al <strong>31/03/2026</strong>, consulta la tabla
+      y luego genera el PDF si necesitas el reporte formal.
+    </div>
+  </section>
+
+  <section class="help-section">
+    <h2>8. Recomendaciones de uso</h2>
+    <ul class="help-summary-list">
+      <li>Consulta primero en pantalla antes de emitir el PDF.</li>
+      <li>Recuerda que el Libro Diario muestra solo <strong>asientos confirmados</strong>.</li>
+      <li>Usa gestión cuando necesites una revisión anual y rango libre para cortes puntuales.</li>
+      <li>Usa el filtro de Unidad de Negocio cuando necesites revisar una sola operación interna.</li>
+      <li>Revisa el origen de los movimientos para entender si provienen de Tesorería o de un comprobante manual.</li>
+      <li>Valida los totales del resumen cuando el volumen de registros sea alto.</li>
+      <li>Si el indicador de cuadre muestra diferencia, revisa los comprobantes del período antes de cerrar o reportar.</li>
+    </ul>
+  </section>
+{% endblock %}

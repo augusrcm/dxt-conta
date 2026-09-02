@@ -1,0 +1,1168 @@
+{% extends "layout.html" %}
+{% block title %}Saldos Iniciales{% endblock %}
+{% block page_help_url %}{{ url_for('saldos_iniciales.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  #saldosInicialesPage {
+    --si-navy: #0f2340;
+    --si-blue: #1d4ed8;
+    --si-blue-soft: #eff6ff;
+    --si-border: #dbe4ef;
+    --si-surface: #f8fafc;
+    --si-text: #243447;
+    --si-muted: #64748b;
+    --si-success: #15803d;
+    --si-success-soft: #ecfdf5;
+    --si-warning: #b45309;
+    --si-warning-soft: #fffbeb;
+    --si-danger: #b91c1c;
+    --si-danger-soft: #fef2f2;
+    --si-radius: 16px;
+    margin-bottom: 80px;
+    color: var(--si-text);
+  }
+
+  #saldosInicialesPage .si-hero {
+    background: linear-gradient(120deg, var(--si-navy) 0%, #164274 58%, var(--si-blue) 100%);
+    color: #fff;
+    border-radius: var(--si-radius);
+    padding: 1.15rem 1.35rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 14px 34px rgba(15, 35, 64, 0.16);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  #saldosInicialesPage .si-hero-main {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  #saldosInicialesPage .si-hero-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.13);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  #saldosInicialesPage .si-title {
+    margin: 0;
+    font-size: 1.18rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  #saldosInicialesPage .si-subtitle {
+    margin: 0.25rem 0 0;
+    color: rgba(255, 255, 255, 0.74);
+    font-size: 0.84rem;
+  }
+
+  #saldosInicialesPage .si-hero-actions {
+    display: flex;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  #saldosInicialesPage .si-card {
+    background: #fff;
+    border: 1px solid var(--si-border);
+    border-radius: var(--si-radius);
+    box-shadow: 0 6px 22px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  #saldosInicialesPage .si-card-head {
+    padding: 0.95rem 1.1rem;
+    background: linear-gradient(180deg, #fff 0%, var(--si-surface) 100%);
+    border-bottom: 1px solid var(--si-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  #saldosInicialesPage .si-card-title {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    color: var(--si-navy);
+    font-weight: 800;
+  }
+
+  #saldosInicialesPage .si-card-title small {
+    display: block;
+    margin-top: 0.15rem;
+    color: var(--si-muted);
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+
+  #saldosInicialesPage .si-card-body {
+    padding: 1rem 1.1rem;
+  }
+
+  #saldosInicialesPage .si-grid-4 {
+    display: grid;
+    grid-template-columns: 1.1fr 0.8fr 2fr auto;
+    gap: 0.8rem;
+    align-items: end;
+  }
+
+  #saldosInicialesPage .si-label {
+    display: block;
+    color: var(--si-muted);
+    font-size: 0.73rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
+
+  #saldosInicialesPage .si-input,
+  #saldosInicialesPage .si-select,
+  #saldosInicialesPage .si-line-input,
+  #saldosInicialesPage .si-line-select {
+    width: 100%;
+    border: 1px solid var(--si-border);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--si-text);
+    font-size: 0.86rem;
+    min-height: 38px;
+  }
+
+  #saldosInicialesPage .si-input,
+  #saldosInicialesPage .si-select {
+    padding: 0.55rem 0.7rem;
+  }
+
+  #saldosInicialesPage .si-line-input,
+  #saldosInicialesPage .si-line-select {
+    padding: 0.46rem 0.55rem;
+  }
+
+  #saldosInicialesPage .si-line-input.is-money {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #saldosInicialesPage .si-alert {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.85rem 0.95rem;
+    border-radius: 14px;
+    border: 1px solid var(--si-border);
+    background: var(--si-blue-soft);
+    color: #1e3a8a;
+    font-size: 0.86rem;
+    margin-bottom: 1rem;
+  }
+
+  #saldosInicialesPage .si-alert.is-warning {
+    background: var(--si-warning-soft);
+    border-color: #f4d28f;
+    color: var(--si-warning);
+  }
+
+  #saldosInicialesPage .si-alert.is-danger {
+    background: var(--si-danger-soft);
+    border-color: #fecaca;
+    color: var(--si-danger);
+  }
+
+  #saldosInicialesPage .si-alert.is-hidden {
+    display: none;
+  }
+
+  #saldosInicialesPage .si-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+
+  #saldosInicialesPage .si-kpi {
+    border: 1px solid var(--si-border);
+    border-radius: 14px;
+    padding: 0.82rem 0.9rem;
+    background: linear-gradient(180deg, #fff 0%, #fbfdff 100%);
+  }
+
+  #saldosInicialesPage .si-kpi-label {
+    color: var(--si-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  #saldosInicialesPage .si-kpi-value {
+    margin-top: 0.25rem;
+    font-size: 1.05rem;
+    color: var(--si-navy);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #saldosInicialesPage .si-toolbar {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  #saldosInicialesPage .si-table-wrap {
+    overflow-x: auto;
+  }
+
+  #saldosInicialesPage .si-table {
+    width: 100%;
+    min-width: 1180px;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  #saldosInicialesPage .si-table thead th {
+    background: var(--si-surface);
+    color: var(--si-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.72rem 0.55rem;
+    border-bottom: 1px solid var(--si-border);
+    white-space: nowrap;
+  }
+
+  #saldosInicialesPage .si-table tbody td {
+    padding: 0.55rem;
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+  }
+
+  #saldosInicialesPage .si-table tbody tr:nth-child(even) td {
+    background: #fbfdff;
+  }
+
+  #saldosInicialesPage .si-table tbody tr:hover td {
+    background: #f8fbff;
+  }
+
+  #saldosInicialesPage .si-col-unit {
+    width: 180px;
+  }
+
+  #saldosInicialesPage .si-col-account {
+    width: 260px;
+  }
+
+  #saldosInicialesPage .si-col-aux,
+  #saldosInicialesPage .si-col-cc {
+    width: 170px;
+  }
+
+  #saldosInicialesPage .si-col-money {
+    width: 115px;
+  }
+
+  #saldosInicialesPage .si-col-glosa {
+    width: 210px;
+  }
+
+  #saldosInicialesPage .si-col-actions {
+    width: 64px;
+    text-align: center;
+  }
+
+  #saldosInicialesPage .si-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--si-muted);
+  }
+
+  #saldosInicialesPage .si-unit-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
+
+  #saldosInicialesPage .si-unit-box {
+    border: 1px solid var(--si-border);
+    border-radius: 14px;
+    padding: 0.8rem 0.9rem;
+    background: #fff;
+  }
+
+  #saldosInicialesPage .si-unit-box.is-ok {
+    background: var(--si-success-soft);
+    border-color: #bbf7d0;
+  }
+
+  #saldosInicialesPage .si-unit-box.is-bad {
+    background: var(--si-danger-soft);
+    border-color: #fecaca;
+  }
+
+  #saldosInicialesPage .si-unit-name {
+    color: var(--si-navy);
+    font-weight: 800;
+    font-size: 0.88rem;
+    margin-bottom: 0.32rem;
+  }
+
+  #saldosInicialesPage .si-unit-meta {
+    color: var(--si-muted);
+    font-size: 0.78rem;
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #saldosInicialesPage .si-saved-links {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  #saldosInicialesPage .si-link-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border: 1px solid var(--si-border);
+    border-radius: 999px;
+    padding: 0.3rem 0.55rem;
+    background: #fff;
+    color: var(--si-blue);
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  #saldosInicialesPage .si-link-pill:hover {
+    background: var(--si-blue-soft);
+  }
+
+  #saldosInicialesPage .btn-si-primary {
+    background: var(--si-blue);
+    border-color: var(--si-blue);
+    color: #fff;
+    font-weight: 800;
+  }
+
+  #saldosInicialesPage .btn-si-primary:hover {
+    background: #1e40af;
+    border-color: #1e40af;
+    color: #fff;
+  }
+
+  #saldosInicialesPage .btn-si-soft {
+    background: #fff;
+    border-color: var(--si-border);
+    color: var(--si-text);
+    font-weight: 700;
+  }
+
+  #saldosInicialesPage .btn-si-soft:hover {
+    background: var(--si-blue-soft);
+    color: #1e3a8a;
+  }
+
+  #saldosInicialesPage .btn-icon-danger {
+    border: 1px solid #fecaca;
+    background: #fff;
+    color: var(--si-danger);
+    border-radius: 10px;
+    width: 34px;
+    height: 34px;
+  }
+
+  #saldosInicialesPage .btn-icon-danger:hover {
+    background: var(--si-danger-soft);
+  }
+
+  @media (max-width: 1200px) {
+    #saldosInicialesPage .si-grid-4,
+    #saldosInicialesPage .si-summary-grid,
+    #saldosInicialesPage .si-unit-list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="saldosInicialesPage">
+  <section class="si-hero">
+    <div class="si-hero-main">
+      <div class="si-hero-icon">
+        <i class="fas fa-layer-group"></i>
+      </div>
+      <div>
+        <h1 class="si-title">Saldos Iniciales</h1>
+        <p class="si-subtitle">Registra el punto de partida del sistema contable por unidad de negocio.</p>
+      </div>
+    </div>
+    <div class="si-hero-actions">
+      <button type="button" class="btn btn-light btn-sm fw-bold" id="btnAgregarFilaHero">
+        <i class="fas fa-plus me-1"></i>Agregar línea
+      </button>
+      <button type="button" class="btn btn-warning btn-sm fw-bold" id="btnGuardarHero">
+        <i class="fas fa-floppy-disk me-1"></i>Guardar saldos
+      </button>
+      <button type="button" class="btn btn-light btn-sm fw-bold" id="btnPdfHero">
+        <i class="fas fa-file-pdf me-1"></i>PDF
+      </button>
+      <button type="button" class="btn btn-light btn-sm fw-bold" id="btnExcelHero">
+        <i class="fas fa-file-excel me-1"></i>Excel
+      </button>
+    </div>
+  </section>
+
+  <div class="si-alert" id="alertInfo">
+    <i class="fas fa-circle-info mt-1"></i>
+    <div>
+      Este módulo genera comprobantes especiales <strong>SALDOS_INICIALES</strong>. No es cierre ni apertura de gestión.
+      Cada unidad debe cuadrar por separado: Total Debe = Total Haber.
+    </div>
+  </div>
+
+  <div class="si-alert is-warning is-hidden" id="alertMovimientos">
+    <i class="fas fa-triangle-exclamation mt-1"></i>
+    <div id="alertMovimientosText"></div>
+  </div>
+
+  <div class="si-alert is-danger is-hidden" id="alertBloqueo">
+    <i class="fas fa-ban mt-1"></i>
+    <div id="alertBloqueoText"></div>
+  </div>
+
+  <section class="si-card">
+    <div class="si-card-head">
+      <div class="si-card-title">
+        <i class="fas fa-sliders"></i>
+        <div>
+          Parámetros del comprobante inicial
+          <small>La fecha debe pertenecer a una gestión abierta.</small>
+        </div>
+      </div>
+      <button type="button" class="btn btn-sm btn-si-soft" id="btnRecargar">
+        <i class="fas fa-rotate me-1"></i>Recargar
+      </button>
+    </div>
+    <div class="si-card-body">
+      <div class="si-grid-4">
+        <div>
+          <label class="si-label" for="gestionInput">Gestión</label>
+          <select class="si-select" id="gestionInput"></select>
+        </div>
+        <div>
+          <label class="si-label" for="fechaInput">Fecha inicial</label>
+          <input type="date" class="si-input" id="fechaInput" />
+        </div>
+        <div>
+          <label class="si-label" for="glosaInput">Glosa general</label>
+          <input type="text" class="si-input" id="glosaInput" maxlength="500"
+            placeholder="Saldos iniciales del sistema" />
+        </div>
+        <div>
+          <button type="button" class="btn btn-si-primary" id="btnGuardar">
+            <i class="fas fa-floppy-disk me-1"></i>Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="si-card">
+    <div class="si-card-head">
+      <div class="si-card-title">
+        <i class="fas fa-table"></i>
+        <div>
+          Detalle por cuenta
+          <small>Use cuentas de Activo, Pasivo o Patrimonio. No se permiten cuentas de ingreso, costo o gasto.</small>
+        </div>
+      </div>
+      <div class="si-toolbar">
+        <button type="button" class="btn btn-sm btn-si-soft" id="btnAgregarFila">
+          <i class="fas fa-plus me-1"></i>Agregar línea
+        </button>
+        <button type="button" class="btn btn-sm btn-si-soft" id="btnAgregarDosFilas">
+          <i class="fas fa-plus me-1"></i>Agregar 2 líneas
+        </button>
+      </div>
+    </div>
+    <div class="si-table-wrap">
+      <table class="si-table" aria-label="Detalle de saldos iniciales">
+        <thead>
+          <tr>
+            <th class="si-col-unit">Unidad</th>
+            <th class="si-col-account">Cuenta</th>
+            <th class="si-col-aux">Auxiliar</th>
+            <th class="si-col-cc">Centro costo</th>
+            <th class="si-col-money">Debe</th>
+            <th class="si-col-money">Haber</th>
+            <th class="si-col-glosa">Glosa línea</th>
+            <th class="si-col-actions">Quitar</th>
+          </tr>
+        </thead>
+        <tbody id="detalleBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="si-card">
+    <div class="si-card-head">
+      <div class="si-card-title">
+        <i class="fas fa-scale-balanced"></i>
+        <div>
+          Control de cuadratura
+          <small>El total general puede cuadrar, pero cada unidad también debe cuadrar individualmente.</small>
+        </div>
+      </div>
+    </div>
+    <div class="si-card-body">
+      <div class="si-summary-grid mb-3">
+        <div class="si-kpi">
+          <div class="si-kpi-label">Total Debe</div>
+          <div class="si-kpi-value" id="kpiDebe">0.00</div>
+        </div>
+        <div class="si-kpi">
+          <div class="si-kpi-label">Total Haber</div>
+          <div class="si-kpi-value" id="kpiHaber">0.00</div>
+        </div>
+        <div class="si-kpi">
+          <div class="si-kpi-label">Diferencia</div>
+          <div class="si-kpi-value" id="kpiDiferencia">0.00</div>
+        </div>
+        <div class="si-kpi">
+          <div class="si-kpi-label">Líneas útiles</div>
+          <div class="si-kpi-value" id="kpiLineas">0</div>
+        </div>
+      </div>
+      <div class="si-unit-list" id="resumenUnidades"></div>
+    </div>
+  </section>
+</div>
+
+<script type="application/json" id="saldosInicialesBootstrap">
+  {{ {
+    'gestionActual': gestion_actual,
+    'fechaSugerida': fecha_sugerida,
+    'catalogos': catalogos,
+    'urls': {
+      'datos': url_for('saldos_iniciales.datos'),
+      'estado': url_for('saldos_iniciales.estado'),
+      'guardar': url_for('saldos_iniciales.guardar'),
+      'pdf': url_for('saldos_iniciales.pdf'),
+      'excel': url_for('saldos_iniciales.excel'),
+      'catalogos': url_for('saldos_iniciales.catalogos'),
+      'comprobantesIndex': url_for('comprobantes.index')
+    }
+  } | tojson }}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (() => {
+    const bootEl = document.getElementById('saldosInicialesBootstrap');
+    const boot = JSON.parse(bootEl.textContent || '{}');
+
+    const state = {
+      rows: [],
+      catalogos: boot.catalogos || {},
+      savedResumen: [],
+      bloqueado: false,
+      movimientosNoIniciales: 0,
+      nextRowId: 1,
+    };
+
+    const els = {
+      gestion: document.getElementById('gestionInput'),
+      fecha: document.getElementById('fechaInput'),
+      glosa: document.getElementById('glosaInput'),
+      detalleBody: document.getElementById('detalleBody'),
+      btnGuardar: document.getElementById('btnGuardar'),
+      btnGuardarHero: document.getElementById('btnGuardarHero'),
+      btnPdfHero: document.getElementById('btnPdfHero'),
+      btnExcelHero: document.getElementById('btnExcelHero'),
+      btnAgregarFila: document.getElementById('btnAgregarFila'),
+      btnAgregarFilaHero: document.getElementById('btnAgregarFilaHero'),
+      btnAgregarDosFilas: document.getElementById('btnAgregarDosFilas'),
+      btnRecargar: document.getElementById('btnRecargar'),
+      kpiDebe: document.getElementById('kpiDebe'),
+      kpiHaber: document.getElementById('kpiHaber'),
+      kpiDiferencia: document.getElementById('kpiDiferencia'),
+      kpiLineas: document.getElementById('kpiLineas'),
+      resumenUnidades: document.getElementById('resumenUnidades'),
+      alertMovimientos: document.getElementById('alertMovimientos'),
+      alertMovimientosText: document.getElementById('alertMovimientosText'),
+      alertBloqueo: document.getElementById('alertBloqueo'),
+      alertBloqueoText: document.getElementById('alertBloqueoText'),
+    };
+
+    const money = (value) => {
+      const num = Number(value || 0);
+      return Number.isFinite(num) ? num : 0;
+    };
+
+    const cents = (value) => Math.round(money(value) * 100);
+
+    const formatMoney = (value) => money(value).toLocaleString('es-BO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    const createOption = (value, text, selectedValue) => {
+      const option = document.createElement('option');
+      option.value = value == null ? '' : String(value);
+      option.textContent = text;
+      if (String(selectedValue || '') === String(option.value)) {
+        option.selected = true;
+      }
+      return option;
+    };
+
+    const appendEmptyOption = (select, text) => {
+      select.appendChild(createOption('', text, ''));
+    };
+
+    const addEmptyRow = () => {
+      state.rows.push({
+        rowId: state.nextRowId,
+        unidad_negocio_id: '',
+        cuenta_codigo: '',
+        auxiliar_id: '',
+        centro_costo_id: '',
+        debe: '',
+        haber: '',
+        glosa: '',
+        referencia: '',
+      });
+      state.nextRowId += 1;
+    };
+
+    const isUsefulRow = (row) => {
+      return Boolean(
+        row.unidad_negocio_id ||
+        row.cuenta_codigo ||
+        row.auxiliar_id ||
+        row.centro_costo_id ||
+        money(row.debe) > 0 ||
+        money(row.haber) > 0 ||
+        String(row.glosa || '').trim()
+      );
+    };
+
+    const payloadRows = () => state.rows.filter(isUsefulRow).map((row) => ({
+      unidad_negocio_id: row.unidad_negocio_id || null,
+      cuenta_codigo: row.cuenta_codigo || '',
+      auxiliar_id: row.auxiliar_id || null,
+      centro_costo_id: row.centro_costo_id || null,
+      debe: money(row.debe),
+      haber: money(row.haber),
+      glosa: String(row.glosa || '').trim(),
+      referencia: row.referencia || '',
+    }));
+
+    const cuentaByCodigo = (codigo) => {
+      return (state.catalogos.cuentas || []).find((cuenta) => String(cuenta.codigo) === String(codigo));
+    };
+
+    const unidadById = (id) => {
+      return (state.catalogos.unidades || []).find((unidad) => String(unidad.id) === String(id));
+    };
+
+    const buildSelect = (field, selectedValue, placeholder, options, formatter) => {
+      const select = document.createElement('select');
+      select.className = 'si-line-select';
+      select.dataset.field = field;
+      appendEmptyOption(select, placeholder);
+      options.forEach((item) => {
+        select.appendChild(createOption(item.value, formatter(item.raw), selectedValue));
+      });
+      return select;
+    };
+
+    const makeInput = (field, value, type = 'text') => {
+      const input = document.createElement('input');
+      input.className = 'si-line-input';
+      input.dataset.field = field;
+      input.value = value || '';
+      input.type = type;
+      if (type === 'number') {
+        input.step = '0.01';
+        input.min = '0';
+        input.classList.add('is-money');
+      }
+      return input;
+    };
+
+    const renderGestiones = () => {
+      els.gestion.textContent = '';
+      const gestiones = state.catalogos.gestiones || [];
+      if (!gestiones.length) {
+        els.gestion.appendChild(createOption(boot.gestionActual, `Gestión ${boot.gestionActual}`, boot.gestionActual));
+        return;
+      }
+      gestiones.forEach((gestion) => {
+        els.gestion.appendChild(createOption(gestion.gestion, `Gestión ${gestion.gestion}`, boot.gestionActual));
+      });
+    };
+
+    const renderRows = () => {
+      els.detalleBody.textContent = '';
+      if (!state.rows.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 8;
+        td.className = 'si-empty';
+        td.textContent = 'No existen líneas. Agregue al menos una línea en Debe y una línea en Haber para cada unidad.';
+        tr.appendChild(td);
+        els.detalleBody.appendChild(tr);
+        renderSummary();
+        return;
+      }
+
+      const unidades = (state.catalogos.unidades || []).map((raw) => ({ value: raw.id, raw }));
+      const cuentas = (state.catalogos.cuentas || []).map((raw) => ({ value: raw.codigo, raw }));
+      const auxiliares = (state.catalogos.auxiliares || []).map((raw) => ({ value: raw.id, raw }));
+      const centros = (state.catalogos.centrosCosto || []).map((raw) => ({ value: raw.id, raw }));
+
+      state.rows.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        tr.dataset.index = String(index);
+
+        const tdUnidad = document.createElement('td');
+        tdUnidad.appendChild(buildSelect('unidad_negocio_id', row.unidad_negocio_id, 'Unidad...', unidades, (item) => `${item.codigo} - ${item.nombre}`));
+        tr.appendChild(tdUnidad);
+
+        const tdCuenta = document.createElement('td');
+        tdCuenta.appendChild(buildSelect('cuenta_codigo', row.cuenta_codigo, 'Cuenta...', cuentas, (item) => {
+          const marcas = [];
+          if (item.requiere_auxiliar) {
+            marcas.push('Aux');
+          }
+          if (item.requiere_cc) {
+            marcas.push('CC');
+          }
+          const suffix = marcas.length ? ` · ${marcas.join(' · ')}` : '';
+          return `${item.codigo} - ${item.nombre} [${item.tipo}]${suffix}`;
+        }));
+        tr.appendChild(tdCuenta);
+
+        const tdAux = document.createElement('td');
+        tdAux.appendChild(buildSelect('auxiliar_id', row.auxiliar_id, 'Sin auxiliar', auxiliares, (item) => `${item.nombre}`));
+        tr.appendChild(tdAux);
+
+        const tdCc = document.createElement('td');
+        tdCc.appendChild(buildSelect('centro_costo_id', row.centro_costo_id, 'Sin centro', centros, (item) => `${item.codigo} - ${item.nombre}`));
+        tr.appendChild(tdCc);
+
+        const tdDebe = document.createElement('td');
+        tdDebe.appendChild(makeInput('debe', row.debe, 'number'));
+        tr.appendChild(tdDebe);
+
+        const tdHaber = document.createElement('td');
+        tdHaber.appendChild(makeInput('haber', row.haber, 'number'));
+        tr.appendChild(tdHaber);
+
+        const tdGlosa = document.createElement('td');
+        const glosaInput = makeInput('glosa', row.glosa, 'text');
+        glosaInput.maxLength = 300;
+        tdGlosa.appendChild(glosaInput);
+        tr.appendChild(tdGlosa);
+
+        const tdActions = document.createElement('td');
+        tdActions.className = 'si-col-actions';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-icon-danger';
+        btn.dataset.action = 'remove-row';
+        btn.dataset.index = String(index);
+        btn.setAttribute('aria-label', 'Quitar línea');
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-trash';
+        btn.appendChild(icon);
+        tdActions.appendChild(btn);
+        tr.appendChild(tdActions);
+
+        els.detalleBody.appendChild(tr);
+      });
+      renderSummary();
+    };
+
+    const groupedTotals = () => {
+      const groups = new Map();
+      payloadRows().forEach((row) => {
+        const key = String(row.unidad_negocio_id || 'SIN_UNIDAD');
+        if (!groups.has(key)) {
+          groups.set(key, {
+            unidadId: row.unidad_negocio_id || '',
+            debe: 0,
+            haber: 0,
+            lineas: 0,
+          });
+        }
+        const group = groups.get(key);
+        group.debe += money(row.debe);
+        group.haber += money(row.haber);
+        group.lineas += 1;
+      });
+      return Array.from(groups.values());
+    };
+
+    const savedLinksForUnit = (unidadId) => {
+      const saved = (state.savedResumen || []).find((item) => String(item.unidad_negocio_id) === String(unidadId));
+      if (!saved || !Array.isArray(saved.asientos)) {
+        return [];
+      }
+      return saved.asientos;
+    };
+
+    const renderSummary = () => {
+      const rows = payloadRows();
+      const totalDebe = rows.reduce((acc, row) => acc + money(row.debe), 0);
+      const totalHaber = rows.reduce((acc, row) => acc + money(row.haber), 0);
+      const diferencia = totalDebe - totalHaber;
+
+      els.kpiDebe.textContent = formatMoney(totalDebe);
+      els.kpiHaber.textContent = formatMoney(totalHaber);
+      els.kpiDiferencia.textContent = formatMoney(diferencia);
+      els.kpiLineas.textContent = String(rows.length);
+
+      els.resumenUnidades.textContent = '';
+      const groups = groupedTotals();
+      if (!groups.length) {
+        const empty = document.createElement('div');
+        empty.className = 'si-empty';
+        empty.textContent = 'Sin líneas útiles para controlar.';
+        els.resumenUnidades.appendChild(empty);
+        return;
+      }
+
+      groups.forEach((group) => {
+        const unidad = unidadById(group.unidadId);
+        const diff = group.debe - group.haber;
+        const ok = cents(diff) === 0 && cents(group.debe) > 0 && cents(group.haber) > 0 && unidad;
+        const box = document.createElement('div');
+        box.className = `si-unit-box ${ok ? 'is-ok' : 'is-bad'}`;
+
+        const name = document.createElement('div');
+        name.className = 'si-unit-name';
+        name.textContent = unidad ? `${unidad.codigo} - ${unidad.nombre}` : 'Unidad no seleccionada';
+        box.appendChild(name);
+
+        const meta = document.createElement('div');
+        meta.className = 'si-unit-meta';
+        const debe = document.createElement('span');
+        debe.textContent = `Debe: ${formatMoney(group.debe)}`;
+        const haber = document.createElement('span');
+        haber.textContent = `Haber: ${formatMoney(group.haber)}`;
+        const diferenciaEl = document.createElement('span');
+        diferenciaEl.textContent = `Dif.: ${formatMoney(diff)}`;
+        const lineas = document.createElement('span');
+        lineas.textContent = `Líneas: ${group.lineas}`;
+        meta.appendChild(debe);
+        meta.appendChild(haber);
+        meta.appendChild(diferenciaEl);
+        meta.appendChild(lineas);
+        box.appendChild(meta);
+
+        const links = savedLinksForUnit(group.unidadId);
+        if (links.length) {
+          const wrap = document.createElement('div');
+          wrap.className = 'si-saved-links';
+          links.forEach((asiento) => {
+            const link = document.createElement('a');
+            link.className = 'si-link-pill';
+            link.href = `${boot.urls.comprobantesIndex}ver/${asiento.id}`;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-file-invoice';
+            const text = document.createElement('span');
+            text.textContent = `Asiento ${asiento.id}`;
+            link.appendChild(icon);
+            link.appendChild(text);
+            wrap.appendChild(link);
+          });
+          box.appendChild(wrap);
+        }
+
+        els.resumenUnidades.appendChild(box);
+      });
+    };
+
+    const updateAlerts = () => {
+      if (state.movimientosNoIniciales > 0) {
+        els.alertMovimientos.classList.remove('is-hidden');
+        els.alertMovimientosText.textContent = `Ya existen ${state.movimientosNoIniciales} movimiento(s) confirmado(s) en la gestión que no son saldos iniciales. Puede editar porque la gestión está abierta, pero los reportes históricos cambiarán desde la fecha inicial.`;
+      } else {
+        els.alertMovimientos.classList.add('is-hidden');
+        els.alertMovimientosText.textContent = '';
+      }
+
+      if (state.bloqueado) {
+        els.alertBloqueo.classList.remove('is-hidden');
+        els.alertBloqueoText.textContent = 'La gestión seleccionada no está abierta o ya tiene cierre registrado. No se permite editar saldos iniciales directamente.';
+        els.btnGuardar.disabled = true;
+        els.btnGuardarHero.disabled = true;
+      } else {
+        els.alertBloqueo.classList.add('is-hidden');
+        els.alertBloqueoText.textContent = '';
+        els.btnGuardar.disabled = false;
+        els.btnGuardarHero.disabled = false;
+      }
+    };
+
+    const readTableChange = (event) => {
+      const field = event.target.dataset.field;
+      if (!field) {
+        return;
+      }
+      const tr = event.target.closest('tr');
+      if (!tr) {
+        return;
+      }
+      const index = Number(tr.dataset.index);
+      if (!Number.isInteger(index) || !state.rows[index]) {
+        return;
+      }
+      state.rows[index][field] = event.target.value;
+
+      if (field === 'debe' && money(event.target.value) > 0) {
+        state.rows[index].haber = '';
+        const haberInput = tr.querySelector('[data-field="haber"]');
+        if (haberInput) {
+          haberInput.value = '';
+        }
+      }
+      if (field === 'haber' && money(event.target.value) > 0) {
+        state.rows[index].debe = '';
+        const debeInput = tr.querySelector('[data-field="debe"]');
+        if (debeInput) {
+          debeInput.value = '';
+        }
+      }
+      renderSummary();
+    };
+
+    const validateFrontend = () => {
+      const rows = payloadRows();
+      if (rows.length < 2) {
+        return 'Debe registrar al menos dos líneas: una en Debe y otra en Haber.';
+      }
+      for (let i = 0; i < rows.length; i += 1) {
+        const row = rows[i];
+        if (!row.unidad_negocio_id) {
+          return `Línea ${i + 1}: seleccione unidad de negocio.`;
+        }
+        if (!row.cuenta_codigo) {
+          return `Línea ${i + 1}: seleccione cuenta contable.`;
+        }
+        const cuenta = cuentaByCodigo(row.cuenta_codigo);
+        if (cuenta && cuenta.requiere_auxiliar && !row.auxiliar_id) {
+          return `Línea ${i + 1}: la cuenta ${row.cuenta_codigo} requiere auxiliar.`;
+        }
+        if (cuenta && cuenta.requiere_cc && !row.centro_costo_id) {
+          return `Línea ${i + 1}: la cuenta ${row.cuenta_codigo} requiere centro de costo.`;
+        }
+        if (cents(row.debe) > 0 && cents(row.haber) > 0) {
+          return `Línea ${i + 1}: no puede tener Debe y Haber al mismo tiempo.`;
+        }
+        if (cents(row.debe) === 0 && cents(row.haber) === 0) {
+          return `Línea ${i + 1}: registre Debe o Haber.`;
+        }
+      }
+      const groups = groupedTotals();
+      for (const group of groups) {
+        const unidad = unidadById(group.unidadId);
+        const nombreUnidad = unidad ? `${unidad.codigo} - ${unidad.nombre}` : 'unidad sin seleccionar';
+        if (cents(group.debe) <= 0 || cents(group.haber) <= 0) {
+          return `La ${nombreUnidad} debe tener Debe y Haber mayores a cero.`;
+        }
+        if (cents(group.debe) !== cents(group.haber)) {
+          return `La ${nombreUnidad} no cuadra. Diferencia: ${formatMoney(group.debe - group.haber)}.`;
+        }
+      }
+      return '';
+    };
+
+    const showError = (message) => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Revisión necesaria',
+        text: message,
+        confirmButtonText: 'Entendido',
+      });
+    };
+
+    const loadData = async () => {
+      const gestion = els.gestion.value || boot.gestionActual;
+      const url = `${boot.urls.datos}?gestion=${encodeURIComponent(gestion)}`;
+      const response = await fetch(url, { headers: { Accept: 'application/json' } });
+      const data = await response.json();
+      if (!data.ok) {
+        showError(data.msg || 'No se pudo cargar la información.');
+        return;
+      }
+
+      state.bloqueado = Boolean(data.bloqueado);
+      state.movimientosNoIniciales = Number(data.movimientos_no_iniciales || 0);
+      state.savedResumen = data.resumen || [];
+
+      const rows = data.rows || [];
+      if (rows.length) {
+        state.rows = rows.map((row) => ({
+          rowId: state.nextRowId++,
+          unidad_negocio_id: row.unidad_negocio_id || '',
+          cuenta_codigo: row.cuenta_codigo || '',
+          auxiliar_id: row.auxiliar_id || '',
+          centro_costo_id: row.centro_costo_id || '',
+          debe: row.debe || '',
+          haber: row.haber || '',
+          glosa: row.glosa || '',
+          referencia: row.referencia || '',
+        }));
+        els.fecha.value = rows[0].fecha || boot.fechaSugerida;
+        els.glosa.value = rows[0].asiento_glosa || `Saldos iniciales del sistema - gestión ${gestion}`;
+      } else {
+        state.rows = [];
+        addEmptyRow();
+        addEmptyRow();
+        els.fecha.value = `${gestion}-01-01`;
+        els.glosa.value = `Saldos iniciales del sistema - gestión ${gestion}`;
+      }
+
+      renderRows();
+      updateAlerts();
+    };
+
+    const openExport = (type) => {
+      const gestion = els.gestion.value || boot.gestionActual;
+      const baseUrl = type === 'excel' ? boot.urls.excel : boot.urls.pdf;
+      const url = `${baseUrl}?gestion=${encodeURIComponent(gestion)}`;
+      if (type === 'excel') {
+        window.location.href = url;
+        return;
+      }
+      window.open(url, '_blank', 'noopener,noreferrer');
+    };
+
+    const guardar = async () => {
+      if (state.bloqueado) {
+        showError('La gestión seleccionada no permite modificar saldos iniciales directamente.');
+        return;
+      }
+
+      const validation = validateFrontend();
+      if (validation) {
+        showError(validation);
+        return;
+      }
+
+      if (state.movimientosNoIniciales > 0) {
+        const confirm = await Swal.fire({
+          icon: 'warning',
+          title: 'Existen movimientos posteriores',
+          text: 'Guardar cambios en saldos iniciales afectará balances y reportes de la gestión abierta.',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, guardar',
+          cancelButtonText: 'Cancelar',
+        });
+        if (!confirm.isConfirmed) {
+          return;
+        }
+      }
+
+      const response = await fetch(boot.urls.guardar, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({
+          gestion: els.gestion.value,
+          fecha: els.fecha.value,
+          glosa: els.glosa.value,
+          rows: payloadRows(),
+        }),
+      });
+      const result = await response.json();
+      if (!result.ok) {
+        showError(result.msg || 'No se pudo guardar los saldos iniciales.');
+        return;
+      }
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Saldos guardados',
+        text: result.msg || 'Saldos iniciales guardados correctamente.',
+        confirmButtonText: 'Aceptar',
+      });
+      await loadData();
+    };
+
+    const addRowsAndRender = (quantity) => {
+      for (let i = 0; i < quantity; i += 1) {
+        addEmptyRow();
+      }
+      renderRows();
+    };
+
+    const initEvents = () => {
+      els.detalleBody.addEventListener('input', readTableChange);
+      els.detalleBody.addEventListener('change', readTableChange);
+      els.detalleBody.addEventListener('click', (event) => {
+        const btn = event.target.closest('[data-action="remove-row"]');
+        if (!btn) {
+          return;
+        }
+        const index = Number(btn.dataset.index);
+        if (Number.isInteger(index)) {
+          state.rows.splice(index, 1);
+          renderRows();
+        }
+      });
+
+      els.btnAgregarFila.addEventListener('click', () => addRowsAndRender(1));
+      els.btnAgregarFilaHero.addEventListener('click', () => addRowsAndRender(1));
+      els.btnAgregarDosFilas.addEventListener('click', () => addRowsAndRender(2));
+      els.btnGuardar.addEventListener('click', guardar);
+      els.btnGuardarHero.addEventListener('click', guardar);
+      els.btnPdfHero.addEventListener('click', () => openExport('pdf'));
+      els.btnExcelHero.addEventListener('click', () => openExport('excel'));
+      els.btnRecargar.addEventListener('click', loadData);
+      els.gestion.addEventListener('change', loadData);
+    };
+
+    const init = async () => {
+      renderGestiones();
+      els.fecha.value = boot.fechaSugerida;
+      els.glosa.value = `Saldos iniciales del sistema - gestión ${els.gestion.value || boot.gestionActual}`;
+      initEvents();
+      await loadData();
+    };
+
+    init();
+  })();
+</script>
+{% endblock %}

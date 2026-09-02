@@ -1,0 +1,1157 @@
+{% extends "layout.html" %} {% block title %}Auxiliar · Cuentas Contables{%
+endblock title %} {% block extra_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='select2/css/select2.min.css') }}"
+/>
+<style>
+  #auxiliarCuentaPage {
+    --aq-navy: #0f2340;
+    --aq-blue: #1a4a7a;
+    --aq-accent: #2d7dd2;
+    --aq-accent-lt: #e8f1fc;
+    --aq-success: #1a7a4a;
+    --aq-success-lt: #e6f6ee;
+    --aq-danger: #b83232;
+    --aq-danger-lt: #fdeaea;
+    --aq-warning: #c8962a;
+    --aq-warning-lt: #fdf6e3;
+    --aq-surface: #f5f8fc;
+    --aq-border: #dde4ed;
+    --aq-text: #1e2d3d;
+    --aq-muted: #8898aa;
+    --aq-radius: 14px;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+
+  /* Header */
+  #auxiliarCuentaPage .aq-header {
+    background: linear-gradient(
+      120deg,
+      var(--aq-navy) 0%,
+      var(--aq-blue) 60%,
+      #1f5d9e 100%
+    );
+    border-radius: var(--aq-radius);
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1.1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15, 35, 64, 0.16);
+    position: sticky;
+    top: 64px;
+    z-index: 40;
+    overflow: hidden;
+  }
+
+  #auxiliarCuentaPage .aq-header::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+  }
+
+  #auxiliarCuentaPage .aq-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    position: relative;
+  }
+
+  #auxiliarCuentaPage .aq-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  #auxiliarCuentaPage .aq-header-title {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  #auxiliarCuentaPage .aq-header-sub {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+
+  #auxiliarCuentaPage .aq-header-right {
+    position: relative;
+  }
+
+  #auxiliarCuentaPage .aq-header-right .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+    font-size: 0.82rem;
+  }
+
+  #auxiliarCuentaPage .aq-header-right .btn-primary:hover {
+    background: #eff6ff;
+  }
+
+  /* Tarjeta */
+  #auxiliarCuentaPage .aq-card {
+    background: #fff;
+    border: 1px solid var(--aq-border);
+    border-radius: var(--aq-radius);
+    box-shadow: 0 4px 16px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+  }
+
+  /* Toolbar */
+  #auxiliarCuentaPage .aq-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.85rem 1.1rem;
+    background: var(--aq-surface);
+    border-bottom: 1px solid var(--aq-border);
+  }
+
+  #auxiliarCuentaPage .aq-toolbar-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.65px;
+    text-transform: uppercase;
+    color: var(--aq-muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  #auxiliarCuentaPage .aq-toolbar-label::before {
+    content: "";
+    display: block;
+    width: 3px;
+    height: 13px;
+    background: var(--aq-accent);
+    border-radius: 2px;
+  }
+
+  #auxiliarCuentaPage .aq-note {
+    font-size: 0.78rem;
+    color: #1a4070;
+    background: var(--aq-accent-lt);
+    border: 1px solid #bfdbfe;
+    padding: 5px 11px;
+    border-radius: 20px;
+    margin-left: auto;
+  }
+
+  /* Tabla */
+  #auxiliarCuentaPage .aq-table-wrap {
+    padding: 0.8rem 1rem 1rem;
+    overflow: auto;
+  }
+
+  #auxiliarCuentaPage #tblAuxiliarCuenta {
+    width: 100% !important;
+  }
+
+  #auxiliarCuentaPage #tblAuxiliarCuenta thead th {
+    background: var(--aq-surface);
+    color: var(--aq-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.65px;
+    border-bottom: 2px solid var(--aq-border);
+    padding: 9px 12px;
+    white-space: nowrap;
+    box-shadow: 0 1px 0 var(--aq-border);
+  }
+
+  #auxiliarCuentaPage #tblAuxiliarCuenta tbody td {
+    padding: 9px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eef1f6;
+    font-size: 0.875rem;
+    color: var(--aq-text);
+  }
+
+  #auxiliarCuentaPage #tblAuxiliarCuenta tbody tr:nth-child(even) {
+    background: #f9fbfe;
+  }
+
+  #auxiliarCuentaPage #tblAuxiliarCuenta tbody tr {
+    transition: background 0.12s;
+  }
+
+  #auxiliarCuentaPage #tblAuxiliarCuenta tbody tr:hover td {
+    background: var(--aq-accent-lt) !important;
+  }
+
+  /* Badges */
+  #auxiliarCuentaPage .aq-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+  }
+
+  #auxiliarCuentaPage .aq-badge::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.8;
+  }
+
+  #auxiliarCuentaPage .aq-badge-tipo {
+    background: var(--aq-accent-lt);
+    color: var(--aq-accent);
+    border-color: #bfdbfe;
+  }
+
+  #auxiliarCuentaPage .aq-badge-si {
+    background: var(--aq-success-lt);
+    color: var(--aq-success);
+    border-color: #a7f3d0;
+  }
+
+  #auxiliarCuentaPage .aq-badge-no {
+    background: var(--aq-warning-lt);
+    color: var(--aq-warning);
+    border-color: #fde68a;
+  }
+
+  /* Botones de acción */
+  #auxiliarCuentaPage .aq-btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 7px;
+    border: 1.5px solid var(--aq-border);
+    background: #fff;
+    color: var(--aq-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.75rem;
+    padding: 0;
+  }
+
+  #auxiliarCuentaPage .aq-btn-action:hover {
+    transform: translateY(-1px);
+  }
+
+  #auxiliarCuentaPage .aq-btn-edit:hover {
+    background: var(--aq-accent-lt);
+    border-color: #bfdbfe;
+    color: var(--aq-accent);
+  }
+
+  #auxiliarCuentaPage .aq-btn-toggle:hover {
+    background: var(--aq-warning-lt);
+    border-color: #fde68a;
+    color: var(--aq-warning);
+  }
+
+  #auxiliarCuentaPage .aq-btn-delete:hover {
+    background: var(--aq-danger-lt);
+    border-color: #fca5a5;
+    color: var(--aq-danger);
+  }
+
+  #auxiliarCuentaPage .col-tipo {
+    width: 120px;
+  }
+  #auxiliarCuentaPage .col-activo {
+    width: 80px;
+  }
+  #auxiliarCuentaPage .col-acciones {
+    width: 110px;
+  }
+
+  /* DataTables overrides */
+  #auxiliarCuentaPage div.dataTables_wrapper div.dataTables_filter input,
+  #auxiliarCuentaPage div.dataTables_wrapper div.dataTables_length select {
+    border: 1.5px solid var(--aq-border);
+    border-radius: 8px;
+    font-size: 0.84rem;
+    padding: 5px 10px;
+  }
+
+  #auxiliarCuentaPage div.dataTables_wrapper div.dataTables_filter label,
+  #auxiliarCuentaPage div.dataTables_wrapper div.dataTables_length label,
+  #auxiliarCuentaPage div.dataTables_wrapper div.dataTables_info {
+    font-size: 0.8rem;
+    color: var(--aq-muted);
+  }
+
+  #auxiliarCuentaPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button {
+    border-radius: 7px !important;
+    font-size: 0.82rem;
+    padding: 4px 10px !important;
+    border: 1px solid transparent !important;
+    color: var(--aq-muted) !important;
+  }
+
+  #auxiliarCuentaPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button.current,
+  #auxiliarCuentaPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button.current:hover {
+    background: var(--aq-accent) !important;
+    border-color: var(--aq-accent) !important;
+    color: #fff !important;
+    font-weight: 600;
+  }
+
+  #auxiliarCuentaPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button:hover {
+    background: var(--aq-accent-lt) !important;
+    border-color: var(--aq-accent-lt) !important;
+    color: var(--aq-accent) !important;
+  }
+
+  /* Modal — variables redeclaradas porque el modal está fuera de #auxiliarCuentaPage */
+  #auxiliarCuentaModal {
+    --aq-navy: #0f2340;
+    --aq-blue: #1a4a7a;
+    --aq-accent: #2d7dd2;
+    --aq-accent-lt: #e8f1fc;
+    --aq-success: #1a7a4a;
+    --aq-success-lt: #e6f6ee;
+    --aq-surface: #f5f8fc;
+    --aq-border: #dde4ed;
+    --aq-text: #1e2d3d;
+    --aq-muted: #8898aa;
+  }
+
+  #auxiliarCuentaModal .modal-dialog {
+    max-width: 860px;
+  }
+
+  #auxiliarCuentaModal .modal-content {
+    border: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(15, 35, 64, 0.2);
+  }
+
+  #auxiliarCuentaModal .modal-header {
+    background: linear-gradient(
+      120deg,
+      var(--aq-navy) 0%,
+      var(--aq-blue) 60%,
+      #1f5d9e 100%
+    );
+    color: #fff;
+    border-bottom: 0;
+    padding: 1rem 1.2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #auxiliarCuentaModal .modal-header::before {
+    content: "";
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+  }
+
+  #auxiliarCuentaModal .modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+  }
+
+  #auxiliarCuentaModal .modal-title::before {
+    content: "";
+    display: block;
+    width: 3px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 2px;
+  }
+
+  #auxiliarCuentaModal .btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.7;
+    position: relative;
+  }
+
+  #auxiliarCuentaModal .modal-body {
+    padding: 1.1rem 1.2rem 1rem;
+    background: var(--aq-surface);
+  }
+
+  #auxiliarCuentaModal .modal-footer {
+    border-top: 1px solid var(--aq-border);
+    background: #fff;
+    padding: 0.85rem 1.2rem;
+    gap: 0.5rem;
+  }
+
+  #auxiliarCuentaModal .modal-footer .btn-outline-secondary {
+    font-size: 0.82rem;
+  }
+
+  #auxiliarCuentaModal .modal-footer .btn-primary {
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  /* Secciones del formulario */
+  #auxiliarCuentaModal .aq-form-section {
+    background: #fff;
+    border: 1px solid var(--aq-border);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 0.85rem;
+  }
+
+  #auxiliarCuentaModal .aq-form-section:last-child {
+    margin-bottom: 0;
+  }
+
+  #auxiliarCuentaModal .aq-form-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.65px;
+    text-transform: uppercase;
+    color: var(--aq-muted);
+    margin-bottom: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  #auxiliarCuentaModal .aq-form-section-title::before {
+    content: "";
+    display: block;
+    width: 3px;
+    height: 12px;
+    background: var(--aq-accent);
+    border-radius: 2px;
+  }
+
+  #auxiliarCuentaModal .aq-form-section-title.green::before {
+    background: var(--aq-success);
+  }
+
+  #auxiliarCuentaModal .form-label {
+    font-size: 0.71rem;
+    font-weight: 700;
+    letter-spacing: 0.55px;
+    text-transform: uppercase;
+    color: #4a6070;
+    margin-bottom: 5px;
+  }
+
+  #auxiliarCuentaModal .form-control,
+  #auxiliarCuentaModal .form-select {
+    border-radius: 9px;
+    border: 1.5px solid var(--aq-border);
+    font-size: 0.875rem;
+    min-height: 38px;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+  }
+
+  #auxiliarCuentaModal .form-control:focus,
+  #auxiliarCuentaModal .form-select:focus {
+    border-color: var(--aq-accent);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+    outline: none;
+  }
+
+  #auxiliarCuentaModal .select2-container {
+    width: 100% !important;
+  }
+
+  #auxiliarCuentaModal .select2-container .select2-selection--single {
+    height: 38px;
+    border: 1.5px solid var(--aq-border);
+    border-radius: 9px;
+    transition: border-color 0.15s;
+  }
+
+  #auxiliarCuentaModal
+    .select2-container--default
+    .select2-selection--single
+    .select2-selection__rendered {
+    line-height: 36px;
+    padding-left: 11px;
+    font-size: 0.875rem;
+  }
+
+  #auxiliarCuentaModal
+    .select2-container--default
+    .select2-selection--single
+    .select2-selection__arrow {
+    height: 36px;
+  }
+
+  @media (max-width: 768px) {
+    #auxiliarCuentaModal .modal-dialog {
+      max-width: 96vw;
+      margin: 0.8rem auto;
+    }
+  }
+</style>
+{% endblock extra_css %} {% block content %}
+<div id="auxiliarCuentaPage">
+  <div class="aq-header">
+    <div class="aq-header-left">
+      <div class="aq-header-icon">
+        <i class="fas fa-link"></i>
+      </div>
+      <div>
+        <h1 class="aq-header-title">Auxiliar · Cuentas Contables</h1>
+        <div class="aq-header-sub">
+          Asignación de auxiliares a cuentas contables del Plan Único
+        </div>
+      </div>
+    </div>
+    <div class="aq-header-right">
+      <button
+        id="btnNuevaAuxiliarCuenta"
+        type="button"
+        class="btn btn-primary btn-sm"
+      >
+        <i class="fas fa-plus me-1"></i>
+        Nueva asignación
+      </button>
+    </div>
+  </div>
+
+  <div class="aq-card">
+    <div class="aq-toolbar">
+      <span class="aq-toolbar-label">Listado de asignaciones</span>
+      <span class="aq-note">
+        <i class="fas fa-circle-info me-1"></i>
+        Solo cuentas activas, postables y que requieren auxiliar
+      </span>
+    </div>
+
+    <div class="aq-table-wrap">
+      <table id="tblAuxiliarCuenta" class="table table-hover w-100">
+        <thead>
+          <tr>
+            <th>Auxiliar</th>
+            <th class="col-tipo">Tipo</th>
+            <th>Código cuenta</th>
+            <th>Nombre cuenta</th>
+            <th class="col-activo">Activo</th>
+            <th class="col-acciones text-center no-sort">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Automatico -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div
+  class="modal fade"
+  id="auxiliarCuentaModal"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Nueva asignación auxiliar-cuenta</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Cerrar"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="formAuxiliarCuenta" novalidate>
+          <input type="hidden" id="auxiliar_cuenta_id" />
+          <input type="hidden" id="auxiliar_id" />
+          <input type="hidden" id="cuenta_codigo" />
+
+          <div class="aq-form-section">
+            <div class="aq-form-section-title">Selección del auxiliar</div>
+            <div class="mb-0">
+              <label class="form-label" for="auxiliar_select">Auxiliar</label>
+              <select id="auxiliar_select" class="form-select"></select>
+            </div>
+          </div>
+
+          <div class="aq-form-section">
+            <div class="aq-form-section-title green">Vinculación contable</div>
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label class="form-label" for="cuenta_select"
+                  >Cuenta contable</label
+                >
+                <select id="cuenta_select" class="form-select"></select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="activo">Estado</label>
+                <select id="activo" class="form-select">
+                  <option value="true">Activo</option>
+                  <option value="false">Inactivo</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary btn-sm"
+          data-bs-dismiss="modal"
+        >
+          <i class="fas fa-times me-1"></i>Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          id="btnGuardarAuxiliarCuenta"
+        >
+          <i class="fas fa-floppy-disk me-1"></i>Guardar asignación
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} {% block extra_js %}
+<script src="{{ url_for('static', filename='select2/js/select2.min.js') }}"></script>
+<script>
+  (function () {
+    "use strict";
+
+    let tabla = null;
+    let modalAuxiliarCuenta = null;
+
+    function escHtml(valor) {
+      return String(valor ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function makeBadge(clases, texto) {
+      const span = document.createElement("span");
+      span.className = clases;
+      span.textContent = texto;
+      return span.outerHTML;
+    }
+
+    function boolBadge(valor) {
+      return valor
+        ? makeBadge("aq-badge aq-badge-si", "Activo")
+        : makeBadge("aq-badge aq-badge-no", "Inactivo");
+    }
+
+    function tipoBadge(valor) {
+      return makeBadge("aq-badge aq-badge-tipo", valor || "");
+    }
+
+    function mostrarMensaje(tipo, titulo, texto) {
+      return Swal.fire({
+        icon: tipo,
+        title: titulo,
+        text: texto,
+        confirmButtonText: "Aceptar",
+        allowOutsideClick: false,
+        allowEscapeKey: true,
+        buttonsStyling: false,
+        customClass: { confirmButton: "btn btn-primary" },
+      });
+    }
+
+    function confirmarCambioEstado(activar) {
+      return Swal.fire({
+        icon: "warning",
+        title: activar ? "Activar asignación" : "Desactivar asignación",
+        text: activar
+          ? "La asignación será activada."
+          : "La asignación será desactivada.",
+        showCancelButton: true,
+        confirmButtonText: activar ? "Activar" : "Desactivar",
+        cancelButtonText: "Cancelar",
+        allowOutsideClick: false,
+        buttonsStyling: false,
+        customClass: {
+          confirmButton: "btn btn-primary",
+          cancelButton: "btn btn-light me-2",
+        },
+      });
+    }
+
+    function confirmarEliminacion() {
+      return Swal.fire({
+        icon: "warning",
+        title: "Eliminar asignación",
+        text: "La relación auxiliar-cuenta será eliminada permanentemente.",
+        showCancelButton: true,
+        confirmButtonText: "Eliminar",
+        cancelButtonText: "Cancelar",
+        allowOutsideClick: false,
+        buttonsStyling: false,
+        customClass: {
+          confirmButton: "btn btn-danger",
+          cancelButton: "btn btn-light me-2",
+        },
+      });
+    }
+
+    function ajaxJSON(options) {
+      return $.ajax({
+        url: options.url,
+        method: options.method || "GET",
+        data: options.body ? JSON.stringify(options.body) : null,
+        contentType: "application/json; charset=UTF-8",
+        dataType: "json",
+        processData: false,
+      });
+    }
+
+    function getDtLanguage() {
+      if (window.DXTBase && DXTBase.dtLang) {
+        return typeof DXTBase.dtLang === "function"
+          ? DXTBase.dtLang()
+          : DXTBase.dtLang;
+      }
+      return {
+        processing: "Procesando...",
+        search: "Buscar:",
+        lengthMenu: "Mostrar _MENU_ registros",
+        info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+        infoEmpty: "Mostrando 0 a 0 de 0 registros",
+        infoFiltered: "(filtrado de _MAX_ registros totales)",
+        loadingRecords: "Cargando...",
+        zeroRecords: "No se encontraron resultados",
+        emptyTable: "No hay datos disponibles",
+        paginate: { first: "«", previous: "‹", next: "›", last: "»" },
+      };
+    }
+
+    function baseUrl() {
+      return "{{ url_for('auxiliar_cuenta.index') }}".replace(/\/$/, "");
+    }
+
+    function renderAcciones(row) {
+      const toggleTitle = row.activo ? "Desactivar" : "Activar";
+      const toggleIconClass = row.activo
+        ? "fas fa-toggle-on"
+        : "fas fa-toggle-off";
+
+      const wrap = document.createElement("div");
+      wrap.className = "d-flex justify-content-center gap-1";
+
+      const btnEditar = document.createElement("button");
+      btnEditar.type = "button";
+      btnEditar.className = "aq-btn-action aq-btn-edit btn-editar";
+      btnEditar.title = "Editar";
+      btnEditar.dataset.id = row.id;
+      const iEdit = document.createElement("i");
+      iEdit.className = "fas fa-pen";
+      btnEditar.appendChild(iEdit);
+
+      const btnToggle = document.createElement("button");
+      btnToggle.type = "button";
+      btnToggle.className = "aq-btn-action aq-btn-toggle btn-toggle";
+      btnToggle.title = toggleTitle;
+      btnToggle.dataset.id = row.id;
+      btnToggle.dataset.activo = row.activo ? "true" : "false";
+      const iToggle = document.createElement("i");
+      iToggle.className = toggleIconClass;
+      btnToggle.appendChild(iToggle);
+
+      const btnDelete = document.createElement("button");
+      btnDelete.type = "button";
+      btnDelete.className = "aq-btn-action aq-btn-delete btn-eliminar";
+      btnDelete.title = "Eliminar";
+      btnDelete.dataset.id = row.id;
+      const iDelete = document.createElement("i");
+      iDelete.className = "fas fa-trash-alt";
+      btnDelete.appendChild(iDelete);
+
+      wrap.appendChild(btnEditar);
+      wrap.appendChild(btnToggle);
+      wrap.appendChild(btnDelete);
+
+      return wrap.outerHTML;
+    }
+
+    function initTabla() {
+      tabla = $("#tblAuxiliarCuenta").DataTable({
+        ajax: {
+          url: "{{ url_for('auxiliar_cuenta.data') }}",
+          dataSrc: "data",
+          cache: false,
+        },
+        columns: [
+          {
+            data: "auxiliar_nombre",
+            render: function (v) {
+              return escHtml(v || "");
+            },
+          },
+          {
+            data: "auxiliar_tipo",
+            render: function (v) {
+              return tipoBadge(v);
+            },
+          },
+          {
+            data: "cuenta_codigo",
+            render: function (v) {
+              return escHtml(v || "");
+            },
+          },
+          {
+            data: "cuenta_nombre",
+            render: function (v) {
+              return escHtml(v || "");
+            },
+          },
+          {
+            data: "activo",
+            render: function (v) {
+              return boolBadge(Boolean(v));
+            },
+          },
+          {
+            data: null,
+            className: "text-center",
+            orderable: false,
+            render: function (row) {
+              return renderAcciones(row);
+            },
+          },
+        ],
+        language: getDtLanguage(),
+        order: [
+          [0, "asc"],
+          [2, "asc"],
+        ],
+        pageLength: 15,
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
+        columnDefs: [{ targets: "no-sort", orderable: false }],
+      });
+    }
+
+    function initAuxiliarSelect() {
+      $("#auxiliar_select").select2({
+        width: "100%",
+        dropdownParent: $("#auxiliarCuentaModal"),
+        placeholder: "Buscar auxiliar por nombre, tipo o código externo",
+        allowClear: true,
+        minimumInputLength: 1,
+        ajax: {
+          url: baseUrl() + "/auxiliares/buscar",
+          dataType: "json",
+          delay: 250,
+          data: function (params) {
+            return { q: params.term || "" };
+          },
+          processResults: function (data) {
+            return { results: data.results || [] };
+          },
+        },
+      });
+
+      $("#auxiliar_select").on("select2:select", function (e) {
+        const data = e.params.data || {};
+        $("#auxiliar_id").val(data.id || "");
+      });
+
+      $("#auxiliar_select").on("select2:clear", function () {
+        $("#auxiliar_id").val("");
+      });
+    }
+
+    function initCuentaSelect() {
+      $("#cuenta_select").select2({
+        width: "100%",
+        dropdownParent: $("#auxiliarCuentaModal"),
+        placeholder: "Buscar cuenta por código o nombre",
+        allowClear: true,
+        minimumInputLength: 1,
+        ajax: {
+          url: baseUrl() + "/cuentas/buscar",
+          dataType: "json",
+          delay: 250,
+          data: function (params) {
+            return { q: params.term || "" };
+          },
+          processResults: function (data) {
+            return { results: data.results || [] };
+          },
+        },
+      });
+
+      $("#cuenta_select").on("select2:select", function (e) {
+        const data = e.params.data || {};
+        $("#cuenta_codigo").val(data.id || "");
+      });
+
+      $("#cuenta_select").on("select2:clear", function () {
+        $("#cuenta_codigo").val("");
+      });
+    }
+
+    function limpiarFormulario() {
+      $("#auxiliar_cuenta_id").val("");
+      $("#auxiliar_id").val("");
+      $("#cuenta_codigo").val("");
+      $("#activo").val("true");
+      $("#auxiliar_select").empty().trigger("change");
+      $("#cuenta_select").empty().trigger("change");
+    }
+
+    function setAuxiliarSeleccionado(id, text) {
+      const $s = $("#auxiliar_select");
+      $s.empty();
+      if (id && text) {
+        $s.append(new Option(text, id, true, true)).trigger("change");
+        $("#auxiliar_id").val(id);
+      } else {
+        $s.val(null).trigger("change");
+        $("#auxiliar_id").val("");
+      }
+    }
+
+    function setCuentaSeleccionada(codigo, text) {
+      const $s = $("#cuenta_select");
+      $s.empty();
+      if (codigo && text) {
+        $s.append(new Option(text, codigo, true, true)).trigger("change");
+        $("#cuenta_codigo").val(codigo);
+      } else {
+        $s.val(null).trigger("change");
+        $("#cuenta_codigo").val("");
+      }
+    }
+
+    function payloadFormulario() {
+      return {
+        auxiliar_id: $("#auxiliar_id").val() || null,
+        cuenta_codigo: ($("#cuenta_codigo").val() || "").trim(),
+        activo: $("#activo").val() === "true",
+      };
+    }
+
+    function validarPayload(payload) {
+      if (!payload.auxiliar_id) return "El auxiliar es obligatorio.";
+      if (!payload.cuenta_codigo) return "La cuenta contable es obligatoria.";
+      return "";
+    }
+
+    function abrirModalNuevo() {
+      limpiarFormulario();
+      $("#auxiliarCuentaModal .modal-title").text(
+        "Nueva asignación auxiliar-cuenta",
+      );
+      modalAuxiliarCuenta.show();
+    }
+
+    function abrirModalEditar(id) {
+      ajaxJSON({
+        url: baseUrl() + "/obtener/" + encodeURIComponent(id),
+        method: "GET",
+      })
+        .done(function (resp) {
+          const row = resp.data || {};
+          limpiarFormulario();
+          $("#auxiliar_cuenta_id").val(row.id || "");
+          $("#activo").val(row.activo ? "true" : "false");
+          setAuxiliarSeleccionado(
+            row.auxiliar_id || "",
+            row.auxiliar_text || "",
+          );
+          setCuentaSeleccionada(row.cuenta_codigo || "", row.cuenta_text || "");
+          $("#auxiliarCuentaModal .modal-title").text(
+            "Editar asignación auxiliar-cuenta",
+          );
+          modalAuxiliarCuenta.show();
+        })
+        .fail(function (xhr) {
+          const resp = xhr.responseJSON || {};
+          mostrarMensaje(
+            "error",
+            "No se pudo abrir",
+            resp.msg || "Error al cargar la asignación.",
+          );
+        });
+    }
+
+    function guardarFormulario() {
+      const payload = payloadFormulario();
+      const error = validarPayload(payload);
+      if (error) {
+        mostrarMensaje("warning", "Datos incompletos", error);
+        return;
+      }
+
+      const id = $("#auxiliar_cuenta_id").val();
+      const esEdicion = !!id;
+
+      ajaxJSON({
+        url: esEdicion
+          ? baseUrl() + "/editar/" + encodeURIComponent(id)
+          : baseUrl() + "/crear",
+        method: esEdicion ? "PUT" : "POST",
+        body: payload,
+      })
+        .done(function (resp) {
+          modalAuxiliarCuenta.hide();
+          tabla.ajax.reload(null, false);
+          mostrarMensaje(
+            "success",
+            "Guardado correctamente",
+            resp.msg || "Asignación guardada.",
+          );
+        })
+        .fail(function (xhr) {
+          const resp = xhr.responseJSON || {};
+          mostrarMensaje(
+            "error",
+            "No se pudo guardar",
+            resp.msg || "Error al guardar la asignación.",
+          );
+        });
+    }
+
+    function toggleActivo(id, activoActual) {
+      confirmarCambioEstado(!activoActual).then(function (result) {
+        if (!result.isConfirmed) return;
+        ajaxJSON({
+          url: baseUrl() + "/toggle-activo/" + encodeURIComponent(id),
+          method: "POST",
+        })
+          .done(function (resp) {
+            tabla.ajax.reload(null, false);
+            mostrarMensaje(
+              "success",
+              "Actualización correcta",
+              resp.msg || "Estado actualizado.",
+            );
+          })
+          .fail(function (xhr) {
+            const resp = xhr.responseJSON || {};
+            mostrarMensaje(
+              "error",
+              "No se pudo actualizar",
+              resp.msg || "Error al actualizar.",
+            );
+          });
+      });
+    }
+
+    function eliminarAsignacion(id) {
+      confirmarEliminacion().then(function (result) {
+        if (!result.isConfirmed) return;
+        ajaxJSON({
+          url: baseUrl() + "/eliminar/" + encodeURIComponent(id),
+          method: "DELETE",
+        })
+          .done(function (resp) {
+            tabla.ajax.reload(null, false);
+            mostrarMensaje(
+              "success",
+              "Eliminado correctamente",
+              resp.msg || "Asignación eliminada.",
+            );
+          })
+          .fail(function (xhr) {
+            const resp = xhr.responseJSON || {};
+            mostrarMensaje(
+              "error",
+              "No se pudo eliminar",
+              resp.msg || "Error al eliminar.",
+            );
+          });
+      });
+    }
+
+    $(function () {
+      modalAuxiliarCuenta = new bootstrap.Modal(
+        document.getElementById("auxiliarCuentaModal"),
+      );
+
+      initTabla();
+      initAuxiliarSelect();
+      initCuentaSelect();
+
+      $("#btnNuevaAuxiliarCuenta").on("click", function () {
+        abrirModalNuevo();
+      });
+      $("#btnGuardarAuxiliarCuenta").on("click", function () {
+        guardarFormulario();
+      });
+
+      $(document).on("click", ".btn-editar", function () {
+        abrirModalEditar($(this).data("id"));
+      });
+      $(document).on("click", ".btn-toggle", function () {
+        toggleActivo(
+          $(this).data("id"),
+          $(this).data("activo") === true || $(this).data("activo") === "true",
+        );
+      });
+      $(document).on("click", ".btn-eliminar", function () {
+        eliminarAsignacion($(this).data("id"));
+      });
+
+      $("#auxiliarCuentaModal").on("hidden.bs.modal", function () {
+        limpiarFormulario();
+      });
+    });
+  })();
+</script>
+{% endblock extra_js %}

@@ -1,0 +1,527 @@
+{% extends "layout.html" %}
+{% block title %}Bitacora de Procesos{% endblock title %}
+{% block page_help_url %}{{ url_for('bitacora_procesos.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .bp-page {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .bp-header {
+    background: linear-gradient(135deg, #0f2340, #183b66);
+    border-radius: 1.15rem;
+    box-shadow: 0 18px 38px rgba(15, 35, 64, 0.18);
+    color: #fff;
+    padding: 1.15rem 1.25rem;
+  }
+
+  .bp-kicker {
+    color: #f7c89b;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+  }
+
+  .bp-header h1 {
+    font-size: 1.55rem;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .bp-header p {
+    color: rgba(255, 255, 255, 0.82);
+    margin: 0.35rem 0 0;
+  }
+
+  .bp-panel {
+    background: #fff;
+    border: 1px solid #d9e1ea;
+    border-radius: 1rem;
+    box-shadow: 0 10px 26px rgba(15, 35, 64, 0.08);
+    padding: 1rem;
+  }
+
+  .bp-filters {
+    display: grid;
+    gap: 0.8rem;
+    grid-template-columns: repeat(6, minmax(130px, 1fr));
+  }
+
+  .bp-actions {
+    align-items: end;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  .bp-summary {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(6, minmax(120px, 1fr));
+  }
+
+  .bp-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.9rem;
+    padding: 0.8rem;
+  }
+
+  .bp-card span {
+    color: #64748b;
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .bp-card strong {
+    color: #0f2340;
+    display: block;
+    font-size: 1.3rem;
+    line-height: 1.2;
+    margin-top: 0.15rem;
+  }
+
+  .bp-toolbar {
+    align-items: center;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .bp-page-size {
+    align-items: center;
+    color: #475569;
+    display: flex;
+    font-size: 0.86rem;
+    gap: 0.45rem;
+  }
+
+  .bp-page-size select {
+    max-width: 86px;
+  }
+
+  .bp-grid-wrap {
+    border: 1px solid #d9e1ea;
+    border-radius: 0.9rem;
+    max-height: 560px;
+    overflow: auto;
+  }
+
+  .bp-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+    min-width: 1180px;
+    width: 100%;
+  }
+
+  .bp-table thead th {
+    background: #eef3f8;
+    border-bottom: 1px solid #d9e1ea;
+    color: #0f2340;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.72rem;
+    position: sticky;
+    text-transform: uppercase;
+    top: 0;
+    z-index: 2;
+  }
+
+  .bp-table tbody td {
+    border-bottom: 1px solid #eef2f7;
+    color: #243447;
+    font-size: 0.84rem;
+    padding: 0.68rem 0.72rem;
+    vertical-align: top;
+  }
+
+  .bp-table tbody tr:hover td {
+    background: #f8fafc;
+  }
+
+  .bp-badge {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.18rem 0.55rem;
+    white-space: nowrap;
+  }
+
+  .bp-badge-critical {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .bp-badge-high {
+    background: #ffedd5;
+    color: #9a3412;
+  }
+
+  .bp-badge-medium {
+    background: #fef9c3;
+    color: #854d0e;
+  }
+
+  .bp-badge-low {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .bp-muted {
+    color: #64748b;
+  }
+
+  .bp-empty {
+    color: #64748b;
+    padding: 1.6rem;
+    text-align: center;
+  }
+
+  .bp-pagination {
+    align-items: center;
+    display: flex;
+    gap: 0.45rem;
+    justify-content: flex-end;
+    margin-top: 0.8rem;
+  }
+
+  .bp-pagination-info {
+    color: #475569;
+    font-size: 0.86rem;
+    margin-right: auto;
+  }
+
+  @media (max-width: 1200px) {
+    .bp-filters,
+    .bp-summary {
+      grid-template-columns: repeat(3, minmax(140px, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    .bp-filters,
+    .bp-summary {
+      grid-template-columns: 1fr;
+    }
+
+    .bp-actions,
+    .bp-toolbar,
+    .bp-pagination {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .bp-pagination-info {
+      margin-right: 0;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="bp-page">
+  <section class="bp-header">
+    <div class="bp-kicker">Herramientas</div>
+    <h1>Bitacora de Procesos</h1>
+    <p>Consulta centralizada de procesos especiales, respaldos, restauraciones y bloqueos criticos.</p>
+  </section>
+
+  <section class="bp-panel">
+    <div class="bp-filters">
+      <div>
+        <label for="bpGestion" class="form-label">Gestion</label>
+        <select id="bpGestion" class="form-select">
+          {% for item in gestiones %}
+          <option value="{{ item }}" {% if item == gestion_actual %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="bpDesde" class="form-label">Desde</label>
+        <input type="date" id="bpDesde" class="form-control" />
+      </div>
+      <div>
+        <label for="bpHasta" class="form-label">Hasta</label>
+        <input type="date" id="bpHasta" class="form-control" />
+      </div>
+      <div>
+        <label for="bpFuente" class="form-label">Fuente</label>
+        <select id="bpFuente" class="form-select">
+          {% for item in fuentes %}
+          <option value="{{ item.value }}">{{ item.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="bpTipo" class="form-label">Proceso</label>
+        <select id="bpTipo" class="form-select">
+          {% for item in tipos_proceso %}
+          <option value="{{ item.value }}">{{ item.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="bpEstado" class="form-label">Estado</label>
+        <select id="bpEstado" class="form-select">
+          {% for item in estados %}
+          <option value="{{ item.value }}">{{ item.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="bp-actions mt-3">
+      <button type="button" class="btn btn-primary" id="bpBtnConsultar">
+        <i class="fas fa-search"></i> Consultar
+      </button>
+      <button type="button" class="btn btn-outline-secondary" id="bpBtnPdf">
+        <i class="fas fa-file-pdf"></i> PDF
+      </button>
+      <button type="button" class="btn btn-outline-success" id="bpBtnExcel">
+        <i class="fas fa-file-excel"></i> Excel
+      </button>
+    </div>
+  </section>
+
+  <section class="bp-summary" id="bpSummary">
+    <div class="bp-card"><span>Total</span><strong id="bpTotal">0</strong></div>
+    <div class="bp-card"><span>Criticos</span><strong id="bpCriticos">0</strong></div>
+    <div class="bp-card"><span>Altas</span><strong id="bpAltas">0</strong></div>
+    <div class="bp-card"><span>Fallidos</span><strong id="bpFallidos">0</strong></div>
+    <div class="bp-card"><span>En proceso</span><strong id="bpProceso">0</strong></div>
+    <div class="bp-card"><span>Ultimo evento</span><strong id="bpUltimo">-</strong></div>
+  </section>
+
+  <section class="bp-panel">
+    <div class="bp-toolbar">
+      <div class="bp-page-size">
+        <span>Filas por pagina</span>
+        <select id="bpPageSize" class="form-select form-select-sm">
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+      <div class="bp-muted" id="bpStatus">Sin consulta ejecutada</div>
+    </div>
+
+    <div class="bp-grid-wrap">
+      <table class="bp-table">
+        <thead>
+          <tr>
+            <th>Codigo</th>
+            <th>Fecha</th>
+            <th>Fuente</th>
+            <th>Proceso</th>
+            <th>Estado</th>
+            <th>Prioridad</th>
+            <th>Gestion</th>
+            <th>Usuario</th>
+            <th>Referencia</th>
+            <th>Duracion</th>
+            <th>Observacion</th>
+          </tr>
+        </thead>
+        <tbody id="bpBody">
+          <tr>
+            <td colspan="11" class="bp-empty">Ejecute la consulta para ver la bitacora.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="bp-pagination">
+      <div class="bp-pagination-info" id="bpPageInfo">Pagina 0 de 0</div>
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="bpFirst">Primera</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="bpPrev">Anterior</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="bpNext">Siguiente</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" id="bpLast">Ultima</button>
+    </div>
+  </section>
+</div>
+
+<script type="application/json" id="bpBootstrap">
+  {{ {
+    "gestion_actual": gestion_actual,
+    "api_url": url_for('bitacora_procesos.api_bitacora'),
+    "pdf_url": url_for('bitacora_procesos.pdf_bitacora'),
+    "excel_url": url_for('bitacora_procesos.excel_bitacora')
+  } | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  (() => {
+    const boot = JSON.parse(document.getElementById("bpBootstrap").textContent || "{}");
+    const el = {
+      gestion: document.getElementById("bpGestion"),
+      desde: document.getElementById("bpDesde"),
+      hasta: document.getElementById("bpHasta"),
+      fuente: document.getElementById("bpFuente"),
+      tipo: document.getElementById("bpTipo"),
+      estado: document.getElementById("bpEstado"),
+      btnConsultar: document.getElementById("bpBtnConsultar"),
+      btnPdf: document.getElementById("bpBtnPdf"),
+      btnExcel: document.getElementById("bpBtnExcel"),
+      pageSize: document.getElementById("bpPageSize"),
+      body: document.getElementById("bpBody"),
+      status: document.getElementById("bpStatus"),
+      pageInfo: document.getElementById("bpPageInfo"),
+      first: document.getElementById("bpFirst"),
+      prev: document.getElementById("bpPrev"),
+      next: document.getElementById("bpNext"),
+      last: document.getElementById("bpLast"),
+      total: document.getElementById("bpTotal"),
+      criticos: document.getElementById("bpCriticos"),
+      altas: document.getElementById("bpAltas"),
+      fallidos: document.getElementById("bpFallidos"),
+      proceso: document.getElementById("bpProceso"),
+      ultimo: document.getElementById("bpUltimo"),
+    };
+
+    const state = {
+      rows: [],
+      page: 1,
+      pageSize: 10,
+    };
+
+    const escapeHtml = (value) => String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+
+    const setDatesFromGestion = () => {
+      const gestion = Number(el.gestion.value || boot.gestion_actual || new Date().getFullYear());
+      el.desde.value = `${gestion}-01-01`;
+      el.hasta.value = `${gestion}-12-31`;
+    };
+
+    const params = () => new URLSearchParams({
+      gestion: el.gestion.value || boot.gestion_actual,
+      fecha_desde: el.desde.value,
+      fecha_hasta: el.hasta.value,
+      fuente: el.fuente.value || "TODAS",
+      tipo_proceso: el.tipo.value || "TODAS",
+      estado: el.estado.value || "TODOS",
+    });
+
+    const badgeClass = (priority) => {
+      if (priority === "CRITICA") return "bp-badge-critical";
+      if (priority === "ALTA") return "bp-badge-high";
+      if (priority === "MEDIA") return "bp-badge-medium";
+      return "bp-badge-low";
+    };
+
+    const renderSummary = (summary = {}) => {
+      el.total.textContent = summary.total ?? 0;
+      el.criticos.textContent = summary.criticos ?? 0;
+      el.altas.textContent = summary.altas ?? 0;
+      el.fallidos.textContent = summary.fallidos ?? 0;
+      el.proceso.textContent = summary.en_proceso ?? 0;
+      el.ultimo.textContent = summary.ultimo_evento || "-";
+    };
+
+    const renderTable = () => {
+      const total = state.rows.length;
+      const pages = Math.max(1, Math.ceil(total / state.pageSize));
+      state.page = Math.min(Math.max(1, state.page), pages);
+      const start = (state.page - 1) * state.pageSize;
+      const pageRows = state.rows.slice(start, start + state.pageSize);
+
+      if (!pageRows.length) {
+        el.body.innerHTML = '<tr><td colspan="11" class="bp-empty">No se encontraron procesos con los filtros seleccionados.</td></tr>';
+      } else {
+        el.body.innerHTML = pageRows.map((row) => `
+          <tr>
+            <td>${escapeHtml(row.codigo_evento)}</td>
+            <td>${escapeHtml(row.fecha_display)}</td>
+            <td>${escapeHtml(row.fuente_label)}</td>
+            <td>${escapeHtml(row.tipo_label)}</td>
+            <td>${escapeHtml(row.estado_label)}</td>
+            <td><span class="bp-badge ${badgeClass(row.prioridad_codigo)}">${escapeHtml(row.prioridad_label)}</span></td>
+            <td>${escapeHtml(row.gestion_texto)}</td>
+            <td>${escapeHtml(row.usuario_nombre)}</td>
+            <td>${escapeHtml(row.documento)}</td>
+            <td>${escapeHtml(row.duracion_display)}</td>
+            <td>${escapeHtml(row.observacion_corta || row.observacion)}</td>
+          </tr>
+        `).join("");
+      }
+
+      el.pageInfo.textContent = total ? `Pagina ${state.page} de ${pages} · ${total} registros` : "Pagina 0 de 0";
+      el.first.disabled = state.page <= 1;
+      el.prev.disabled = state.page <= 1;
+      el.next.disabled = state.page >= pages;
+      el.last.disabled = state.page >= pages;
+    };
+
+    const consultar = async () => {
+      el.status.textContent = "Consultando...";
+      el.btnConsultar.disabled = true;
+      try {
+        const response = await fetch(`${boot.api_url}?${params().toString()}`, {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error(data.msg || "No se pudo generar la consulta.");
+        }
+        state.rows = data.payload.rows || [];
+        state.page = 1;
+        renderSummary(data.payload.summary || {});
+        renderTable();
+        el.status.textContent = data.payload.summary?.truncated
+          ? "Resultado limitado por seguridad operativa. Use filtros mas especificos."
+          : "Consulta generada correctamente.";
+      } catch (error) {
+        state.rows = [];
+        renderSummary({});
+        renderTable();
+        el.status.textContent = error.message;
+        if (window.Swal) {
+          window.Swal.fire({ icon: "error", title: "Revision no generada", text: error.message });
+        }
+      } finally {
+        el.btnConsultar.disabled = false;
+      }
+    };
+
+    const openExport = (baseUrl) => {
+      window.open(`${baseUrl}?${params().toString()}`, "_blank");
+    };
+
+    el.gestion.addEventListener("change", setDatesFromGestion);
+    el.btnConsultar.addEventListener("click", consultar);
+    el.btnPdf.addEventListener("click", () => openExport(boot.pdf_url));
+    el.btnExcel.addEventListener("click", () => openExport(boot.excel_url));
+    el.pageSize.addEventListener("change", () => {
+      state.pageSize = Number(el.pageSize.value || 10);
+      state.page = 1;
+      renderTable();
+    });
+    el.first.addEventListener("click", () => { state.page = 1; renderTable(); });
+    el.prev.addEventListener("click", () => { state.page -= 1; renderTable(); });
+    el.next.addEventListener("click", () => { state.page += 1; renderTable(); });
+    el.last.addEventListener("click", () => {
+      state.page = Math.max(1, Math.ceil(state.rows.length / state.pageSize));
+      renderTable();
+    });
+
+    setDatesFromGestion();
+    renderTable();
+    consultar();
+  })();
+</script>
+{% endblock extra_js %}

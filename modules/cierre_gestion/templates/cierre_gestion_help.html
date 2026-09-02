@@ -1,0 +1,105 @@
+{% extends "layouthelp.html" %}
+
+{% block title %}Ayuda · Cierre y Apertura de Gestión{% endblock title %}
+{% block help_title %}Ayuda · Cierre y Apertura de Gestión{% endblock help_title %}
+{% block help_subtitle %}
+Guía operativa breve para usar el cierre, la apertura y la reapertura de gestión contable.
+{% endblock help_subtitle %}
+
+{% block help_summary %}
+<li>Flujo recomendado del proceso.</li>
+<li>Cuenta patrimonial de resultado del ejercicio.</li>
+<li>Validación y ejecución del cierre.</li>
+<li>Validación y ejecución de la apertura.</li>
+<li>Condiciones para reabrir una gestión.</li>
+<li>Mensajes de bloqueo y controles críticos.</li>
+{% endblock help_summary %}
+
+{% block help_content %}
+<section class="help-section">
+    <h2>1. Finalidad del módulo</h2>
+    <p>
+        Este módulo permite ejecutar el proceso formal de cierre de una gestión contable,
+        abrir la gestión siguiente y reabrir una gestión cerrada cuando corresponde.
+    </p>
+    <div class="help-callout">
+        Las operaciones generan o anulan comprobantes contables y actualizan el control de gestión.
+        Por eso deben ejecutarse solo cuando la información contable ya fue revisada.
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>2. Flujo recomendado</h2>
+    <ol class="help-steps">
+        <li>Seleccione la <strong>gestión origen</strong>.</li>
+        <li>Revise el estado, el balance y la cuenta resultado del ejercicio.</li>
+        <li>Ejecute <strong>Validar cierre</strong>.</li>
+        <li>Si la validación es correcta, ejecute <strong>Ejecutar cierre</strong>.</li>
+        <li>Ejecute <strong>Validar apertura</strong>.</li>
+        <li>Si la validación es correcta, ejecute <strong>Ejecutar apertura</strong>.</li>
+    </ol>
+</section>
+
+<section class="help-section">
+    <h2>3. Cuenta resultado del ejercicio</h2>
+    <p>
+        La cuenta configurada debe ser patrimonial, activa y postable. El sistema la usa para
+        registrar la utilidad o pérdida neta al momento del cierre.
+    </p>
+    <ul class="help-summary-list">
+        <li>Revísela antes de cerrar la gestión.</li>
+        <li>No use cuentas de ingreso, costo, gasto, activo o pasivo.</li>
+        <li>Después de cambiarla, presione <strong>Guardar</strong>.</li>
+    </ul>
+</section>
+
+<section class="help-section">
+    <h2>4. Cierre de gestión</h2>
+    <p>
+        El cierre cancela las cuentas temporales de ingresos, costos y gastos, y traslada el resultado
+        neto a la cuenta patrimonial configurada.
+    </p>
+    <ul class="help-summary-list">
+        <li>La gestión debe estar abierta.</li>
+        <li>El balance debe estar cuadrado.</li>
+        <li>No debe existir un cierre confirmado previo para la misma gestión.</li>
+        <li>No debe existir un bloqueo crítico activo.</li>
+    </ul>
+</section>
+
+<section class="help-section">
+    <h2>5. Apertura de gestión</h2>
+    <p>
+        La apertura traslada a la nueva gestión los saldos de balance: activo, pasivo y patrimonio.
+        No traslada cuentas de ingresos, costos ni gastos.
+    </p>
+    <ul class="help-summary-list">
+        <li>La gestión origen debe estar cerrada.</li>
+        <li>Debe existir comprobante de cierre confirmado.</li>
+        <li>La gestión destino no debe tener una apertura previa.</li>
+        <li>La gestión destino no debe tener movimientos confirmados que impidan una apertura limpia.</li>
+    </ul>
+</section>
+
+<section class="help-section">
+    <h2>6. Reapertura de gestión</h2>
+    <p>
+        La reapertura se usa cuando una gestión cerrada necesita corrección. El sistema anula el cierre
+        y, si corresponde, también la apertura relacionada.
+    </p>
+    <div class="help-callout">
+        Para reabrir es obligatorio registrar una observación clara. Esa observación queda como respaldo
+        en la bitácora del proceso.
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>7. Estado, historial y bloqueos</h2>
+    <ul class="help-summary-list">
+        <li><strong>Estado</strong>: muestra si la gestión origen está abierta o cerrada.</li>
+        <li><strong>Balance</strong>: indica si la gestión está cuadrada.</li>
+        <li><strong>Bloqueo</strong>: indica si hay un proceso crítico en ejecución.</li>
+        <li><strong>Historial</strong>: registra validaciones, cierres, aperturas, fallos y reaperturas.</li>
+    </ul>
+</section>
+{% endblock help_content %}

@@ -1,0 +1,421 @@
+{% extends "layout.html" %}
+{% block title %}Backups y Restore{% endblock %}
+{% block page_help_url %}{{ url_for('backups_gestion.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+#backupsGestionPage { --bk-navy:#0f2340; --bk-blue:#1f4f82; --bk-accent:#2d7dd2; --bk-border:#dde5ef; --bk-surface:#fff; --bk-surface-alt:#f8fbff; --bk-text:#1d2c3c; --bk-muted:#6b7c8e; --bk-success:#177a53; --bk-danger:#a61f2b; --bk-warning:#b45309; --bk-radius:18px; color:var(--bk-text); }
+#backupsGestionPage .bk-header { background:linear-gradient(135deg,var(--bk-navy) 0%,var(--bk-blue) 60%,#2a6db1 100%); border-radius:var(--bk-radius); padding:1.2rem 1.35rem; margin-bottom:1rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; box-shadow:0 14px 34px rgba(15,35,64,.18); }
+#backupsGestionPage .bk-header-main { display:flex; align-items:center; gap:.95rem; }
+#backupsGestionPage .bk-header-icon { width:50px; height:50px; border-radius:15px; background:rgba(255,255,255,.14); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+#backupsGestionPage .bk-title { margin:0; color:#fff; font-size:1.2rem; font-weight:700; }
+#backupsGestionPage .bk-subtitle { margin-top:.15rem; color:rgba(255,255,255,.8); font-size:.84rem; }
+#backupsGestionPage .bk-chip { display:inline-flex; align-items:center; gap:.5rem; background:rgba(255,255,255,.16); color:#fff; padding:.55rem .85rem; border-radius:999px; font-size:.82rem; font-weight:700; }
+#backupsGestionPage .bk-grid { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr); gap:1rem; margin-bottom:1rem; }
+#backupsGestionPage .bk-card, #backupsGestionPage .bk-table-card { background:var(--bk-surface); border:1px solid var(--bk-border); border-radius:var(--bk-radius); box-shadow:0 8px 28px rgba(15,35,64,.06); overflow:hidden; }
+#backupsGestionPage .bk-card-head { padding:.95rem 1.15rem; border-bottom:1px solid var(--bk-border); background:linear-gradient(180deg,#fff 0%,var(--bk-surface-alt) 100%); display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
+#backupsGestionPage .bk-card-title { display:flex; align-items:center; gap:.75rem; color:var(--bk-navy); font-weight:700; }
+#backupsGestionPage .bk-card-title small { display:block; margin-top:.12rem; font-size:.78rem; font-weight:500; color:var(--bk-muted); }
+#backupsGestionPage .bk-card-body { padding:1rem 1.15rem 1.15rem; }
+#backupsGestionPage .bk-form-grid { display:grid; grid-template-columns:1.2fr .8fr; gap:1rem; margin-bottom:1rem; }
+#backupsGestionPage .bk-field { display:flex; flex-direction:column; gap:.45rem; }
+#backupsGestionPage .bk-label { color:var(--bk-text); font-size:.86rem; font-weight:700; }
+#backupsGestionPage .bk-label small { color:var(--bk-muted); font-weight:600; font-size:.76rem; }
+#backupsGestionPage .bk-input, #backupsGestionPage .bk-textarea { width:100%; border:1px solid var(--bk-border); border-radius:14px; background:#fff; color:var(--bk-text); padding:.8rem .95rem; outline:none; transition:all .18s ease; box-shadow:none; }
+#backupsGestionPage .bk-input:focus, #backupsGestionPage .bk-textarea:focus { border-color:var(--bk-accent); box-shadow:0 0 0 4px rgba(45,125,210,.12); }
+#backupsGestionPage .bk-textarea { min-height:104px; resize:vertical; }
+#backupsGestionPage .bk-helper { margin-top:.35rem; color:var(--bk-muted); font-size:.78rem; line-height:1.45; }
+#backupsGestionPage .bk-actions { display:flex; justify-content:flex-end; gap:.7rem; flex-wrap:wrap; }
+#backupsGestionPage .bk-btn-primary, #backupsGestionPage .bk-btn-secondary, #backupsGestionPage .bk-btn-danger { border:none; border-radius:14px; display:inline-flex; align-items:center; justify-content:center; gap:.55rem; padding:.82rem 1rem; font-size:.88rem; font-weight:700; transition:all .18s ease; cursor:pointer; text-decoration:none; }
+#backupsGestionPage .bk-btn-primary { background:var(--bk-accent); color:#fff; box-shadow:0 14px 24px rgba(45,125,210,.22); }
+#backupsGestionPage .bk-btn-primary:hover { background:#2167b0; color:#fff; transform:translateY(-1px); }
+#backupsGestionPage .bk-btn-secondary { background:#eef3f9; color:var(--bk-text); border:1px solid var(--bk-border); }
+#backupsGestionPage .bk-btn-danger { background:rgba(166,31,43,.12); color:var(--bk-danger); border:1px solid rgba(166,31,43,.14); }
+#backupsGestionPage .bk-btn-danger:hover { background:rgba(166,31,43,.18); }
+#backupsGestionPage .bk-btn-primary[disabled], #backupsGestionPage .bk-btn-danger[disabled], #backupsGestionPage .bk-btn-secondary[disabled] { opacity:.7; cursor:wait; transform:none; }
+#backupsGestionPage .bk-info-list { display:grid; gap:.7rem; }
+#backupsGestionPage .bk-info-item { background:#f8fbff; border:1px solid var(--bk-border); border-radius:14px; padding:.9rem 1rem; }
+#backupsGestionPage .bk-info-title { font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; color:var(--bk-muted); font-weight:700; margin-bottom:.22rem; }
+#backupsGestionPage .bk-info-value { color:var(--bk-text); font-size:.92rem; font-weight:700; line-height:1.45; word-break:break-word; }
+#backupsGestionPage .bk-table-wrap { padding:0 1rem 1rem; }
+#backupsGestionPage .table { margin-bottom:0; }
+#backupsGestionPage .table thead th { background:#f8fbff; color:var(--bk-navy); border-bottom:1px solid var(--bk-border); font-size:.8rem; font-weight:800; text-transform:uppercase; letter-spacing:.03em; vertical-align:middle; }
+#backupsGestionPage .table tbody td { vertical-align:middle; border-color:#edf2f7; color:var(--bk-text); font-size:.86rem; }
+#backupsGestionPage .bk-file-name { font-weight:700; color:var(--bk-navy); }
+#backupsGestionPage .bk-file-meta { margin-top:.15rem; color:var(--bk-muted); font-size:.76rem; line-height:1.45; }
+#backupsGestionPage .bk-badge { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:.34rem .66rem; font-size:.74rem; font-weight:800; letter-spacing:.02em; }
+#backupsGestionPage .bk-badge.success { background:rgba(23,122,83,.12); color:var(--bk-success); }
+#backupsGestionPage .bk-badge.warning { background:rgba(180,83,9,.12); color:var(--bk-warning); }
+#backupsGestionPage .bk-badge.danger { background:rgba(166,31,43,.12); color:var(--bk-danger); }
+#backupsGestionPage .bk-badge.neutral { background:rgba(71,85,105,.12); color:#475569; }
+#backupsGestionPage .bk-row-actions { display:flex; gap:.45rem; flex-wrap:wrap; }
+#backupsGestionPage .bk-row-btn { min-width:104px; }
+#backupsGestionPage .bk-empty { padding:2rem 1rem; text-align:center; color:var(--bk-muted); }
+
+#backupsGestionPage .bk-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+#backupsGestionPage .bk-loader.is-visible {
+  display: flex;
+}
+
+#backupsGestionPage .bk-loader-card {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.28);
+  padding: 1.5rem 1.35rem;
+  text-align: center;
+}
+
+#backupsGestionPage .bk-loader-spinner {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  border: 5px solid rgba(45, 125, 210, 0.14);
+  border-top-color: var(--bk-accent);
+  animation: bkSpin .9s linear infinite;
+}
+
+#backupsGestionPage .bk-loader-title {
+  margin: 0;
+  color: var(--bk-navy);
+  font-size: 1.08rem;
+  font-weight: 800;
+}
+
+#backupsGestionPage .bk-loader-text {
+  margin: .55rem 0 0;
+  color: var(--bk-muted);
+  font-size: .9rem;
+  line-height: 1.55;
+}
+
+@keyframes bkSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width:991.98px) {
+  #backupsGestionPage .bk-grid, #backupsGestionPage .bk-form-grid { grid-template-columns:1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="backupsGestionPage">
+  <div class="bk-header">
+    <div class="bk-header-main">
+      <div class="bk-header-icon"><i class="fas fa-database"></i></div>
+      <div>
+        <h1 class="bk-title">Backups y restauración del esquema contabilidad</h1>
+        <div class="bk-subtitle">Genera respaldos manuales, ejecuta restauraciones y elimina backups físicos desde una sola pantalla operativa.</div>
+      </div>
+    </div>
+    <div class="bk-chip"><i class="fas fa-folder-tree"></i><span>{{ backup_dir_label }}</span></div>
+  </div>
+
+  <div class="bk-grid">
+    <section class="bk-card">
+      <div class="bk-card-head">
+        <div class="bk-card-title">
+          <i class="fas fa-box-archive"></i>
+          <div>Generar backup manual<small>El respaldo se genera solo del esquema contabilidad.</small></div>
+        </div>
+      </div>
+      <div class="bk-card-body">
+        <div class="bk-form-grid">
+          <div class="bk-field">
+            <label class="bk-label" for="nombreArchivo">Nombre de archivo <small>editable por el usuario</small></label>
+            <input id="nombreArchivo" class="bk-input" type="text" value="{{ nombre_sugerido }}" maxlength="255" />
+            <div class="bk-helper">Se guardará con extensión <strong>.sql</strong>. Directorio: <strong>{{ backup_dir_label }}</strong></div>
+          </div>
+          <div class="bk-field">
+            <label class="bk-label" for="observacionBackup">Observación</label>
+            <textarea id="observacionBackup" class="bk-textarea" placeholder="Detalle breve del respaldo (opcional)"></textarea>
+          </div>
+        </div>
+        <div class="bk-actions">
+          <button id="btnGenerarBackup" type="button" class="bk-btn-primary">
+            <i class="fas fa-floppy-disk"></i><span>Generar backup</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="bk-card">
+      <div class="bk-card-head">
+        <div class="bk-card-title">
+          <i class="fas fa-circle-info"></i>
+          <div>Consideraciones de restore<small>Proceso sensible con cierre global de sesión.</small></div>
+        </div>
+      </div>
+      <div class="bk-card-body">
+        <div class="bk-info-list">
+          <div class="bk-info-item"><div class="bk-info-title">Directorio físico</div><div class="bk-info-value">{{ backup_dir_label }}</div></div>
+          <div class="bk-info-item"><div class="bk-info-title">Restore</div><div class="bk-info-value">Selecciona un backup de la lista, registra el motivo y confirma la restauración.</div></div>
+          <div class="bk-info-item"><div class="bk-info-title">Sesiones</div><div class="bk-info-value">Al concluir una restauración, se cierran las sesiones activas y el sistema vuelve al login.</div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="bk-table-card">
+    <div class="bk-card-head">
+      <div class="bk-card-title">
+        <i class="fas fa-list-ul"></i>
+        <div>Backups disponibles<small>Solo se listan los respaldos registrados en el catálogo.</small></div>
+      </div>
+    </div>
+    <div class="bk-table-wrap">
+      <table id="tablaBackups" class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th style="width:16%;">Fecha</th>
+            <th style="width:29%;">Archivo</th>
+            <th style="width:10%;">Tipo</th>
+            <th style="width:11%;">Estado</th>
+            <th style="width:10%;">Usuario</th>
+            <th style="width:12%;">Observación</th>
+            <th style="width:12%;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in backups %}
+          <tr>
+            <td>{{ item.fecha_generacion_label }}</td>
+            <td>
+              <div class="bk-file-name">{{ item.nombre_archivo }}</div>
+              <div class="bk-file-meta">
+                {{ item.tamanio_label }} · Gestión {{ item.gestion_origen }}
+                {% if item.archivo_existe %} · Archivo disponible {% else %} · Archivo no encontrado {% endif %}
+              </div>
+            </td>
+            <td>{{ item.tipo_respaldo }}</td>
+            <td>
+              {% if item.estado == 'GENERADO' %}<span class="bk-badge success">GENERADO</span>
+              {% elif item.estado == 'RESTAURADO' %}<span class="bk-badge warning">RESTAURADO</span>
+              {% elif item.estado == 'FALLIDO' %}<span class="bk-badge danger">FALLIDO</span>
+              {% else %}<span class="bk-badge neutral">{{ item.estado }}</span>{% endif %}
+            </td>
+            <td>{{ item.usuario_nombre or '—' }}</td>
+            <td>{{ item.observacion or '—' }}</td>
+            <td>
+              <div class="bk-row-actions">
+                {% if item.archivo_existe %}
+                <button type="button" class="bk-btn-danger bk-row-btn js-restaurar" data-backup-id="{{ item.id }}" data-backup-nombre="{{ item.nombre_archivo }}">
+                  <i class="fas fa-rotate-left"></i><span>Restore</span>
+                </button>
+                {% endif %}
+                <button type="button" class="bk-btn-secondary bk-row-btn js-eliminar" data-backup-id="{{ item.id }}" data-backup-nombre="{{ item.nombre_archivo }}">
+                  <i class="fas fa-trash-can"></i><span>Eliminar</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7"><div class="bk-empty">Aún no existen backups registrados para el esquema contabilidad.</div></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div id="bkLoader" class="bk-loader" aria-hidden="true">
+    <div class="bk-loader-card">
+      <div class="bk-loader-spinner"></div>
+      <h3 id="bkLoaderTitle" class="bk-loader-title">Procesando operación</h3>
+      <p id="bkLoaderText" class="bk-loader-text">Espere un momento. No cierre esta ventana.</p>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="backupsGestionBootstrap">
+{{ {
+    'generarUrl': url_for('backups_gestion.generar_backup'),
+    'restaurarUrl': url_for('backups_gestion.restaurar_backup'),
+    'eliminarUrl': url_for('backups_gestion.eliminar_backup'),
+    'loginUrl': url_for('auth.login')
+} | tojson }}
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const boot = JSON.parse(document.getElementById('backupsGestionBootstrap').textContent || '{}');
+    const btnGenerar = document.getElementById('btnGenerarBackup');
+    const inputNombre = document.getElementById('nombreArchivo');
+    const inputObservacion = document.getElementById('observacionBackup');
+    const tabla = document.getElementById('tablaBackups');
+    const loader = document.getElementById('bkLoader');
+    const loaderTitle = document.getElementById('bkLoaderTitle');
+    const loaderText = document.getElementById('bkLoaderText');
+
+    function showLoader(title, text) {
+        if (loaderTitle) loaderTitle.textContent = title || 'Procesando operación';
+        if (loaderText) loaderText.textContent = text || 'Espere un momento. No cierre esta ventana.';
+        if (loader) {
+            loader.classList.add('is-visible');
+            loader.setAttribute('aria-hidden', 'false');
+        }
+    }
+
+    function hideLoader() {
+        if (loader) {
+            loader.classList.remove('is-visible');
+            loader.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    const tablaTieneFilaVacia = tabla ? !!tabla.querySelector('tbody td[colspan]') : false;
+    if (tabla && window.jQuery && $.fn.DataTable && !tablaTieneFilaVacia) {
+        $(tabla).DataTable({
+            pageLength: 10,
+            order: [[0, 'desc']],
+            autoWidth: false,
+            responsive: true
+        });
+    }
+
+    async function postJson(url, payload) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(() => ({}));
+        return { response, data };
+    }
+
+    btnGenerar?.addEventListener('click', async function () {
+        const nombre = (inputNombre?.value || '').trim();
+        const observacion = (inputObservacion?.value || '').trim();
+
+        if (!nombre) {
+            await Swal.fire({ icon: 'warning', title: 'Nombre requerido', text: 'Debe indicar el nombre del archivo de backup.' });
+            inputNombre?.focus();
+            return;
+        }
+
+        btnGenerar.setAttribute('disabled', 'disabled');
+        showLoader('Generando backup', 'Generando backup del esquema contabilidad. Espere un momento...');
+
+        const { data } = await postJson(boot.generarUrl, {
+            nombre_archivo: nombre,
+            observacion: observacion
+        }).finally(() => {
+            btnGenerar.removeAttribute('disabled');
+            hideLoader();
+        });
+
+        if (!data.ok) {
+            await Swal.fire({ icon: 'error', title: 'No se pudo generar el backup', text: data.msg || 'Ocurrió un problema durante la generación del backup.' });
+            return;
+        }
+
+        await Swal.fire({ icon: 'success', title: 'Backup generado', text: data.msg || 'El backup se generó correctamente.' });
+        window.location.reload();
+    });
+
+    document.querySelectorAll('.js-restaurar').forEach(function (button) {
+        button.addEventListener('click', async function () {
+            const backupId = this.dataset.backupId;
+            const backupNombre = this.dataset.backupNombre || 'backup seleccionado';
+
+            const { value: motivo } = await Swal.fire({
+                icon: 'warning',
+                title: 'Confirmar restore',
+                html: `<div style="text-align:left;">Se restaurará el backup <strong>${backupNombre}</strong>.<br><br>Registre el motivo de la restauración.</div>`,
+                input: 'textarea',
+                inputPlaceholder: 'Motivo obligatorio',
+                inputAttributes: { 'aria-label': 'Motivo obligatorio' },
+                inputValidator: (value) => {
+                    if (!value || !String(value).trim()) {
+                        return 'Debe registrar el motivo de la restauración.';
+                    }
+                    return null;
+                },
+                confirmButtonText: 'Ejecutar restore',
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            });
+
+            if (!motivo) return;
+
+            this.setAttribute('disabled', 'disabled');
+            showLoader('Ejecutando restore', 'Restaurando el esquema contabilidad. No cierre esta ventana ni abandone la sesión.');
+
+            const { data } = await postJson(boot.restaurarUrl, { backup_id: backupId, motivo: motivo })
+                .finally(() => {
+                    this.removeAttribute('disabled');
+                    hideLoader();
+                });
+
+            if (!data.ok) {
+                await Swal.fire({ icon: 'error', title: 'Restore no ejecutado', text: data.msg || 'No se pudo completar la restauración.' });
+                return;
+            }
+
+            await Swal.fire({ icon: 'success', title: 'Restore ejecutado', text: data.msg || 'La restauración se completó correctamente.' });
+            window.location.href = data.redirect_url || boot.loginUrl;
+        });
+    });
+
+    document.querySelectorAll('.js-eliminar').forEach(function (button) {
+        button.addEventListener('click', async function () {
+            const backupId = this.dataset.backupId;
+            const backupNombre = this.dataset.backupNombre || 'backup seleccionado';
+
+            const result = await Swal.fire({
+                icon: 'warning',
+                title: 'Eliminar backup',
+                html: `<div style="text-align:left;">Se eliminará el archivo físico y su registro de catálogo para <strong>${backupNombre}</strong>.<br><br>Esta acción no se puede deshacer.</div>`,
+                confirmButtonText: 'Eliminar backup',
+                showCancelButton: true,
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true,
+                focusCancel: true
+            });
+
+            if (!result.isConfirmed) return;
+
+            this.setAttribute('disabled', 'disabled');
+            showLoader('Eliminando backup', 'Eliminando archivo físico y registro del catálogo. Espere un momento...');
+
+            const { data } = await postJson(boot.eliminarUrl, { backup_id: backupId })
+                .finally(() => {
+                    this.removeAttribute('disabled');
+                    hideLoader();
+                });
+
+            if (!data.ok) {
+                await Swal.fire({ icon: 'error', title: 'No se pudo eliminar el backup', text: data.msg || 'Ocurrió un problema durante la eliminación.' });
+                return;
+            }
+
+            await Swal.fire({ icon: 'success', title: 'Backup eliminado', text: data.msg || 'El backup fue eliminado correctamente.' });
+            window.location.reload();
+        });
+    });
+});
+</script>
+{% endblock %}

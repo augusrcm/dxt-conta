@@ -1,0 +1,95 @@
+{% extends "layouthelp.html" %}
+{% block title %}Ayuda · Configuración inicial{% endblock %}
+{% block help_title %}Ayuda rápida · Configuración inicial{% endblock %}
+{% block help_subtitle %}Guía breve para dejar lista la primera gestión de trabajo en DXT-Conta.{% endblock %}
+{% block help_summary %}
+<li>Qué resuelve esta pantalla.</li>
+<li>Qué datos deben definirse la primera vez.</li>
+<li>Cómo registrar la primera unidad de negocio sin acudir a la base de datos.</li>
+<li>Cómo seleccionar la cuenta patrimonial correcta.</li>
+<li>Qué significan las reglas operativas base.</li>
+<li>Qué relación tiene con el control diario de tipo de cambio.</li>
+{% endblock %}
+{% block help_content %}
+<section class="help-section">
+  <h2>1. ¿Cuándo usar esta pantalla?</h2>
+  <div class="help-callout">
+    Esta pantalla se usa cuando el sistema todavía no tiene una base operativa completa. Su función es dejar definida la gestión inicial de trabajo, registrar la primera unidad de negocio y dejar lista la cuenta patrimonial del resultado del ejercicio.
+  </div>
+  <p>
+    No reemplaza el proceso normal de cierre y apertura de gestión. Tampoco reemplaza el control diario de tipo de cambio de SUS y UFV.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>2. Datos principales</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Gestión inicial</h3>
+      <p>Es la gestión que quedará habilitada como base para empezar a trabajar.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Primera unidad de negocio</h3>
+      <p>Debe registrarse al menos una unidad real para arrancar el sistema. El nombre lo define el operador y el código se genera automáticamente.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Cuenta patrimonial</h3>
+      <p>Debe ser una cuenta activa, postable y de tipo <strong>PATRIMONIO</strong>.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Glosa de cierre</h3>
+      <p>Texto base que el sistema utilizará en el comprobante contable del cierre.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Glosa de apertura</h3>
+      <p>Texto base que el sistema utilizará en el comprobante contable de apertura.</p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>3. Reglas operativas</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Permitir reapertura</h3>
+      <p>Autoriza volver a abrir una gestión cerrada cuando exista una causa válida.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Bloquear si hay borradores</h3>
+      <p>Evita procesos de gestión cuando aún existen documentos sin confirmar.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Bloquear si hay movimientos en destino</h3>
+      <p>Protege la siguiente gestión para que no existan registros previos antes de su apertura.</p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>4. Flujo recomendado</h2>
+  <ol class="help-steps">
+    <li>Selecciona la gestión inicial con la que realmente comenzarás a operar.</li>
+    <li>Si todavía no existe ninguna, registra la primera unidad de negocio con el nombre real que usarás en operación.</li>
+    <li>Elige la cuenta patrimonial del resultado del ejercicio.</li>
+    <li>Revisa las glosas y las reglas operativas.</li>
+    <li>Guarda la configuración y continúa con el trabajo normal del sistema.</li>
+  </ol>
+</section>
+
+<section class="help-section">
+  <h2>5. Primera unidad de negocio</h2>
+  <div class="help-callout">
+    El sistema ya no depende de un registro precargado en base de datos. Si todavía no existe ninguna unidad, esta pantalla te pedirá crear la primera desde la propia interfaz.
+  </div>
+  <p>
+    El nombre debe corresponder a una unidad real de trabajo. El NIT es opcional en esta pantalla y el código se genera automáticamente al guardar.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>6. Relación con el tipo de cambio del día</h2>
+  <div class="help-callout">
+    Aunque la configuración inicial deje lista la estructura del sistema, el usuario seguirá viendo el control diario bloqueante de tipo de cambio cuando falten SUS y UFV para la fecha operativa actual.
+  </div>
+</section>
+{% endblock %}

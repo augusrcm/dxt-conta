@@ -1,0 +1,976 @@
+{% extends "layout.html" %}
+{% block title %}Resultado mensual{% endblock %}
+{% block page_help_url %}{{ url_for('estado_resultados_mes.help') }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='flatpickr/flatpickr.min.css') }}" />
+<style>
+  #erMensualPage {
+    --rem-navy: #0f2340;
+    --rem-blue: #173f6a;
+    --rem-accent: #ea6f1b;
+    --rem-soft: #f4f7fb;
+    --rem-line: #d9e1ea;
+    --rem-text: #243447;
+    --rem-muted: #687789;
+    color: var(--rem-text);
+  }
+
+  #erMensualPage .rem-page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  #erMensualPage .rem-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--rem-navy);
+  }
+
+  #erMensualPage .rem-subtitle {
+    margin: .25rem 0 0;
+    color: var(--rem-muted);
+    font-size: .88rem;
+  }
+
+  #erMensualPage .rem-card {
+    background: #fff;
+    border: 1px solid var(--rem-line);
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(15, 35, 64, .06);
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+
+  #erMensualPage .rem-filter-card {
+    position: relative;
+    z-index: 30;
+    overflow: visible;
+  }
+
+  #erMensualPage .rem-filter-card .rem-card-head {
+    border-radius: 18px 18px 0 0;
+  }
+
+  #erMensualPage .rem-filter-card .rem-card-body {
+    position: relative;
+    z-index: 31;
+    overflow: visible;
+  }
+
+  #erMensualPage .rem-card-head {
+    padding: .95rem 1rem;
+    background: linear-gradient(135deg, #f8fbff, #eef4fb);
+    border-bottom: 1px solid var(--rem-line);
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  #erMensualPage .rem-card-title {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    color: var(--rem-navy);
+    font-weight: 800;
+  }
+
+  #erMensualPage .rem-card-title i {
+    color: var(--rem-accent);
+  }
+
+  #erMensualPage .rem-card-title small {
+    display: block;
+    color: var(--rem-muted);
+    font-weight: 500;
+    font-size: .76rem;
+  }
+
+  #erMensualPage .rem-card-body {
+    padding: 1rem;
+  }
+
+  #erMensualPage .rem-filter-grid {
+    display: grid;
+    grid-template-columns: minmax(230px, 320px) 1fr;
+    gap: 1rem;
+  }
+
+  #erMensualPage .rem-mode-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: .55rem;
+  }
+
+  #erMensualPage .rem-mode-card {
+    border: 1px solid var(--rem-line);
+    border-radius: 14px;
+    padding: .72rem .8rem;
+    background: #fff;
+    cursor: pointer;
+    transition: .15s ease;
+  }
+
+  #erMensualPage .rem-mode-card.active {
+    border-color: var(--rem-accent);
+    box-shadow: 0 0 0 3px rgba(234, 111, 27, .12);
+  }
+
+  #erMensualPage .rem-mode-title {
+    font-weight: 800;
+    color: var(--rem-navy);
+    font-size: .88rem;
+  }
+
+  #erMensualPage .rem-fields {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(145px, 1fr));
+    gap: .85rem;
+    align-items: end;
+  }
+
+  #erMensualPage .rem-actions {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  #erMensualPage .rem-hidden {
+    display: none !important;
+  }
+
+  #erMensualPage .rem-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(130px, 1fr));
+    gap: .75rem;
+  }
+
+  #erMensualPage .rem-summary-box {
+    border: 1px solid var(--rem-line);
+    border-radius: 16px;
+    padding: .85rem;
+    background: var(--rem-soft);
+    min-height: 84px;
+  }
+
+  #erMensualPage .rem-summary-label {
+    color: var(--rem-muted);
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    font-weight: 700;
+  }
+
+  #erMensualPage .rem-summary-value {
+    margin-top: .35rem;
+    font-size: 1.02rem;
+    font-weight: 850;
+    color: var(--rem-navy);
+  }
+
+  #erMensualPage .rem-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .32rem .55rem;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--rem-line);
+    color: var(--rem-muted);
+    font-size: .78rem;
+    font-weight: 700;
+  }
+
+  #erMensualPage .rem-alert {
+    border: 1px solid #ffd3bf;
+    background: #fff4ee;
+    color: #8a3b10;
+    border-radius: 14px;
+    padding: .8rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  #erMensualPage .rem-table-wrap {
+    overflow-x: auto;
+  }
+
+  #erMensualPage .rem-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 980px;
+  }
+
+  #erMensualPage .rem-table th {
+    background: #eef3f8;
+    color: var(--rem-navy);
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    border-bottom: 1px solid var(--rem-line);
+    padding: .72rem;
+    white-space: nowrap;
+  }
+
+  #erMensualPage .rem-table td {
+    border-bottom: 1px solid var(--rem-line);
+    padding: .72rem;
+    font-size: .86rem;
+    vertical-align: middle;
+  }
+
+  #erMensualPage .rem-table tbody tr:hover td {
+    background: #fbfdff;
+  }
+
+  #erMensualPage .rem-table .rem-money {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  #erMensualPage .rem-month-cell {
+    font-weight: 800;
+    color: var(--rem-navy);
+  }
+
+  #erMensualPage .rem-result-positive {
+    color: #107c41;
+    font-weight: 850;
+  }
+
+  #erMensualPage .rem-result-negative {
+    color: #b42318;
+    font-weight: 850;
+  }
+
+  #erMensualPage .rem-total-row td {
+    background: #f8fbff;
+    font-weight: 850;
+    color: var(--rem-navy);
+  }
+
+  #erMensualPage .rem-month-picker {
+    position: relative;
+  }
+
+  #erMensualPage .rem-month-input {
+    background: #fff;
+    cursor: pointer;
+  }
+
+  #erMensualPage .rem-month-input:disabled {
+    background: #e9eef5;
+    cursor: not-allowed;
+  }
+
+  #erMensualPage .rem-month-popover {
+    position: absolute;
+    z-index: 9999;
+    top: calc(100% + .35rem);
+    left: 0;
+    width: 292px;
+    background: #fff;
+    border: 1px solid var(--rem-line);
+    border-radius: 14px;
+    box-shadow: 0 14px 30px rgba(15, 35, 64, .16);
+    padding: .75rem;
+  }
+
+  #erMensualPage .rem-month-popover.rem-hidden {
+    display: none;
+  }
+
+  #erMensualPage .rem-month-picker-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .65rem;
+  }
+
+  #erMensualPage .rem-month-year {
+    font-weight: 850;
+    color: var(--rem-navy);
+    letter-spacing: .02em;
+  }
+
+  #erMensualPage .rem-month-nav {
+    border: 1px solid var(--rem-line);
+    background: #f8fbff;
+    color: var(--rem-blue);
+    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #erMensualPage .rem-month-nav:hover {
+    background: #eef4fb;
+  }
+
+  #erMensualPage .rem-month-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .45rem;
+  }
+
+  #erMensualPage .rem-month-option {
+    border: 1px solid var(--rem-line);
+    background: #fff;
+    border-radius: 10px;
+    padding: .45rem .2rem;
+    font-size: .8rem;
+    font-weight: 750;
+    color: var(--rem-text);
+    text-align: center;
+  }
+
+  #erMensualPage .rem-month-option:hover {
+    border-color: var(--rem-accent);
+    background: #fff8f4;
+  }
+
+  #erMensualPage .rem-month-option.active {
+    background: var(--rem-accent);
+    color: #fff;
+    border-color: var(--rem-accent);
+  }
+
+  #erMensualPage .rem-chart-wrap {
+    overflow-x: auto;
+    padding-bottom: .25rem;
+  }
+
+  #erMensualPage .rem-chart-svg {
+    width: 100%;
+    min-width: 740px;
+    height: auto;
+    display: block;
+  }
+
+  #erMensualPage .rem-chart-zero {
+    stroke: #b8c5d4;
+    stroke-width: 1.5;
+    stroke-dasharray: 6 5;
+  }
+
+  #erMensualPage .rem-chart-axis-label,
+  #erMensualPage .rem-chart-month-label {
+    fill: var(--rem-muted);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  #erMensualPage .rem-chart-value-label {
+    fill: var(--rem-text);
+    font-size: 12px;
+    font-weight: 750;
+  }
+
+  #erMensualPage .rem-chart-bar-positive {
+    fill: #107c41;
+  }
+
+  #erMensualPage .rem-chart-bar-negative {
+    fill: #b42318;
+  }
+
+  #erMensualPage .rem-chart-empty {
+    fill: var(--rem-muted);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  #erMensualPage .rem-legend {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: .75rem;
+    color: var(--rem-muted);
+    font-size: .82rem;
+  }
+
+  #erMensualPage .rem-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+  }
+
+  #erMensualPage .rem-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    display: inline-block;
+  }
+
+  #erMensualPage .rem-legend-dot.positive {
+    background: #107c41;
+  }
+
+  #erMensualPage .rem-legend-dot.negative {
+    background: #b42318;
+  }
+
+  @media (max-width: 1180px) {
+    #erMensualPage .rem-filter-grid,
+    #erMensualPage .rem-fields,
+    #erMensualPage .rem-summary-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 760px) {
+    #erMensualPage .rem-page-head,
+    #erMensualPage .rem-card-head {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    #erMensualPage .rem-filter-grid,
+    #erMensualPage .rem-fields,
+    #erMensualPage .rem-summary-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div id="erMensualPage" class="container-fluid py-3">
+  <div class="rem-page-head">
+    <div>
+      <h1 class="rem-title">Resultado mensual</h1>
+      <p class="rem-subtitle">Ingresos, costos, gastos y resultado neto por mes.</p>
+    </div>
+    <a id="btnPdfTop" class="btn btn-outline-primary btn-sm" href="{{ url_for('estado_resultados_mes.pdf') }}"
+      target="_blank" rel="noopener">
+      <i class="fas fa-file-pdf me-1"></i> PDF
+    </a>
+  </div>
+
+  {% if error %}
+  <div class="rem-alert">
+    <i class="fas fa-triangle-exclamation me-1"></i>{{ error }}
+  </div>
+  {% endif %}
+
+  <div class="rem-card rem-filter-card">
+    <div class="rem-card-head">
+      <div class="rem-card-title">
+        <i class="fas fa-filter"></i>
+        <div>Filtros</div>
+      </div>
+      <div class="rem-chip">
+        <i class="fas fa-calendar-days"></i>{{ filtros.periodo_label }}
+      </div>
+    </div>
+    <div class="rem-card-body">
+      <form id="formErMensual" method="get" action="{{ url_for('estado_resultados_mes.index') }}">
+        <div class="rem-filter-grid">
+          <div>
+            <label class="form-label">Período</label>
+            <div class="rem-mode-grid">
+              <div class="rem-mode-card {% if filtros.modo_periodo == 'GESTION' %}active{% endif %}"
+                data-mode="GESTION">
+                <div class="rem-mode-title">Gestión</div>
+              </div>
+              <div class="rem-mode-card {% if filtros.modo_periodo == 'RANGO_MESES' %}active{% endif %}"
+                data-mode="RANGO_MESES">
+                <div class="rem-mode-title">Rango de meses</div>
+              </div>
+            </div>
+            <input id="modoPeriodo" name="modo_periodo" type="hidden" value="{{ filtros.modo_periodo }}" />
+          </div>
+
+          <div class="rem-fields">
+            <div id="fieldGestion">
+              <label for="gestion" class="form-label">Gestión</label>
+              <select id="gestion" name="gestion" class="form-select">
+                {% for item in gestiones %}
+                <option value="{{ item }}" {% if item == filtros.gestion %}selected{% endif %}>{{ item }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div id="fieldMesDesde" class="{% if filtros.modo_periodo != 'RANGO_MESES' %}rem-hidden{% endif %}">
+              <label for="mesDesdeDisplay" class="form-label">Mes desde</label>
+              <div class="rem-month-picker" data-month-picker>
+                <input id="mesDesdeDisplay" type="text" class="form-control rem-month-input"
+                  value="{{ filtros.mes_desde_value }}" readonly autocomplete="off" data-month-display
+                  data-target="mesDesde" />
+                <input id="mesDesde" name="mes_desde" type="hidden" value="{{ filtros.mes_desde_value }}"
+                  data-month-value />
+              </div>
+            </div>
+
+            <div id="fieldMesHasta" class="{% if filtros.modo_periodo != 'RANGO_MESES' %}rem-hidden{% endif %}">
+              <label for="mesHastaDisplay" class="form-label">Mes hasta</label>
+              <div class="rem-month-picker" data-month-picker>
+                <input id="mesHastaDisplay" type="text" class="form-control rem-month-input"
+                  value="{{ filtros.mes_hasta_value }}" readonly autocomplete="off" data-month-display
+                  data-target="mesHasta" />
+                <input id="mesHasta" name="mes_hasta" type="hidden" value="{{ filtros.mes_hasta_value }}"
+                  data-month-value />
+              </div>
+            </div>
+
+            <div>
+              <label for="unidadNegocio" class="form-label">Unidad</label>
+              <select id="unidadNegocio" name="unidad_negocio_id" class="form-select">
+                <option value="">Todas</option>
+                {% for item in unidades %}
+                <option value="{{ item.id }}" {% if item.id == filtros.unidad_negocio_id %}selected{% endif %}>{{ item.codigo }} · {{ item.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div>
+              <label for="monedaCodigo" class="form-label">Moneda</label>
+              <select id="monedaCodigo" name="moneda_codigo" class="form-select">
+                <option value="">Todas</option>
+                {% for item in monedas %}
+                <option value="{{ item.codigo }}" {% if item.codigo == filtros.moneda_codigo %}selected{% endif %}>{{ item.simbolo }} · {{ item.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="rem-actions">
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-search me-1"></i> Consultar
+              </button>
+              <a class="btn btn-light btn-sm" href="{{ url_for('estado_resultados_mes.index') }}">
+                <i class="fas fa-rotate-left me-1"></i> Limpiar
+              </a>
+              <a id="btnPdfFilters" class="btn btn-outline-primary btn-sm"
+                href="{{ url_for('estado_resultados_mes.pdf') }}" target="_blank" rel="noopener">
+                <i class="fas fa-file-pdf me-1"></i> PDF
+              </a>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="rem-card">
+    <div class="rem-card-head">
+      <div class="rem-card-title">
+        <i class="fas fa-chart-line"></i>
+        <div>Resumen</div>
+      </div>
+      <div class="rem-chip">
+        <i class="fas fa-coins"></i>{% if resumen.moneda_unica %}{{ resumen.moneda_principal_simbolo }}{% else %}{{ resumen.cantidad_monedas }} monedas{% endif %}
+      </div>
+    </div>
+    <div class="rem-card-body">
+      <div class="rem-summary-grid">
+        <div class="rem-summary-box">
+          <div class="rem-summary-label">Meses</div>
+          <div class="rem-summary-value">{{ resumen.meses }}</div>
+        </div>
+        <div class="rem-summary-box">
+          <div class="rem-summary-label">Ingresos</div>
+          <div class="rem-summary-value">{{ resumen.ingresos_label }}</div>
+        </div>
+        <div class="rem-summary-box">
+          <div class="rem-summary-label">Costos</div>
+          <div class="rem-summary-value">{{ resumen.costos_label }}</div>
+        </div>
+        <div class="rem-summary-box">
+          <div class="rem-summary-label">Utilidad bruta</div>
+          <div class="rem-summary-value">{{ resumen.utilidad_bruta_label }}</div>
+        </div>
+        <div class="rem-summary-box">
+          <div class="rem-summary-label">Gastos</div>
+          <div class="rem-summary-value">{{ resumen.gastos_label }}</div>
+        </div>
+        <div class="rem-summary-box">
+          <div class="rem-summary-label">Resultado neto</div>
+          <div class="rem-summary-value">{{ resumen.resultado_neto_label }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if not resumen.moneda_unica and resumen.totales_por_moneda %}
+  <div class="rem-card">
+    <div class="rem-card-head">
+      <div class="rem-card-title">
+        <i class="fas fa-coins"></i>
+        <div>Totales por moneda</div>
+      </div>
+    </div>
+    <div class="rem-card-body">
+      <div class="rem-table-wrap">
+        <table class="rem-table">
+          <thead>
+            <tr>
+              <th>Moneda</th>
+              <th class="text-end">Ingresos</th>
+              <th class="text-end">Costos</th>
+              <th class="text-end">Utilidad bruta</th>
+              <th class="text-end">Gastos</th>
+              <th class="text-end">Resultado neto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in resumen.totales_por_moneda %}
+            <tr>
+              <td>{{ row.moneda_simbolo }}</td>
+              <td class="rem-money">{{ row.ingresos_label }}</td>
+              <td class="rem-money">{{ row.costos_label }}</td>
+              <td class="rem-money">{{ row.utilidad_bruta_label }}</td>
+              <td class="rem-money">{{ row.gastos_label }}</td>
+              <td class="rem-money {% if row.resultado_tipo == 'utilidad' %}rem-result-positive{% else %}rem-result-negative{% endif %}">{{ row.resultado_neto_label }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if chart_view.enabled %}
+  <div class="rem-card">
+    <div class="rem-card-head">
+      <div class="rem-card-title">
+        <i class="fas fa-chart-column"></i>
+        <div>Gráfico</div>
+      </div>
+      <div class="rem-chip">
+        <i class="fas fa-scale-balanced"></i>Máx. {{ chart_view.max_abs_label }}
+      </div>
+    </div>
+    <div class="rem-card-body">
+      <div class="rem-chart-wrap" aria-label="Gráfico del resultado neto por mes">
+        <svg class="rem-chart-svg" viewBox="0 0 {{ chart_view.width }} {{ chart_view.height }}" role="img"
+          aria-labelledby="erChartTitle erChartDesc">
+          <title id="erChartTitle">Resultado neto por mes</title>
+          <desc id="erChartDesc">Barras positivas para utilidad y barras negativas para pérdida.</desc>
+          <line class="rem-chart-zero" x1="{{ chart_view.pad_left }}" y1="{{ chart_view.zero_y }}"
+            x2="{{ chart_view.width - chart_view.pad_right }}" y2="{{ chart_view.zero_y }}" />
+          <text class="rem-chart-axis-label" x="{{ chart_view.pad_left }}" y="{{ chart_view.zero_y - 8 }}">0</text>
+          {% if chart_view.has_data %}
+          {% for item in chart_view.series %}
+          <g>
+            {% if item.bar_height > 0 %}
+            <rect
+              class="{% if item.tipo == 'utilidad' %}rem-chart-bar-positive{% else %}rem-chart-bar-negative{% endif %}"
+              x="{{ item.x }}" y="{{ item.bar_y }}" width="{{ item.bar_width }}" height="{{ item.bar_height }}"
+              rx="7" />
+            {% endif %}
+            <text class="rem-chart-value-label" x="{{ item.center_x }}" y="{{ item.value_y }}" text-anchor="middle">
+              {{ item.value_label }}
+            </text>
+            <text class="rem-chart-month-label" x="{{ item.center_x }}" y="{{ chart_view.height - 24 }}"
+              text-anchor="middle">
+              {{ item.label_short }}
+            </text>
+          </g>
+          {% endfor %}
+          {% else %}
+          <text class="rem-chart-empty" x="{{ chart_view.width / 2 }}" y="{{ chart_view.height / 2 }}"
+            text-anchor="middle">Sin datos para graficar.</text>
+          {% endif %}
+        </svg>
+      </div>
+      <div class="rem-legend">
+        <span class="rem-legend-item"><span class="rem-legend-dot positive"></span>Utilidad</span>
+        <span class="rem-legend-item"><span class="rem-legend-dot negative"></span>Pérdida</span>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="rem-card">
+    <div class="rem-card-head">
+      <div class="rem-card-title">
+        <i class="fas fa-table"></i>
+        <div>Resultado por mes</div>
+      </div>
+    </div>
+    <div class="rem-card-body">
+      <div class="rem-table-wrap">
+        <table class="rem-table">
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th>Moneda</th>
+              <th class="text-end">Ingresos</th>
+              <th class="text-end">Costos</th>
+              <th class="text-end">Utilidad bruta</th>
+              <th class="text-end">Gastos</th>
+              <th class="text-end">Resultado neto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in monthly %}
+            <tr>
+              <td class="rem-month-cell">{{ row.mes_label }}</td>
+              <td>{{ row.moneda_simbolo }}</td>
+              <td class="rem-money">{{ row.ingresos_label }}</td>
+              <td class="rem-money">{{ row.costos_label }}</td>
+              <td class="rem-money">{{ row.utilidad_bruta_label }}</td>
+              <td class="rem-money">{{ row.gastos_label }}</td>
+              <td class="rem-money {% if row.resultado_tipo == 'utilidad' %}rem-result-positive{% else %}rem-result-negative{% endif %}">{{ row.resultado_neto_label }}</td>
+            </tr>
+            {% endfor %}
+            {% if not monthly %}
+            <tr>
+              <td colspan="7" class="text-center text-muted py-4">Sin datos</td>
+            </tr>
+            {% endif %}
+            {% if resumen.moneda_unica and resumen.totales_por_moneda %}
+            {% for row in resumen.totales_por_moneda %}
+            <tr class="rem-total-row">
+              <td>TOTAL</td>
+              <td>{{ row.moneda_simbolo }}</td>
+              <td class="rem-money">{{ row.ingresos_label }}</td>
+              <td class="rem-money">{{ row.costos_label }}</td>
+              <td class="rem-money">{{ row.utilidad_bruta_label }}</td>
+              <td class="rem-money">{{ row.gastos_label }}</td>
+              <td class="rem-money">{{ row.resultado_neto_label }}</td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="erMensualBootstrap" type="application/json">
+  {{ {
+    "modo_periodo": filtros.modo_periodo
+  } | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='flatpickr/flatpickr.min.js') }}"></script>
+<script src="{{ url_for('static', filename='flatpickr/l10n/es.js') }}"></script>
+<script>
+  (function () {
+    const page = document.getElementById('erMensualPage');
+    const bootEl = document.getElementById('erMensualBootstrap');
+    if (!page || !bootEl) return;
+
+    const form = document.getElementById('formErMensual');
+    const modoInput = document.getElementById('modoPeriodo');
+    const modeCards = Array.from(page.querySelectorAll('.rem-mode-card'));
+    const fieldGestion = document.getElementById('fieldGestion');
+    const fieldMesDesde = document.getElementById('fieldMesDesde');
+    const fieldMesHasta = document.getElementById('fieldMesHasta');
+    const gestion = document.getElementById('gestion');
+    const mesDesde = document.getElementById('mesDesde');
+    const mesHasta = document.getElementById('mesHasta');
+    const mesDesdeDisplay = document.getElementById('mesDesdeDisplay');
+    const mesHastaDisplay = document.getElementById('mesHastaDisplay');
+    const btnPdfTop = document.getElementById('btnPdfTop');
+    const btnPdfFilters = document.getElementById('btnPdfFilters');
+
+    const monthNames = (
+      window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.es
+        ? window.flatpickr.l10ns.es.months.longhand
+        : ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    );
+
+    function parseMonth(value) {
+      const match = String(value || '').match(/^(\d{4})-(\d{2})$/);
+      if (!match) {
+        const now = new Date();
+        return { year: now.getFullYear(), month: now.getMonth() + 1 };
+      }
+      return { year: Number(match[1]), month: Number(match[2]) };
+    }
+
+    function monthValue(year, month) {
+      return `${year}-${String(month).padStart(2, '0')}`;
+    }
+
+    function monthLabel(value) {
+      const parsed = parseMonth(value);
+      return `${monthNames[parsed.month - 1]} ${parsed.year}`;
+    }
+
+    function dispatchMonthChange(hiddenInput) {
+      hiddenInput.dispatchEvent(new Event('input', { bubbles: true }));
+      hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function closeAllMonthPickers(exceptPanel) {
+      page.querySelectorAll('.rem-month-popover').forEach((panel) => {
+        if (panel !== exceptPanel) panel.classList.add('rem-hidden');
+      });
+    }
+
+    function createMonthPicker(wrapper) {
+      const display = wrapper.querySelector('[data-month-display]');
+      const hidden = wrapper.querySelector('[data-month-value]');
+      if (!display || !hidden) return;
+
+      let parsed = parseMonth(hidden.value);
+      let viewYear = parsed.year;
+
+      const panel = document.createElement('div');
+      panel.className = 'rem-month-popover rem-hidden';
+      panel.setAttribute('role', 'dialog');
+      panel.setAttribute('aria-label', 'Selector de mes');
+      wrapper.appendChild(panel);
+
+      function render() {
+        const current = parseMonth(hidden.value);
+        panel.textContent = '';
+
+        const head = document.createElement('div');
+        head.className = 'rem-month-picker-head';
+
+        const prev = document.createElement('button');
+        prev.type = 'button';
+        prev.className = 'rem-month-nav';
+        prev.innerHTML = '<i class="fas fa-chevron-left" aria-hidden="true"></i>';
+        prev.setAttribute('aria-label', 'Gestión anterior');
+
+        const year = document.createElement('div');
+        year.className = 'rem-month-year';
+        year.textContent = String(viewYear);
+
+        const next = document.createElement('button');
+        next.type = 'button';
+        next.className = 'rem-month-nav';
+        next.innerHTML = '<i class="fas fa-chevron-right" aria-hidden="true"></i>';
+        next.setAttribute('aria-label', 'Gestión siguiente');
+
+        prev.addEventListener('click', () => {
+          viewYear -= 1;
+          render();
+        });
+        next.addEventListener('click', () => {
+          viewYear += 1;
+          render();
+        });
+
+        head.append(prev, year, next);
+        panel.appendChild(head);
+
+        const grid = document.createElement('div');
+        grid.className = 'rem-month-grid';
+
+        monthNames.forEach((name, index) => {
+          const month = index + 1;
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'rem-month-option';
+          button.textContent = name.slice(0, 3);
+          button.title = `${name} ${viewYear}`;
+          if (current.year === viewYear && current.month === month) {
+            button.classList.add('active');
+          }
+          button.addEventListener('click', () => {
+            hidden.value = monthValue(viewYear, month);
+            display.value = monthLabel(hidden.value);
+            panel.classList.add('rem-hidden');
+            dispatchMonthChange(hidden);
+          });
+          grid.appendChild(button);
+        });
+
+        panel.appendChild(grid);
+      }
+
+      function openPanel() {
+        if (display.disabled) return;
+        const current = parseMonth(hidden.value);
+        viewYear = current.year;
+        closeAllMonthPickers(panel);
+        render();
+        panel.classList.remove('rem-hidden');
+      }
+
+      display.value = monthLabel(hidden.value);
+      display.addEventListener('focus', openPanel);
+      display.addEventListener('click', openPanel);
+      display.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openPanel();
+        }
+        if (event.key === 'Escape') {
+          panel.classList.add('rem-hidden');
+        }
+      });
+      hidden.addEventListener('change', () => {
+        display.value = monthLabel(hidden.value);
+      });
+    }
+
+    page.querySelectorAll('[data-month-picker]').forEach(createMonthPicker);
+
+    document.addEventListener('click', (event) => {
+      if (!page.contains(event.target)) {
+        closeAllMonthPickers(null);
+        return;
+      }
+      if (!event.target.closest('[data-month-picker]')) {
+        closeAllMonthPickers(null);
+      }
+    });
+
+    function setMode(mode) {
+      const isRange = mode === 'RANGO_MESES';
+      modoInput.value = mode;
+      modeCards.forEach((card) => {
+        card.classList.toggle('active', card.dataset.mode === mode);
+      });
+      fieldGestion.classList.toggle('rem-hidden', isRange);
+      fieldMesDesde.classList.toggle('rem-hidden', !isRange);
+      fieldMesHasta.classList.toggle('rem-hidden', !isRange);
+      gestion.disabled = isRange;
+      mesDesde.disabled = !isRange;
+      mesHasta.disabled = !isRange;
+      mesDesdeDisplay.disabled = !isRange;
+      mesHastaDisplay.disabled = !isRange;
+      closeAllMonthPickers(null);
+    }
+
+    function buildPdfUrl() {
+      const params = new URLSearchParams(new FormData(form));
+      const baseUrl = '{{ url_for("estado_resultados_mes.pdf") }}';
+      return `${baseUrl}?${params.toString()}`;
+    }
+
+    function syncPdfLinks() {
+      const url = buildPdfUrl();
+      btnPdfTop.href = url;
+      btnPdfFilters.href = url;
+    }
+
+    modeCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        setMode(card.dataset.mode || 'GESTION');
+        syncPdfLinks();
+      });
+    });
+
+    Array.from(form.elements).forEach((el) => {
+      el.addEventListener('change', syncPdfLinks);
+      el.addEventListener('input', syncPdfLinks);
+    });
+
+    setMode(modoInput.value || 'GESTION');
+    syncPdfLinks();
+  }());
+</script>
+{% endblock extra_js %}

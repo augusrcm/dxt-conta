@@ -1,0 +1,1215 @@
+{% extends "layout.html" %} {% block title %}Comprobantes{% endblock title %} {%
+block page_help_url %}{{ url_for('comprobantes.help') }}{% endblock %} {% block
+extra_css %}
+<style>
+  #comprobantesIndexPage {
+    --ci-navy: #0f2340;
+    --ci-blue: #173f6a;
+    --ci-accent: #2d7dd2;
+    --ci-accent-soft: #ebf4ff;
+    --ci-success: #177a53;
+    --ci-success-soft: #e8f8f0;
+    --ci-warning: #c78a1b;
+    --ci-warning-soft: #fff7df;
+    --ci-danger: #c03b35;
+    --ci-danger-soft: #fdecec;
+    --ci-surface: #f5f8fc;
+    --ci-surface-2: #f9fbff;
+    --ci-border: #dde5ef;
+    --ci-text: #1d2c3c;
+    --ci-muted: #6b7c8f;
+    --ci-radius: 16px;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    color: var(--ci-text);
+  }
+
+  #comprobantesIndexPage .ci-header {
+    background: linear-gradient(130deg,
+        var(--ci-navy) 0%,
+        var(--ci-blue) 55%,
+        #1f5d9e 100%);
+    border-radius: var(--ci-radius);
+    padding: 1.1rem 1.35rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 14px 34px rgba(15, 35, 64, 0.16);
+    position: sticky;
+    top: 64px;
+    z-index: 40;
+    overflow: hidden;
+  }
+
+  #comprobantesIndexPage .ci-header::after {
+    content: "";
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    right: -60px;
+    top: -80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    pointer-events: none;
+  }
+
+  #comprobantesIndexPage .ci-header-main {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  #comprobantesIndexPage .ci-header-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    background: rgba(255, 255, 255, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.1rem;
+  }
+
+  #comprobantesIndexPage .ci-header-title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.12rem;
+    font-weight: 700;
+  }
+
+  #comprobantesIndexPage .ci-header-subtitle {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.82rem;
+    margin-top: 2px;
+  }
+
+  #comprobantesIndexPage .ci-header-actions {
+    display: flex;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+  }
+
+  #comprobantesIndexPage .ci-header-actions .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+  }
+
+  #comprobantesIndexPage .ci-card {
+    background: #fff;
+    border: 1px solid var(--ci-border);
+    border-radius: var(--ci-radius);
+    box-shadow: 0 4px 16px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  #comprobantesIndexPage .ci-card-head {
+    padding: 0.95rem 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    background: var(--ci-surface);
+    border-bottom: 1px solid var(--ci-border);
+  }
+
+  #comprobantesIndexPage .ci-card-title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ci-text);
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  #comprobantesIndexPage .ci-card-title i {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    color: var(--ci-accent);
+    border: 1px solid var(--ci-border);
+    font-size: 0.82rem;
+  }
+
+  #comprobantesIndexPage .ci-card-actions {
+    display: flex;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+  }
+
+  #comprobantesIndexPage .ci-body {
+    padding: 1rem 1.1rem 1.1rem;
+  }
+
+  #comprobantesIndexPage .form-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #4d6175;
+    margin-bottom: 0.35rem;
+  }
+
+  #comprobantesIndexPage .form-control,
+  #comprobantesIndexPage .form-select {
+    border-radius: 10px;
+    border: 1.5px solid var(--ci-border);
+    min-height: 40px;
+    font-size: 0.9rem;
+  }
+
+  #comprobantesIndexPage .form-control:focus,
+  #comprobantesIndexPage .form-select:focus {
+    border-color: var(--ci-accent);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.11);
+  }
+
+  #comprobantesIndexPage .ci-filter-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1.15fr 0.8fr 0.85fr 0.8fr 1.15fr 1.35fr;
+    gap: 0.85rem;
+    align-items: end;
+  }
+
+  #comprobantesIndexPage .ci-filter-item {
+    min-width: 0;
+  }
+
+  #comprobantesIndexPage .ci-quick-actions {
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    margin-top: 0.9rem;
+  }
+
+  #comprobantesIndexPage .ci-quick-btn {
+    border: 1px solid var(--ci-border);
+    background: #fff;
+    color: var(--ci-text);
+    border-radius: 999px;
+    padding: 0.42rem 0.8rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  #comprobantesIndexPage .ci-quick-btn.is-active,
+  #comprobantesIndexPage .ci-quick-btn:hover {
+    background: var(--ci-accent-soft);
+    color: var(--ci-accent);
+    border-color: #c7ddff;
+  }
+
+  #comprobantesIndexPage .ci-table-card {
+    position: relative;
+  }
+
+  #comprobantesIndexPage .ci-table-wrap {
+    position: relative;
+    min-height: 220px;
+    padding: 0.9rem 1rem 1rem;
+    overflow: auto;
+  }
+
+  #comprobantesIndexPage .ci-table-loading {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.74);
+    backdrop-filter: blur(2px);
+  }
+
+  #comprobantesIndexPage .ci-table-loading[hidden] {
+    display: none;
+  }
+
+  #comprobantesIndexPage .ci-table-loading-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.72rem 0.95rem;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid var(--ci-border);
+    box-shadow: 0 10px 26px rgba(15, 35, 64, 0.1);
+    color: var(--ci-text);
+    font-size: 0.84rem;
+    font-weight: 700;
+  }
+
+  #comprobantesIndexPage .ci-table-loading-spinner {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #d6e4f4;
+    border-top-color: var(--ci-accent);
+    animation: ci-table-spin 0.75s linear infinite;
+  }
+
+  @keyframes ci-table-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  #comprobantesIndexPage #tblComprobantes {
+    width: 100% !important;
+  }
+
+  #comprobantesIndexPage #tblComprobantes thead th {
+    background: var(--ci-surface);
+    color: var(--ci-muted);
+    font-size: 0.71rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.65px;
+    white-space: nowrap;
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--ci-border);
+  }
+
+  #comprobantesIndexPage #tblComprobantes tbody td {
+    padding: 9px 12px;
+    font-size: 0.87rem;
+    vertical-align: middle;
+    color: var(--ci-text);
+    border-bottom: 1px solid #edf1f6;
+  }
+
+  #comprobantesIndexPage #tblComprobantes tbody tr:nth-child(even) {
+    background: var(--ci-surface-2);
+  }
+
+  #comprobantesIndexPage #tblComprobantes tbody tr:hover td {
+    background: #edf5ff;
+  }
+
+  #comprobantesIndexPage .ci-code {
+    font-weight: 800;
+    color: var(--ci-blue);
+  }
+
+  #comprobantesIndexPage .ci-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.24rem 0.62rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+    line-height: 1.2;
+  }
+
+  #comprobantesIndexPage .ci-badge-state-borrador {
+    background: var(--ci-warning-soft);
+    color: var(--ci-warning);
+    border-color: #f3d79b;
+  }
+
+  #comprobantesIndexPage .ci-badge-state-confirmado {
+    background: var(--ci-success-soft);
+    color: var(--ci-success);
+    border-color: #aee2c8;
+  }
+
+  #comprobantesIndexPage .ci-badge-state-anulado {
+    background: var(--ci-danger-soft);
+    color: var(--ci-danger);
+    border-color: #f2bbbb;
+  }
+
+  #comprobantesIndexPage .ci-badge-origin-manual {
+    background: #eef2ff;
+    color: #5b5bd6;
+    border-color: #d7dcff;
+  }
+
+  #comprobantesIndexPage .ci-badge-origin-tesoreria {
+    background: var(--ci-accent-soft);
+    color: var(--ci-accent);
+    border-color: #c7ddff;
+  }
+
+  #comprobantesIndexPage .ci-badge-origin-factura {
+    background: #f5edff;
+    color: #7c3aed;
+    border-color: #ddc7ff;
+  }
+
+  #comprobantesIndexPage .ci-badge-origin-sistema {
+    background: #eef6f7;
+    color: #1f6f78;
+    border-color: #c6e3e8;
+  }
+
+  #comprobantesIndexPage .ci-badge-origin-cierre {
+    background: #fff4e8;
+    color: #b65f16;
+    border-color: #ffd7aa;
+  }
+
+  #comprobantesIndexPage .ci-actions {
+    display: inline-flex;
+    gap: 0.35rem;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #comprobantesIndexPage .ci-btn-icon {
+    width: 31px;
+    height: 31px;
+    border-radius: 9px;
+    border: 1px solid var(--ci-border);
+    background: #fff;
+    color: var(--ci-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    text-decoration: none;
+  }
+
+  #comprobantesIndexPage .ci-btn-icon:hover {
+    transform: translateY(-1px);
+  }
+
+  #comprobantesIndexPage .ci-btn-view:hover {
+    color: var(--ci-accent);
+    border-color: #c9ddff;
+    background: var(--ci-accent-soft);
+  }
+
+  #comprobantesIndexPage .ci-btn-edit:hover {
+    color: var(--ci-success);
+    border-color: #b7e6cf;
+    background: var(--ci-success-soft);
+  }
+
+  #comprobantesIndexPage .ci-btn-pdf:hover {
+    color: var(--ci-danger);
+    border-color: #f4c2c0;
+    background: var(--ci-danger-soft);
+  }
+
+  #comprobantesIndexPage .ci-btn-reopen:hover {
+    color: #b65f16;
+    border-color: #ffd7aa;
+    background: #fff4e8;
+  }
+
+  /* ===== ESTILOS DEL RESUMEN COMPACTO (dentro del card de tabla) ===== */
+  #comprobantesIndexPage .ci-summary-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    margin: 0;
+    border-top: 1px solid var(--ci-border);
+    border-bottom: 1px solid var(--ci-border);
+    background: #fafcff;
+    font-size: 0.8rem;
+  }
+
+  #comprobantesIndexPage .ci-summary-bar[hidden] {
+    display: none;
+  }
+
+  #comprobantesIndexPage .ci-summary-inline-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  #comprobantesIndexPage .ci-summary-pill {
+    padding: 0.25rem 0.65rem;
+    border-radius: 30px;
+    background: white;
+    border: 1px solid var(--ci-border);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+
+  #comprobantesIndexPage .ci-summary-pill i {
+    font-size: 0.75rem;
+    color: var(--ci-accent);
+  }
+
+  #comprobantesIndexPage .ci-summary-pill-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--ci-muted);
+  }
+
+  #comprobantesIndexPage .ci-summary-pill-value {
+    font-weight: 800;
+    color: var(--ci-text);
+  }
+
+  #comprobantesIndexPage .ci-summary-pill-meta {
+    font-size: 0.7rem;
+    color: var(--ci-muted);
+    margin-left: 0.2rem;
+  }
+
+  #comprobantesIndexPage .ci-summary-pill-state.is-balanced {
+    background: var(--ci-success-soft);
+    border-color: #b7e6cf;
+  }
+
+  #comprobantesIndexPage .ci-summary-pill-state.is-balanced .ci-summary-pill-value {
+    color: var(--ci-success);
+  }
+
+  #comprobantesIndexPage .ci-summary-pill-state.is-unbalanced {
+    background: var(--ci-danger-soft);
+    border-color: #f2bbbb;
+  }
+
+  #comprobantesIndexPage .ci-summary-pill-state.is-unbalanced .ci-summary-pill-value {
+    color: var(--ci-danger);
+  }
+
+  /* Responsive para el resumen */
+  @media (max-width: 768px) {
+    #comprobantesIndexPage .ci-summary-pill {
+      white-space: normal;
+      flex-wrap: wrap;
+    }
+
+    #comprobantesIndexPage .ci-summary-inline-group {
+      width: 100%;
+    }
+  }
+
+  /* DataTables */
+  #comprobantesIndexPage div.dataTables_wrapper div.dataTables_filter input,
+  #comprobantesIndexPage div.dataTables_wrapper div.dataTables_length select {
+    border: 1.5px solid var(--ci-border);
+    border-radius: 8px;
+    font-size: 0.84rem;
+    padding: 5px 10px;
+  }
+
+  #comprobantesIndexPage div.dataTables_wrapper div.dataTables_info,
+  #comprobantesIndexPage div.dataTables_wrapper div.dataTables_length label,
+  #comprobantesIndexPage div.dataTables_wrapper div.dataTables_filter label {
+    font-size: 0.8rem;
+    color: var(--ci-muted);
+  }
+
+  #comprobantesIndexPage div.dataTables_wrapper div.dataTables_paginate .paginate_button {
+    border-radius: 7px !important;
+    font-size: 0.82rem;
+    padding: 4px 10px !important;
+    border: 1px solid transparent !important;
+    color: var(--ci-muted) !important;
+  }
+
+  #comprobantesIndexPage div.dataTables_wrapper div.dataTables_paginate .paginate_button.current,
+  #comprobantesIndexPage div.dataTables_wrapper div.dataTables_paginate .paginate_button.current:hover {
+    background: var(--ci-accent) !important;
+    border-color: var(--ci-accent) !important;
+    color: #fff !important;
+    font-weight: 700;
+  }
+
+  #comprobantesIndexPage div.dataTables_wrapper div.dataTables_paginate .paginate_button:hover {
+    background: var(--ci-accent-soft) !important;
+    border-color: var(--ci-accent-soft) !important;
+    color: var(--ci-accent) !important;
+  }
+
+  /* Responsive filtros */
+  @media (max-width: 1399.98px) {
+    #comprobantesIndexPage .ci-filter-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+
+    #comprobantesIndexPage .ci-header,
+    #comprobantesIndexPage .ci-card-head {
+      align-items: stretch;
+    }
+
+    #comprobantesIndexPage .ci-header-actions,
+    #comprobantesIndexPage .ci-card-actions {
+      width: 100%;
+    }
+
+    #comprobantesIndexPage .ci-header-actions .btn,
+    #comprobantesIndexPage .ci-card-actions .btn {
+      flex: 1 1 auto;
+    }
+
+    #comprobantesIndexPage .ci-filter-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 575.98px) {
+    #comprobantesIndexPage .ci-filter-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock extra_css %} {% block content %}
+<div id="comprobantesIndexPage">
+  <!-- Header principal -->
+  <div class="ci-header">
+    <div class="ci-header-main">
+      <div class="ci-header-icon">
+        <i class="fas fa-file-invoice"></i>
+      </div>
+      <div>
+        <h1 class="ci-header-title">Comprobantes</h1>
+        <div class="ci-header-subtitle">
+          Listado general de comprobantes manuales y generados desde Tesorería
+        </div>
+      </div>
+    </div>
+    <div class="ci-header-actions">
+      <a href="{{ url_for('comprobantes.nuevo') }}" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus me-1"></i>
+        Nuevo comprobante
+      </a>
+      <button id="btnRecargar" type="button" class="btn btn-outline-light btn-sm">
+        <i class="fas fa-rotate me-1"></i>
+        Recargar
+      </button>
+    </div>
+  </div>
+
+  <!-- Card de filtros -->
+  <div class="ci-card">
+    <div class="ci-card-head">
+      <div class="ci-card-title">
+        <i class="fas fa-filter"></i>
+        <div>Filtros</div>
+      </div>
+      <div class="ci-card-actions">
+        <button id="btnBuscar" type="button" class="btn btn-primary btn-sm">
+          <i class="fas fa-magnifying-glass me-1"></i>
+          Buscar
+        </button>
+        <button id="btnLimpiar" type="button" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-eraser me-1"></i>
+          Limpiar
+        </button>
+      </div>
+    </div>
+    <div class="ci-body">
+      <div class="ci-filter-grid">
+        <div class="ci-filter-item">
+          <label class="form-label" for="filtroFechaDesde">Fecha desde</label>
+          <input id="filtroFechaDesde" type="text" class="form-control" autocomplete="off" placeholder="dd/mm/aaaa" inputmode="numeric" />
+        </div>
+        <div class="ci-filter-item">
+          <label class="form-label" for="filtroFechaHasta">Fecha hasta</label>
+          <input id="filtroFechaHasta" type="text" class="form-control" autocomplete="off" placeholder="dd/mm/aaaa" inputmode="numeric" />
+        </div>
+        <div class="ci-filter-item">
+          <label class="form-label" for="filtroEstado">Estado</label>
+          <select id="filtroEstado" class="form-select">
+            <option value="TODOS">Todos</option>
+            <option value="BORRADOR">Borrador</option>
+            <option value="CONFIRMADO">Confirmado</option>
+            <option value="ANULADO">Anulado</option>
+          </select>
+        </div>
+        <div class="ci-filter-item">
+          <label class="form-label" for="filtroOrigen">Origen</label>
+          <select id="filtroOrigen" class="form-select">
+            <option value="TODOS">Todos</option>
+            <option value="MANUAL">Manual</option>
+            <option value="TESORERIA_PAGOS">Tesorería Pagos</option>
+            <option value="TESORERIA_COBROS">Tesorería Cobros</option>
+            <option value="TESORERIA_MOVIMIENTOS">Tesorería Caja/Bancos</option>
+            <option value="FACTURA_ELECTRONICA">Facturas Electrónicas</option>
+            <option value="SALDOS_INICIALES">Saldos Iniciales</option>
+            <option value="CIERRE_GESTION">Cierre de Gestión</option>
+            <option value="PLANILLAS_REVERSO_PAGO">Planillas - Reverso de pago</option>
+          </select>
+        </div>
+        <div class="ci-filter-item">
+          <label class="form-label" for="filtroMoneda">Moneda</label>
+          <select id="filtroMoneda" class="form-select">
+            <option value="TODAS">Todas</option>
+          </select>
+        </div>
+        <div class="ci-filter-item">
+          <label class="form-label" for="filtroUnidadNegocio">Unidad de negocio</label>
+          <select id="filtroUnidadNegocio" class="form-select">
+            <option value="">Todas</option>
+          </select>
+        </div>
+        <div class="ci-filter-item">
+          <label class="form-label" for="filtroTexto">Buscar</label>
+          <input id="filtroTexto" type="text" class="form-control" autocomplete="off" />
+        </div>
+      </div>
+      <div class="ci-quick-actions">
+        <button type="button" class="ci-quick-btn is-active" data-range="today">Hoy</button>
+        <button type="button" class="ci-quick-btn" data-range="month">Este mes</button>
+        <button type="button" class="ci-quick-btn" data-range="all">Todos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card de la tabla con resumen integrado -->
+  <div class="ci-card ci-table-card">
+    <div class="ci-card-head">
+      <div class="ci-card-title">
+        <i class="fas fa-table-list"></i>
+        <div>Listado de comprobantes</div>
+      </div>
+    </div>
+
+    <!-- Resumen de totales (compacto) -->
+    <div id="comprobantesResumen" class="ci-summary-bar" hidden>
+      <div class="ci-summary-pill">
+        <i class="fas fa-list-check"></i>
+        <span class="ci-summary-pill-label">Transacciones</span>
+        <span id="resumenCantidad" class="ci-summary-pill-value">0</span>
+      </div>
+
+      <div id="resumenConTotales" class="ci-summary-inline-group" hidden>
+        <div class="ci-summary-pill">
+          <i class="fas fa-coins"></i>
+          <span class="ci-summary-pill-label">Moneda</span>
+          <span id="resumenMoneda" class="ci-summary-pill-value">—</span>
+        </div>
+        <div class="ci-summary-pill">
+          <i class="fas fa-arrow-down"></i>
+          <span class="ci-summary-pill-label">Debe</span>
+          <span id="resumenDebe" class="ci-summary-pill-value">0.00</span>
+        </div>
+        <div class="ci-summary-pill">
+          <i class="fas fa-arrow-up"></i>
+          <span class="ci-summary-pill-label">Haber</span>
+          <span id="resumenHaber" class="ci-summary-pill-value">0.00</span>
+        </div>
+        <div id="resumenEstadoWrap" class="ci-summary-pill ci-summary-pill-state is-balanced">
+          <i class="fas fa-scale-balanced"></i>
+          <span class="ci-summary-pill-label">Estado</span>
+          <span id="resumenEstado" class="ci-summary-pill-value">Cuadrado</span>
+          <span id="resumenDiferencia" class="ci-summary-pill-meta">Dif. 0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ci-table-wrap">
+      <div id="ciTableLoading" class="ci-table-loading" hidden>
+        <div class="ci-table-loading-card">
+          <span class="ci-table-loading-spinner" aria-hidden="true"></span>
+          <span>Cargando comprobantes...</span>
+        </div>
+      </div>
+      <table id="tblComprobantes" class="table table-hover w-100">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+            <th>Origen</th>
+            <th>Unidad de negocio</th>
+            <th>Glosa</th>
+            <th>Referencia</th>
+            <th>Auxiliar</th>
+            <th>Moneda</th>
+            <th>Debe</th>
+            <th>Haber</th>
+            <th>Líneas</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Automático -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script id="comprobantesIndexBootstrap" type="application/json">
+  {{ {
+    "fecha_hoy": fecha_hoy,
+    "urls": {
+      "data": url_for('comprobantes.data'),
+      "catalogos": url_for('comprobantes.catalogos'),
+      "nuevo": url_for('comprobantes.nuevo'),
+      "ver_base": url_for('comprobantes.ver', asiento_id=0),
+      "editar_base": url_for('comprobantes.editar', asiento_id=0),
+      "pdf_base": url_for('comprobantes.pdf', asiento_id=0),
+      "reabrir_borrador_base": url_for('comprobantes.reabrir_borrador', asiento_id=0)
+    }
+  } | tojson }}
+</script>
+{% endblock content %} {% block extra_js %}
+<script>
+  (function () {
+    const bootEl = document.getElementById("comprobantesIndexBootstrap");
+    if (!bootEl) {
+      console.error("No se encontró el bloque comprobantesIndexBootstrap.");
+      return;
+    }
+
+    const boot = JSON.parse(bootEl.textContent || "{}");
+
+    const filtroFechaDesde = document.getElementById("filtroFechaDesde");
+    const filtroFechaHasta = document.getElementById("filtroFechaHasta");
+    const filtroEstado = document.getElementById("filtroEstado");
+    const filtroOrigen = document.getElementById("filtroOrigen");
+    const filtroMoneda = document.getElementById("filtroMoneda");
+    const filtroUnidadNegocio = document.getElementById("filtroUnidadNegocio");
+    const filtroTexto = document.getElementById("filtroTexto");
+    const btnBuscar = document.getElementById("btnBuscar");
+    const btnLimpiar = document.getElementById("btnLimpiar");
+    const btnRecargar = document.getElementById("btnRecargar");
+    const resumenWrap = document.getElementById("comprobantesResumen");
+    const resumenCantidad = document.getElementById("resumenCantidad");
+    const tableLoading = document.getElementById("ciTableLoading");
+    const resumenConTotales = document.getElementById("resumenConTotales");
+    const resumenMoneda = document.getElementById("resumenMoneda");
+    const resumenDebe = document.getElementById("resumenDebe");
+    const resumenHaber = document.getElementById("resumenHaber");
+    const resumenEstadoWrap = document.getElementById("resumenEstadoWrap");
+    const resumenEstado = document.getElementById("resumenEstado");
+    const resumenDiferencia = document.getElementById("resumenDiferencia");
+
+    let tabla = null;
+    let autoReloadTimer = null;
+    let suppressAutoReload = false;
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("es-BO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    function formatDateDisplay(value) {
+      if (!value) return "—";
+      const raw = String(value).trim().slice(0, 10);
+      const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (iso) return `${iso[3]}/${iso[2]}/${iso[1]}`;
+      const local = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (local) return raw;
+      return raw || "—";
+    }
+
+    function normalizeIsoDate(value) {
+      if (!value) return "";
+      const raw = String(value).trim().slice(0, 10);
+      const local = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (local) return `${local[3]}-${local[2]}-${local[1]}`;
+      return raw;
+    }
+
+    function toNumber(value) {
+      const parsed = Number(value || 0);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function setTableLoading(isLoading) {
+      if (!tableLoading) return;
+      tableLoading.hidden = !isLoading;
+    }
+
+    function showAlert(icon, title, text) {
+      if (window.Swal) {
+        return Swal.fire({
+          icon,
+          title,
+          text,
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#1d4ed8",
+        });
+      }
+      window.alert(text || title || "Operación completada.");
+      return Promise.resolve();
+    }
+
+    function postJson(url, payload) {
+      return fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: JSON.stringify(payload || {}),
+      }).then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.ok === false) {
+          throw new Error(data.msg || "Ocurrió un error inesperado.");
+        }
+        return data;
+      });
+    }
+
+    function reloadTable(resetPaging = true) {
+      if (!tabla) return;
+      tabla.ajax.reload(null, resetPaging);
+    }
+
+    function queueReload(delay = 0, resetPaging = true) {
+      if (suppressAutoReload) return;
+      window.clearTimeout(autoReloadTimer);
+      autoReloadTimer = window.setTimeout(() => {
+        reloadTable(resetPaging);
+      }, delay);
+    }
+
+    function runWithoutAutoReload(callback) {
+      suppressAutoReload = true;
+      try {
+        callback();
+      } finally {
+        suppressAutoReload = false;
+      }
+    }
+
+    function updateSummary(rows) {
+      if (!resumenWrap) return;
+      const items = Array.isArray(rows) ? rows : [];
+      const monedaCodigo = filtroMoneda.value;
+
+      resumenCantidad.textContent = String(items.length);
+      resumenWrap.hidden = false;
+
+      if (!monedaCodigo || monedaCodigo === "TODAS") {
+        if (resumenConTotales) resumenConTotales.hidden = true;
+        return;
+      }
+
+      const totalDebe = items.reduce((acc, row) => acc + toNumber(row.total_debe), 0);
+      const totalHaber = items.reduce((acc, row) => acc + toNumber(row.total_haber), 0);
+      const diferencia = totalDebe - totalHaber;
+      const cuadrado = Math.abs(diferencia) < 0.0001;
+      const monedaTexto = filtroMoneda.options[filtroMoneda.selectedIndex]?.textContent || monedaCodigo;
+
+      if (resumenConTotales) resumenConTotales.hidden = false;
+      resumenMoneda.textContent = monedaTexto;
+      resumenDebe.textContent = formatMoney(totalDebe);
+      resumenHaber.textContent = formatMoney(totalHaber);
+      resumenEstado.textContent = cuadrado ? "Cuadrado" : "No cuadrado";
+      if (resumenEstadoWrap) {
+        resumenEstadoWrap.classList.toggle("is-balanced", cuadrado);
+        resumenEstadoWrap.classList.toggle("is-unbalanced", !cuadrado);
+      }
+      resumenDiferencia.textContent = `Dif. ${formatMoney(Math.abs(diferencia))}`;
+    }
+
+    function badgeEstado(estado) {
+      if (estado === "CONFIRMADO") return "ci-badge ci-badge-state-confirmado";
+      if (estado === "ANULADO") return "ci-badge ci-badge-state-anulado";
+      return "ci-badge ci-badge-state-borrador";
+    }
+
+    function badgeOrigen(origen) {
+      if (origen === "MANUAL") return "ci-badge ci-badge-origin-manual";
+      if (origen === "FACTURA_ELECTRONICA") return "ci-badge ci-badge-origin-factura";
+      if (origen === "SALDOS_INICIALES") return "ci-badge ci-badge-origin-sistema";
+      if (origen === "CIERRE_GESTION") return "ci-badge ci-badge-origin-cierre";
+      return "ci-badge ci-badge-origin-tesoreria";
+    }
+
+    function labelOrigen(origen) {
+      if (origen === "TESORERIA_PAGOS") return "TES · Pagos";
+      if (origen === "TESORERIA_COBROS") return "TES · Cobros";
+      if (origen === "TESORERIA_MOVIMIENTOS") return "TES · Caja/Bancos";
+      if (origen === "FACTURA_ELECTRONICA") return "Factura electrónica";
+      if (origen === "SALDOS_INICIALES") return "Saldos iniciales";
+      if (origen === "CIERRE_GESTION") return "Cierre gestión";
+      if (origen === "PLANILLAS_REVERSO_PAGO") return "Planillas · Reverso pago";
+      return "Manual";
+    }
+
+    function loadCatalogos() {
+      fetch(boot.urls.catalogos)
+        .then(response => response.json())
+        .then(data => {
+          (data.data.monedas || []).forEach(moneda => {
+            const option = document.createElement("option");
+            option.value = moneda.codigo;
+            option.textContent = moneda.codigo;
+            filtroMoneda.appendChild(option);
+          });
+          (data.data.unidades_negocio || []).forEach(unidad => {
+            const option = document.createElement("option");
+            option.value = unidad.id;
+            option.textContent = `${unidad.codigo} · ${unidad.nombre}`;
+            filtroUnidadNegocio.appendChild(option);
+          });
+        })
+        .catch(error => console.error(error));
+    }
+
+    function setDateValue(input, value) {
+      const normalized = normalizeIsoDate(value);
+      if (input && input._flatpickr) {
+        input._flatpickr.setDate(normalized || null, true, "Y-m-d");
+      } else if (input) {
+        input.value = normalized || "";
+      }
+    }
+
+    function applyTodayRange() {
+      setDateValue(filtroFechaDesde, boot.fecha_hoy || "");
+      setDateValue(filtroFechaHasta, boot.fecha_hoy || "");
+      document.querySelectorAll(".ci-quick-btn").forEach(btn => {
+        btn.classList.toggle("is-active", btn.dataset.range === "today");
+      });
+    }
+
+    function applyMonthRange() {
+      const today = new Date(boot.fecha_hoy || new Date().toISOString().slice(0, 10));
+      const start = new Date(today.getFullYear(), today.getMonth(), 1);
+      const startText = start.toISOString().slice(0, 10);
+      const endText = today.toISOString().slice(0, 10);
+      setDateValue(filtroFechaDesde, startText);
+      setDateValue(filtroFechaHasta, endText);
+      document.querySelectorAll(".ci-quick-btn").forEach(btn => {
+        btn.classList.toggle("is-active", btn.dataset.range === "month");
+      });
+    }
+
+    function applyAllRange() {
+      setDateValue(filtroFechaDesde, "");
+      setDateValue(filtroFechaHasta, "");
+      document.querySelectorAll(".ci-quick-btn").forEach(btn => {
+        btn.classList.toggle("is-active", btn.dataset.range === "all");
+      });
+    }
+
+    function clearFilters() {
+      runWithoutAutoReload(() => {
+        applyTodayRange();
+        filtroEstado.value = "TODOS";
+        filtroOrigen.value = "TODOS";
+        filtroMoneda.value = "TODAS";
+        filtroUnidadNegocio.value = "";
+        filtroTexto.value = "";
+      });
+    }
+
+    function initDates() {
+      flatpickr.localize(flatpickr.l10ns.es);
+      [filtroFechaDesde, filtroFechaHasta].forEach(input => {
+        flatpickr(input, {
+          locale: "es",
+          dateFormat: "Y-m-d",
+          altInput: true,
+          altFormat: "d/m/Y",
+          allowInput: true,
+          disableMobile: true,
+        });
+      });
+      window.requestAnimationFrame(() => applyTodayRange());
+    }
+
+    async function reopenDraft(row) {
+      if (!row || !row.id) return;
+
+      const title = `Volver a borrador comprobante #${row.id}`;
+      const text = "Mientras esté en borrador, este comprobante dejará de impactar los reportes contables hasta que sea confirmado nuevamente. La acción quedará registrada en auditoría.";
+
+      let result;
+      if (window.Swal) {
+        result = await Swal.fire({
+          icon: "warning",
+          title,
+          text,
+          input: "textarea",
+          inputLabel: "Motivo de reapertura",
+          inputPlaceholder: "Describe el motivo. Ej.: Corrección de fecha informada por operador.",
+          inputAttributes: {
+            maxlength: 500,
+            autocapitalize: "sentences",
+          },
+          inputValidator: (value) => {
+            if (!value || value.trim().length < 10) {
+              return "Registra un motivo claro de al menos 10 caracteres.";
+            }
+            return null;
+          },
+          showCancelButton: true,
+          confirmButtonText: "Sí, volver a borrador",
+          cancelButtonText: "Cancelar",
+          confirmButtonColor: "#b65f16",
+        });
+      } else {
+        const motivo = window.prompt(`${title}\n\n${text}\n\nMotivo:`);
+        result = { isConfirmed: !!motivo, value: motivo };
+      }
+
+      if (!result.isConfirmed) return;
+
+      try {
+        const url = boot.urls.reabrir_borrador_base.replace(/0$/, String(row.id));
+        const response = await postJson(url, { motivo: String(result.value || "").trim() });
+        await showAlert("success", "Comprobante en borrador", response.msg || "El comprobante volvió a borrador.");
+        reloadTable(false);
+      } catch (error) {
+        showAlert("error", "No se pudo volver a borrador", error.message);
+      }
+    }
+
+    function initTable() {
+      const $table = $("#tblComprobantes");
+
+      $table.on("processing.dt", function (_event, _settings, processing) {
+        setTableLoading(processing);
+      });
+      $table.on("preXhr.dt", function () {
+        setTableLoading(true);
+      });
+      $table.on("xhr.dt error.dt", function () {
+        setTableLoading(false);
+      });
+
+      tabla = $table.DataTable({
+        processing: true,
+        ajax: {
+          url: boot.urls.data,
+          dataSrc: "data",
+          data: function () {
+            return {
+              fecha_desde: filtroFechaDesde.value,
+              fecha_hasta: filtroFechaHasta.value,
+              estado: filtroEstado.value,
+              origen: filtroOrigen.value,
+              moneda_codigo: filtroMoneda.value,
+              unidad_negocio_id: filtroUnidadNegocio.value,
+              texto: filtroTexto.value.trim(),
+            };
+          },
+        },
+        ordering: false,
+        pageLength: 15,
+        language: {
+          processing: "Procesando...",
+          lengthMenu: "Mostrar _MENU_ registros",
+          zeroRecords: "No se encontraron comprobantes",
+          emptyTable: "No hay comprobantes disponibles",
+          info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+          infoEmpty: "Mostrando 0 a 0 de 0 registros",
+          infoFiltered: "(filtrado de _MAX_ registros totales)",
+          search: "Buscar:",
+          paginate: {
+            first: "Primero",
+            last: "Último",
+            next: "Siguiente",
+            previous: "Anterior",
+          },
+        },
+        drawCallback: function () {
+          const rows = this.api().rows({ search: "applied" }).data().toArray();
+          updateSummary(rows);
+        },
+        columns: [
+          { data: "id", render: (data) => `<span class="ci-code">#${data}</span>` },
+          { data: "fecha", render: (data) => formatDateDisplay(data) },
+          { data: "estado", render: (data) => `<span class="${badgeEstado(data)}">${data}</span>` },
+          { data: "origen", render: (data) => `<span class="${badgeOrigen(data)}">${labelOrigen(data)}</span>` },
+          { data: null, render: (row) => row.unidad_negocio_codigo ? `${row.unidad_negocio_codigo} · ${row.unidad_negocio_nombre || ""}` : "—" },
+          { data: "glosa" },
+          { data: "referencia", render: (data) => data || "—" },
+          { data: "auxiliar_nombre", render: (data) => data || "—" },
+          { data: "moneda_codigo" },
+          { data: "total_debe", className: "text-end", render: (data) => formatMoney(data) },
+          { data: "total_haber", className: "text-end", render: (data) => formatMoney(data) },
+          { data: "total_lineas", className: "text-center" },
+          {
+            data: null,
+            className: "text-center",
+            render: function (row) {
+              const viewUrl = boot.urls.ver_base.replace(/0$/, String(row.id));
+              const editUrl = boot.urls.editar_base.replace(/0$/, String(row.id));
+              const pdfUrl = boot.urls.pdf_base.replace(/0\/pdf$/, `${row.id}/pdf`);
+              const editBtn = row.puede_editar ? `<a href="${editUrl}" class="ci-btn-icon ci-btn-edit" title="Editar" aria-label="Editar"><i class="fas fa-pen"></i></a>` : "";
+              const reopenBtn = row.puede_reabrir_borrador ? `<button type="button" class="ci-btn-icon ci-btn-reopen js-reabrir-borrador" data-id="${row.id}" title="Volver a borrador" aria-label="Volver a borrador"><i class="fas fa-rotate-left"></i></button>` : "";
+              const pdfBtn = `<a href="${pdfUrl}" class="ci-btn-icon ci-btn-pdf" target="_blank" rel="noopener" title="Generar PDF" aria-label="Generar PDF"><i class="fas fa-file-pdf"></i></a>`;
+              return `<div class="ci-actions"><a href="${viewUrl}" class="ci-btn-icon ci-btn-view" title="Ver" aria-label="Ver"><i class="fas fa-eye"></i></a>${editBtn}${reopenBtn}${pdfBtn}</div>`;
+            },
+          },
+        ],
+      });
+    }
+
+    function initEvents() {
+      btnBuscar.addEventListener("click", () => reloadTable(true));
+      btnLimpiar.addEventListener("click", () => {
+        clearFilters();
+        reloadTable(true);
+      });
+      btnRecargar.addEventListener("click", () => reloadTable(false));
+
+      [filtroFechaDesde, filtroFechaHasta, filtroEstado, filtroOrigen, filtroMoneda, filtroUnidadNegocio].forEach(control => {
+        control.addEventListener("change", () => queueReload(0, true));
+      });
+
+      filtroTexto.addEventListener("input", () => queueReload(420, true));
+      filtroTexto.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          window.clearTimeout(autoReloadTimer);
+          reloadTable(true);
+        }
+      });
+
+      document.querySelectorAll(".ci-quick-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          runWithoutAutoReload(() => {
+            if (btn.dataset.range === "today") applyTodayRange();
+            if (btn.dataset.range === "month") applyMonthRange();
+            if (btn.dataset.range === "all") applyAllRange();
+          });
+          reloadTable(true);
+        });
+      });
+
+      document.getElementById("tblComprobantes").addEventListener("click", (event) => {
+        const btn = event.target.closest(".js-reabrir-borrador");
+        if (!btn || !tabla) return;
+        event.preventDefault();
+        const tr = btn.closest("tr");
+        const row = tabla.row(tr).data();
+        reopenDraft(row);
+      });
+    }
+
+    initDates();
+    loadCatalogos();
+    initTable();
+    initEvents();
+  })();
+</script>
+{% endblock extra_js %}

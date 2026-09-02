@@ -1,0 +1,29 @@
+{% extends "layouthelp.html" %}
+{% block title %}Ayuda · Anticipos y Préstamos{% endblock title %}
+{% block help_content %}
+<div class="help-section">
+  <h4><i class="fas fa-hand-holding-dollar me-2"></i>Anticipos y Préstamos</h4>
+  <p>Permite registrar anticipos de sueldo y préstamos sobre sueldo vinculados a personas de planilla.</p>
+</div>
+<div class="help-section">
+  <h5>Reglas principales</h5>
+  <ul>
+    <li>El anticipo se programa en una sola planilla mensual.</li>
+    <li>El préstamo puede programarse en varias planillas de la gestión activa, no necesariamente consecutivas.</li>
+    <li>La suma de cuotas debe coincidir con el total a recuperar.</li>
+    <li>La planilla mensual será una forma de recuperación, pero también existe recupero directo por caja o banco.</li>
+    <li>El interés del préstamo, si existe, es simple: porcentaje o valor fijo aplicado al monto inicial.</li>
+    <li>La glosa concentra la referencia operativa del registro; no se solicitan campos redundantes de referencia u observación.</li>
+  </ul>
+</div>
+<div class="help-section">
+  <h5>Contabilización</h5>
+  <ul>
+    <li>Al confirmar un desembolso se registra la cuenta por cobrar contra caja/banco.</li>
+    <li>Si el préstamo tiene interés, el total a recuperar se registra contra capital desembolsado e ingreso por interés.</li>
+    <li>El recupero directo genera cobro y asiento automático.</li>
+    <li>Los asientos generados pueden abrirse en PDF con el mismo formato de comprobante contable del módulo Contabilidad &gt; Comprobantes.</li>
+    <li>La recuperación por planilla se integrará al módulo de generación de planilla mensual.</li>
+  </ul>
+</div>
+{% endblock help_content %}

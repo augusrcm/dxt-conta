@@ -1,0 +1,419 @@
+{% extends "layout.html" %}
+{% block title %}Anticipos y Préstamos{% endblock title %}
+{% block page_help_url %}{{ url_for('planilla_prestamos.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root{--ap-navy:#0f2340;--ap-blue:#17406f;--ap-border:#dfe7f1;--ap-muted:#64748b;--ap-danger:#dc2626;--ap-success:#0f766e;--ap-warning:#f97316;--ap-radius:1rem;}
+  #apPage{display:grid;gap:1rem}.ap-header{align-items:center;background:linear-gradient(135deg,var(--ap-navy),var(--ap-blue));border-radius:var(--ap-radius);box-shadow:0 18px 38px rgba(15,35,64,.18);color:#fff;display:flex;gap:1rem;justify-content:space-between;padding:1.1rem 1.25rem}.ap-header-left{align-items:center;display:flex;gap:.85rem}.ap-header-icon{align-items:center;background:rgba(255,255,255,.14);border-radius:.9rem;display:flex;height:46px;justify-content:center;width:46px}.ap-kicker{color:rgba(255,255,255,.72);font-size:.73rem;font-weight:800;text-transform:uppercase}.ap-title{font-size:1.55rem;font-weight:900;line-height:1;margin:0}.ap-subtitle{color:rgba(255,255,255,.82);font-size:.84rem;font-weight:700;margin-top:.25rem}.ap-toolbar{display:flex;gap:.5rem;flex-wrap:wrap}.ap-btn{align-items:center;border:1px solid transparent;border-radius:.7rem;display:inline-flex;font-weight:800;gap:.45rem;padding:.58rem .85rem;text-decoration:none}.ap-btn-primary{background:#fff;color:#0d47a1}.ap-btn-danger{background:#dc2626;color:#fff}.ap-btn-outline{background:#fff;border-color:var(--ap-border);color:#17406f}.ap-card{background:#fff;border:1px solid var(--ap-border);border-radius:var(--ap-radius);box-shadow:0 12px 28px rgba(15,35,64,.08);padding:1rem}.ap-filters{display:grid;gap:.8rem;grid-template-columns:1fr 1fr 1fr 2fr auto}.ap-field label{color:#334155;font-size:.74rem;font-weight:900;margin-bottom:.25rem;text-transform:uppercase}.ap-field input,.ap-field select,.ap-field textarea{border:1px solid #d7e0ec;border-radius:.65rem;font-weight:700}.ap-field small{color:#64748b;font-weight:700}.ap-metrics{display:grid;gap:.9rem;grid-template-columns:repeat(5,minmax(0,1fr))}.ap-metric{background:#fff;border:1px solid var(--ap-border);border-left:5px solid #2563eb;border-radius:.85rem;padding:.85rem}.ap-metric:nth-child(2){border-left-color:#0f766e}.ap-metric:nth-child(3){border-left-color:#f97316}.ap-metric:nth-child(4){border-left-color:#7c3aed}.ap-metric:nth-child(5){border-left-color:#dc2626}.ap-metric-label{color:#64748b;font-size:.72rem;font-weight:900;text-transform:uppercase}.ap-metric-value{color:#0f2340;font-size:1.18rem;font-weight:900}.ap-table-wrap{overflow:auto}.ap-table{margin:0;min-width:1120px;width:100%}.ap-table th{background:#f7fafc;color:#334155;font-size:.74rem;font-weight:900;text-transform:uppercase;white-space:nowrap}.ap-table td{font-size:.84rem;vertical-align:middle}.ap-badge{border-radius:999px;display:inline-flex;font-size:.69rem;font-weight:900;padding:.28rem .55rem;text-transform:uppercase}.ap-badge-borrador{background:#eff6ff;color:#1d4ed8}.ap-badge-confirmado{background:#ecfdf5;color:#047857}.ap-badge-parcial{background:#fff7ed;color:#c2410c}.ap-badge-pagado{background:#f0fdfa;color:#0f766e}.ap-badge-anulado{background:#fef2f2;color:#b91c1c}.ap-actions{display:flex;gap:.25rem}.ap-icon-btn{align-items:center;background:#fff;border:1px solid #d7e0ec;border-radius:.55rem;color:#17406f;display:inline-flex;height:32px;justify-content:center;width:32px}.ap-icon-btn:hover{background:#eef6ff}.ap-empty{color:#64748b;font-weight:800;padding:1rem;text-align:center}.modal-header.ap-modal-head{background:linear-gradient(135deg,var(--ap-navy),var(--ap-blue));color:#fff}.ap-section{border:1px solid #e3eaf4;border-radius:.9rem;margin-bottom:1rem;padding:1rem}.ap-section-title{align-items:center;color:#0f2340;display:flex;font-weight:900;gap:.45rem;margin-bottom:.8rem}.ap-grid-2{display:grid;gap:.85rem;grid-template-columns:1fr 1fr}.ap-grid-3{display:grid;gap:.85rem;grid-template-columns:repeat(3,1fr)}.ap-grid-4{display:grid;gap:.85rem;grid-template-columns:repeat(4,1fr)}.ap-form-grid{display:grid;gap:.45rem .85rem}.ap-form-grid-5{grid-template-columns:1fr 1fr 1.25fr 1.25fr 1.25fr}.ap-grid-label{color:#334155;font-size:.72rem;font-weight:900;text-transform:uppercase}.ap-grid-control select,.ap-grid-control input{border:1px solid #d7e0ec;border-radius:.65rem;font-weight:700;width:100%}.ap-cuota-toolbar{display:flex;gap:.5rem;justify-content:flex-end;margin-bottom:.5rem}.ap-cuotas-head{background:#f8fafc;border:1px solid #e2e8f0;border-radius:.7rem;display:grid;gap:.55rem;grid-template-columns:1fr 1fr 1.2fr 36px;margin-bottom:.45rem;padding:.55rem .65rem}.ap-cuotas-head div{color:#334155;font-size:.72rem;font-weight:900;text-transform:uppercase}.ap-cuota-row{align-items:center;display:grid;gap:.55rem;grid-template-columns:1fr 1fr 1.2fr 36px;margin-bottom:.45rem}.ap-cuota-row input,.ap-cuota-row select{border:1px solid #d7e0ec;border-radius:.65rem;font-weight:700;width:100%}.ap-cuotas-list{border:1px dashed #cbd5e1;border-radius:.8rem;padding:.7rem}.ap-cont-grid{display:grid;gap:.85rem;grid-template-columns:1fr 1fr}.ap-cont-grid .ap-wide{grid-column:span 2}.ap-field textarea.ap-textarea-soft{min-height:76px;resize:vertical}.ap-total-line{align-items:center;background:#f8fafc;border-radius:.75rem;display:flex;font-weight:900;justify-content:space-between;margin-top:.6rem;padding:.65rem}.ap-select2-dropdown{font-size:.88rem}.select2-container--default .select2-selection--single{border:1px solid #d7e0ec;border-radius:.65rem;height:38px}.select2-container--default .select2-selection--single .select2-selection__rendered{font-weight:700;line-height:36px;padding-left:.75rem}.select2-container--default .select2-selection--single .select2-selection__arrow{height:36px}.select2-container--default .select2-search--dropdown .select2-search__field{border:1px solid #d7e0ec;border-radius:.45rem;outline:none;padding:.38rem .5rem}.select2-container--default .select2-results__option{font-weight:700}.select2-container--default .select2-results__option--highlighted[aria-selected]{background:#17406f}.ap-hide{display:none!important}@media(max-width:992px){.ap-filters,.ap-metrics,.ap-grid-2,.ap-grid-3,.ap-grid-4,.ap-form-grid-5,.ap-cont-grid{grid-template-columns:1fr}.ap-header{align-items:flex-start;flex-direction:column}.ap-cuota-row,.ap-cuotas-head{grid-template-columns:1fr}}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div id="apPage">
+  <section class="ap-header">
+    <div class="ap-header-left">
+      <div class="ap-header-icon"><i class="fas fa-hand-holding-dollar fa-lg"></i></div>
+      <div>
+        <div class="ap-kicker">Planillas</div>
+        <h1 class="ap-title">Anticipos y Préstamos</h1>
+        <div class="ap-subtitle">Registro, programación por planilla y recupero directo</div>
+      </div>
+    </div>
+    <div class="ap-toolbar">
+      {% if puede_editar %}<button type="button" class="ap-btn ap-btn-primary" id="btnNuevo"><i class="fas fa-plus"></i> Nuevo registro</button>{% endif %}
+    </div>
+  </section>
+
+  {% if error %}<div class="alert alert-danger fw-bold mb-0"><i class="fas fa-triangle-exclamation me-2"></i>{{ error }}</div>{% endif %}
+
+  <section class="ap-metrics">
+    <div class="ap-metric"><div class="ap-metric-label">Registros</div><div class="ap-metric-value">{{ stats.total }}</div></div>
+    <div class="ap-metric"><div class="ap-metric-label">Activos</div><div class="ap-metric-value">{{ stats.activos }}</div></div>
+    <div class="ap-metric"><div class="ap-metric-label">Borradores</div><div class="ap-metric-value">{{ stats.borradores }}</div></div>
+    <div class="ap-metric"><div class="ap-metric-label">Capital otorgado</div><div class="ap-metric-value">{{ '%.2f'|format(stats.capital|float) }}</div></div>
+    <div class="ap-metric"><div class="ap-metric-label">Saldo pendiente</div><div class="ap-metric-value">{{ '%.2f'|format(stats.pendiente|float) }}</div></div>
+  </section>
+
+  <section class="ap-card">
+    <div class="ap-filters">
+      <div class="ap-field"><label>Estado</label><select class="form-select" id="fEstado"><option value="">Todos</option><option>BORRADOR</option><option>CONFIRMADO</option><option>PARCIAL</option><option>PAGADO</option><option>ANULADO</option></select></div>
+      <div class="ap-field"><label>Tipo</label><select class="form-select" id="fTipo"><option value="">Todos</option><option value="ANTICIPO">Anticipo</option><option value="PRESTAMO">Préstamo</option></select></div>
+      <div class="ap-field"><label>Persona</label><select class="form-select" id="fPersonaTipo"><option value="">Todos</option><option value="PLANTA">Planta</option><option value="COLABORADOR">Colaborador</option></select></div>
+      <div class="ap-field"><label>Buscar</label><input class="form-control" id="fBuscar" placeholder="Código, persona, CI/NIT o glosa"></div>
+      <div class="d-flex align-items-end"><button type="button" class="ap-btn ap-btn-outline" id="btnLimpiar"><i class="fas fa-eraser"></i></button></div>
+    </div>
+  </section>
+
+  <section class="ap-card">
+    <div class="ap-table-wrap">
+      <table class="table table-hover ap-table">
+        <thead><tr><th>Código</th><th>Tipo</th><th>Persona</th><th>Fecha</th><th>Programación</th><th class="text-end">Capital</th><th class="text-end">Interés</th><th class="text-end">Total</th><th class="text-end">Saldo</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="tablaPrestamos"><tr><td colspan="11" class="ap-empty">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div class="modal fade" id="modalPrestamo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header ap-modal-head">
+        <div><h5 class="modal-title fw-black mb-0" id="modalTitle">Nuevo anticipo/préstamo</h5><small>Los descuentos se programan por planilla mensual y pueden recuperarse también de forma directa.</small></div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="prestamoId">
+        <div class="ap-section">
+          <div class="ap-section-title"><i class="fas fa-user"></i> Datos de la persona</div>
+          <div class="ap-grid-3">
+            <div class="ap-field"><label>Persona</label><select class="form-select ap-select-buscable" id="personaId" data-placeholder="Seleccione persona"></select></div>
+            <div class="ap-field"><label>Unidad</label><select class="form-select ap-select-buscable" id="unidadId" data-placeholder="Seleccione unidad"></select></div>
+            <div class="ap-field"><label>Moneda</label><select class="form-select ap-select-buscable" id="monedaCodigo" data-placeholder="Seleccione moneda"></select></div>
+          </div>
+        </div>
+
+        <div class="ap-section">
+          <div class="ap-section-title"><i class="fas fa-file-signature"></i> Datos del anticipo o préstamo</div>
+          <div class="ap-grid-4">
+            <div class="ap-field"><label>Tipo</label><select class="form-select" id="tipoOperacion"><option value="">Seleccione</option><option value="ANTICIPO">Anticipo</option><option value="PRESTAMO">Préstamo</option></select></div>
+            <div class="ap-field"><label>Fecha otorgamiento</label><input type="date" class="form-control" id="fechaOtorgamiento"></div>
+            <div class="ap-field"><label>Tipo cambio</label><input type="number" step="0.000001" class="form-control" id="tipoCambio"></div>
+            <div class="ap-field"><label>Monto inicial</label><input type="number" step="0.01" class="form-control text-end" id="montoCapital"></div>
+          </div>
+          <div class="ap-grid-4 mt-2" id="grpInteres">
+            <div class="ap-field"><label>Interés</label><select class="form-select" id="tipoInteres"><option value="NINGUNO">Ninguno</option><option value="PORCENTAJE">Porcentaje</option><option value="VALOR">Valor fijo</option></select></div>
+            <div class="ap-field"><label>Valor interés</label><input type="number" step="0.01" class="form-control text-end" id="valorInteres"></div>
+            <div class="ap-field"><label>Interés calculado</label><input type="text" class="form-control text-end" id="interesCalculado" readonly></div>
+            <div class="ap-field"><label>Total a recuperar</label><input type="text" class="form-control text-end" id="totalRecuperar" readonly></div>
+          </div>
+        </div>
+
+        <div class="ap-section">
+          <div class="ap-section-title"><i class="fas fa-calendar-check"></i> Programación de descuento en planilla</div>
+          <div id="programaAnticipo" class="ap-grid-3">
+            <div class="ap-field"><label>Gestión</label><input type="number" class="form-control" id="anticipoGestion" value="{{ gestion_activa }}" readonly></div>
+            <div class="ap-field"><label>Mes de descuento</label><select class="form-select" id="anticipoMes"></select></div>
+            <div class="ap-field"><label>Monto</label><input type="text" class="form-control text-end" id="anticipoMonto" readonly></div>
+          </div>
+          <div id="programaPrestamo" class="ap-hide">
+            <div class="ap-cuota-toolbar"><button type="button" class="ap-btn ap-btn-outline" id="btnAddCuota"><i class="fas fa-plus"></i> Agregar cuota</button></div>
+            <div class="ap-cuotas-head"><div>Gestión</div><div>Mes</div><div>Monto</div><div></div></div>
+            <div class="ap-cuotas-list" id="cuotasList"></div>
+          </div>
+          <div class="ap-total-line"><span>Total programado</span><span id="totalProgramado">0.00</span></div>
+        </div>
+
+        <div class="ap-section">
+          <div class="ap-section-title"><i class="fas fa-scale-balanced"></i> Contabilización</div>
+          <div class="ap-cont-grid">
+            <div class="ap-field">
+              <label>Modalidad</label>
+              <select class="form-select" id="modalidadRegistro"><option value="">Seleccione</option><option value="DESEMBOLSO">Desembolso caja/banco</option><option value="SALDO_INICIAL">Saldo inicial operativo</option></select>
+            </div>
+            <div class="ap-field" id="grpMedio">
+              <label>Medio desembolso</label>
+              <select class="form-select" id="medioDesembolso"><option value="">Seleccione</option><option value="CAJA">Caja</option><option value="BANCO">Banco</option></select>
+            </div>
+            <div class="ap-field ap-wide">
+              <label>Cuenta por cobrar al personal</label>
+              <select class="form-select ap-select-buscable" id="cuentaCobrar" data-placeholder="Seleccione cuenta por cobrar"></select>
+            </div>
+            <div class="ap-field ap-wide" id="grpCaja">
+              <label>Caja de desembolso</label>
+              <select class="form-select ap-select-buscable" id="cajaId" data-placeholder="Seleccione caja"></select>
+            </div>
+            <div class="ap-field ap-wide ap-hide" id="grpBanco">
+              <label>Banco / cuenta de desembolso</label>
+              <select class="form-select ap-select-buscable" id="bancoId" data-placeholder="Seleccione banco/cuenta"></select>
+            </div>
+            <div class="ap-field ap-wide" id="grpCuentaInteres">
+              <label>Cuenta de intereses</label>
+              <select class="form-select ap-select-buscable" id="cuentaInteres" data-placeholder="Seleccione cuenta de interés"></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="ap-section">
+          <div class="ap-section-title"><i class="fas fa-clipboard-list"></i> Glosa y justificativo</div>
+          <div class="ap-field mb-2"><label>Glosa</label><textarea class="form-control ap-textarea-soft" id="glosa" rows="2"></textarea></div>
+          <div class="ap-field"><label>Justificativo</label><textarea class="form-control ap-textarea-soft" id="justificativo" rows="2"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary fw-bold" id="btnGuardar"><i class="fas fa-save me-1"></i> Guardar</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalRecupero" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header ap-modal-head"><div><h5 class="modal-title fw-black mb-0">Recupero directo</h5><small>Cobra por caja/banco sin esperar planilla.</small></div><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="hidden" id="recPrestamoId">
+        <div class="ap-grid-2">
+          <div class="ap-field"><label>Registro</label><input class="form-control" id="recPrestamoLabel" readonly></div>
+          <div class="ap-field"><label>Saldo</label><input class="form-control text-end" id="recSaldo" readonly></div>
+        </div>
+        <div class="ap-field mt-2">
+          <label>Contracuenta</label>
+          <input class="form-control" id="recContraCuenta" readonly>
+        </div>
+        <div class="ap-grid-3 mt-2">
+          <div class="ap-field"><label>Fecha</label><input type="date" class="form-control" id="recFecha"></div>
+          <div class="ap-field"><label>Monto</label><input type="number" step="0.01" class="form-control text-end" id="recMonto"></div>
+          <div class="ap-field"><label>Medio</label><select class="form-select" id="recMedio"><option value="CAJA">Caja</option><option value="BANCO">Banco</option></select></div>
+        </div>
+        <div class="ap-grid-2 mt-2"><div class="ap-field" id="recGrpCaja"><label>Caja</label><select class="form-select ap-select-buscable" id="recCaja" data-placeholder="Seleccione caja"></select></div><div class="ap-field ap-hide" id="recGrpBanco"><label>Banco</label><select class="form-select ap-select-buscable" id="recBanco" data-placeholder="Seleccione banco/cuenta"></select></div></div>
+        <div class="ap-grid-2 mt-2"><div class="ap-field"><label>Referencia</label><input class="form-control" id="recReferencia"></div><div class="ap-field"><label>Justificativo</label><textarea class="form-control" id="recJustificativo" rows="2"></textarea></div></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary fw-bold" id="btnGuardarRecupero"><i class="fas fa-check me-1"></i> Registrar</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content"><div class="modal-header ap-modal-head"><div><h5 class="modal-title fw-black mb-0" id="detTitle">Detalle</h5><small>Programación y recuperos aplicados</small></div><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body" id="detContenido"></div></div></div></div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+(() => {
+  const puedeEditar = {{ 'true' if puede_editar else 'false' }};
+  const urls = {
+    opciones: "{{ url_for('planilla_prestamos.opciones') }}",
+    listar: "{{ url_for('planilla_prestamos.listar') }}",
+    guardar: "{{ url_for('planilla_prestamos.guardar') }}",
+    recuperar: "{{ url_for('planilla_prestamos.recuperar_directo') }}",
+    obtenerBase: "{{ url_for('planilla_prestamos.obtener', prestamo_id=0) }}".replace('/0',''),
+    confirmarBase: "{{ url_for('planilla_prestamos.confirmar', prestamo_id=0) }}".replace('/0',''),
+    anularBase: "{{ url_for('planilla_prestamos.anular_borrador', prestamo_id=0) }}".replace('/0',''),
+    pdfBase: "{{ url_for('comprobantes.pdf', asiento_id=999999) }}".replace('/999999/pdf','')
+  };
+  const state = {opciones:null, rows:[], cuotas:[]};
+  const $ = id => document.getElementById(id);
+  const jq = () => window.jQuery || null;
+  const money = v => Number(v || 0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const today = () => new Date().toISOString().slice(0,10);
+  const swal = (icon,title,text) => window.Swal ? Swal.fire({icon,title,text,confirmButtonText:'Aceptar'}) : console.error(title,text);
+  function csrfToken(){
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+  }
+  async function api(url, opt={}){
+    const method = String(opt.method || 'GET').toUpperCase();
+    const headers = Object.assign({'Content-Type':'application/json'}, opt.headers || {});
+    if(!['GET','HEAD','OPTIONS','TRACE'].includes(method)){
+      headers['X-CSRFToken'] = csrfToken();
+    }
+    const res = await fetch(url, Object.assign({}, opt, {headers}));
+    const data = await res.json().catch(()=>({success:false,message:'Respuesta inválida del servidor.'}));
+    if(!res.ok || data.success === false) throw new Error(data.message || 'No se pudo completar la operación.');
+    return data;
+  }
+  window.addEventListener('unhandledrejection', e => { e.preventDefault(); swal('error','No se pudo completar la operación', e.reason?.message || String(e.reason)); });
+  function fillSelect(el, rows, value, label, placeholder='Seleccione'){
+    el.innerHTML = placeholder === null ? '' : `<option value="">${placeholder}</option>`;
+    (rows || []).forEach(r => { const o=document.createElement('option'); o.value=r[value]; o.textContent=label(r); el.appendChild(o); });
+  }
+  function setSelectValue(id, value){
+    const el = $(id);
+    if(!el) return;
+    el.value = value == null ? '' : String(value);
+    const $jq = jq();
+    if($jq && $jq.fn && $jq.fn.select2 && $jq(el).data('select2')) $jq(el).trigger('change.select2');
+  }
+  function initSelectsBuscables(){
+    if(!window.DXTBase || !window.DXTBase.initSelect2Es || !jq()) return;
+    window.DXTBase.initSelect2Es('#modalPrestamo .ap-select-buscable', {dropdownParent: jq()('#modalPrestamo'), dropdownCssClass:'ap-select2-dropdown'});
+    window.DXTBase.initSelect2Es('#modalRecupero .ap-select-buscable', {dropdownParent: jq()('#modalRecupero'), dropdownCssClass:'ap-select2-dropdown'});
+  }
+  async function cargarOpciones(){
+    state.opciones = await api(urls.opciones);
+    fillSelect($('personaId'), state.opciones.personas, 'id', r=>`${r.tipo_persona} · ${r.nombre_completo} · ${r.ci_nit}`);
+    fillSelect($('unidadId'), state.opciones.unidades, 'id', r=>`${r.codigo} · ${r.nombre}`);
+    fillSelect($('monedaCodigo'), state.opciones.monedas, 'codigo', r=>`${r.codigo} · ${r.nombre}`);
+    fillSelect($('cuentaCobrar'), state.opciones.cuentas_cobrar, 'codigo', r=>`${r.codigo} · ${r.nombre}`);
+    fillSelect($('cuentaInteres'), state.opciones.cuentas_interes, 'codigo', r=>`${r.codigo} · ${r.nombre}`, 'Sin interés / no aplica');
+    fillSelect($('cajaId'), state.opciones.cajas, 'id', r=>`${r.codigo} · ${r.nombre}`);
+    fillSelect($('bancoId'), state.opciones.bancos, 'id', r=>`${r.nombre_banco} · ${r.numero_cuenta} · ${r.moneda_codigo}`);
+    fillSelect($('recCaja'), state.opciones.cajas, 'id', r=>`${r.codigo} · ${r.nombre}`);
+    fillSelect($('recBanco'), state.opciones.bancos, 'id', r=>`${r.nombre_banco} · ${r.numero_cuenta} · ${r.moneda_codigo}`);
+    fillSelect($('anticipoMes'), state.opciones.meses, 'id', r=>r.nombre);
+    $('anticipoGestion').value = state.opciones.gestion_activa;
+    initSelectsBuscables();
+  }
+  function sugerirCuentaCobrar(){
+    const el = $('cuentaCobrar');
+    if(!el || el.value) return;
+
+    const tipo = $('tipoOperacion')?.value || '';
+    const cuentas = state.opciones?.cuentas_cobrar || [];
+    if(!tipo || !cuentas.length) return;
+
+    const buscarExacta = codigo => cuentas.find(c => String(c.codigo) === String(codigo));
+    const buscarTexto = texto => cuentas.find(c => {
+      const t = `${c.codigo || ''} ${c.nombre || ''}`.toUpperCase();
+      return t.includes(texto);
+    });
+
+    let cuenta = null;
+    if(tipo === 'ANTICIPO'){
+      cuenta = buscarExacta('1.1.2.011') || buscarTexto('ANTICIP');
+    } else if(tipo === 'PRESTAMO'){
+      cuenta = buscarExacta('1.1.2.003') || buscarTexto('PRESTAM');
+    }
+
+    if(!cuenta && tipo) cuenta = cuentas[0];
+    if(cuenta) setSelectValue('cuentaCobrar', cuenta.codigo);
+  }
+
+  function calcular(){
+    const capital = Number($('montoCapital').value || 0);
+    const tipo = $('tipoInteres').value;
+    const valor = Number($('valorInteres').value || 0);
+    let interes = 0;
+    if($('tipoOperacion').value === 'PRESTAMO'){
+      if(tipo === 'PORCENTAJE') interes = +(capital * valor / 100).toFixed(2);
+      if(tipo === 'VALOR') interes = +valor.toFixed(2);
+    }
+    const total = +(capital + interes).toFixed(2);
+    $('interesCalculado').value = money(interes);
+    $('totalRecuperar').value = money(total);
+    $('anticipoMonto').value = money(total);
+    actualizarTotales();
+    return {capital, interes, total};
+  }
+  function actualizarTotales(){
+    const tipo = $('tipoOperacion').value;
+    let total = 0;
+    if(tipo === 'ANTICIPO') total = Number($('montoCapital').value || 0);
+    else total = state.cuotas.reduce((s,c)=>s+Number(c.monto||0),0);
+    $('totalProgramado').textContent = money(total);
+  }
+  function renderCuotas(){
+    const list = $('cuotasList');
+    if(!state.cuotas.length){ list.innerHTML = '<div class="ap-empty">Agregue cuotas por mes/gestión.</div>'; actualizarTotales(); return; }
+    list.innerHTML = state.cuotas.map((c,i)=>`<div class="ap-cuota-row" data-i="${i}"><input type="number" class="form-control cuota-gestion" value="${c.gestion}"><select class="form-select cuota-mes">${state.opciones.meses.map(m=>`<option value="${m.id}" ${Number(c.mes)===Number(m.id)?'selected':''}>${m.nombre}</option>`).join('')}</select><input type="number" step="0.01" class="form-control text-end cuota-monto" value="${c.monto}"><button type="button" class="ap-icon-btn btn-quitar-cuota" title="Quitar"><i class="fas fa-times"></i></button></div>`).join('');
+    actualizarTotales();
+  }
+  function syncCuotasFromDom(){
+    state.cuotas = Array.from($('cuotasList').querySelectorAll('.ap-cuota-row')).map(row=>({gestion:row.querySelector('.cuota-gestion').value, mes:row.querySelector('.cuota-mes').value, monto:row.querySelector('.cuota-monto').value}));
+    actualizarTotales();
+  }
+  function addCuota(c={}){
+    const g = state.opciones?.gestion_activa || new Date().getFullYear();
+    state.cuotas.push({gestion:c.gestion||g, mes:c.mes||'', monto:c.monto||''});
+    renderCuotas();
+  }
+  function toggleTipo(){
+    const tipo = $('tipoOperacion').value;
+    const esAnticipo = tipo === 'ANTICIPO';
+    const esPrestamo = tipo === 'PRESTAMO';
+    $('grpInteres').classList.toggle('ap-hide', !esPrestamo);
+    $('programaAnticipo').classList.toggle('ap-hide', !esAnticipo);
+    $('programaPrestamo').classList.toggle('ap-hide', !esPrestamo);
+    if(esAnticipo){ $('tipoInteres').value='NINGUNO'; $('valorInteres').value='0'; state.cuotas=[]; }
+    if(!esAnticipo && !esPrestamo){ $('tipoInteres').value='NINGUNO'; $('valorInteres').value=''; state.cuotas=[]; }
+    const muestraInteres = esPrestamo && $('tipoInteres').value !== 'NINGUNO';
+    $('grpCuentaInteres').classList.toggle('ap-hide', !muestraInteres);
+    renderCuotas(); calcular(); sugerirCuentaCobrar(); sugerirGlosa();
+  }
+  function toggleDesembolso(){
+    const es = $('modalidadRegistro').value === 'DESEMBOLSO';
+    const medio = $('medioDesembolso').value;
+    $('grpMedio').classList.toggle('ap-hide', !es);
+    $('grpCaja').classList.toggle('ap-hide', !es || medio !== 'CAJA');
+    $('grpBanco').classList.toggle('ap-hide', !es || medio !== 'BANCO');
+  }
+  function toggleRec(){ $('recGrpCaja').classList.toggle('ap-hide', $('recMedio').value !== 'CAJA'); $('recGrpBanco').classList.toggle('ap-hide', $('recMedio').value !== 'BANCO'); }
+  function sugerirGlosa(){
+    const persona = $('personaId').value ? ($('personaId').selectedOptions[0]?.textContent || '') : '';
+    const tipoValor = $('tipoOperacion').value;
+    if(!persona || !tipoValor || $('glosa').value) return;
+    const tipo = tipoValor === 'ANTICIPO' ? 'anticipo de sueldo' : 'préstamo sobre sueldo';
+    $('glosa').value = `Registro de ${tipo} a ${persona}`.slice(0,500);
+  }
+  function resetModal(){
+    ['prestamoId','fechaOtorgamiento','tipoCambio','montoCapital','valorInteres','interesCalculado','totalRecuperar','anticipoMonto','glosa','justificativo'].forEach(id=>$(id).value='');
+    ['personaId','unidadId','monedaCodigo','cuentaCobrar','cuentaInteres','cajaId','bancoId','anticipoMes'].forEach(id=>setSelectValue(id, ''));
+    $('tipoOperacion').value='';
+    $('tipoInteres').value='NINGUNO';
+    $('modalidadRegistro').value='';
+    $('medioDesembolso').value='';
+    $('anticipoGestion').value = state.opciones?.gestion_activa || new Date().getFullYear();
+    state.cuotas=[];
+    renderCuotas(); toggleTipo(); toggleDesembolso(); calcular();
+  }
+  function badge(estado){ return `<span class="ap-badge ap-badge-${String(estado).toLowerCase().replace('_','-')}">${estado}</span>`; }
+  function acciones(row){
+    let html = `<div class="ap-actions"><button class="ap-icon-btn" title="Detalle" data-det="${row.id}"><i class="fas fa-eye"></i></button>`;
+    if(row.asiento_otorgamiento_id) html += `<a class="ap-icon-btn" title="PDF asiento" href="${urls.pdfBase}/${row.asiento_otorgamiento_id}/pdf" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i></a>`;
+    if(puedeEditar && row.estado === 'BORRADOR') html += `<button class="ap-icon-btn" title="Editar" data-edit="${row.id}"><i class="fas fa-pen"></i></button><button class="ap-icon-btn" title="Confirmar" data-conf="${row.id}"><i class="fas fa-check"></i></button>`;
+    if(puedeEditar && ['BORRADOR','CONFIRMADO','PARCIAL','PAGADO'].includes(row.estado)) html += `<button class="ap-icon-btn" title="Anular/Revertir" data-anular="${row.id}"><i class="fas fa-ban"></i></button>`;
+    if(puedeEditar && ['CONFIRMADO','PARCIAL'].includes(row.estado)) html += `<button class="ap-icon-btn" title="Recupero directo" data-rec="${row.id}"><i class="fas fa-cash-register"></i></button>`;
+    html += '</div>'; return html;
+  }
+  async function listar(){
+    const qs = new URLSearchParams({estado:$('fEstado').value,tipo:$('fTipo').value,persona_tipo:$('fPersonaTipo').value,q:$('fBuscar').value});
+    const res = await fetch(`${urls.listar}?${qs.toString()}`); const data = await res.json(); state.rows = data.data || [];
+    const tb = $('tablaPrestamos');
+    if(!state.rows.length){ tb.innerHTML = '<tr><td colspan="11" class="ap-empty">Sin registros</td></tr>'; return; }
+    tb.innerHTML = state.rows.map(r => `<tr><td><strong>${r.codigo}</strong></td><td>${r.tipo_operacion}</td><td><strong>${r.nombre_completo}</strong><br><small>${r.tipo_persona} · ${r.ci_nit}</small></td><td>${r.fecha_otorgamiento}</td><td>${r.cuotas_total} cuota(s)<br><small>pend. ${r.cuotas_pendientes}</small></td><td class="text-end">${money(r.monto_capital)}</td><td class="text-end">${money(r.interes_monto)}</td><td class="text-end">${money(r.total_recuperar)}</td><td class="text-end"><strong>${money(r.saldo_pendiente)}</strong></td><td>${badge(r.estado)}</td><td>${acciones(r)}</td></tr>`).join('');
+  }
+  function modalPrestamo(){ return bootstrap.Modal.getOrCreateInstance($('modalPrestamo')); }
+  function modalRecupero(){ return bootstrap.Modal.getOrCreateInstance($('modalRecupero')); }
+  function modalDetalle(){ return bootstrap.Modal.getOrCreateInstance($('modalDetalle')); }
+  function cuentaCobrarLabel(codigo){
+    const c = (state.opciones.cuentas_cobrar || []).find(x => String(x.codigo) === String(codigo));
+    return c ? `${c.codigo} - ${c.nombre}` : (codigo || '');
+  }
+  async function abrirEditar(id){
+    const data = await api(`${urls.obtenerBase}/${id}`); const r=data.data;
+    resetModal(); $('prestamoId').value=r.id; $('tipoOperacion').value=r.tipo_operacion; setSelectValue('personaId', r.persona_id); setSelectValue('unidadId', r.unidad_negocio_id); $('fechaOtorgamiento').value=r.fecha_otorgamiento; setSelectValue('monedaCodigo', r.moneda_codigo); $('tipoCambio').value=r.tipo_cambio; $('montoCapital').value=r.monto_capital; $('tipoInteres').value=r.tipo_interes; $('valorInteres').value=r.tipo_interes==='PORCENTAJE'?r.interes_porcentaje:r.interes_monto; $('modalidadRegistro').value=r.modalidad_registro; setSelectValue('cuentaCobrar', r.cuenta_cobrar_codigo); setSelectValue('cuentaInteres', r.cuenta_interes_codigo||''); $('medioDesembolso').value=r.medio_desembolso==='NO_APLICA'?'':r.medio_desembolso; setSelectValue('cajaId', r.caja_id||''); setSelectValue('bancoId', r.cuenta_bancaria_id||''); $('glosa').value=r.glosa||''; $('justificativo').value=r.justificativo||'';
+    if(r.tipo_operacion==='ANTICIPO' && data.cuotas.length){ $('anticipoGestion').value=data.cuotas[0].gestion; setSelectValue('anticipoMes', data.cuotas[0].mes); }
+    state.cuotas = (data.cuotas||[]).map(c=>({gestion:c.gestion, mes:c.mes, monto:c.monto_programado}));
+    renderCuotas(); toggleTipo(); toggleDesembolso(); calcular(); modalPrestamo().show();
+  }
+  async function abrirDetalle(id){
+    const data = await api(`${urls.obtenerBase}/${id}`); const r=data.data;
+    $('detTitle').textContent = `${r.codigo} · ${r.nombre_completo}`;
+    const cuotas = data.cuotas.map(c=>`<div class="ap-total-line"><span>${c.numero_cuota}. ${c.mes}/${c.gestion} · ${c.estado}</span><span>${money(c.monto_aplicado)} / ${money(c.monto_programado)}</span></div>`).join('') || '<div class="ap-empty">Sin cuotas</div>';
+    const apps = data.aplicaciones.map(a=>`<div class="ap-total-line"><span>${a.fecha_aplicacion} · ${a.tipo_aplicacion}${a.asiento_id ? ` · <a href="${urls.pdfBase}/${a.asiento_id}/pdf" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> PDF</a>` : ''}</span><span>${money(a.monto_aplicado)}</span></div>`).join('') || '<div class="ap-empty">Sin recuperos</div>'; 
+    $('detContenido').innerHTML = `<div class="ap-grid-3"><div><strong>Capital:</strong><br>${money(r.monto_capital)}</div><div><strong>Interés:</strong><br>${money(r.interes_monto)}</div><div><strong>Saldo:</strong><br>${money(r.saldo_pendiente)} ${r.moneda_codigo}</div></div><h6 class="mt-3 fw-black">Cuotas</h6>${cuotas}<h6 class="mt-3 fw-black">Recuperos</h6>${apps}`;
+    modalDetalle().show();
+  }
+  async function guardar(){
+    syncCuotasFromDom();
+    const payload = {id:$('prestamoId').value,tipo_operacion:$('tipoOperacion').value,persona_id:$('personaId').value,unidad_negocio_id:$('unidadId').value,fecha_otorgamiento:$('fechaOtorgamiento').value,moneda_codigo:$('monedaCodigo').value,tipo_cambio:$('tipoCambio').value,monto_capital:$('montoCapital').value,tipo_interes:$('tipoInteres').value,valor_interes:$('valorInteres').value,anticipo_gestion:$('anticipoGestion').value,anticipo_mes:$('anticipoMes').value,cuotas:state.cuotas,modalidad_registro:$('modalidadRegistro').value,cuenta_cobrar_codigo:$('cuentaCobrar').value,cuenta_interes_codigo:$('cuentaInteres').value,medio_desembolso:$('medioDesembolso').value,caja_id:$('cajaId').value,cuenta_bancaria_id:$('bancoId').value,glosa:$('glosa').value,justificativo:$('justificativo').value};
+    await api(urls.guardar,{method:'POST',body:JSON.stringify(payload)}); modalPrestamo().hide(); await listar(); swal('success','Guardado','Anticipo/préstamo guardado.');
+  }
+  async function confirmar(id){ const ok = await Swal.fire({icon:'question',title:'Confirmar registro',text:'Se generará el desembolso/asiento si corresponde y se bloqueará el registro.',showCancelButton:true,confirmButtonText:'Confirmar',cancelButtonText:'Cancelar'}); if(!ok.isConfirmed) return; await api(`${urls.confirmarBase}/${id}`,{method:'POST',body:'{}'}); await listar(); swal('success','Confirmado','Registro confirmado.'); }
+  async function anular(id){ const res = await Swal.fire({icon:'warning',title:'Anular/Revertir anticipo o préstamo',text:'La operación reversará desde el sistema los efectos permitidos. Si existen recuperos en planilla, primero debe revertirse la planilla relacionada.',input:'textarea',inputLabel:'Motivo',showCancelButton:true,confirmButtonText:'Anular/Revertir',cancelButtonText:'Cancelar',inputValidator:v=>!v?'Ingrese un motivo.':undefined}); if(!res.isConfirmed) return; await api(`${urls.anularBase}/${id}`,{method:'POST',body:JSON.stringify({motivo:res.value})}); await listar(); swal('success','Anulado','Registro anulado y reversado.'); }
+  function abrirRecupero(id){
+    const r = state.rows.find(x=>String(x.id)===String(id));
+    if(!r) return;
+    $('recPrestamoId').value=r.id;
+    $('recPrestamoLabel').value=`${r.codigo} · ${r.nombre_completo}`;
+    $('recSaldo').value=money(r.saldo_pendiente);
+    $('recContraCuenta').value=cuentaCobrarLabel(r.cuenta_cobrar_codigo);
+    $('recMonto').value=r.saldo_pendiente;
+    $('recFecha').value=today();
+    $('recReferencia').value=`REC-${r.codigo}`;
+    $('recJustificativo').value='Recupero directo de anticipo/préstamo.';
+    $('recMedio').value='CAJA';
+    setSelectValue('recCaja', '');
+    setSelectValue('recBanco', '');
+    toggleRec();
+    modalRecupero().show();
+  }
+  async function guardarRecupero(){ const payload={prestamo_id:$('recPrestamoId').value,fecha_aplicacion:$('recFecha').value,monto_aplicado:$('recMonto').value,medio_cobro:$('recMedio').value,caja_id:$('recCaja').value,cuenta_bancaria_id:$('recBanco').value,referencia:$('recReferencia').value,justificativo:$('recJustificativo').value}; await api(urls.recuperar,{method:'POST',body:JSON.stringify(payload)}); modalRecupero().hide(); await listar(); swal('success','Registrado','Recupero directo registrado.'); }
+  function bind(){
+    $('btnNuevo')?.addEventListener('click',()=>{resetModal(); modalPrestamo().show();}); $('btnGuardar').addEventListener('click',guardar); $('btnGuardarRecupero').addEventListener('click',guardarRecupero);
+    ['fEstado','fTipo','fPersonaTipo'].forEach(id=>$(id).addEventListener('change',listar)); let t=null; $('fBuscar').addEventListener('input',()=>{clearTimeout(t); t=setTimeout(listar,300);}); $('btnLimpiar').addEventListener('click',()=>{$('fEstado').value='';$('fTipo').value='';$('fPersonaTipo').value='';$('fBuscar').value='';listar();});
+    ['tipoOperacion','tipoInteres','montoCapital','valorInteres'].forEach(id=>$(id).addEventListener('input',()=>{toggleTipo(); calcular();})); $('tipoOperacion').addEventListener('change',toggleTipo); $('modalidadRegistro').addEventListener('change',toggleDesembolso); $('medioDesembolso').addEventListener('change',toggleDesembolso); $('recMedio').addEventListener('change',toggleRec); $('personaId').addEventListener('change',sugerirGlosa); if(jq()) jq()($('personaId')).on('change',sugerirGlosa);
+    $('btnAddCuota').addEventListener('click',()=>addCuota()); $('cuotasList').addEventListener('input',syncCuotasFromDom); $('cuotasList').addEventListener('change',syncCuotasFromDom); $('cuotasList').addEventListener('click',e=>{ const b=e.target.closest('.btn-quitar-cuota'); if(!b) return; const row=b.closest('.ap-cuota-row'); state.cuotas.splice(Number(row.dataset.i),1); renderCuotas(); });
+    document.addEventListener('click',e=>{ const btn=e.target.closest('[data-det],[data-edit],[data-conf],[data-anular],[data-rec]'); if(!btn) return; if(btn.dataset.det) abrirDetalle(btn.dataset.det); if(btn.dataset.edit) abrirEditar(btn.dataset.edit); if(btn.dataset.conf) confirmar(btn.dataset.conf); if(btn.dataset.anular) anular(btn.dataset.anular); if(btn.dataset.rec) abrirRecupero(btn.dataset.rec); });
+  }
+  document.addEventListener('DOMContentLoaded', async()=>{ await cargarOpciones(); bind(); resetModal(); await listar(); });
+})();
+</script>
+{% endblock extra_js %}

@@ -1,0 +1,811 @@
+{% extends "layout.html" %}
+{% block title %}Conciliación Caja/Banco{% endblock title %}
+{% block page_help_url %}{{ url_for('conciliacion_caja_banco.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .ccb-page {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .ccb-header {
+    background: linear-gradient(135deg, #0f2340, #173b68);
+    border-radius: 1.15rem;
+    box-shadow: 0 18px 38px rgba(15, 35, 64, 0.18);
+    color: #fff;
+    padding: 1.2rem 1.35rem;
+  }
+
+  .ccb-kicker {
+    align-items: center;
+    color: rgba(255, 255, 255, 0.82);
+    display: flex;
+    font-size: 0.78rem;
+    font-weight: 850;
+    gap: 0.45rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .ccb-title {
+    font-size: clamp(1.35rem, 2vw, 2rem);
+    font-weight: 900;
+    margin: 0.35rem 0 0.1rem;
+  }
+
+  .ccb-subtitle {
+    color: rgba(255, 255, 255, 0.76);
+    margin: 0;
+    max-width: 920px;
+  }
+
+  .ccb-card {
+    background: #fff;
+    border: 1px solid #dfe7f1;
+    border-radius: 1.15rem;
+    box-shadow: 0 14px 34px rgba(15, 35, 64, 0.08);
+  }
+
+  .ccb-filter-card {
+    padding: 1rem;
+  }
+
+  .ccb-filter-grid {
+    align-items: end;
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: 0.95fr 0.9fr 1fr 1.45fr 0.95fr auto auto auto auto;
+  }
+
+  .ccb-field label {
+    color: #334155;
+    font-size: 0.78rem;
+    font-weight: 850;
+    margin-bottom: 0.3rem;
+  }
+
+  .ccb-field .form-control,
+  .ccb-field .form-select {
+    border-color: #d5deea;
+    border-radius: 0.8rem;
+    min-height: 40px;
+  }
+
+  .ccb-check {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.45rem;
+    min-height: 40px;
+    padding-top: 1.65rem;
+    white-space: nowrap;
+  }
+
+  .ccb-check label {
+    color: #334155;
+    font-size: 0.82rem;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .ccb-action-btn {
+    align-items: center;
+    border-radius: 0.85rem;
+    display: inline-flex;
+    font-weight: 850;
+    gap: 0.45rem;
+    min-height: 40px;
+    padding-inline: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .ccb-summary {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .ccb-summary-card {
+    border-left: 5px solid #2563eb;
+    padding: 0.95rem 1rem;
+  }
+
+  .ccb-summary-card.is-critical {
+    border-left-color: #dc2626;
+  }
+
+  .ccb-summary-card.is-high {
+    border-left-color: #f97316;
+  }
+
+  .ccb-summary-card.is-medium {
+    border-left-color: #eab308;
+  }
+
+  .ccb-summary-card.is-low {
+    border-left-color: #22c55e;
+  }
+
+  .ccb-summary-label {
+    color: #64748b;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .ccb-summary-value {
+    color: #0f2340;
+    font-size: 1.25rem;
+    font-weight: 900;
+    line-height: 1.15;
+    margin-top: 0.2rem;
+  }
+
+  .ccb-summary-note {
+    color: #64748b;
+    font-size: 0.74rem;
+    margin-top: 0.1rem;
+  }
+
+  .ccb-results-card {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .ccb-results-toolbar {
+    align-items: flex-start;
+    border-bottom: 1px solid #dfe7f1;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 1rem 1.05rem;
+  }
+
+  .ccb-results-title {
+    color: #0f2340;
+    font-weight: 900;
+    margin: 0;
+  }
+
+  .ccb-results-meta {
+    color: #64748b;
+    font-size: 0.82rem;
+    margin-top: 0.15rem;
+  }
+
+  .ccb-grid-tools {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+
+  .ccb-page-size {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.5rem;
+  }
+
+  .ccb-page-size label {
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 850;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .ccb-page-size .form-select {
+    border-color: #d5deea;
+    border-radius: 0.75rem;
+    font-weight: 850;
+    min-height: 38px;
+    width: 86px;
+  }
+
+  .ccb-table-wrap {
+    max-height: 62vh;
+    min-height: 360px;
+    overflow: auto;
+    position: relative;
+  }
+
+  .ccb-table {
+    margin: 0;
+    min-width: 1420px;
+  }
+
+  .ccb-table thead th {
+    background: #f1f5f9;
+    color: #243447;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.025em;
+    position: sticky;
+    text-transform: uppercase;
+    top: 0;
+    vertical-align: middle;
+    white-space: nowrap;
+    z-index: 3;
+  }
+
+  .ccb-table tbody td {
+    color: #263445;
+    font-size: 0.85rem;
+    vertical-align: top;
+  }
+
+  .ccb-text-strong {
+    color: #0f2340;
+    font-weight: 850;
+  }
+
+  .ccb-badge {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.71rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    padding: 0.32rem 0.55rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .ccb-badge-critical,
+  .ccb-badge-observado {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .ccb-badge-high,
+  .ccb-badge-caja {
+    background: #ffedd5;
+    color: #9a3412;
+  }
+
+  .ccb-badge-medium {
+    background: #fef9c3;
+    color: #854d0e;
+  }
+
+  .ccb-badge-low,
+  .ccb-badge-ok,
+  .ccb-badge-banco {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .ccb-badge-default {
+    background: #e2e8f0;
+    color: #334155;
+  }
+
+  .ccb-empty {
+    color: #64748b;
+    display: none;
+    padding: 4rem 1rem;
+    text-align: center;
+  }
+
+  .ccb-empty.is-visible {
+    display: block;
+  }
+
+  .ccb-empty i {
+    color: #22c55e;
+    font-size: 2.6rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .ccb-loader {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(2px);
+    display: none;
+    inset: 0;
+    justify-content: center;
+    position: absolute;
+    z-index: 5;
+  }
+
+  .ccb-loader.is-visible {
+    display: flex;
+  }
+
+  .ccb-loader-card {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #dfe7f1;
+    border-radius: 999px;
+    box-shadow: 0 12px 30px rgba(15, 35, 64, 0.14);
+    color: #0f2340;
+    display: inline-flex;
+    font-weight: 850;
+    gap: 0.65rem;
+    padding: 0.7rem 1rem;
+  }
+
+  .ccb-loader-card i {
+    color: #ea6f1b;
+  }
+
+  .ccb-pagination-bar {
+    align-items: center;
+    border-top: 1px solid #dfe7f1;
+    display: flex;
+    gap: 0.85rem;
+    justify-content: space-between;
+    padding: 0.8rem 1.05rem;
+  }
+
+  .ccb-pagination-info {
+    color: #64748b;
+    font-size: 0.82rem;
+    font-weight: 750;
+  }
+
+  .ccb-pagination-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: flex-end;
+  }
+
+  .ccb-page-btn {
+    align-items: center;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    font-weight: 850;
+    justify-content: center;
+    min-height: 36px;
+    min-width: 40px;
+  }
+
+  .ccb-page-indicator {
+    color: #0f2340;
+    font-size: 0.82rem;
+    font-weight: 900;
+    padding-inline: 0.35rem;
+    white-space: nowrap;
+  }
+
+  .ccb-footer-note {
+    color: #64748b;
+    font-size: 0.78rem;
+    padding: 0.75rem 1.05rem 1rem;
+  }
+
+  @media (max-width: 1380px) {
+    .ccb-filter-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .ccb-check {
+      padding-top: 0;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .ccb-filter-grid,
+    .ccb-summary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .ccb-filter-grid,
+    .ccb-summary {
+      grid-template-columns: 1fr;
+    }
+
+    .ccb-results-toolbar,
+    .ccb-pagination-bar {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .ccb-grid-tools,
+    .ccb-pagination-actions {
+      justify-content: stretch;
+    }
+
+    .ccb-page-size,
+    .ccb-page-size .form-select {
+      width: 100%;
+    }
+
+    .ccb-action-btn {
+      justify-content: center;
+      width: 100%;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="ccb-page">
+  <section class="ccb-header">
+    <div class="ccb-kicker">
+      <i class="fas fa-balance-scale"></i>
+      <span>Herramientas</span>
+    </div>
+    <h1 class="ccb-title">Conciliación Caja/Banco</h1>
+    <p class="ccb-subtitle">Control de saldos de caja y bancos contra arqueos, borradores y operaciones confirmadas sin asiento.</p>
+  </section>
+
+  <section class="ccb-card ccb-filter-card">
+    <div class="ccb-filter-grid">
+      <div class="ccb-field">
+        <label for="fechaCorte">Fecha corte</label>
+        <input id="fechaCorte" class="form-control" type="date" value="{{ fecha_corte }}">
+      </div>
+
+      <div class="ccb-field">
+        <label for="medio">Medio</label>
+        <select id="medio" class="form-select">
+          {% for medio in medios %}
+          <option value="{{ medio.value }}">{{ medio.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="ccb-field">
+        <label for="estadoRevision">Estado</label>
+        <select id="estadoRevision" class="form-select">
+          {% for estado in estados_revision %}
+          <option value="{{ estado.value }}">{{ estado.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="ccb-field">
+        <label for="unidadNegocio">Unidad de negocio</label>
+        <select id="unidadNegocio" class="form-select">
+          <option value="">Todas</option>
+          {% for unidad in unidades_negocio %}
+          <option value="{{ unidad.id }}">{{ unidad.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="ccb-field">
+        <label for="diasSinArqueo">Alerta arqueo</label>
+        <select id="diasSinArqueo" class="form-select">
+          {% for dia in dias_arqueo %}
+          {% if dia == 7 %}
+          <option value="{{ dia }}" selected>{{ dia }} días</option>
+          {% else %}
+          <option value="{{ dia }}">{{ dia }} días</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="ccb-check">
+        <input id="incluirInactivos" class="form-check-input" type="checkbox" value="1">
+        <label for="incluirInactivos">Inactivos</label>
+      </div>
+
+      <button id="btnActualizar" type="button" class="btn btn-primary ccb-action-btn">
+        <i class="fas fa-rotate"></i>
+        <span>Actualizar</span>
+      </button>
+
+      <a id="btnExcel" class="btn btn-success ccb-action-btn" href="#" role="button">
+        <i class="fas fa-file-excel"></i>
+        <span>Excel</span>
+      </a>
+
+      <a id="btnPdf" class="btn btn-danger ccb-action-btn" href="#" role="button" target="_blank" rel="noopener">
+        <i class="fas fa-file-pdf"></i>
+        <span>PDF</span>
+      </a>
+    </div>
+  </section>
+
+  <section id="summaryGrid" class="ccb-summary" aria-label="Resumen de conciliación caja banco"></section>
+
+  <section class="ccb-card ccb-results-card">
+    <div class="ccb-loader" id="loaderResultados">
+      <div class="ccb-loader-card">
+        <i class="fas fa-circle-notch fa-spin"></i>
+        <span>Revisando saldos</span>
+      </div>
+    </div>
+
+    <div class="ccb-results-toolbar">
+      <div>
+        <h2 class="ccb-results-title">Resultado de conciliación</h2>
+        <div id="resultadoMeta" class="ccb-results-meta">Cargando información...</div>
+      </div>
+      <div class="ccb-grid-tools" aria-label="Controles del listado">
+        <div class="ccb-page-size">
+          <label for="pageSize">Filas por página</label>
+          <select id="pageSize" class="form-select">
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="ccb-table-wrap">
+      <table class="table table-hover ccb-table">
+        <thead id="tablaHead"></thead>
+        <tbody id="tablaBody"></tbody>
+      </table>
+      <div id="emptyState" class="ccb-empty">
+        <i class="fas fa-circle-check"></i>
+        <h3 id="emptyTitle">Sin observaciones</h3>
+      </div>
+    </div>
+
+    <div class="ccb-pagination-bar">
+      <div id="paginationInfo" class="ccb-pagination-info">Sin registros</div>
+      <div class="ccb-pagination-actions">
+        <button id="btnFirst" type="button" class="btn btn-outline-secondary ccb-page-btn" aria-label="Primera página">
+          <i class="fas fa-angles-left"></i>
+        </button>
+        <button id="btnPrev" type="button" class="btn btn-outline-secondary ccb-page-btn" aria-label="Página anterior">
+          <i class="fas fa-angle-left"></i>
+        </button>
+        <span id="pageIndicator" class="ccb-page-indicator">Página 1 de 1</span>
+        <button id="btnNext" type="button" class="btn btn-outline-secondary ccb-page-btn" aria-label="Página siguiente">
+          <i class="fas fa-angle-right"></i>
+        </button>
+        <button id="btnLast" type="button" class="btn btn-outline-secondary ccb-page-btn" aria-label="Última página">
+          <i class="fas fa-angles-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="ccb-footer-note">PDF y Excel exportan el resultado completo del filtro aplicado.</div>
+  </section>
+</div>
+<script type="application/json" id="conciliacionCajaBancoBootstrap">
+  {{ {
+    'api_url': url_for('conciliacion_caja_banco.api_conciliacion_caja_banco'),
+    'excel_url': url_for('conciliacion_caja_banco.excel_conciliacion_caja_banco'),
+    'pdf_url': url_for('conciliacion_caja_banco.pdf_conciliacion_caja_banco')
+  } | tojson }}
+</script>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  (() => {
+    const bootEl = document.getElementById('conciliacionCajaBancoBootstrap');
+    const boot = JSON.parse(bootEl.textContent || '{}');
+
+    const state = {
+      rows: [],
+      columns: [],
+      summaryCards: [],
+      page: 1,
+      pageSize: 10,
+      payload: null,
+    };
+
+    const el = {
+      fechaCorte: document.getElementById('fechaCorte'),
+      medio: document.getElementById('medio'),
+      estadoRevision: document.getElementById('estadoRevision'),
+      unidadNegocio: document.getElementById('unidadNegocio'),
+      diasSinArqueo: document.getElementById('diasSinArqueo'),
+      incluirInactivos: document.getElementById('incluirInactivos'),
+      btnActualizar: document.getElementById('btnActualizar'),
+      btnExcel: document.getElementById('btnExcel'),
+      btnPdf: document.getElementById('btnPdf'),
+      summaryGrid: document.getElementById('summaryGrid'),
+      resultadoMeta: document.getElementById('resultadoMeta'),
+      tablaHead: document.getElementById('tablaHead'),
+      tablaBody: document.getElementById('tablaBody'),
+      emptyState: document.getElementById('emptyState'),
+      emptyTitle: document.getElementById('emptyTitle'),
+      loader: document.getElementById('loaderResultados'),
+      pageSize: document.getElementById('pageSize'),
+      paginationInfo: document.getElementById('paginationInfo'),
+      pageIndicator: document.getElementById('pageIndicator'),
+      btnFirst: document.getElementById('btnFirst'),
+      btnPrev: document.getElementById('btnPrev'),
+      btnNext: document.getElementById('btnNext'),
+      btnLast: document.getElementById('btnLast'),
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function badgeClass(code) {
+      const normalized = String(code || 'default').toLowerCase().replace(/_/g, '-');
+      return `ccb-badge ccb-badge-${normalized}`;
+    }
+
+    function currentParams() {
+      const params = new URLSearchParams();
+      params.set('fecha_corte', el.fechaCorte.value || '');
+      params.set('medio', el.medio.value || 'TODOS');
+      params.set('estado_revision', el.estadoRevision.value || 'TODOS');
+      params.set('unidad_negocio_id', el.unidadNegocio.value || '');
+      params.set('dias_sin_arqueo', el.diasSinArqueo.value || '7');
+      if (el.incluirInactivos.checked) {
+        params.set('incluir_inactivos', '1');
+      }
+      return params;
+    }
+
+    function updateExportLinks() {
+      const params = currentParams();
+      el.btnExcel.href = `${boot.excel_url}?${params.toString()}`;
+      el.btnPdf.href = `${boot.pdf_url}?${params.toString()}`;
+    }
+
+    function setLoading(isLoading) {
+      el.loader.classList.toggle('is-visible', isLoading);
+      el.btnActualizar.disabled = isLoading;
+    }
+
+    function renderSummary(cards) {
+      el.summaryGrid.innerHTML = cards.map((card) => `
+        <article class="ccb-card ccb-summary-card is-${escapeHtml(card.kind || 'group')}">
+          <div class="ccb-summary-label">${escapeHtml(card.label)}</div>
+          <div class="ccb-summary-value">${escapeHtml(card.value)}</div>
+          <div class="ccb-summary-note">${escapeHtml(card.note || '')}</div>
+        </article>
+      `).join('');
+    }
+
+    function renderHeader() {
+      const cells = state.columns.map((column) => {
+        const align = column.align ? ` text-${column.align}` : '';
+        return `<th class="${align}">${escapeHtml(column.label)}</th>`;
+      }).join('');
+      el.tablaHead.innerHTML = `<tr>${cells}</tr>`;
+    }
+
+    function cellValue(row, column) {
+      if (column.type === 'money') {
+        return row[`${column.key}_label`] ?? row[column.key] ?? '';
+      }
+      return row[column.key] ?? '';
+    }
+
+    function renderCell(row, column) {
+      const align = column.align ? ` text-${column.align}` : '';
+      if (column.type === 'badge') {
+        const code = row[column.code_key || column.key];
+        return `<td class="${align}"><span class="${badgeClass(code)}">${escapeHtml(cellValue(row, column))}</span></td>`;
+      }
+      const strong = column.strong ? ' ccb-text-strong' : '';
+      return `<td class="${align}${strong}">${escapeHtml(cellValue(row, column))}</td>`;
+    }
+
+    function getPageRows() {
+      const start = (state.page - 1) * state.pageSize;
+      return state.rows.slice(start, start + state.pageSize);
+    }
+
+    function totalPages() {
+      return Math.max(1, Math.ceil(state.rows.length / state.pageSize));
+    }
+
+    function renderRows() {
+      const rows = getPageRows();
+      el.emptyState.classList.toggle('is-visible', rows.length === 0);
+      el.emptyTitle.textContent = state.payload?.empty_title || 'Sin registros';
+      el.tablaBody.innerHTML = rows.map((row) => {
+        const cells = state.columns.map((column) => renderCell(row, column)).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+    }
+
+    function renderPagination() {
+      const pages = totalPages();
+      if (state.page > pages) {
+        state.page = pages;
+      }
+      const total = state.rows.length;
+      const start = total === 0 ? 0 : ((state.page - 1) * state.pageSize) + 1;
+      const end = Math.min(state.page * state.pageSize, total);
+      el.paginationInfo.textContent = total === 0 ? 'Sin registros' : `Mostrando ${start}-${end} de ${total}`;
+      el.pageIndicator.textContent = `Página ${state.page} de ${pages}`;
+      el.btnFirst.disabled = state.page <= 1;
+      el.btnPrev.disabled = state.page <= 1;
+      el.btnNext.disabled = state.page >= pages;
+      el.btnLast.disabled = state.page >= pages;
+    }
+
+    function renderPayload(payload) {
+      state.payload = payload;
+      state.rows = payload.rows || [];
+      state.columns = payload.columns || [];
+      state.summaryCards = payload.summary_cards || [];
+      state.page = 1;
+      el.resultadoMeta.textContent = `${payload.descripcion_periodo || ''} · ${payload.unidad_label || ''} · ${state.rows.length} registro(s)`;
+      renderSummary(state.summaryCards);
+      renderHeader();
+      renderRows();
+      renderPagination();
+    }
+
+    async function loadData() {
+      updateExportLinks();
+      setLoading(true);
+      try {
+        const response = await fetch(`${boot.api_url}?${currentParams().toString()}`, {
+          headers: { 'Accept': 'application/json' },
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.msg || 'No se pudo cargar la conciliación.');
+        }
+        renderPayload(payload);
+      } catch (error) {
+        el.resultadoMeta.textContent = error.message;
+        state.rows = [];
+        state.columns = [];
+        state.summaryCards = [];
+        renderSummary([]);
+        renderHeader();
+        renderRows();
+        renderPagination();
+        if (window.Swal) {
+          window.Swal.fire({ icon: 'error', title: 'No se pudo revisar', text: error.message });
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    el.btnActualizar.addEventListener('click', loadData);
+    [el.fechaCorte, el.medio, el.estadoRevision, el.unidadNegocio, el.diasSinArqueo, el.incluirInactivos].forEach((field) => {
+      field.addEventListener('change', () => {
+        updateExportLinks();
+      });
+    });
+
+    el.pageSize.addEventListener('change', () => {
+      state.pageSize = Number(el.pageSize.value || 10);
+      state.page = 1;
+      renderRows();
+      renderPagination();
+    });
+
+    el.btnFirst.addEventListener('click', () => {
+      state.page = 1;
+      renderRows();
+      renderPagination();
+    });
+
+    el.btnPrev.addEventListener('click', () => {
+      state.page = Math.max(1, state.page - 1);
+      renderRows();
+      renderPagination();
+    });
+
+    el.btnNext.addEventListener('click', () => {
+      state.page = Math.min(totalPages(), state.page + 1);
+      renderRows();
+      renderPagination();
+    });
+
+    el.btnLast.addEventListener('click', () => {
+      state.page = totalPages();
+      renderRows();
+      renderPagination();
+    });
+
+    updateExportLinks();
+    loadData();
+  })();
+</script>
+{% endblock extra_js %}

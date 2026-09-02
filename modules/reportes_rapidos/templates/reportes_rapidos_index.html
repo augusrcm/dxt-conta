@@ -1,0 +1,1032 @@
+{% extends "layout.html" %}
+{% block title %}Reportes rápidos{% endblock title %}
+{% block page_help_url %}{{ url_for('reportes_rapidos.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .rr-page {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .rr-header {
+    background: linear-gradient(135deg, #0f2340, #17406f);
+    border-radius: 1.15rem;
+    color: #fff;
+    padding: 1.2rem 1.35rem;
+    box-shadow: 0 18px 38px rgba(15, 35, 64, 0.18);
+  }
+
+  .rr-header-kicker {
+    align-items: center;
+    color: rgba(255, 255, 255, 0.82);
+    display: flex;
+    font-size: 0.78rem;
+    font-weight: 800;
+    gap: 0.45rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .rr-header-title {
+    font-size: clamp(1.35rem, 2vw, 2rem);
+    font-weight: 850;
+    margin: 0.35rem 0 0.1rem;
+  }
+
+  .rr-header-subtitle {
+    color: rgba(255, 255, 255, 0.76);
+    margin: 0;
+    max-width: 900px;
+  }
+
+  .rr-shell {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+
+  .rr-card {
+    background: #fff;
+    border: 1px solid #dfe7f1;
+    border-radius: 1.15rem;
+    box-shadow: 0 14px 34px rgba(15, 35, 64, 0.08);
+  }
+
+  .rr-menu {
+    align-self: start;
+    display: grid;
+    gap: 0.65rem;
+    max-height: calc(100vh - 150px);
+    min-width: 0;
+    overflow: auto;
+    padding: 0.85rem;
+    scrollbar-gutter: stable both-edges;
+  }
+
+  .rr-menu-scroll {
+    display: grid;
+    gap: 0.65rem;
+    min-width: 236px;
+  }
+
+  .rr-menu-title {
+    color: #526174;
+    font-size: 0.78rem;
+    font-weight: 850;
+    letter-spacing: 0.05em;
+    margin: 0;
+    text-transform: uppercase;
+  }
+
+  .rr-menu-button {
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #dfe7f1;
+    border-radius: 0.9rem;
+    color: #0f2340;
+    cursor: pointer;
+    display: flex;
+    gap: 0.65rem;
+    padding: 0.82rem 0.9rem;
+    text-align: left;
+    min-width: 220px;
+    width: 100%;
+  }
+
+  .rr-menu-button:hover,
+  .rr-menu-button.is-active {
+    background: #0f2340;
+    border-color: #0f2340;
+    color: #fff;
+  }
+
+  .rr-menu-button i {
+    color: #ea6f1b;
+    min-width: 1.1rem;
+  }
+
+  .rr-menu-button.is-active i {
+    color: #ffb35c;
+  }
+
+  .rr-menu-main {
+    display: block;
+    font-size: 0.93rem;
+    font-weight: 850;
+  }
+
+  .rr-menu-sub {
+    color: #64748b;
+    display: block;
+    font-size: 0.74rem;
+    line-height: 1.15;
+  }
+
+  .rr-menu-button.is-active .rr-menu-sub {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .rr-filter-card {
+    padding: 1rem;
+  }
+
+  .rr-filter-grid {
+    align-items: end;
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: 1fr 1fr 1fr 1.25fr auto auto;
+  }
+
+  .rr-field.is-hidden,
+  .rr-button-row.is-hidden {
+    display: none;
+  }
+
+  .rr-field label {
+    color: #334155;
+    font-size: 0.78rem;
+    font-weight: 800;
+    margin-bottom: 0.3rem;
+  }
+
+  .rr-field .form-control,
+  .rr-field .form-select {
+    border-color: #d5deea;
+    border-radius: 0.8rem;
+    min-height: 40px;
+  }
+
+  .rr-date-range {
+    display: none;
+  }
+
+  .rr-date-range.is-visible {
+    display: block;
+  }
+
+  .rr-button-row {
+    display: flex;
+    gap: 0.45rem;
+  }
+
+  .rr-action-btn {
+    align-items: center;
+    border-radius: 0.85rem;
+    display: inline-flex;
+    font-weight: 800;
+    gap: 0.45rem;
+    min-height: 40px;
+    padding-inline: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .rr-summary {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .rr-summary-card {
+    border-left: 5px solid #8aa1bd;
+    padding: 0.95rem 1rem;
+  }
+
+  .rr-summary-card.is-critical {
+    border-left-color: #dc2626;
+  }
+
+  .rr-summary-card.is-high {
+    border-left-color: #f97316;
+  }
+
+  .rr-summary-card.is-total {
+    border-left-color: #0f766e;
+  }
+
+  .rr-summary-card.is-group {
+    border-left-color: #2563eb;
+  }
+
+  .rr-summary-label {
+    color: #64748b;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .rr-summary-value {
+    color: #0f2340;
+    font-size: 1.25rem;
+    font-weight: 900;
+    line-height: 1.15;
+    margin-top: 0.2rem;
+  }
+
+  .rr-summary-note {
+    color: #64748b;
+    font-size: 0.74rem;
+    margin-top: 0.1rem;
+  }
+
+  .rr-results-card {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .rr-results-toolbar {
+    align-items: center;
+    border-bottom: 1px solid #dfe7f1;
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem 1.05rem;
+  }
+
+  .rr-results-title {
+    color: #0f2340;
+    font-weight: 900;
+    margin: 0;
+  }
+
+  .rr-results-meta {
+    color: #64748b;
+    font-size: 0.82rem;
+  }
+
+  .rr-money-note {
+    color: #0f2340;
+    display: none;
+    font-size: 0.82rem;
+    font-weight: 900;
+    margin-top: 0.18rem;
+  }
+
+  .rr-money-note.is-visible {
+    display: block;
+  }
+
+  .rr-quality-note {
+    align-items: flex-start;
+    background: #f8fafc;
+    border: 1px solid #dfe7f1;
+    border-radius: 0.8rem;
+    color: #43556d;
+    display: none;
+    font-size: 0.78rem;
+    gap: 0.45rem;
+    line-height: 1.25;
+    margin-top: 0.45rem;
+    max-width: 1000px;
+    padding: 0.42rem 0.58rem;
+  }
+
+  .rr-quality-note.is-visible {
+    display: inline-flex;
+  }
+
+  .rr-quality-note i {
+    color: #2563eb;
+    margin-top: 0.1rem;
+  }
+
+  .rr-table-wrap {
+    min-height: 360px;
+    overflow-x: auto;
+    position: relative;
+  }
+
+  .rr-table {
+    margin: 0;
+    min-width: 1180px;
+  }
+
+  .rr-table thead th {
+    background: #f1f5f9;
+    color: #243447;
+    font-size: 0.75rem;
+    font-weight: 850;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .rr-table tbody td {
+    color: #263445;
+    font-size: 0.86rem;
+    vertical-align: top;
+  }
+
+  .rr-text-strong {
+    color: #0f2340;
+    font-weight: 850;
+  }
+
+  .rr-text-muted {
+    color: #6b7280;
+    font-size: 0.78rem;
+  }
+
+  .rr-badge {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    padding: 0.32rem 0.55rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .rr-badge-critical,
+  .rr-badge-pagar {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .rr-badge-high {
+    background: #ffedd5;
+    color: #9a3412;
+  }
+
+  .rr-badge-medium {
+    background: #fef9c3;
+    color: #854d0e;
+  }
+
+  .rr-badge-low,
+  .rr-badge-cobrar {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .rr-badge-control {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .rr-badge-default {
+    background: #e2e8f0;
+    color: #334155;
+  }
+
+  .rr-empty {
+    color: #64748b;
+    display: none;
+    padding: 4rem 1rem;
+    text-align: center;
+  }
+
+  .rr-empty.is-visible {
+    display: block;
+  }
+
+  .rr-empty i {
+    color: #94a3b8;
+    font-size: 2.6rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .rr-loader {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(2px);
+    display: none;
+    inset: 0;
+    justify-content: center;
+    position: absolute;
+    z-index: 5;
+  }
+
+  .rr-loader.is-visible {
+    display: flex;
+  }
+
+  .rr-loader-card {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #dfe7f1;
+    border-radius: 999px;
+    box-shadow: 0 12px 30px rgba(15, 35, 64, 0.14);
+    color: #0f2340;
+    display: inline-flex;
+    font-weight: 850;
+    gap: 0.65rem;
+    padding: 0.7rem 1rem;
+  }
+
+  .rr-loader-card i {
+    color: #ea6f1b;
+  }
+
+  .rr-footer-note {
+    color: #64748b;
+    font-size: 0.78rem;
+    padding: 0.75rem 1.05rem 1rem;
+  }
+
+  @media (max-width: 1180px) {
+    .rr-shell {
+      grid-template-columns: 1fr;
+    }
+
+    .rr-menu {
+      max-height: 310px;
+    }
+
+    .rr-filter-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rr-summary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .rr-filter-grid,
+    .rr-summary {
+      grid-template-columns: 1fr;
+    }
+
+    .rr-results-toolbar {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .rr-button-row {
+      width: 100%;
+    }
+
+    .rr-action-btn {
+      justify-content: center;
+      width: 100%;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="rr-page">
+  <section class="rr-header">
+    <div class="rr-header-kicker">
+      <i class="fas fa-bolt"></i>
+      <span>Reportes rápidos</span>
+    </div>
+    <h1 id="headerTitle" class="rr-header-title">Reportes rápidos</h1>
+    <p id="headerSubtitle" class="rr-header-subtitle"></p>
+  </section>
+
+  <div class="rr-shell">
+    <aside class="rr-card rr-menu" aria-label="Menú de reportes rápidos">
+      <p class="rr-menu-title">Reportes</p>
+      <div class="rr-menu-scroll">
+        {% for reporte in reportes %}
+        <button
+          type="button"
+          class="rr-menu-button{% if reporte.id == reporte_inicial %} is-active{% endif %}"
+          data-report-id="{{ reporte.id }}"
+        >
+          <i class="{{ reporte.icono }}"></i>
+          <span>
+            <span class="rr-menu-main">{{ reporte.titulo }}</span>
+            <span class="rr-menu-sub">{{ reporte.descripcion }}</span>
+          </span>
+        </button>
+        {% endfor %}
+      </div>
+    </aside>
+
+    <main class="rr-page">
+      <section class="rr-card rr-filter-card">
+        <div class="rr-filter-grid">
+          <div class="rr-field">
+            <label id="alcanceLabel" for="alcance">Alcance</label>
+            <select id="alcance" class="form-select"></select>
+          </div>
+
+          <div class="rr-field" id="fechaBaseWrap">
+            <label id="fechaBaseLabel" for="fechaBase">Fecha de atención</label>
+            <input id="fechaBase" type="date" class="form-control" value="{{ fecha_hoy }}" />
+          </div>
+
+          <div class="rr-field rr-date-range" id="fechaDesdeWrap">
+            <label for="fechaDesde">Fecha desde</label>
+            <input id="fechaDesde" type="date" class="form-control" value="{{ fecha_hoy }}" />
+          </div>
+
+          <div class="rr-field rr-date-range" id="fechaHastaWrap">
+            <label for="fechaHasta">Fecha hasta</label>
+            <input id="fechaHasta" type="date" class="form-control" value="{{ fecha_hoy }}" />
+          </div>
+
+          <div class="rr-field">
+            <label id="grupoLabel" for="grupo">Grupo</label>
+            <select id="grupo" class="form-select"></select>
+          </div>
+
+          <div class="rr-field" id="unidadNegocioWrap">
+            <label for="unidadNegocio">Unidad de negocio</label>
+            <select id="unidadNegocio" class="form-select">
+              <option value="">Todas</option>
+              {% for unidad in unidades_negocio %}
+              <option value="{{ unidad.id }}">{{ unidad.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="rr-button-row" id="btnHoyWrap">
+            <button id="btnHoy" type="button" class="btn btn-outline-primary rr-action-btn">
+              <i class="fas fa-calendar-day"></i>
+              <span>Hoy</span>
+            </button>
+          </div>
+
+          <div class="rr-button-row">
+            <a id="btnExcel" class="btn btn-success rr-action-btn" href="#" role="button">
+              <i class="fas fa-file-excel"></i>
+              <span>Excel</span>
+            </a>
+            <a id="btnPdf" class="btn btn-danger rr-action-btn" href="#" role="button" target="_blank" rel="noopener">
+              <i class="fas fa-file-pdf"></i>
+              <span>PDF</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="summaryGrid" class="rr-summary" aria-label="Resumen del reporte"></section>
+
+      <section class="rr-card rr-results-card">
+        <div class="rr-loader" id="loaderResultados">
+          <div class="rr-loader-card">
+            <i class="fas fa-circle-notch fa-spin"></i>
+            <span>Actualizando resultados</span>
+          </div>
+        </div>
+
+        <div class="rr-results-toolbar">
+          <div>
+            <h2 class="rr-results-title">Resultados</h2>
+            <div id="resultadoMeta" class="rr-results-meta">Cargando reporte...</div>
+            <div id="monedaMeta" class="rr-money-note"></div>
+            <div id="criterioMeta" class="rr-quality-note"></div>
+          </div>
+        </div>
+
+        <div class="rr-table-wrap">
+          <table class="table table-hover rr-table">
+            <thead>
+              <tr id="resultadosHead"></tr>
+            </thead>
+            <tbody id="resultadosBody"></tbody>
+          </table>
+          <div id="emptyState" class="rr-empty">
+            <i id="emptyIcon" class="fas fa-circle-check"></i>
+            <h3 id="emptyTitle">No hay resultados para los filtros seleccionados</h3>
+          </div>
+        </div>
+
+        <div id="footerNote" class="rr-footer-note"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script type="application/json" id="reportesRapidosBootstrap">
+  {{ {
+    'reportes': reportes,
+    'reporte_inicial': reporte_inicial,
+    'fecha_hoy': fecha_hoy,
+    'help_base_url': url_for('reportes_rapidos.help')
+  } | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const bootEl = document.getElementById("reportesRapidosBootstrap");
+    const boot = JSON.parse(bootEl.textContent || "{}");
+    const reports = Array.isArray(boot.reportes) ? boot.reportes : [];
+    const reportsById = new Map(reports.map((report) => [report.id, report]));
+
+    const el = {
+      headerTitle: document.getElementById("headerTitle"),
+      headerSubtitle: document.getElementById("headerSubtitle"),
+      menuButtons: Array.from(document.querySelectorAll(".rr-menu-button[data-report-id]")),
+      alcance: document.getElementById("alcance"),
+      alcanceLabel: document.getElementById("alcanceLabel"),
+      fechaBase: document.getElementById("fechaBase"),
+      fechaBaseWrap: document.getElementById("fechaBaseWrap"),
+      fechaBaseLabel: document.getElementById("fechaBaseLabel"),
+      fechaDesde: document.getElementById("fechaDesde"),
+      fechaHasta: document.getElementById("fechaHasta"),
+      fechaDesdeWrap: document.getElementById("fechaDesdeWrap"),
+      fechaHastaWrap: document.getElementById("fechaHastaWrap"),
+      grupo: document.getElementById("grupo"),
+      grupoLabel: document.getElementById("grupoLabel"),
+      unidadNegocio: document.getElementById("unidadNegocio"),
+      unidadNegocioWrap: document.getElementById("unidadNegocioWrap"),
+      btnHoy: document.getElementById("btnHoy"),
+      btnHoyWrap: document.getElementById("btnHoyWrap"),
+      btnExcel: document.getElementById("btnExcel"),
+      btnPdf: document.getElementById("btnPdf"),
+      loader: document.getElementById("loaderResultados"),
+      head: document.getElementById("resultadosHead"),
+      body: document.getElementById("resultadosBody"),
+      empty: document.getElementById("emptyState"),
+      emptyIcon: document.getElementById("emptyIcon"),
+      emptyTitle: document.getElementById("emptyTitle"),
+      meta: document.getElementById("resultadoMeta"),
+      monedaMeta: document.getElementById("monedaMeta"),
+      criterioMeta: document.getElementById("criterioMeta"),
+      footerNote: document.getElementById("footerNote"),
+      summaryGrid: document.getElementById("summaryGrid"),
+    };
+
+    let activeReportId = boot.reporte_inicial || (reports[0] ? reports[0].id : "");
+    let timer = null;
+    let controller = null;
+
+    function activeReport() {
+      return reportsById.get(activeReportId) || reports[0] || {};
+    }
+
+
+    function updateHelpContext() {
+      const root = document.getElementById("layoutHelpRoot");
+      if (!root || !boot.help_base_url) {
+        return;
+      }
+      const params = new URLSearchParams();
+      params.set("reporte", activeReportId);
+      root.dataset.helpUrl = `${boot.help_base_url}?${params.toString()}`;
+    }
+
+    function showLoader() {
+      el.loader.classList.add("is-visible");
+    }
+
+    function hideLoader() {
+      el.loader.classList.remove("is-visible");
+    }
+
+    function alertError(message) {
+      if (window.Swal) {
+        window.Swal.fire({
+          icon: "error",
+          title: "No se pudo actualizar el reporte",
+          text: message || "Revise la consola del servidor.",
+          confirmButtonText: "Aceptar",
+        });
+      } else {
+        window.alert(message || "No se pudo actualizar el reporte.");
+      }
+    }
+
+    function populateSelect(select, options, selectedValue) {
+      select.textContent = "";
+      (options || []).forEach((option) => {
+        const opt = document.createElement("option");
+        opt.value = option.id || "";
+        opt.textContent = option.label || "";
+        opt.selected = String(opt.value) === String(selectedValue || "");
+        select.appendChild(opt);
+      });
+    }
+
+    function applyReportConfig(resetFilters) {
+      const report = activeReport();
+      el.headerTitle.textContent = report.titulo || "Reportes rápidos";
+      el.headerSubtitle.textContent = report.descripcion || "";
+      el.alcanceLabel.textContent = report.alcance_label || "Alcance";
+      el.grupoLabel.textContent = report.grupo_label || "Grupo";
+      el.fechaBaseLabel.textContent = report.fecha_label || "Fecha de atención";
+
+      const hideFechaBase = report.hide_fecha_base_filter === true;
+      el.fechaBaseWrap.classList.toggle("is-hidden", hideFechaBase);
+      if (hideFechaBase) {
+        el.fechaBase.value = boot.fecha_hoy;
+      }
+
+      const hideHoyButton = report.hide_hoy_button === true;
+      el.btnHoyWrap.classList.toggle("is-hidden", hideHoyButton);
+
+      const showUnidad = report.show_unidad_filter !== false;
+      el.unidadNegocioWrap.classList.toggle("is-hidden", !showUnidad);
+      if (!showUnidad) {
+        el.unidadNegocio.value = "";
+      }
+
+      if (resetFilters) {
+        populateSelect(el.alcance, report.alcances || [], report.alcance_default || "hoy");
+        populateSelect(el.grupo, report.grupos || [], report.grupo_default || "");
+        el.fechaBase.value = boot.fecha_hoy;
+        el.fechaDesde.value = boot.fecha_hoy;
+        el.fechaHasta.value = boot.fecha_hoy;
+      } else if (!el.alcance.options.length) {
+        populateSelect(el.alcance, report.alcances || [], report.alcance_default || "hoy");
+        populateSelect(el.grupo, report.grupos || [], report.grupo_default || "");
+      }
+
+      el.menuButtons.forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.reportId === activeReportId);
+      });
+      toggleRange();
+      updateExportLinks();
+      updateHelpContext();
+    }
+
+    function buildParams() {
+      const params = new URLSearchParams();
+      params.set("alcance", el.alcance.value || "hoy");
+      params.set("fecha_base", el.fechaBase.value || boot.fecha_hoy);
+      params.set("fecha_desde", el.fechaDesde.value || boot.fecha_hoy);
+      params.set("fecha_hasta", el.fechaHasta.value || boot.fecha_hoy);
+      params.set("grupo", el.grupo.value || "");
+      if (activeReport().show_unidad_filter !== false) {
+        params.set("unidad_negocio_id", el.unidadNegocio.value || "");
+      } else {
+        params.set("unidad_negocio_id", "");
+      }
+      return params;
+    }
+
+    function updateExportLinks() {
+      const report = activeReport();
+      const params = buildParams();
+      el.btnExcel.href = `${report.urls.excel}?${params.toString()}`;
+      el.btnPdf.href = `${report.urls.pdf}?${params.toString()}`;
+    }
+
+    function toggleRange() {
+      const isRange = el.alcance.value === "rango";
+      el.fechaDesdeWrap.classList.toggle("is-visible", isRange);
+      el.fechaHastaWrap.classList.toggle("is-visible", isRange);
+    }
+
+    function badgeClass(code) {
+      const normalized = String(code || "").toUpperCase();
+      if (normalized === "CRITICA") {
+        return "rr-badge-critical";
+      }
+      if (normalized === "ALTA") {
+        return "rr-badge-high";
+      }
+      if (normalized === "MEDIA") {
+        return "rr-badge-medium";
+      }
+      if (normalized === "BAJA") {
+        return "rr-badge-low";
+      }
+      if (normalized === "PAGAR") {
+        return "rr-badge-pagar";
+      }
+      if (normalized === "COBRAR") {
+        return "rr-badge-cobrar";
+      }
+      if (normalized === "CONTROL") {
+        return "rr-badge-control";
+      }
+      if (normalized === "CONFIRMADO") {
+        return "rr-badge-low";
+      }
+      if (normalized === "BORRADOR") {
+        return "rr-badge-medium";
+      }
+      if (normalized === "ANULADO") {
+        return "rr-badge-critical";
+      }
+      return "rr-badge-default";
+    }
+
+    function alignClass(align) {
+      if (align === "right") {
+        return "text-end";
+      }
+      if (align === "center") {
+        return "text-center";
+      }
+      return "";
+    }
+
+    function renderColumns(columns) {
+      el.head.textContent = "";
+      (columns || []).forEach((column) => {
+        const th = document.createElement("th");
+        th.textContent = column.label || "";
+        const align = alignClass(column.align);
+        if (align) {
+          th.className = align;
+        }
+        el.head.appendChild(th);
+      });
+    }
+
+    function cellValue(row, column) {
+      if (column.type === "money") {
+        return row[`${column.key}_label`] || row[column.key] || "";
+      }
+      return row[column.key] || "";
+    }
+
+    function renderRows(rows, columns) {
+      el.body.textContent = "";
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+
+        (columns || []).forEach((column) => {
+          const td = document.createElement("td");
+          const align = alignClass(column.align);
+          if (align) {
+            td.classList.add(...align.split(" "));
+          }
+          if (column.type === "money") {
+            td.classList.add("rr-text-strong");
+          }
+
+          if (column.type === "badge") {
+            const badge = document.createElement("span");
+            badge.className = `rr-badge ${badgeClass(row[column.code_key])}`;
+            badge.textContent = cellValue(row, column);
+            td.appendChild(badge);
+          } else if (column.sub_key) {
+            const main = document.createElement("div");
+            if (column.strong) {
+              main.className = "rr-text-strong";
+            }
+            main.textContent = cellValue(row, column);
+            td.appendChild(main);
+
+            if (row[column.sub_key]) {
+              const sub = document.createElement("div");
+              sub.className = "rr-text-muted";
+              sub.textContent = row[column.sub_key];
+              td.appendChild(sub);
+            }
+          } else {
+            td.textContent = cellValue(row, column);
+            if (column.strong) {
+              td.classList.add("rr-text-strong");
+            }
+          }
+
+          tr.appendChild(td);
+        });
+
+        el.body.appendChild(tr);
+      });
+
+      el.empty.classList.toggle("is-visible", rows.length === 0);
+    }
+
+    function moneyNoteDisplay(note) {
+      let value = String(note || "").trim();
+      if (!value) {
+        return "";
+      }
+      if (!value.endsWith(".")) {
+        value += ".";
+      }
+      if (value.startsWith("(") && value.endsWith(")")) {
+        return value;
+      }
+      return `(${value})`;
+    }
+
+    function renderSummary(cards) {
+      el.summaryGrid.textContent = "";
+      (cards || []).forEach((card) => {
+        const item = document.createElement("div");
+        item.className = `rr-card rr-summary-card is-${card.kind || "group"}`;
+
+        const label = document.createElement("div");
+        label.className = "rr-summary-label";
+        label.textContent = card.label || "";
+
+        const value = document.createElement("div");
+        value.className = "rr-summary-value";
+        value.textContent = card.value === 0 ? "0" : card.value || "";
+
+        const note = document.createElement("div");
+        note.className = "rr-summary-note";
+        note.textContent = card.note || "";
+
+        item.appendChild(label);
+        item.appendChild(value);
+        item.appendChild(note);
+        el.summaryGrid.appendChild(item);
+      });
+    }
+
+    function renderPayload(payload) {
+      el.headerTitle.textContent = payload.titulo || activeReport().titulo || "Reportes rápidos";
+      el.headerSubtitle.textContent = payload.descripcion || activeReport().descripcion || "";
+      el.meta.textContent = `${payload.descripcion_periodo || ""} · ${payload.unidad_label || "Todas las unidades"} · Emitido ${payload.emitido_en || ""}`;
+      const monedaNote = moneyNoteDisplay(payload.summary && payload.summary.moneda_display_note);
+      el.monedaMeta.textContent = monedaNote;
+      el.monedaMeta.classList.toggle("is-visible", Boolean(monedaNote));
+      const criterio = String(payload.criterio_reporte || '').trim();
+      const fuente = String(payload.fuente_datos || '').trim();
+      const criterioTexto = criterio
+        ? `Criterio: ${criterio}${fuente ? ` Fuente: ${fuente}` : ''}`
+        : '';
+      el.criterioMeta.textContent = '';
+      if (criterioTexto) {
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-shield-halved';
+        const text = document.createElement('span');
+        text.textContent = criterioTexto;
+        el.criterioMeta.appendChild(icon);
+        el.criterioMeta.appendChild(text);
+      }
+      el.criterioMeta.classList.toggle('is-visible', Boolean(criterioTexto));
+
+      el.emptyTitle.textContent = payload.empty_title || "No hay resultados para los filtros seleccionados";
+      el.emptyIcon.className = payload.empty_icon || "fas fa-circle-check";
+      renderSummary(payload.summary_cards || []);
+      renderColumns(payload.columns || []);
+      renderRows(payload.rows || [], payload.columns || []);
+
+      const summary = payload.summary || {};
+      const advertencia = String(payload.advertencia_reporte || '').trim();
+      if (summary.hay_limite) {
+        el.footerNote.textContent = "La pantalla muestra el límite operativo de registros. Use Excel para obtener el detalle exportable.";
+      } else if (advertencia) {
+        el.footerNote.textContent = advertencia;
+      } else {
+        el.footerNote.textContent = "";
+      }
+    }
+
+    async function cargarReporte() {
+      applyReportConfig(false);
+      const report = activeReport();
+      const params = buildParams();
+      if (controller) {
+        controller.abort();
+      }
+      controller = new AbortController();
+
+      showLoader();
+      try {
+        const response = await fetch(`${report.urls.data}?${params.toString()}`, {
+          headers: {
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          credentials: "same-origin",
+          signal: controller.signal,
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "No se pudo consultar el reporte.");
+        }
+        renderPayload(data);
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          alertError(error.message || "No se pudo consultar el reporte.");
+        }
+      } finally {
+        hideLoader();
+      }
+    }
+
+    function scheduleLoad() {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(cargarReporte, 250);
+    }
+
+    el.menuButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const reportId = button.dataset.reportId;
+        if (!reportsById.has(reportId) || reportId === activeReportId) {
+          return;
+        }
+        activeReportId = reportId;
+        applyReportConfig(true);
+        cargarReporte();
+      });
+    });
+
+    [el.alcance, el.fechaBase, el.fechaDesde, el.fechaHasta, el.grupo, el.unidadNegocio].forEach((node) => {
+      node.addEventListener("change", scheduleLoad);
+    });
+
+    el.btnHoy.addEventListener("click", () => {
+      const report = activeReport();
+      el.alcance.value = report.alcance_default || "hoy";
+      el.fechaBase.value = boot.fecha_hoy;
+      el.fechaDesde.value = boot.fecha_hoy;
+      el.fechaHasta.value = boot.fecha_hoy;
+      scheduleLoad();
+    });
+
+    applyReportConfig(true);
+    cargarReporte();
+  });
+</script>
+{% endblock extra_js %}

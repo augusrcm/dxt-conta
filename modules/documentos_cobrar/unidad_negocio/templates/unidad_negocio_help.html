@@ -1,0 +1,47 @@
+<div class="help-page">
+  <h2>Unidad de negocio</h2>
+  <p>
+    Esta pantalla administra el catálogo maestro de unidades de negocio que
+    usarán los módulos operativos, contables y documentales del sistema.
+  </p>
+
+  <h3>Campos principales</h3>
+  <p>
+    <strong>Código:</strong> identificador interno autogenerado.<br />
+    <strong>Nombre:</strong> denominación visible de la unidad.<br />
+    <strong>NIT:</strong> dato fiscal de referencia para documentos cuando corresponda.<br />
+    <strong>Logo para documentos:</strong> imagen usada en boletas, comprobantes y otros respaldos emitidos por unidad.<br />
+    <strong>Activo:</strong> define si la unidad puede utilizarse en nuevas operaciones.<br />
+    <strong>Vinculación:</strong> relación opcional con subsistemas específicos, por ejemplo Publicidad.
+  </p>
+
+  <h3>Logo para documentos</h3>
+  <p>
+    El logo se carga desde el modal de creación o edición. Puede seleccionarse
+    mediante explorador de archivos o arrastrarse al recuadro de carga.
+  </p>
+  <p>
+    El archivo físico se guarda en la carpeta configurada para logos del sistema
+    (<strong>DXT_CONTA_DATA_DIR/logo</strong>) y en base de datos solo se conserva la ruta relativa.
+    Formatos permitidos: PNG, JPG, JPEG y WEBP.
+  </p>
+
+  <h3>Vinculación</h3>
+  <p>
+    La vinculación puede quedar como Ninguno o Publicidad. Para cada área de
+    vinculación solo debe existir una unidad representante. Si una unidad se
+    guarda como Publicidad, cualquier otra unidad que antes tuviera esa misma
+    vinculación queda automáticamente como Ninguno.
+  </p>
+
+  <h3>Reglas importantes</h3>
+  <p>
+    La unidad BASE se conserva como registro de respaldo del sistema y no debe
+    desactivarse. Desactivar una unidad no elimina ni altera movimientos
+    históricos; solo impide su uso en nuevas operaciones.
+  </p>
+  <p>
+    Una unidad vinculada a Publicidad no puede desactivarse directamente. Primero
+    debe vincularse Publicidad con otra unidad activa para evitar referencias rotas.
+  </p>
+</div>

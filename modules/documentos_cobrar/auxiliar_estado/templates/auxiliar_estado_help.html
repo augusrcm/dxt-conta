@@ -1,0 +1,43 @@
+<div class="help-content">
+  <h2>Estado de Auxiliares</h2>
+  <p>
+    Este reporte permite revisar el movimiento contable de cada auxiliar, por ejemplo clientes,
+    proveedores, bancos, funcionarios u otros terceros usados en los asientos contables.
+  </p>
+
+  <h3>Listado general</h3>
+  <p>
+    La pantalla principal muestra todos los auxiliares activos. Para cada auxiliar se resume el Debe,
+    Haber y Saldo de la gestión seleccionada, considerando únicamente asientos confirmados.
+  </p>
+
+  <h3>Detalle del auxiliar</h3>
+  <p>
+    El botón de detalle abre un extracto similar a un libro mayor, pero filtrado por auxiliar. Allí se
+    muestran los comprobantes donde aparece ese auxiliar, la cuenta afectada, la glosa, el Debe, el Haber
+    y el saldo acumulado.
+  </p>
+
+  <h3>Alcance de fechas</h3>
+  <ul>
+    <li><strong>Gestión completa:</strong> consulta desde el 1 de enero hasta el 31 de diciembre de la gestión seleccionada.</li>
+    <li><strong>Rango de fechas:</strong> permite indicar una fecha desde y una fecha hasta.</li>
+  </ul>
+
+  <h3>Cómo se calcula cuando hay rango</h3>
+  <ul>
+    <li><strong>Saldo anterior:</strong> suma todos los movimientos confirmados antes de la fecha inicial.</li>
+    <li><strong>Debe del período:</strong> suma los importes al Debe dentro del rango seleccionado.</li>
+    <li><strong>Haber del período:</strong> suma los importes al Haber dentro del rango seleccionado.</li>
+    <li><strong>Saldo final:</strong> saldo anterior más Debe del período menos Haber del período.</li>
+  </ul>
+
+  <h3>Reglas importantes</h3>
+  <ul>
+    <li>El reporte no modifica datos ni genera asientos.</li>
+    <li>Solo considera asientos en estado Confirmado.</li>
+    <li>La unidad de negocio es opcional; si se deja en blanco, se consultan todas.</li>
+    <li>El PDF del listado imprime los auxiliares filtrados en pantalla.</li>
+    <li>El PDF del detalle imprime el extracto del auxiliar seleccionado.</li>
+  </ul>
+</div>

@@ -1,0 +1,26 @@
+{% extends "layouthelp.html" %}
+{% block title %}Ayuda - Parámetros de Planilla{% endblock %}
+{% block content %}
+<h4>Parámetros de Planilla</h4>
+<p>Define la configuración anual que usará la generación mensual de planillas. Se registra una vez por gestión y solo se ajusta cuando cambian valores normativos, criterios internos o cuentas contables.</p>
+
+<h5>Parámetros laborales</h5>
+<ul>
+  <li>Salario mínimo nacional.</li>
+  <li>Base para bono de antigüedad.</li>
+  <li>Porcentaje AFP/Gestora.</li>
+  <li>Jornada semanal referencial.</li>
+  <li>Múltiplo referencial para RC-IVA.</li>
+</ul>
+
+<h5>Cuentas contables</h5>
+<ul>
+  <li>Use <strong>Sugerir cuentas</strong> para cargar cuentas del plan actual.</li>
+  <li>El contador puede cambiar cualquier cuenta sugerida.</li>
+  <li>La planilla mensual no vuelve a pedir estas cuentas.</li>
+  <li>Si falta una cuenta requerida, el sistema bloquea la consolidación antes de generar asientos.</li>
+</ul>
+
+<h5>Copiar gestión anterior</h5>
+<p>Permite iniciar una nueva gestión tomando como base la configuración activa más reciente. Revise y ajuste solo lo necesario antes de guardar.</p>
+{% endblock %}

@@ -1,0 +1,35 @@
+<div id="layoutHelpRoot" class="layout-help-root" data-help-url="{{ __page_help_url|trim }}">
+  <button
+    type="button"
+    id="layoutHelpButton"
+    class="layout-help-button"
+    aria-label="Abrir ayuda de esta pantalla"
+    title="Ayuda"
+  >
+    ?
+  </button>
+</div>
+
+<div id="layoutHelpModal" class="layout-help-modal" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="layout-help-modal__backdrop" data-help-close="1"></div>
+  <div class="layout-help-modal__dialog" role="document">
+    <div class="layout-help-modal__header">
+      <div class="layout-help-modal__titlewrap">
+        <span class="layout-help-modal__badge"><i class="fas fa-circle-info"></i> Ayuda</span>
+        <h2 id="layoutHelpModalTitle" class="layout-help-modal__title">Ayuda de esta pantalla</h2>
+      </div>
+      <button type="button" class="layout-help-modal__close" id="layoutHelpModalClose" aria-label="Cerrar ayuda">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div id="layoutHelpModalBody" class="layout-help-modal__body">
+      <div class="layout-help-modal__loading">
+        <i class="fas fa-circle-notch fa-spin"></i>
+        <span>Cargando ayuda...</span>
+      </div>
+    </div>
+    <div class="layout-help-modal__footer">
+      <button type="button" class="btn btn-outline-secondary" id="layoutHelpModalCloseFooter">Cerrar</button>
+    </div>
+  </div>
+</div>

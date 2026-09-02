@@ -1,0 +1,67 @@
+{% extends "layouthelp.html" %}
+
+{% block title %}Ayuda · Comprobantes{% endblock %}
+{% block help_title %}Ayuda rápida · Comprobantes{% endblock %}
+{% block help_subtitle %}Resumen práctico de las dos pantallas del módulo: listado y formulario de comprobantes.{% endblock %}
+
+{% block help_summary %}
+  <li>Qué hace el listado principal.</li>
+  <li>Cómo crear un comprobante nuevo.</li>
+  <li>Diferencia entre comprobantes manuales y generados por otros módulos.</li>
+  <li>Diferencia entre guardar borrador, eliminar y confirmar.</li>
+  <li>Qué revisar antes de confirmar.</li>
+{% endblock %}
+
+{% block help_content %}
+  <section class="help-section">
+    <h2>1. Pantalla principal</h2>
+    <div class="help-callout">
+      Aquí se consultan los comprobantes registrados. El filtro de fechas se carga por omisión con la fecha actual para evitar listados extensos.
+    </div>
+  </section>
+
+  <section class="help-section">
+    <h2>2. Origen del comprobante</h2>
+    <div class="help-callout">
+      El listado muestra comprobantes manuales y asientos generados por Tesorería, Facturas Electrónicas, Saldos Iniciales y Cierre de Gestión. Los generados por otros módulos son de solo lectura desde esta pantalla.
+    </div>
+  </section>
+
+  <section class="help-section">
+    <h2>3. Nuevo comprobante</h2>
+    <div class="help-grid-2">
+      <div class="help-mini-card">
+        <h3>Cabecera</h3>
+        <p>Registra fecha, moneda, tipo de cambio, unidad de negocio, glosa y referencia del comprobante.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Detalle contable</h3>
+        <p>En cada línea debes elegir la cuenta y registrar el importe en Debe o Haber.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="help-section">
+    <h2>4. Guardar borrador o confirmar</h2>
+    <ol class="help-steps">
+      <li><strong>Guardar borrador</strong>: conserva el comprobante editable para revisarlo más tarde.</li>
+      <li><strong>Eliminar</strong>: permite quitar definitivamente un comprobante manual mientras siga en BORRADOR.</li>
+      <li><strong>Confirmar</strong>: guarda y deja el comprobante cerrado para operación normal.</li>
+      <li>Solo se puede confirmar cuando el comprobante está balanceado.</li>
+    </ol>
+  </section>
+
+  <section class="help-section">
+    <h2>5. Qué revisar antes de confirmar</h2>
+    <div class="help-grid-2">
+      <div class="help-mini-card">
+        <h3>Balance</h3>
+        <p>El total del Debe debe ser igual al total del Haber.</p>
+      </div>
+      <div class="help-mini-card">
+        <h3>Soporte</h3>
+        <p>La unidad de negocio es obligatoria en comprobantes manuales. La glosa y la referencia deben permitir identificar rápidamente el respaldo del comprobante.</p>
+      </div>
+    </div>
+  </section>
+{% endblock %}

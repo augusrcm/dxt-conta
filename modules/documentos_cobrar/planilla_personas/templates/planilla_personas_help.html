@@ -1,0 +1,45 @@
+{% extends "layouthelp.html" %}
+{% block title %}Ayuda - Personas de Planilla{% endblock %}
+
+{% block help_content %}
+<h4>Personas de Planilla</h4>
+<p>Este módulo administra la base de personas que podrán ser incorporadas a planillas mensuales de planta o colaboradores.</p>
+
+<h5>Criterios</h5>
+<ul>
+  <li><strong>Planta:</strong> personal dependiente usado para planillas de sueldos.</li>
+  <li><strong>Colaborador:</strong> persona externa usada para planillas de servicios o tareas.</li>
+  <li>El respaldo del colaborador, con factura o sin factura, se definirá en cada planilla mensual.</li>
+  <li>Banco y cuenta bancaria son datos referenciales y podrán ajustarse al elaborar la planilla.</li>
+  <li><strong>Unidad de negocio:</strong> es obligatoria para generar planillas únicas por mes y agrupar internamente por unidad.</li>
+</ul>
+
+<h5>Origen de datos</h5>
+<ul>
+  <li><strong>Manual:</strong> registro creado directamente en DXT-CONTA.</li>
+  <li><strong>Funcionarios:</strong> datos base recuperados del esquema <code>funcionarios</code>. El selector muestra funcionarios pendientes de vincular para evitar duplicados.</li>
+  <li>El esquema <code>funcionarios</code> no contiene unidad de negocio; por eso debe completarse en DXT-CONTA antes de guardar.</li>
+</ul>
+
+<h5>Filtros</h5>
+<ul>
+  <li>Los filtros del listado se aplican automáticamente al cambiar tipo, estado o búsqueda.</li>
+</ul>
+
+<h5>Estado</h5>
+<ul>
+  <li>Las nuevas personas se crean activas.</li>
+  <li>La activación o inactivación se realiza desde las acciones del listado.</li>
+</ul>
+
+<h5>Auxiliar contable</h5>
+<ul>
+  <li>Para planta se crea o vincula auxiliar tipo <strong>FUNCIONARIO</strong>.</li>
+  <li>Para colaboradores se crea o vincula auxiliar tipo <strong>OTRO</strong>.</li>
+  <li>La contabilización final se realizará desde la planilla consolidada.</li>
+</ul>
+{% endblock %}
+
+<!-- Actualizacion: los días/horas del mes no pertenecen a la persona; se proponen al generar la planilla desde parámetros de planilla. -->
+
+<!-- Actualizacion: los días/horas del mes no pertenecen a la persona; se proponen al generar la planilla desde parámetros de planilla. -->

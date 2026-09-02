@@ -1,0 +1,818 @@
+{% extends "layout.html" %}
+{% block title %}Asistente de Ajustes{% endblock title %}
+{% block page_help_url %}{{ url_for('asistente_ajustes.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .aa-page {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .aa-header {
+    background: linear-gradient(135deg, #0f2340, #183b66);
+    border-radius: 1.15rem;
+    box-shadow: 0 18px 38px rgba(15, 35, 64, 0.18);
+    color: #fff;
+    padding: 1.15rem 1.25rem;
+  }
+
+  .aa-kicker {
+    align-items: center;
+    color: rgba(255, 255, 255, 0.82);
+    display: flex;
+    font-size: 0.78rem;
+    font-weight: 850;
+    gap: 0.45rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .aa-title {
+    font-size: clamp(1.35rem, 2vw, 1.95rem);
+    font-weight: 900;
+    margin: 0.35rem 0 0.05rem;
+  }
+
+  .aa-subtitle {
+    color: rgba(255, 255, 255, 0.76);
+    margin: 0;
+    max-width: 940px;
+  }
+
+  .aa-card {
+    background: #fff;
+    border: 1px solid #dfe7f1;
+    border-radius: 1.15rem;
+    box-shadow: 0 14px 34px rgba(15, 35, 64, 0.08);
+  }
+
+  .aa-card-header {
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: space-between;
+    padding: 0.95rem 1.05rem;
+  }
+
+  .aa-card-title {
+    color: #0f2340;
+    font-size: 1rem;
+    font-weight: 900;
+    margin: 0;
+  }
+
+  .aa-card-body {
+    padding: 1rem 1.05rem;
+  }
+
+  .aa-form-grid {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: 0.8fr 1.2fr 1.25fr 1fr 2fr;
+  }
+
+  .aa-filter-grid {
+    align-items: end;
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: 0.75fr 0.95fr 0.95fr 1.3fr 1fr 1fr auto auto auto;
+  }
+
+  .aa-field label {
+    color: #334155;
+    font-size: 0.78rem;
+    font-weight: 850;
+    margin-bottom: 0.3rem;
+  }
+
+  .aa-field .form-control,
+  .aa-field .form-select {
+    border-color: #d5deea;
+    border-radius: 0.8rem;
+    min-height: 40px;
+  }
+
+  .aa-detail-toolbar,
+  .aa-grid-toolbar {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    justify-content: space-between;
+    margin-bottom: 0.85rem;
+  }
+
+  .aa-action-btn {
+    align-items: center;
+    border-radius: 0.85rem;
+    display: inline-flex;
+    font-weight: 850;
+    gap: 0.45rem;
+    min-height: 40px;
+    padding-inline: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .aa-table-wrap {
+    border: 1px solid #dfe7f1;
+    border-radius: 0.95rem;
+    max-height: 430px;
+    overflow: auto;
+  }
+
+  .aa-table {
+    margin: 0;
+    min-width: 1100px;
+  }
+
+  .aa-table thead th {
+    background: #eef3f8;
+    color: #0f2340;
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    position: sticky;
+    text-transform: uppercase;
+    top: 0;
+    z-index: 2;
+  }
+
+  .aa-table tbody td {
+    color: #243447;
+    font-size: 0.84rem;
+    vertical-align: middle;
+  }
+
+  .aa-detail-table .form-control,
+  .aa-detail-table .form-select {
+    border-radius: 0.7rem;
+    font-size: 0.82rem;
+    min-height: 36px;
+  }
+
+  .aa-money {
+    text-align: right;
+  }
+
+  .aa-totals {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+    justify-content: flex-end;
+    margin-top: 0.85rem;
+  }
+
+  .aa-total-chip {
+    background: #f8fafc;
+    border: 1px solid #dfe7f1;
+    border-radius: 999px;
+    color: #0f2340;
+    font-weight: 900;
+    padding: 0.45rem 0.8rem;
+  }
+
+  .aa-total-chip.is-diff {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #9a3412;
+  }
+
+  .aa-total-chip.is-ok {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+    color: #166534;
+  }
+
+  .aa-summary {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .aa-summary-card {
+    border-left: 5px solid #2563eb;
+    padding: 0.9rem 1rem;
+  }
+
+  .aa-summary-label {
+    color: #64748b;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .aa-summary-value {
+    color: #0f2340;
+    font-size: 1.2rem;
+    font-weight: 900;
+    margin-top: 0.15rem;
+  }
+
+  .aa-grid-tools {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+
+  .aa-page-size {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.5rem;
+  }
+
+  .aa-page-size label {
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 850;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .aa-page-size .form-select {
+    border-radius: 0.75rem;
+    width: 82px;
+  }
+
+  .aa-pagination {
+    align-items: center;
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .aa-page-indicator {
+    color: #475569;
+    font-size: 0.82rem;
+    font-weight: 850;
+    padding-inline: 0.35rem;
+  }
+
+  .aa-empty {
+    color: #64748b;
+    padding: 1.4rem;
+    text-align: center;
+  }
+
+  .aa-badge {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.72rem;
+    font-weight: 900;
+    padding: 0.25rem 0.55rem;
+    text-transform: uppercase;
+  }
+
+  .aa-badge.is-borrador {
+    background: #fff7ed;
+    color: #9a3412;
+  }
+
+  .aa-badge.is-confirmado {
+    background: #ecfdf5;
+    color: #166534;
+  }
+
+  .aa-badge.is-anulado {
+    background: #f1f5f9;
+    color: #475569;
+  }
+
+  @media (max-width: 1200px) {
+    .aa-form-grid,
+    .aa-filter-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .aa-summary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .aa-form-grid,
+    .aa-filter-grid,
+    .aa-summary {
+      grid-template-columns: 1fr;
+    }
+    .aa-card-header,
+    .aa-detail-toolbar,
+    .aa-grid-toolbar {
+      align-items: stretch;
+      flex-direction: column;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="aa-page">
+  <section class="aa-header">
+    <div class="aa-kicker">
+      <i class="fas fa-wand-magic-sparkles"></i>
+      <span>Herramientas</span>
+    </div>
+    <h1 class="aa-title">Asistente de Ajustes Contables</h1>
+    <p class="aa-subtitle">Prepara comprobantes de ajuste en borrador para que el contador los revise y confirme desde Comprobantes.</p>
+  </section>
+
+  <section class="aa-card">
+    <div class="aa-card-header">
+      <h2 class="aa-card-title">Preparar ajuste</h2>
+      <button class="btn btn-primary aa-action-btn" id="aaCreateDraftBtn" type="button">
+        <i class="fas fa-file-circle-plus"></i>
+        Crear borrador
+      </button>
+    </div>
+    <div class="aa-card-body">
+      <div class="aa-form-grid">
+        <div class="aa-field">
+          <label for="aaFecha">Fecha</label>
+          <input class="form-control" id="aaFecha" type="date" value="{{ fecha_hoy }}">
+        </div>
+        <div class="aa-field">
+          <label for="aaUnidad">Unidad de negocio</label>
+          <select class="form-select" id="aaUnidad">
+            {% for unidad in unidades_negocio %}
+            <option value="{{ unidad.id }}">{{ unidad.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="aa-field">
+          <label for="aaTipo">Tipo de ajuste</label>
+          <select class="form-select" id="aaTipo">
+            {% for tipo in tipos_ajuste %}
+            <option value="{{ tipo.value }}">{{ tipo.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="aa-field">
+          <label for="aaReferencia">Referencia</label>
+          <input class="form-control" id="aaReferencia" maxlength="150" type="text">
+        </div>
+        <div class="aa-field">
+          <label for="aaGlosa">Glosa</label>
+          <input class="form-control" id="aaGlosa" maxlength="500" type="text">
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <div class="aa-detail-toolbar">
+          <strong>Detalle del ajuste</strong>
+          <button class="btn btn-outline-primary aa-action-btn" id="aaAddRowBtn" type="button">
+            <i class="fas fa-plus"></i>
+            Agregar linea
+          </button>
+        </div>
+        <div class="aa-table-wrap">
+          <table class="table table-hover aa-table aa-detail-table">
+            <thead>
+              <tr>
+                <th>Cuenta</th>
+                <th>Auxiliar</th>
+                <th>Centro de costo</th>
+                <th class="text-end">Debe</th>
+                <th class="text-end">Haber</th>
+                <th>Glosa linea</th>
+                <th class="text-center">Accion</th>
+              </tr>
+            </thead>
+            <tbody id="aaDetailBody"></tbody>
+          </table>
+        </div>
+        <div class="aa-totals">
+          <span class="aa-total-chip">Debe: <strong id="aaTotalDebe">0.00</strong></span>
+          <span class="aa-total-chip">Haber: <strong id="aaTotalHaber">0.00</strong></span>
+          <span class="aa-total-chip is-diff" id="aaDiffChip">Diferencia: <strong id="aaDiferencia">0.00</strong></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="aa-card">
+    <div class="aa-card-header">
+      <h2 class="aa-card-title">Ajustes preparados</h2>
+    </div>
+    <div class="aa-card-body">
+      <div class="aa-filter-grid">
+        <div class="aa-field">
+          <label for="aaGestion">Gestion</label>
+          <select class="form-select" id="aaGestion">
+            {% for gestion in gestiones %}
+            <option value="{{ gestion }}" {% if gestion == gestion_preferida %}selected{% endif %}>{{ gestion }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="aa-field">
+          <label for="aaDesde">Desde</label>
+          <input class="form-control" id="aaDesde" type="date" value="{{ fecha_desde }}">
+        </div>
+        <div class="aa-field">
+          <label for="aaHasta">Hasta</label>
+          <input class="form-control" id="aaHasta" type="date" value="{{ fecha_hasta }}">
+        </div>
+        <div class="aa-field">
+          <label for="aaUnidadFiltro">Unidad</label>
+          <select class="form-select" id="aaUnidadFiltro">
+            <option value="">Todas</option>
+            {% for unidad in unidades_negocio %}
+            <option value="{{ unidad.id }}">{{ unidad.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="aa-field">
+          <label for="aaEstadoFiltro">Estado</label>
+          <select class="form-select" id="aaEstadoFiltro">
+            {% for estado in estados %}
+            <option value="{{ estado.value }}">{{ estado.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="aa-field">
+          <label for="aaTipoFiltro">Tipo</label>
+          <select class="form-select" id="aaTipoFiltro">
+            <option value="TODOS">Todos</option>
+            {% for tipo in tipos_ajuste %}
+            <option value="{{ tipo.value }}">{{ tipo.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button class="btn btn-primary aa-action-btn" id="aaSearchBtn" type="button">
+          <i class="fas fa-search"></i>
+          Consultar
+        </button>
+        <button class="btn btn-outline-danger aa-action-btn" id="aaPdfBtn" type="button">
+          <i class="fas fa-file-pdf"></i>
+          PDF
+        </button>
+        <button class="btn btn-outline-success aa-action-btn" id="aaExcelBtn" type="button">
+          <i class="fas fa-file-excel"></i>
+          Excel
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="aa-summary" id="aaSummary"></section>
+
+  <section class="aa-card">
+    <div class="aa-card-header">
+      <div>
+        <h2 class="aa-card-title">Resultado</h2>
+        <div class="text-muted small" id="aaResultMeta">Sin consulta</div>
+      </div>
+      <div class="aa-grid-tools">
+        <div class="aa-page-size">
+          <label for="aaPageSize">Filas</label>
+          <select class="form-select" id="aaPageSize">
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+        <div class="aa-pagination">
+          <button class="btn btn-sm btn-outline-secondary" id="aaFirstPage" type="button"><i class="fas fa-angles-left"></i></button>
+          <button class="btn btn-sm btn-outline-secondary" id="aaPrevPage" type="button"><i class="fas fa-angle-left"></i></button>
+          <span class="aa-page-indicator" id="aaPageInfo">1 / 1</span>
+          <button class="btn btn-sm btn-outline-secondary" id="aaNextPage" type="button"><i class="fas fa-angle-right"></i></button>
+          <button class="btn btn-sm btn-outline-secondary" id="aaLastPage" type="button"><i class="fas fa-angles-right"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="aa-table-wrap">
+      <table class="table table-hover aa-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Comp.</th>
+            <th>Estado</th>
+            <th>Tipo</th>
+            <th>Referencia</th>
+            <th>Unidad</th>
+            <th class="text-end">Debe</th>
+            <th class="text-end">Haber</th>
+            <th>Glosa</th>
+            <th class="text-center">Ver</th>
+          </tr>
+        </thead>
+        <tbody id="aaRowsBody">
+          <tr><td colspan="10" class="aa-empty">Ejecuta una consulta para ver ajustes preparados.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script type="application/json" id="aaBootstrap">
+    {{ bootstrap | tojson }}
+  </script>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+(() => {
+  const bootEl = document.getElementById('aaBootstrap');
+  const boot = JSON.parse(bootEl.textContent || '{}');
+  const cuentas = boot.cuentas || [];
+  const auxiliares = boot.auxiliares || [];
+  const centros = boot.centros_costo || [];
+
+  let rows = [];
+  let page = 1;
+  let pageSize = 10;
+
+  const detailBody = document.getElementById('aaDetailBody');
+  const rowsBody = document.getElementById('aaRowsBody');
+  const summaryEl = document.getElementById('aaSummary');
+
+  const money = (value) => Number(value || 0).toLocaleString('es-BO', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  const notify = (icon, title, text) => {
+    if (window.Swal) {
+      Swal.fire({ icon, title, text, confirmButtonText: 'Aceptar' });
+      return;
+    }
+    alert(`${title}\n${text || ''}`);
+  };
+
+  const makeOption = (value, label) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    return option;
+  };
+
+  const fillSelect = (select, items, valueField, labelField, emptyLabel) => {
+    select.innerHTML = '';
+    if (emptyLabel) select.appendChild(makeOption('', emptyLabel));
+    items.forEach((item) => select.appendChild(makeOption(item[valueField], item[labelField])));
+  };
+
+  const createAccountSelect = () => {
+    const select = document.createElement('select');
+    select.className = 'form-select aa-account-select';
+    select.appendChild(makeOption('', 'Seleccione'));
+    cuentas.forEach((cuenta) => {
+      const option = makeOption(cuenta.codigo, cuenta.label);
+      option.dataset.requiereAuxiliar = cuenta.requiere_auxiliar ? '1' : '0';
+      option.dataset.requiereCc = cuenta.requiere_cc ? '1' : '0';
+      select.appendChild(option);
+    });
+    return select;
+  };
+
+  const addDetailRow = () => {
+    const tr = document.createElement('tr');
+
+    const tdCuenta = document.createElement('td');
+    tdCuenta.appendChild(createAccountSelect());
+
+    const tdAux = document.createElement('td');
+    const auxSelect = document.createElement('select');
+    auxSelect.className = 'form-select aa-aux-select';
+    fillSelect(auxSelect, auxiliares, 'id', 'label', 'Sin auxiliar');
+    tdAux.appendChild(auxSelect);
+
+    const tdCc = document.createElement('td');
+    const ccSelect = document.createElement('select');
+    ccSelect.className = 'form-select aa-cc-select';
+    fillSelect(ccSelect, centros, 'id', 'label', 'Sin centro');
+    tdCc.appendChild(ccSelect);
+
+    const tdDebe = document.createElement('td');
+    const debe = document.createElement('input');
+    debe.className = 'form-control aa-money aa-debe';
+    debe.min = '0';
+    debe.step = '0.01';
+    debe.type = 'number';
+    tdDebe.appendChild(debe);
+
+    const tdHaber = document.createElement('td');
+    const haber = document.createElement('input');
+    haber.className = 'form-control aa-money aa-haber';
+    haber.min = '0';
+    haber.step = '0.01';
+    haber.type = 'number';
+    tdHaber.appendChild(haber);
+
+    const tdGlosa = document.createElement('td');
+    const glosa = document.createElement('input');
+    glosa.className = 'form-control aa-line-glosa';
+    glosa.maxLength = 300;
+    glosa.type = 'text';
+    tdGlosa.appendChild(glosa);
+
+    const tdAction = document.createElement('td');
+    tdAction.className = 'text-center';
+    const remove = document.createElement('button');
+    remove.className = 'btn btn-sm btn-outline-danger';
+    remove.type = 'button';
+    remove.innerHTML = '<i class="fas fa-trash"></i>';
+    remove.addEventListener('click', () => {
+      tr.remove();
+      updateTotals();
+    });
+    tdAction.appendChild(remove);
+
+    [tdCuenta, tdAux, tdCc, tdDebe, tdHaber, tdGlosa, tdAction].forEach((td) => tr.appendChild(td));
+    detailBody.appendChild(tr);
+    debe.addEventListener('input', updateTotals);
+    haber.addEventListener('input', updateTotals);
+    updateTotals();
+  };
+
+  const getDetailRows = () => Array.from(detailBody.querySelectorAll('tr')).map((tr) => ({
+    cuenta_codigo: tr.querySelector('.aa-account-select').value,
+    auxiliar_id: tr.querySelector('.aa-aux-select').value,
+    centro_costo_id: tr.querySelector('.aa-cc-select').value,
+    debe: tr.querySelector('.aa-debe').value || '0',
+    haber: tr.querySelector('.aa-haber').value || '0',
+    glosa: tr.querySelector('.aa-line-glosa').value,
+  }));
+
+  const updateTotals = () => {
+    const data = getDetailRows();
+    const debe = data.reduce((acc, item) => acc + Number(item.debe || 0), 0);
+    const haber = data.reduce((acc, item) => acc + Number(item.haber || 0), 0);
+    const diff = Math.abs(debe - haber);
+    document.getElementById('aaTotalDebe').textContent = money(debe);
+    document.getElementById('aaTotalHaber').textContent = money(haber);
+    document.getElementById('aaDiferencia').textContent = money(diff);
+    const chip = document.getElementById('aaDiffChip');
+    chip.classList.toggle('is-ok', diff < 0.005 && debe > 0);
+    chip.classList.toggle('is-diff', !(diff < 0.005 && debe > 0));
+  };
+
+  const createDraft = async () => {
+    const payload = {
+      fecha: document.getElementById('aaFecha').value,
+      unidad_negocio_id: document.getElementById('aaUnidad').value,
+      tipo_ajuste: document.getElementById('aaTipo').value,
+      referencia: document.getElementById('aaReferencia').value,
+      glosa: document.getElementById('aaGlosa').value,
+      detalles: getDetailRows(),
+    };
+    try {
+      const response = await fetch('{{ url_for('asistente_ajustes.crear_borrador') }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!result.ok) throw new Error(result.msg || 'No se pudo crear el borrador.');
+      if (window.Swal) {
+        const action = await Swal.fire({
+          icon: 'success',
+          title: 'Borrador creado',
+          text: result.msg,
+          showCancelButton: true,
+          confirmButtonText: 'Abrir comprobante',
+          cancelButtonText: 'Cerrar',
+        });
+        if (action.isConfirmed && result.url_editar) window.location.href = result.url_editar;
+      } else {
+        alert(result.msg);
+      }
+      loadRows();
+    } catch (error) {
+      notify('error', 'Validacion', error.message);
+    }
+  };
+
+  const currentParams = () => {
+    const params = new URLSearchParams();
+    params.set('gestion', document.getElementById('aaGestion').value);
+    params.set('fecha_desde', document.getElementById('aaDesde').value);
+    params.set('fecha_hasta', document.getElementById('aaHasta').value);
+    params.set('unidad_negocio_id', document.getElementById('aaUnidadFiltro').value);
+    params.set('estado', document.getElementById('aaEstadoFiltro').value);
+    params.set('tipo_ajuste', document.getElementById('aaTipoFiltro').value);
+    return params;
+  };
+
+  const renderSummary = (summary) => {
+    const cards = [
+      ['Total', summary.total || 0],
+      ['Borradores', summary.borradores || 0],
+      ['Confirmados', summary.confirmados || 0],
+      ['Anulados', summary.anulados || 0],
+      ['Debe / Haber', `${summary.total_debe_label || '0.00'} / ${summary.total_haber_label || '0.00'}`],
+    ];
+    summaryEl.innerHTML = '';
+    cards.forEach(([label, value]) => {
+      const card = document.createElement('div');
+      card.className = 'aa-card aa-summary-card';
+      const labelEl = document.createElement('div');
+      labelEl.className = 'aa-summary-label';
+      labelEl.textContent = label;
+      const valueEl = document.createElement('div');
+      valueEl.className = 'aa-summary-value';
+      valueEl.textContent = value;
+      card.appendChild(labelEl);
+      card.appendChild(valueEl);
+      summaryEl.appendChild(card);
+    });
+  };
+
+  const statusBadge = (row) => {
+    const span = document.createElement('span');
+    const code = String(row.estado_codigo || '').toLowerCase();
+    span.className = `aa-badge is-${code}`;
+    span.textContent = row.estado || '';
+    return span;
+  };
+
+  const renderTable = () => {
+    rowsBody.innerHTML = '';
+    if (!rows.length) {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.colSpan = 10;
+      td.className = 'aa-empty';
+      td.textContent = 'No se encontraron ajustes preparados con los filtros seleccionados.';
+      tr.appendChild(td);
+      rowsBody.appendChild(tr);
+      document.getElementById('aaPageInfo').textContent = '1 / 1';
+      return;
+    }
+    const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+    page = Math.min(Math.max(1, page), totalPages);
+    const start = (page - 1) * pageSize;
+    rows.slice(start, start + pageSize).forEach((row) => {
+      const tr = document.createElement('tr');
+      const values = [row.fecha, row.id, null, row.tipo_ajuste, row.referencia, row.unidad, row.total_debe_label, row.total_haber_label, row.glosa];
+      values.forEach((value, idx) => {
+        const td = document.createElement('td');
+        if (idx === 2) td.appendChild(statusBadge(row));
+        else td.textContent = value || '';
+        if (idx === 6 || idx === 7) td.className = 'text-end';
+        tr.appendChild(td);
+      });
+      const tdAction = document.createElement('td');
+      tdAction.className = 'text-center';
+      const link = document.createElement('a');
+      link.className = 'btn btn-sm btn-outline-primary';
+      link.href = row.estado_codigo === 'BORRADOR' ? row.url_editar : row.url_ver;
+      link.innerHTML = '<i class="fas fa-eye"></i>';
+      tdAction.appendChild(link);
+      tr.appendChild(tdAction);
+      rowsBody.appendChild(tr);
+    });
+    document.getElementById('aaPageInfo').textContent = `${page} / ${totalPages}`;
+  };
+
+  const loadRows = async () => {
+    try {
+      const response = await fetch(`{{ url_for('asistente_ajustes.api_ajustes') }}?${currentParams().toString()}`);
+      const result = await response.json();
+      if (!result.ok) throw new Error(result.msg || 'No se pudo consultar.');
+      rows = result.rows || [];
+      page = 1;
+      renderSummary(result.summary || {});
+      document.getElementById('aaResultMeta').textContent = `${result.descripcion_periodo || ''} · Unidad: ${result.unidad_label || ''}`;
+      renderTable();
+    } catch (error) {
+      notify('error', 'Consulta no disponible', error.message);
+    }
+  };
+
+  const openExport = (kind) => {
+    const endpoint = kind === 'pdf' ? '{{ url_for('asistente_ajustes.pdf_ajustes') }}' : '{{ url_for('asistente_ajustes.excel_ajustes') }}';
+    window.open(`${endpoint}?${currentParams().toString()}`, '_blank');
+  };
+
+  document.getElementById('aaAddRowBtn').addEventListener('click', addDetailRow);
+  document.getElementById('aaCreateDraftBtn').addEventListener('click', createDraft);
+  document.getElementById('aaSearchBtn').addEventListener('click', loadRows);
+  document.getElementById('aaPdfBtn').addEventListener('click', () => openExport('pdf'));
+  document.getElementById('aaExcelBtn').addEventListener('click', () => openExport('excel'));
+  document.getElementById('aaPageSize').addEventListener('change', (event) => {
+    pageSize = Number(event.target.value || 10);
+    page = 1;
+    renderTable();
+  });
+  document.getElementById('aaFirstPage').addEventListener('click', () => { page = 1; renderTable(); });
+  document.getElementById('aaPrevPage').addEventListener('click', () => { page -= 1; renderTable(); });
+  document.getElementById('aaNextPage').addEventListener('click', () => { page += 1; renderTable(); });
+  document.getElementById('aaLastPage').addEventListener('click', () => {
+    page = Math.max(1, Math.ceil(rows.length / pageSize));
+    renderTable();
+  });
+  document.getElementById('aaGestion').addEventListener('change', (event) => {
+    const gestion = event.target.value;
+    document.getElementById('aaDesde').value = `${gestion}-01-01`;
+    document.getElementById('aaHasta').value = `${gestion}-12-31`;
+  });
+
+  addDetailRow();
+  addDetailRow();
+  loadRows();
+})();
+</script>
+{% endblock extra_js %}

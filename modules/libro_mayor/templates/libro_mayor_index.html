@@ -1,0 +1,935 @@
+{% extends "layout.html" %}
+{% block title %}Libro Mayor{% endblock %}
+{% block page_help_url %}{{ url_for('libro_mayor.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  #libroMayorPage {
+    --lm-navy: #0f2340;
+    --lm-blue: #173f6a;
+    --lm-accent: #2d7dd2;
+    --lm-accent-soft: #edf5ff;
+    --lm-border: #dde5ef;
+    --lm-surface: #f5f8fc;
+    --lm-surface-2: #fbfdff;
+    --lm-text: #1d2c3c;
+    --lm-muted: #6f7f90;
+    --lm-success: #177a53;
+    --lm-radius: 18px;
+    color: var(--lm-text);
+  }
+
+  #libroMayorPage .lm-header {
+    background: linear-gradient(130deg, var(--lm-navy) 0%, var(--lm-blue) 55%, #1f5d9e 100%);
+    border-radius: var(--lm-radius);
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    box-shadow: 0 14px 34px rgba(15, 35, 64, 0.16);
+  }
+
+  #libroMayorPage .lm-header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  #libroMayorPage .lm-title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  #libroMayorPage .lm-subtitle {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.78rem;
+    margin-top: 1px;
+  }
+
+  #libroMayorPage .lm-card {
+    background: #fff;
+    border: 1px solid var(--lm-border);
+    border-radius: var(--lm-radius);
+    box-shadow: 0 8px 28px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+    margin-bottom: 0.85rem;
+  }
+
+  #libroMayorPage .lm-card-head {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--lm-border);
+    background: linear-gradient(180deg, #fff 0%, #f9fbfe 100%);
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  #libroMayorPage .lm-card-title {
+    display: flex;
+    gap: 0.65rem;
+    align-items: center;
+    color: var(--lm-navy);
+    font-weight: 700;
+    font-size: 0.92rem;
+  }
+
+  #libroMayorPage .lm-card-title small {
+    display: block;
+    margin-top: 0.05rem;
+    color: var(--lm-muted);
+    font-size: 0.74rem;
+    font-weight: 500;
+  }
+
+  #libroMayorPage .lm-card-body {
+    padding: 0.9rem 1rem 1rem;
+  }
+
+  #libroMayorPage .lm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: #edf8f3;
+    color: var(--lm-success);
+    font-weight: 700;
+    font-size: 0.77rem;
+  }
+
+  #libroMayorPage .form-label {
+    color: var(--lm-navy);
+    font-weight: 700;
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+  }
+
+  #libroMayorPage .form-control,
+  #libroMayorPage .form-select {
+    min-height: 40px;
+    border-radius: 12px;
+    border: 1px solid #d7e2ee;
+    box-shadow: none;
+    font-size: 0.86rem;
+  }
+
+  #libroMayorPage .form-control:focus,
+  #libroMayorPage .form-select:focus {
+    border-color: #8fb8eb;
+    box-shadow: 0 0 0 0.2rem rgba(45, 125, 210, 0.12);
+  }
+
+  #libroMayorPage .lm-toolbar-grid {
+    display: grid;
+    grid-template-columns: 250px minmax(250px, 1.15fr) minmax(220px, 1fr) minmax(260px, 1fr) minmax(210px, 0.95fr) 220px;
+    gap: 0.7rem;
+    align-items: end;
+  }
+
+  #libroMayorPage .lm-mode-shell {
+    border: 1px solid #cddced;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #f7fbff 0%, #eef5fd 100%);
+    padding: 0.4rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  }
+
+  #libroMayorPage .lm-mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+  }
+
+  #libroMayorPage .lm-mode-card {
+    border: 1px solid #d5e2f0;
+    border-radius: 11px;
+    background: #ffffff;
+    padding: 0.58rem 0.7rem;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    min-height: 56px;
+  }
+
+  #libroMayorPage .lm-mode-card:hover {
+    border-color: #9fc0e5;
+    background: #f8fbff;
+  }
+
+  #libroMayorPage .lm-mode-card.active {
+    border-color: #82b1e3;
+    background: linear-gradient(180deg, #f4f9ff 0%, #e9f3ff 100%);
+    box-shadow: 0 0 0 2px rgba(45, 125, 210, 0.10);
+  }
+
+  #libroMayorPage .lm-mode-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--lm-blue);
+    line-height: 1.1;
+  }
+
+  #libroMayorPage .lm-mode-text {
+    font-size: 0.69rem;
+    color: var(--lm-muted);
+    margin-top: 0.16rem;
+    line-height: 1.15;
+  }
+
+  #libroMayorPage .lm-period-shell {
+    border: 1px solid #d7e2ee;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fff 0%, #f9fbfe 100%);
+    padding: 0.65rem 0.7rem;
+    min-height: 74px;
+  }
+
+  #libroMayorPage .lm-period-range {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  #libroMayorPage .lm-date-wrap {
+    position: relative;
+  }
+
+  #libroMayorPage .lm-date-input {
+    padding-right: 2.6rem;
+    cursor: pointer;
+    background-color: #fff;
+  }
+
+  #libroMayorPage .lm-date-button {
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
+    width: 1.8rem;
+    height: 1.8rem;
+    border: none;
+    border-radius: 10px;
+    background: var(--lm-accent-soft);
+    color: var(--lm-blue);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  #libroMayorPage .lm-actions-stack {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+  }
+
+  #libroMayorPage .lm-actions-stack .btn {
+    min-height: 40px;
+    font-size: 0.84rem;
+    font-weight: 700;
+  }
+
+  #libroMayorPage .lm-actions-stack .btn.lm-btn-wide {
+    grid-column: 1 / -1;
+  }
+
+  #libroMayorPage .lm-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  #libroMayorPage .lm-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: 999px;
+    background: var(--lm-accent-soft);
+    color: var(--lm-blue);
+    font-weight: 700;
+    font-size: 0.79rem;
+  }
+
+  #libroMayorPage .lm-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  #libroMayorPage .lm-summary-box {
+    background: linear-gradient(180deg, #fff 0%, var(--lm-surface-2) 100%);
+    border: 1px solid var(--lm-border);
+    border-radius: 14px;
+    padding: 0.75rem 0.85rem;
+    min-height: 74px;
+  }
+
+  #libroMayorPage .lm-summary-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.68rem;
+    color: var(--lm-muted);
+    font-weight: 700;
+    margin-bottom: 0.22rem;
+  }
+
+  #libroMayorPage .lm-summary-value {
+    color: var(--lm-navy);
+    font-weight: 800;
+    font-size: 1rem;
+    line-height: 1.15;
+  }
+
+  #libroMayorPage .lm-summary-note {
+    margin-top: 0.22rem;
+    color: var(--lm-muted);
+    font-size: 0.73rem;
+    font-weight: 600;
+  }
+
+  #libroMayorPage .lm-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  #libroMayorPage .select2-container {
+    width: 100% !important;
+  }
+
+  #libroMayorPage .select2-container--default .select2-selection--single {
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid #d7e2ee;
+    display: flex;
+    align-items: center;
+  }
+
+  #libroMayorPage .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 38px;
+    padding-left: 12px;
+    padding-right: 28px;
+  }
+
+  #libroMayorPage .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 38px;
+    right: 8px;
+  }
+
+  #libroMayorPage table.dataTable thead th {
+    background: #f2f6fb;
+    color: var(--lm-blue);
+    border-bottom: 1px solid var(--lm-border) !important;
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  #libroMayorPage table.dataTable tbody td {
+    vertical-align: middle;
+    font-size: 0.84rem;
+  }
+
+  #libroMayorPage table.dataTable tbody td:nth-child(2),
+  #libroMayorPage table.dataTable tbody td:nth-child(4) {
+    white-space: nowrap;
+  }
+
+  #libroMayorPage .lm-money {
+    text-align: right;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  #libroMayorPage .lm-empty {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    color: var(--lm-muted);
+  }
+
+  #libroMayorPage .lm-hidden {
+    display: none !important;
+  }
+
+  @media (max-width: 1600px) {
+    #libroMayorPage .lm-toolbar-grid {
+      grid-template-columns: 250px minmax(250px, 1.1fr) minmax(220px, 1fr) minmax(250px, 1fr) 220px;
+    }
+
+    #libroMayorPage .lm-toolbar-grid>.lm-unit-col {
+      grid-column: span 2;
+    }
+  }
+
+  @media (max-width: 1280px) {
+
+    #libroMayorPage .lm-toolbar-grid,
+    #libroMayorPage .lm-summary-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    #libroMayorPage .lm-toolbar-grid>.lm-actions-col,
+    #libroMayorPage .lm-toolbar-grid>.lm-unit-col,
+    #libroMayorPage .lm-toolbar-grid>.lm-period-col,
+    #libroMayorPage .lm-toolbar-grid>.lm-mode-col {
+      grid-column: auto;
+    }
+  }
+
+  @media (max-width: 768px) {
+
+    #libroMayorPage .lm-toolbar-grid,
+    #libroMayorPage .lm-period-range,
+    #libroMayorPage .lm-summary-grid,
+    #libroMayorPage .lm-mode-grid,
+    #libroMayorPage .lm-actions-stack {
+      grid-template-columns: 1fr;
+    }
+
+    #libroMayorPage .lm-card-head {
+      align-items: stretch;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div id="libroMayorPage">
+  <div class="lm-header">
+    <div class="lm-header-icon"><i class="fas fa-book"></i></div>
+    <div>
+      <h1 class="lm-title">Libro Mayor</h1>
+      <div class="lm-subtitle">Consulta por cuenta, auxiliar opcional, Unidad de Negocio, origen y saldo según naturaleza.</div>
+    </div>
+  </div>
+
+  <div class="lm-card">
+    <div class="lm-card-head">
+      <div class="lm-card-title">
+        <i class="fas fa-filter"></i>
+        <div>Filtros del libro mayor<small>Vista compacta para consultar rápido sin alargar la pantalla.</small></div>
+      </div>
+      <div class="lm-badge"><i class="fas fa-lock"></i> Confirmados</div>
+    </div>
+    <div class="lm-card-body">
+      <div class="lm-toolbar-grid">
+        <div class="lm-mode-col">
+          <label class="form-label">Modo de período</label>
+          <div class="lm-mode-shell">
+            <div class="lm-mode-grid">
+              <div class="lm-mode-card active" data-mode="rango">
+                <div class="lm-mode-title">Rango libre</div>
+                <div class="lm-mode-text">Por fechas</div>
+              </div>
+              <div class="lm-mode-card" data-mode="gestion">
+                <div class="lm-mode-title">Gestión</div>
+                <div class="lm-mode-text">Año completo</div>
+              </div>
+            </div>
+          </div>
+          <input id="modoPeriodo" type="hidden" value="rango" />
+        </div>
+
+        <div class="lm-account-col lm-select2">
+          <label for="cuentaCodigo" class="form-label">Cuenta</label>
+          <select id="cuentaCodigo" class="form-select"></select>
+        </div>
+
+        <div class="lm-aux-col lm-select2">
+          <label for="auxiliarId" class="form-label">Auxiliar</label>
+          <select id="auxiliarId" class="form-select"></select>
+        </div>
+
+        <div class="lm-period-col">
+          <label class="form-label">Período</label>
+          <div class="lm-period-shell">
+            <div id="panelRango" class="lm-period-range">
+              <div>
+                <label for="fechaDesde" class="form-label">Fecha desde</label>
+                <div class="lm-date-wrap">
+                  <input id="fechaDesde" type="text" class="form-control lm-date-input" value="{{ fecha_hoy }}"
+                    autocomplete="off" readonly />
+                  <button id="btnFechaDesde" type="button" class="lm-date-button"
+                    aria-label="Seleccionar fecha desde"><i class="fas fa-calendar-alt"></i></button>
+                </div>
+              </div>
+              <div>
+                <label for="fechaHasta" class="form-label">Fecha hasta</label>
+                <div class="lm-date-wrap">
+                  <input id="fechaHasta" type="text" class="form-control lm-date-input" value="{{ fecha_hoy }}"
+                    autocomplete="off" readonly />
+                  <button id="btnFechaHasta" type="button" class="lm-date-button"
+                    aria-label="Seleccionar fecha hasta"><i class="fas fa-calendar-alt"></i></button>
+                </div>
+              </div>
+            </div>
+            <div id="panelGestion" class="lm-hidden">
+              <label for="gestion" class="form-label">Gestión</label>
+              <select id="gestion" class="form-select">
+                {% for item in gestiones %}
+                <option value="{{ item }}" {% if item==gestion_actual %}selected{% endif %}>{{ item }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="lm-unit-col">
+          <label for="unidadNegocioId" class="form-label">Unidad de Negocio</label>
+          <select id="unidadNegocioId" class="form-select">
+            <option value="">Todas las unidades</option>
+            {% for unidad in unidades_negocio %}
+            <option value="{{ unidad.id }}">{{ unidad.codigo }} · {{ unidad.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="lm-actions-col">
+          <label class="form-label">Acciones</label>
+          <div class="lm-actions-stack">
+            <button id="btnConsultar" type="button" class="btn btn-primary"><i class="fas fa-search me-1"></i>
+              Consultar</button>
+            <button id="btnPdf" type="button" class="btn btn-outline-primary"><i class="fas fa-file-pdf me-1"></i>
+              PDF</button>
+            <button id="btnLimpiar" type="button" class="btn btn-light lm-btn-wide"><i class="fas fa-broom me-1"></i>
+              Limpiar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lm-card">
+    <div class="lm-card-head">
+      <div class="lm-card-title">
+        <i class="fas fa-chart-line"></i>
+        <div>Resumen<small>Saldo inicial, movimientos del período y saldo final según naturaleza.</small></div>
+      </div>
+      <div class="lm-chip-row">
+        <div id="periodoBadge" class="lm-chip"><i class="fas fa-calendar-days"></i> Sin consulta</div>
+        <div id="cuentaBadge" class="lm-chip"><i class="fas fa-sitemap"></i> Cuenta no seleccionada</div>
+        <div id="auxiliarBadge" class="lm-chip"><i class="fas fa-user-tag"></i> Auxiliar: Todos</div>
+        <div id="unidadBadge" class="lm-chip"><i class="fas fa-building"></i> Unidad: Todas</div>
+      </div>
+    </div>
+    <div class="lm-card-body">
+      <div class="lm-summary-grid">
+        <div class="lm-summary-box">
+          <div class="lm-summary-label">Saldo inicial</div>
+          <div id="sumSaldoInicial" class="lm-summary-value">0,00</div>
+        </div>
+        <div class="lm-summary-box">
+          <div class="lm-summary-label">Debe período</div>
+          <div id="sumDebe" class="lm-summary-value">0,00</div>
+        </div>
+        <div class="lm-summary-box">
+          <div class="lm-summary-label">Haber período</div>
+          <div id="sumHaber" class="lm-summary-value">0,00</div>
+        </div>
+        <div class="lm-summary-box">
+          <div class="lm-summary-label">Saldo final</div>
+          <div id="sumSaldoFinal" class="lm-summary-value">0,00</div>
+        </div>
+        <div class="lm-summary-box">
+          <div class="lm-summary-label">Movimientos</div>
+          <div id="sumMovimientos" class="lm-summary-value">0</div>
+          <div id="sumUnidadesMeta" class="lm-summary-note">0 unidades</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lm-card">
+    <div class="lm-card-head">
+      <div class="lm-card-title">
+        <i class="fas fa-table"></i>
+        <div>Detalle del libro mayor<small>Cronológico, con origen y saldo acumulado por movimiento.</small></div>
+      </div>
+    </div>
+    <div class="lm-card-body">
+      <div class="lm-table-wrap">
+        <table id="tablaLibroMayor" class="table table-striped align-middle w-100">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Asiento</th>
+              <th>Origen</th>
+              <th>Mon.</th>
+              <th>Unidad de Negocio</th>
+              <th>Sec.</th>
+              <th>Referencia</th>
+              <th>Detalle</th>
+              <th>Debe</th>
+              <th>Haber</th>
+              <th>Saldo</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="lm-empty">
+        <i class="fas fa-book-open fa-2x mb-3"></i>
+        <div>Seleccione una cuenta y consulte para visualizar el Libro Mayor.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="libroMayorBootstrap" type="application/json">
+  {{ {
+    "fecha_hoy": fecha_hoy,
+    "gestion_actual": gestion_actual,
+    "urls": {
+      "datos": url_for('libro_mayor.datos'),
+      "pdf": url_for('libro_mayor.pdf'),
+      "buscar_cuentas": url_for('libro_mayor.buscar_cuentas'),
+      "buscar_auxiliares": url_for('libro_mayor.buscar_auxiliares')
+    }
+  } | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const bootEl = document.getElementById("libroMayorBootstrap");
+    if (!bootEl) {
+      return;
+    }
+
+    if (
+      typeof flatpickr === "undefined" ||
+      !window.jQuery ||
+      !window.jQuery.fn ||
+      !window.jQuery.fn.select2
+    ) {
+      Swal.fire({
+        icon: "error",
+        title: "Libro Mayor",
+        text: "No se pudieron cargar los componentes requeridos de la pantalla.",
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#1d4ed8"
+      });
+      return;
+    }
+
+    const boot = JSON.parse(bootEl.textContent || "{}");
+    const $ = window.jQuery;
+
+    const modeCards = Array.from(document.querySelectorAll("#libroMayorPage .lm-mode-card"));
+    const modoPeriodo = document.getElementById("modoPeriodo");
+    const panelRango = document.getElementById("panelRango");
+    const panelGestion = document.getElementById("panelGestion");
+    const fechaDesde = document.getElementById("fechaDesde");
+    const fechaHasta = document.getElementById("fechaHasta");
+    const btnFechaDesde = document.getElementById("btnFechaDesde");
+    const btnFechaHasta = document.getElementById("btnFechaHasta");
+    const gestion = document.getElementById("gestion");
+    const unidadNegocioId = document.getElementById("unidadNegocioId");
+    const btnConsultar = document.getElementById("btnConsultar");
+    const btnLimpiar = document.getElementById("btnLimpiar");
+    const btnPdf = document.getElementById("btnPdf");
+    const periodoBadge = document.getElementById("periodoBadge");
+    const cuentaBadge = document.getElementById("cuentaBadge");
+    const auxiliarBadge = document.getElementById("auxiliarBadge");
+    const unidadBadge = document.getElementById("unidadBadge");
+    const emptyState = document.getElementById("emptyState");
+    const sumSaldoInicial = document.getElementById("sumSaldoInicial");
+    const sumDebe = document.getElementById("sumDebe");
+    const sumHaber = document.getElementById("sumHaber");
+    const sumSaldoFinal = document.getElementById("sumSaldoFinal");
+    const sumMovimientos = document.getElementById("sumMovimientos");
+    const sumUnidadesMeta = document.getElementById("sumUnidadesMeta");
+
+    const $cuenta = $("#cuentaCodigo");
+    const $auxiliar = $("#auxiliarId");
+
+    let ultimaConsulta = null;
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("es-BO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    function showError(message) {
+      Swal.fire({
+        icon: "error",
+        title: "Libro Mayor",
+        text: message,
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#1d4ed8"
+      });
+    }
+
+    function setMode(mode) {
+      modoPeriodo.value = mode;
+      modeCards.forEach((card) => {
+        card.classList.toggle("active", card.dataset.mode === mode);
+      });
+      panelRango.classList.toggle("lm-hidden", mode !== "rango");
+      panelGestion.classList.toggle("lm-hidden", mode !== "gestion");
+    }
+
+    modeCards.forEach((card) => {
+      card.addEventListener("click", function () {
+        setMode(card.dataset.mode || "rango");
+      });
+    });
+
+    const fpDesde = flatpickr(fechaDesde, {
+      locale: flatpickr.l10ns.es || "es",
+      dateFormat: "Y-m-d",
+      allowInput: false,
+      clickOpens: true,
+      disableMobile: true,
+      defaultDate: boot.fecha_hoy,
+    });
+
+    const fpHasta = flatpickr(fechaHasta, {
+      locale: flatpickr.l10ns.es || "es",
+      dateFormat: "Y-m-d",
+      allowInput: false,
+      clickOpens: true,
+      disableMobile: true,
+      defaultDate: boot.fecha_hoy,
+    });
+
+    btnFechaDesde.addEventListener("click", function () { fpDesde.open(); });
+    btnFechaHasta.addEventListener("click", function () { fpHasta.open(); });
+    fechaDesde.addEventListener("click", function () { fpDesde.open(); });
+    fechaHasta.addEventListener("click", function () { fpHasta.open(); });
+
+    $cuenta.select2({
+      width: "100%",
+      allowClear: true,
+      placeholder: "Buscar cuenta contable...",
+      language: "es",
+      ajax: {
+        url: boot.urls.buscar_cuentas,
+        dataType: "json",
+        delay: 220,
+        data: function (params) {
+          return { q: params.term || "" };
+        },
+        processResults: function (data) {
+          return { results: (data && data.results) || [] };
+        },
+      },
+    });
+
+    $auxiliar.select2({
+      width: "100%",
+      allowClear: true,
+      placeholder: "Buscar auxiliar...",
+      language: "es",
+      ajax: {
+        url: boot.urls.buscar_auxiliares,
+        dataType: "json",
+        delay: 220,
+        data: function (params) {
+          return { q: params.term || "" };
+        },
+        processResults: function (data) {
+          return { results: (data && data.results) || [] };
+        },
+      },
+    });
+
+    const tabla = $("#tablaLibroMayor").DataTable({
+      data: [],
+      responsive: false,
+      autoWidth: false,
+      pageLength: 25,
+      order: [],
+      language: {
+        decimal: ",",
+        thousands: ".",
+        emptyTable: "Sin datos",
+        info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+        infoEmpty: "Mostrando 0 a 0 de 0 registros",
+        infoFiltered: "(filtrado de _MAX_ registros)",
+        lengthMenu: "Mostrar _MENU_ registros",
+        loadingRecords: "Cargando...",
+        processing: "Procesando...",
+        search: "Buscar:",
+        zeroRecords: "No se encontraron movimientos",
+        paginate: {
+          first: "Primero",
+          last: "Último",
+          next: "Siguiente",
+          previous: "Anterior",
+        },
+      },
+      columns: [
+        {
+          data: "fecha",
+          render: function (data, type, row) {
+            if (type === "sort" || type === "type") return row.fecha_iso || "";
+            return data || "";
+          }
+        },
+        { data: "asiento" },
+        { data: "origen" },
+        { data: "moneda" },
+        { data: "unidad" },
+        { data: "secuencia" },
+        { data: "referencia" },
+        { data: "detalle" },
+        { data: "debe", className: "lm-money", render: function (data) { return formatMoney(data); } },
+        { data: "haber", className: "lm-money", render: function (data) { return formatMoney(data); } },
+        { data: "saldo", className: "lm-money", render: function (data) { return formatMoney(data); } },
+      ],
+    });
+
+    function resetSummary() {
+      periodoBadge.innerHTML = '<i class="fas fa-calendar-days"></i> Sin consulta';
+      cuentaBadge.innerHTML = '<i class="fas fa-sitemap"></i> Cuenta no seleccionada';
+      auxiliarBadge.innerHTML = '<i class="fas fa-user-tag"></i> Auxiliar: Todos';
+      unidadBadge.innerHTML = '<i class="fas fa-building"></i> Unidad: Todas';
+      sumSaldoInicial.textContent = "0,00";
+      sumDebe.textContent = "0,00";
+      sumHaber.textContent = "0,00";
+      sumSaldoFinal.textContent = "0,00";
+      sumMovimientos.textContent = "0";
+      sumUnidadesMeta.textContent = "0 unidades · 0 monedas";
+    }
+
+    function clearTable(message) {
+      tabla.clear().draw();
+      emptyState.classList.remove("lm-hidden");
+      if (message) {
+        emptyState.innerHTML = '<i class="fas fa-folder-open fa-2x mb-3"></i><div>' + message + '</div>';
+      }
+    }
+
+    function currentParams() {
+      const cuentaData = $cuenta.select2("data") || [];
+      const auxiliarData = $auxiliar.select2("data") || [];
+      return {
+        modo_periodo: modoPeriodo.value || "rango",
+        gestion: gestion.value || boot.gestion_actual,
+        fecha_desde: fechaDesde.value || boot.fecha_hoy,
+        fecha_hasta: fechaHasta.value || boot.fecha_hoy,
+        cuenta_codigo: cuentaData.length ? cuentaData[0].id : "",
+        auxiliar_id: auxiliarData.length ? auxiliarData[0].id : "",
+        unidad_negocio_id: unidadNegocioId.value || "",
+      };
+    }
+
+    function validateBeforeQuery(params) {
+      if (!params.cuenta_codigo) {
+        showError("Debe seleccionar una cuenta contable.");
+        return false;
+      }
+      return true;
+    }
+
+    function setLoading(isLoading) {
+      btnConsultar.disabled = isLoading;
+      btnPdf.disabled = isLoading;
+      btnLimpiar.disabled = isLoading;
+      btnConsultar.innerHTML = isLoading
+        ? '<span class="spinner-border spinner-border-sm me-1"></span> Consultando...'
+        : '<i class="fas fa-search me-1"></i> Consultar';
+    }
+
+    async function consultar() {
+      const params = currentParams();
+      if (!validateBeforeQuery(params)) {
+        return;
+      }
+      setLoading(true);
+      try {
+        const query = new URLSearchParams(params);
+        const response = await fetch(`${boot.urls.datos}?${query.toString()}`, {
+          headers: {
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.message || "No se pudo consultar el libro mayor.");
+        }
+
+        const resumen = payload.resumen || {};
+        const rows = payload.rows || [];
+
+        periodoBadge.innerHTML = `<i class="fas fa-calendar-days"></i> ${resumen.descripcion_periodo || "Sin período"}`;
+        cuentaBadge.innerHTML = `<i class="fas fa-sitemap"></i> ${resumen.cuenta_codigo || ""} | ${resumen.cuenta_nombre || ""}${resumen.cuenta_naturaleza ? ` · ${resumen.cuenta_naturaleza}` : ""}`;
+        auxiliarBadge.innerHTML = `<i class="fas fa-user-tag"></i> Auxiliar: ${resumen.auxiliar_nombre || "Todos"}`;
+        unidadBadge.innerHTML = `<i class="fas fa-building"></i> Unidad: ${resumen.unidad_negocio_codigo ? `${resumen.unidad_negocio_codigo} | ${resumen.unidad_negocio_nombre}` : (resumen.unidad_negocio_nombre || "Todas")}`;
+
+        sumSaldoInicial.textContent = formatMoney(resumen.saldo_inicial);
+        sumDebe.textContent = formatMoney(resumen.debe_periodo);
+        sumHaber.textContent = formatMoney(resumen.haber_periodo);
+        sumSaldoFinal.textContent = formatMoney(resumen.saldo_final);
+        sumMovimientos.textContent = String(resumen.movimientos || 0);
+        const unidadesCount = Number(resumen.unidades_presentes || 0);
+        const monedasCount = Number(resumen.monedas_presentes || 0);
+        sumUnidadesMeta.textContent = `${unidadesCount} ${unidadesCount === 1 ? "unidad" : "unidades"} · ${monedasCount} ${monedasCount === 1 ? "moneda" : "monedas"}`;
+
+        tabla.clear();
+        tabla.rows.add(rows).draw();
+
+        emptyState.classList.toggle("lm-hidden", rows.length > 0);
+        if (!rows.length) {
+          emptyState.innerHTML = '<i class="fas fa-folder-open fa-2x mb-3"></i><div>No existen movimientos para el filtro consultado.</div>';
+        }
+
+        ultimaConsulta = params;
+      } catch (error) {
+        clearTable("No se pudo consultar el libro mayor.");
+        resetSummary();
+        ultimaConsulta = null;
+        showError(error.message || "No se pudo consultar el libro mayor.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    btnConsultar.addEventListener("click", consultar);
+
+    btnLimpiar.addEventListener("click", function () {
+      setMode("rango");
+      fpDesde.setDate(boot.fecha_hoy, true);
+      fpHasta.setDate(boot.fecha_hoy, true);
+      gestion.value = String(boot.gestion_actual || "");
+      unidadNegocioId.value = "";
+      $cuenta.val(null).trigger("change");
+      $auxiliar.val(null).trigger("change");
+      ultimaConsulta = null;
+      resetSummary();
+      clearTable("Seleccione una cuenta y consulte para visualizar el Libro Mayor.");
+    });
+
+    btnPdf.addEventListener("click", function () {
+      const params = ultimaConsulta || currentParams();
+      if (!validateBeforeQuery(params)) {
+        return;
+      }
+      const query = new URLSearchParams(params);
+      window.open(`${boot.urls.pdf}?${query.toString()}`, "_blank");
+    });
+
+    resetSummary();
+    clearTable("Seleccione una cuenta y consulte para visualizar el Libro Mayor.");
+  })();
+</script>
+{% endblock extra_js %}

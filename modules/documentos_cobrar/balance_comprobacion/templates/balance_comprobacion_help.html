@@ -1,0 +1,112 @@
+{% extends "layouthelp.html" %}
+{% block title %}Ayuda · Balance de Comprobación{% endblock %}
+{% block help_title %}Ayuda rápida · Balance de Comprobación{% endblock %}
+{% block help_subtitle %}Guía breve para consultar saldos anteriores, movimientos del período y saldos finales por cuenta contable, separados por moneda y Unidad de Negocio.{% endblock %}
+
+{% block help_summary %}
+<li>Qué muestra el Balance de Comprobación.</li>
+<li>Cómo usar período, rango de cuentas y Unidad de Negocio.</li>
+<li>Qué significan saldo anterior, debe, haber, moneda y saldo final.</li>
+<li>Cómo interpretar si el balance está cuadrado.</li>
+<li>Cómo emitir el PDF con el mismo filtro consultado.</li>
+{% endblock %}
+
+{% block help_content %}
+<section class="help-section">
+  <h2>1. ¿Para qué sirve esta pantalla?</h2>
+  <div class="help-callout">
+    El <strong>Balance de Comprobación</strong> resume por cuenta contable el
+    <strong>saldo anterior</strong>, los <strong>movimientos del período</strong>
+    y el <strong>saldo final</strong>.
+  </div>
+  <p>
+    La consulta se construye únicamente con <strong>comprobantes confirmados</strong>,
+    separa importes por <strong>moneda</strong> y puede filtrarse por <strong>Unidad de Negocio</strong>
+    cuando se requiera revisar una unidad específica o todo el conjunto del sistema.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>2. Filtros disponibles</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Gestión</h3>
+      <p>Consulta todo el año o gestión contable seleccionada.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Rango libre</h3>
+      <p>Consulta un período puntual indicando fecha desde y fecha hasta.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Cuenta desde / hasta</h3>
+      <p>Permite revisar solo una parte del plan de cuentas postable.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Unidad de Negocio</h3>
+      <p>Permite consultar una unidad específica o todas las unidades juntas.</p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>3. Qué significan las columnas</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Moneda</h3>
+      <p>Evita mezclar importes de monedas distintas en una misma línea o total.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Saldo anterior deudor / acreedor</h3>
+      <p>Saldo acumulado de la cuenta antes del período consultado.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Debe / Haber</h3>
+      <p>Movimientos registrados dentro del período consultado.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Saldo final deudor / acreedor</h3>
+      <p>Resultado final después de aplicar los movimientos del período.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Resumen</h3>
+      <p>Indica período, unidad consultada, totales, cantidad de cuentas y cuadratura.</p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>4. Cómo interpretar si está cuadrado</h2>
+  <div class="help-callout">
+    El balance está <strong>cuadrado</strong> cuando, para cada moneda, el total del
+    <strong>Debe</strong> iguala al <strong>Haber</strong> y los saldos finales deudores
+    igualan a los acreedores.
+  </div>
+  <p>
+    Si aparece <strong>descuadrado</strong>, se debe revisar los comprobantes confirmados
+    que afectan el período, la moneda y, si corresponde, la Unidad de Negocio aplicada.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>5. Flujo recomendado</h2>
+  <ol class="help-steps">
+    <li>Selecciona el período por <strong>Gestión</strong> o <strong>Rango libre</strong>.</li>
+    <li>Si lo necesitas, delimita un <strong>rango de cuentas</strong>.</li>
+    <li>Selecciona una <strong>Unidad de Negocio</strong> o deja todas las unidades.</li>
+    <li>Presiona <strong>Consultar</strong>.</li>
+    <li>Revisa cuentas, unidades presentes, monedas, totales por moneda y estado de cuadratura.</li>
+    <li>Si todo está correcto, emite el <strong>PDF</strong>.</li>
+  </ol>
+</section>
+
+<section class="help-section">
+  <h2>6. Reporte PDF</h2>
+  <div class="help-callout">
+    El PDF conserva el mismo filtro aplicado en pantalla, incluyendo la
+    <strong>Unidad de Negocio</strong> seleccionada y los totales separados por moneda.
+  </div>
+  <p>
+    Se recomienda validar primero el resultado en pantalla y luego emitir el reporte formal.
+  </p>
+</section>
+{% endblock %}

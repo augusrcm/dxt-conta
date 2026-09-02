@@ -1,0 +1,2096 @@
+{% extends "layout.html" %}
+{% block title %}Facturas Electrónicas{% endblock title %}
+
+{% block extra_css %}
+<style>
+  #facturasElectronicasPage {
+    --fe-navy: #0c1e35;
+    --fe-blue: #1a4d8f;
+    --fe-blue-mid: #2266b3;
+    --fe-blue-soft: #e8f1fb;
+    --fe-border: #dde6f0;
+    --fe-surface: #f3f7fc;
+    --fe-text: #1c2b3a;
+    --fe-muted: #7389a0;
+    --fe-success: #12845a;
+    --fe-success-lt: #e8f5ef;
+    --fe-warning: #b07a10;
+    --fe-warning-lt: #fef7e6;
+    --fe-danger: #b01f2b;
+    --fe-danger-lt: #fdeaea;
+    --fe-radius: 16px;
+    color: var(--fe-text);
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size: 0.925rem;
+    margin-bottom: 1.5rem;
+  }
+
+  #facturasElectronicasPage .fe-hero {
+    align-items: center;
+    background: linear-gradient(130deg, var(--fe-navy) 0%, #1a3f70 55%, #1f5da8 100%);
+    border-radius: var(--fe-radius);
+    box-shadow: 0 14px 36px rgba(12, 30, 53, 0.18);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1.1rem;
+    overflow: hidden;
+    padding: 1.15rem 1.35rem;
+    position: sticky;
+    top: 64px;
+    z-index: 35;
+  }
+
+  #facturasElectronicasPage .fe-hero-left {
+    align-items: center;
+    display: flex;
+    gap: 0.9rem;
+  }
+
+  #facturasElectronicasPage .fe-hero-icon {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 13px;
+    color: #fff;
+    display: flex;
+    flex-shrink: 0;
+    font-size: 1.12rem;
+    height: 48px;
+    justify-content: center;
+    width: 48px;
+  }
+
+  #facturasElectronicasPage .fe-title {
+    color: #fff;
+    font-size: 1.16rem;
+    font-weight: 750;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  #facturasElectronicasPage .fe-subtitle {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.82rem;
+    margin-top: 0.16rem;
+  }
+
+  #facturasElectronicasPage .fe-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+
+  #facturasElectronicasPage .fe-summary-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    margin-bottom: 1rem;
+  }
+
+  #facturasElectronicasPage .fe-summary-card {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--fe-border);
+    border-left: 4px solid var(--fe-blue-mid);
+    border-radius: 14px;
+    box-shadow: 0 3px 14px rgba(12, 30, 53, 0.055);
+    display: flex;
+    gap: 0.7rem;
+    min-width: 0;
+    padding: 0.8rem 0.88rem;
+  }
+
+  #facturasElectronicasPage .fe-summary-card.warning { border-left-color: var(--fe-warning); }
+  #facturasElectronicasPage .fe-summary-card.success { border-left-color: var(--fe-success); }
+  #facturasElectronicasPage .fe-summary-card.danger { border-left-color: var(--fe-danger); }
+
+  #facturasElectronicasPage .fe-summary-icon {
+    align-items: center;
+    background: var(--fe-blue-soft);
+    border-radius: 10px;
+    color: var(--fe-blue-mid);
+    display: flex;
+    flex-shrink: 0;
+    height: 36px;
+    justify-content: center;
+    width: 36px;
+  }
+
+  #facturasElectronicasPage .warning .fe-summary-icon {
+    background: var(--fe-warning-lt);
+    color: var(--fe-warning);
+  }
+
+  #facturasElectronicasPage .success .fe-summary-icon {
+    background: var(--fe-success-lt);
+    color: var(--fe-success);
+  }
+
+  #facturasElectronicasPage .danger .fe-summary-icon {
+    background: var(--fe-danger-lt);
+    color: var(--fe-danger);
+  }
+
+  #facturasElectronicasPage .fe-summary-label {
+    color: var(--fe-muted);
+    font-size: 0.63rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+    margin-bottom: 0.2rem;
+    text-transform: uppercase;
+  }
+
+  #facturasElectronicasPage .fe-summary-value {
+    color: var(--fe-navy);
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  #facturasElectronicasPage .fe-card {
+    background: #fff;
+    border: 1px solid var(--fe-border);
+    border-radius: var(--fe-radius);
+    box-shadow: 0 3px 14px rgba(12, 30, 53, 0.055);
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+
+  #facturasElectronicasPage .fe-card-head {
+    align-items: center;
+    background: linear-gradient(180deg, #fafcff 0%, #f3f7fc 100%);
+    border-bottom: 1px solid var(--fe-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: space-between;
+    padding: 0.82rem 1.05rem;
+  }
+
+  #facturasElectronicasPage .fe-card-title {
+    align-items: center;
+    color: var(--fe-navy);
+    display: flex;
+    font-size: 0.94rem;
+    font-weight: 800;
+    gap: 0.55rem;
+  }
+
+  #facturasElectronicasPage .fe-card-icon {
+    align-items: center;
+    background: var(--fe-blue-soft);
+    border-radius: 10px;
+    color: var(--fe-blue-mid);
+    display: flex;
+    height: 32px;
+    justify-content: center;
+    width: 32px;
+  }
+
+  #facturasElectronicasPage .fe-import-body,
+  #facturasElectronicasPage .fe-toolbar,
+  #facturasElectronicasPage .fe-table-wrap {
+    padding: 1rem;
+  }
+
+  #facturasElectronicasPage .fe-dropzone {
+    align-items: center;
+    background: linear-gradient(180deg, #fbfdff 0%, #f2f7fd 100%);
+    border: 2px dashed #bfd1e5;
+    border-radius: 15px;
+    cursor: pointer;
+    display: grid;
+    gap: 0.55rem;
+    justify-items: center;
+    padding: 1.5rem 1rem;
+    text-align: center;
+  }
+
+  #facturasElectronicasPage .fe-dropzone.dragover {
+    border-color: var(--fe-blue-mid);
+    box-shadow: 0 0 0 4px rgba(34, 102, 179, 0.11);
+  }
+
+  #facturasElectronicasPage .fe-dropzone.disabled {
+    cursor: not-allowed;
+    opacity: 0.68;
+  }
+
+  #facturasElectronicasPage .fe-drop-icon {
+    align-items: center;
+    background: var(--fe-blue-soft);
+    border-radius: 18px;
+    color: var(--fe-blue-mid);
+    display: flex;
+    font-size: 1.8rem;
+    height: 68px;
+    justify-content: center;
+    width: 68px;
+  }
+
+  #facturasElectronicasPage .fe-drop-title {
+    color: var(--fe-navy);
+    font-size: 1.08rem;
+    font-weight: 800;
+  }
+
+  #facturasElectronicasPage .fe-drop-text {
+    color: var(--fe-muted);
+    font-size: 0.85rem;
+  }
+
+  #facturasElectronicasPage .fe-file-info,
+  #facturasElectronicasPage .fe-progress-panel,
+  #facturasElectronicasPage .fe-report-panel {
+    background: #fbfdff;
+    border: 1px solid var(--fe-border);
+    border-radius: 14px;
+    display: none;
+    margin-top: 0.85rem;
+    padding: 0.85rem;
+  }
+
+  #facturasElectronicasPage .fe-file-info.is-visible,
+  #facturasElectronicasPage .fe-progress-panel.is-visible,
+  #facturasElectronicasPage .fe-report-panel.is-visible {
+    display: grid;
+  }
+
+  #facturasElectronicasPage .fe-file-row,
+  #facturasElectronicasPage .fe-progress-head,
+  #facturasElectronicasPage .fe-report-head {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: space-between;
+  }
+
+  #facturasElectronicasPage .fe-file-name,
+  #facturasElectronicasPage .fe-report-title {
+    color: var(--fe-navy);
+    font-weight: 800;
+  }
+
+  #facturasElectronicasPage .fe-file-meta,
+  #facturasElectronicasPage .fe-report-text,
+  #facturasElectronicasPage .fe-progress-extra {
+    color: var(--fe-muted);
+    font-size: 0.82rem;
+  }
+
+  #facturasElectronicasPage .fe-progress {
+    background: #e7eef8;
+    border-radius: 999px;
+    height: 10px;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  #facturasElectronicasPage .fe-progress-bar {
+    background: var(--fe-blue-mid);
+    height: 100%;
+    transition: width 0.16s ease;
+    width: 0%;
+  }
+
+  #facturasElectronicasPage .fe-report-log {
+    display: grid;
+    gap: 0.45rem;
+    margin-top: 0.7rem;
+    max-height: 260px;
+    overflow: auto;
+  }
+
+  #facturasElectronicasPage .fe-log-item {
+    align-items: flex-start;
+    background: #fff;
+    border: 1px solid var(--fe-border);
+    border-radius: 10px;
+    display: flex;
+    gap: 0.55rem;
+    padding: 0.55rem 0.65rem;
+  }
+
+  #facturasElectronicasPage .fe-log-badge {
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 0.18rem 0.45rem;
+    white-space: nowrap;
+  }
+
+  #facturasElectronicasPage .fe-log-ok { background: var(--fe-success-lt); color: var(--fe-success); }
+  #facturasElectronicasPage .fe-log-warn { background: var(--fe-warning-lt); color: var(--fe-warning); }
+  #facturasElectronicasPage .fe-log-danger { background: var(--fe-danger-lt); color: var(--fe-danger); }
+
+  #facturasElectronicasPage .fe-toolbar {
+    align-items: end;
+    background: var(--fe-surface);
+    border-bottom: 1px solid var(--fe-border);
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: 1.35fr 0.85fr 0.85fr 1.05fr auto auto;
+  }
+
+  #facturasElectronicasPage .fe-field label {
+    align-items: center;
+    color: var(--fe-muted);
+    display: flex;
+    font-size: 0.72rem;
+    font-weight: 800;
+    gap: 0.35rem;
+    margin-bottom: 0.32rem;
+    text-transform: uppercase;
+  }
+
+  #facturasElectronicasPage .fe-input,
+  #facturasElectronicasPage .fe-select,
+  #facturasElectronicasPage .fe-textarea {
+    background: #fff;
+    border: 1px solid #cfdbea;
+    border-radius: 10px;
+    color: var(--fe-text);
+    min-height: 38px;
+    padding: 0.44rem 0.58rem;
+    width: 100%;
+  }
+
+  #facturasElectronicasPage .fe-textarea {
+    min-height: 86px;
+    resize: vertical;
+  }
+
+  #facturasElectronicasPage .fe-btn {
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.82rem;
+    font-weight: 750;
+    gap: 0.42rem;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0.48rem 0.74rem;
+    text-decoration: none;
+    transition: transform 0.12s, box-shadow 0.12s;
+    white-space: nowrap;
+  }
+
+  #facturasElectronicasPage .fe-btn:hover {
+    box-shadow: 0 6px 16px rgba(12, 30, 53, 0.12);
+    transform: translateY(-1px);
+  }
+
+  #facturasElectronicasPage .fe-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    transform: none;
+  }
+
+  #facturasElectronicasPage .fe-btn-primary {
+    background: var(--fe-blue-mid);
+    border-color: var(--fe-blue-mid);
+    color: #fff;
+  }
+
+  #facturasElectronicasPage .fe-btn-secondary {
+    background: #fff;
+    border-color: #cbd8e7;
+    color: var(--fe-navy);
+  }
+
+  #facturasElectronicasPage .fe-btn-success {
+    background: var(--fe-success);
+    border-color: var(--fe-success);
+    color: #fff;
+  }
+
+  #facturasElectronicasPage .fe-btn-warning {
+    background: var(--fe-warning);
+    border-color: var(--fe-warning);
+    color: #fff;
+  }
+
+  #facturasElectronicasPage .fe-btn-danger {
+    background: var(--fe-danger);
+    border-color: var(--fe-danger);
+    color: #fff;
+  }
+
+  #facturasElectronicasPage .fe-icon-btn {
+    align-items: center;
+    border-radius: 10px;
+    display: inline-flex;
+    height: 34px;
+    justify-content: center;
+    margin: 0.06rem;
+    width: 34px;
+  }
+
+  #facturasElectronicasPage .fe-chip {
+    align-items: center;
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.69rem;
+    font-weight: 800;
+    gap: 0.28rem;
+    padding: 0.24rem 0.52rem;
+    white-space: nowrap;
+  }
+
+  #facturasElectronicasPage .fe-chip.info { background: var(--fe-blue-soft); color: var(--fe-blue-mid); }
+  #facturasElectronicasPage .fe-chip.success { background: var(--fe-success-lt); color: var(--fe-success); }
+  #facturasElectronicasPage .fe-chip.warning { background: var(--fe-warning-lt); color: var(--fe-warning); }
+  #facturasElectronicasPage .fe-chip.danger { background: var(--fe-danger-lt); color: var(--fe-danger); }
+  #facturasElectronicasPage .fe-chip.neutral { background: #eef3f9; color: #5b7188; }
+
+  #facturasElectronicasPage .fe-chip-btn {
+    border: 0;
+    cursor: pointer;
+    line-height: 1.1;
+    text-decoration: none;
+  }
+
+  #facturasElectronicasPage .fe-chip-btn:hover,
+  #facturasElectronicasPage .fe-chip-btn:focus {
+    filter: brightness(0.97);
+    outline: 2px solid rgba(34, 102, 179, 0.22);
+    outline-offset: 2px;
+  }
+
+  #facturasElectronicasPage .fe-asiento-table {
+    margin-bottom: 0;
+    vertical-align: middle;
+  }
+
+  #facturasElectronicasPage .fe-asiento-table th {
+    background: var(--fe-surface);
+    color: var(--fe-navy);
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  #facturasElectronicasPage .fe-muted {
+    color: var(--fe-muted);
+    font-size: 0.78rem;
+  }
+
+  #facturasElectronicasPage .fe-money {
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+  }
+
+  #facturasElectronicasPage .fe-modal-summary {
+    background: var(--fe-surface);
+    border: 1px solid var(--fe-border);
+    border-radius: 14px;
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 0.9rem;
+    padding: 0.85rem;
+  }
+
+  #facturasElectronicasPage .fe-summary-item small {
+    color: var(--fe-muted);
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  #facturasElectronicasPage .fe-summary-item strong {
+    color: var(--fe-navy);
+    display: block;
+    margin-top: 0.16rem;
+  }
+
+  #facturasElectronicasPage .select2-container--default .select2-selection--single {
+    border: 1px solid #cfdbea;
+    border-radius: 10px;
+    height: 38px;
+  }
+
+  #facturasElectronicasPage .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+  }
+
+  #facturasElectronicasPage .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+  }
+
+  @media (max-width: 1200px) {
+    #facturasElectronicasPage .fe-summary-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    #facturasElectronicasPage .fe-toolbar {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    #facturasElectronicasPage .fe-summary-grid,
+    #facturasElectronicasPage .fe-toolbar,
+    #facturasElectronicasPage .fe-modal-summary {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div id="facturasElectronicasPage">
+  <div class="fe-hero">
+    <div class="fe-hero-left">
+      <div class="fe-hero-icon"><i class="fas fa-file-invoice"></i></div>
+      <div>
+        <h1 class="fe-title">Facturas electrónicas</h1>
+        <div class="fe-subtitle">Recepción, contabilización y control de saldos por factura.</div>
+      </div>
+    </div>
+    <div class="fe-hero-actions">
+      <button type="button" class="fe-btn fe-btn-secondary" id="btnRefrescarTabla">
+        <i class="fas fa-rotate"></i>
+        <span>Actualizar</span>
+      </button>
+      {% if can_edit %}
+      <button type="button" class="fe-btn fe-btn-primary" id="btnRegistrarManual">
+        <i class="fas fa-file-circle-plus"></i>
+        <span>Factura manual</span>
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="fe-summary-grid">
+    <div class="fe-summary-card">
+      <div class="fe-summary-icon"><i class="fas fa-layer-group"></i></div>
+      <div>
+        <div class="fe-summary-label">Activas</div>
+        <div class="fe-summary-value" data-summary="activas_total">0</div>
+      </div>
+    </div>
+    <div class="fe-summary-card warning">
+      <div class="fe-summary-icon"><i class="fas fa-file-circle-exclamation"></i></div>
+      <div>
+        <div class="fe-summary-label">Por contabilizar</div>
+        <div class="fe-summary-value" data-summary="pendientes_contabilizar">0</div>
+      </div>
+    </div>
+    <div class="fe-summary-card success">
+      <div class="fe-summary-icon"><i class="fas fa-scale-balanced"></i></div>
+      <div>
+        <div class="fe-summary-label">Contabilizadas</div>
+        <div class="fe-summary-value" data-summary="contabilizadas_pendientes">0</div>
+      </div>
+    </div>
+    <div class="fe-summary-card success">
+      <div class="fe-summary-icon"><i class="fas fa-circle-check"></i></div>
+      <div>
+        <div class="fe-summary-label">Cobradas</div>
+        <div class="fe-summary-value" data-summary="cobradas_total">0</div>
+      </div>
+    </div>
+    <div class="fe-summary-card warning">
+      <div class="fe-summary-icon"><i class="fas fa-lock"></i></div>
+      <div>
+        <div class="fe-summary-label">Cerradas</div>
+        <div class="fe-summary-value" data-summary="cerradas_manual">0</div>
+      </div>
+    </div>
+    <div class="fe-summary-card danger">
+      <div class="fe-summary-icon"><i class="fas fa-ban"></i></div>
+      <div>
+        <div class="fe-summary-label">Anuladas</div>
+        <div class="fe-summary-value" data-summary="anuladas_historicas">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fe-card">
+    <div class="fe-card-head">
+      <div class="fe-card-title">
+        <div class="fe-card-icon"><i class="fas fa-file-arrow-up"></i></div>
+        Importar facturas
+      </div>
+    </div>
+    <div class="fe-import-body">
+      <input type="file" id="fileFacturas" accept=".xls,.xlsx,.xlsm,.csv,.htm,.html" class="d-none" />
+      <div class="fe-dropzone" id="dropzoneFacturas" tabindex="0">
+        <div class="fe-drop-icon"><i class="fas fa-cloud-arrow-up"></i></div>
+        <div class="fe-drop-title">Arrastra el archivo aquí</div>
+        <div class="fe-drop-text">Compatible con .xls, .xlsx y .csv. El CUF vacío, 0 o CERO no se usa como clave.</div>
+        <button type="button" class="fe-btn fe-btn-primary" id="btnSeleccionarArchivo">
+          <i class="fas fa-folder-open"></i>
+          <span>Seleccionar archivo</span>
+        </button>
+      </div>
+      <div class="fe-file-info" id="fileInfoPanel">
+        <div class="fe-file-row">
+          <div>
+            <div class="fe-file-name" id="metricNombreArchivo">—</div>
+            <div class="fe-file-meta" id="metricArchivoMeta">Archivo listo para importar</div>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <span class="fe-chip info">Filas: <strong id="metricFilasDetectadas">0</strong></span>
+            <span class="fe-chip warning">Anuladas: <strong id="metricFilasAnuladas">0</strong></span>
+            <span class="fe-chip neutral">NIT emisor: <strong id="metricNitEmisor">—</strong></span>
+            <button type="button" class="fe-btn fe-btn-secondary" id="btnLimpiarArchivo" disabled>
+              <i class="fas fa-xmark"></i>
+              <span>Quitar</span>
+            </button>
+            <button type="button" class="fe-btn fe-btn-primary" id="btnImportar" disabled>
+              <i class="fas fa-upload"></i>
+              <span>Importar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="fe-progress-panel" id="progressPanel">
+        <div class="fe-progress-head">
+          <strong id="progressLabel">Preparando importación...</strong>
+          <strong id="progressPercentText">0%</strong>
+        </div>
+        <div class="fe-progress mt-2"><div class="fe-progress-bar" id="progressBar"></div></div>
+        <div class="fe-progress-extra mt-2" id="progressExtraText">Esperando archivo...</div>
+      </div>
+      <div class="fe-report-panel" id="reportPanel">
+        <div class="fe-report-head">
+          <div>
+            <div class="fe-report-title">Resultado de la última importación</div>
+            <div class="fe-report-text" id="reportText">Sin proceso ejecutado todavía.</div>
+          </div>
+        </div>
+        <div class="fe-report-log" id="reportLog"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fe-card" id="panelFacturas" tabindex="-1">
+    <div class="fe-card-head">
+      <div class="fe-card-title">
+        <div class="fe-card-icon"><i class="fas fa-table-list"></i></div>
+        Control de facturas
+      </div>
+    </div>
+    <div class="fe-toolbar">
+      <div class="fe-field">
+        <label for="txtBuscarFactura"><i class="fas fa-magnifying-glass"></i> Buscar</label>
+        <input id="txtBuscarFactura" class="fe-input" type="text" placeholder="Factura, NIT, cliente, auxiliar, cuenta o unidad" />
+      </div>
+      <div class="fe-field">
+        <label for="txtFechaDesde"><i class="fas fa-calendar-day"></i> Fecha desde</label>
+        <input id="txtFechaDesde" class="fe-input" type="date" />
+      </div>
+      <div class="fe-field">
+        <label for="txtFechaHasta"><i class="fas fa-calendar-check"></i> Fecha hasta</label>
+        <input id="txtFechaHasta" class="fe-input" type="date" />
+      </div>
+      <div class="fe-field">
+        <label for="selUnidadNegocio"><i class="fas fa-building"></i> Unidad de negocio</label>
+        <select id="selUnidadNegocio" class="fe-select">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <button type="button" class="fe-btn fe-btn-primary" id="btnFiltrarTabla">
+        <i class="fas fa-filter"></i>
+        <span>Filtrar</span>
+      </button>
+      <button type="button" class="fe-btn fe-btn-secondary" id="btnLimpiarFiltros">
+        <i class="fas fa-filter-circle-xmark"></i>
+        <span>Limpiar</span>
+      </button>
+    </div>
+    <div class="fe-table-wrap">
+      <table id="tblFacturas" class="table table-hover w-100">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Factura</th>
+            <th>Cliente / Auxiliar</th>
+            <th>Unidad</th>
+            <th class="text-end">Total</th>
+            <th class="text-end">Saldo</th>
+            <th>Estado</th>
+            <th>Cuentas</th>
+            <th>Asiento</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalFacturaManual" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Registrar factura manual</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <form id="formFacturaManual">
+          <div class="modal-body">
+            <div class="alert alert-info py-2 mb-3">
+              Registra facturas emitidas manualmente, sin archivo Excel. La validación de duplicidad se realiza con
+              <strong>NIT emisor + número de factura + fecha de emisión + NIT cliente</strong>.
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="fe-field">
+                  <label for="selManualUnidadNegocio"><i class="fas fa-building"></i> NIT emisor / Unidad de negocio</label>
+                  <select id="selManualUnidadNegocio" class="fe-select" required>
+                    <option value="">Seleccionar unidad...</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="fe-field">
+                  <label for="txtManualNumeroFactura"><i class="fas fa-hashtag"></i> Número factura</label>
+                  <input id="txtManualNumeroFactura" class="fe-input" type="text" maxlength="100" required />
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="fe-field">
+                  <label for="txtManualFechaEmision"><i class="fas fa-calendar-day"></i> Fecha emisión</label>
+                  <input id="txtManualFechaEmision" class="fe-input" type="date" required />
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="fe-field">
+                  <label for="txtManualNitCliente"><i class="fas fa-id-card"></i> NIT cliente</label>
+                  <input id="txtManualNitCliente" class="fe-input" type="text" maxlength="50" required />
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div class="fe-field">
+                  <label for="txtManualNombreCliente"><i class="fas fa-user-tie"></i> Nombre cliente</label>
+                  <input id="txtManualNombreCliente" class="fe-input" type="text" maxlength="200" required />
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="fe-field">
+                  <label for="txtManualTotalFactura"><i class="fas fa-money-bill-wave"></i> Total factura</label>
+                  <input id="txtManualTotalFactura" class="fe-input" type="text" inputmode="decimal" placeholder="0.00" required />
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="fe-field">
+                  <label for="txtManualDescuento"><i class="fas fa-percent"></i> Descuento</label>
+                  <input id="txtManualDescuento" class="fe-input" type="text" inputmode="decimal" placeholder="0.00" />
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="fe-field">
+                  <label for="selManualEstado"><i class="fas fa-tag"></i> Estado factura</label>
+                  <select id="selManualEstado" class="fe-select">
+                    <option value="Recepcionada" selected>Recepcionada</option>
+                    <option value="Anulada">Anulada</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="fe-field">
+                  <label for="txtManualCuf"><i class="fas fa-fingerprint"></i> CUF opcional</label>
+                  <input id="txtManualCuf" class="fe-input" type="text" maxlength="255" placeholder="CERO o vacío si no corresponde" />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="fe-field">
+                  <label for="txtManualMetodoPago"><i class="fas fa-receipt"></i> Método de pago</label>
+                  <input id="txtManualMetodoPago" class="fe-input" type="text" maxlength="100" placeholder="Opcional" />
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="fe-field">
+                  <label for="txtManualObservacion"><i class="fas fa-note-sticky"></i> Observación</label>
+                  <textarea id="txtManualObservacion" class="fe-input" rows="2" maxlength="500" placeholder="Opcional"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btnGuardarManual">
+              <i class="fas fa-save me-1"></i> Guardar factura
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalContabilizarFactura" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Contabilizar factura</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <form id="formContabilizarFactura">
+          <div class="modal-body">
+            <div class="fe-modal-summary" id="contabilizarResumen"></div>
+            <input type="hidden" id="contabilizarFacturaId" />
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="fe-field">
+                  <label for="selAuxiliarContable"><i class="fas fa-user-tie"></i> Auxiliar / Cliente</label>
+                  <select id="selAuxiliarContable" class="fe-select" required></select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="fe-field">
+                  <label for="txtFechaAsiento"><i class="fas fa-calendar"></i> Fecha asiento</label>
+                  <input id="txtFechaAsiento" class="fe-input" type="date" required />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="fe-field">
+                  <label for="selCuentaCobrar"><i class="fas fa-arrow-trend-up"></i> Cuenta por cobrar</label>
+                  <select id="selCuentaCobrar" class="fe-select" required></select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="fe-field">
+                  <label for="selCuentaContra"><i class="fas fa-scale-balanced"></i> Contra cuenta</label>
+                  <select id="selCuentaContra" class="fe-select" required></select>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="fe-field">
+                  <label for="txtGlosaContable"><i class="fas fa-align-left"></i> Glosa</label>
+                  <textarea id="txtGlosaContable" class="fe-textarea" maxlength="500"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="fe-btn fe-btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="fe-btn fe-btn-success" id="btnGuardarContabilizacion">
+              <i class="fas fa-scale-balanced"></i>
+              <span>Generar asiento</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalCerrarFactura" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Cerrar factura en tesorería</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <form id="formCerrarFactura">
+          <div class="modal-body">
+            <input type="hidden" id="cerrarFacturaId" />
+            <div class="fe-modal-summary" id="cerrarResumen"></div>
+            <div class="fe-field mb-3">
+              <label for="txtMotivoCierre"><i class="fas fa-message"></i> Motivo</label>
+              <input id="txtMotivoCierre" class="fe-input" type="text" maxlength="200" required />
+            </div>
+            <div class="fe-field">
+              <label for="txtObservacionCierre"><i class="fas fa-note-sticky"></i> Observación</label>
+              <textarea id="txtObservacionCierre" class="fe-textarea" maxlength="500"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="fe-btn fe-btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="fe-btn fe-btn-warning" id="btnGuardarCierre">
+              <i class="fas fa-lock"></i>
+              <span>Cerrar</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalVerAsiento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Asiento contable de la factura</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="fe-modal-summary" id="asientoResumen"></div>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered fe-asiento-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Cuenta</th>
+                  <th>Auxiliar</th>
+                  <th>Glosa</th>
+                  <th class="text-end">Debe</th>
+                  <th class="text-end">Haber</th>
+                </tr>
+              </thead>
+              <tbody id="asientoDetalleBody"></tbody>
+              <tfoot id="asientoTotales"></tfoot>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a
+            class="fe-btn fe-btn-primary"
+            href="#"
+            id="btnAsientoPdf"
+            rel="noopener"
+            target="_blank"
+          >
+            <i class="fas fa-file-pdf"></i>
+            <span>PDF</span>
+          </a>
+          <button type="button" class="fe-btn fe-btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalMovimientosFactura" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Movimientos de la factura</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="fe-modal-summary" id="movimientosResumen"></div>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered fe-asiento-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Origen</th>
+                  <th>Glosa</th>
+                  <th class="text-end">Debe</th>
+                  <th class="text-end">Haber</th>
+                </tr>
+              </thead>
+              <tbody id="movimientosDetalleBody"></tbody>
+              <tfoot id="movimientosTotales"></tfoot>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="fe-btn fe-btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="facturasElectronicasBootstrap">
+    {{ {
+      "canEdit": can_edit,
+      "urls": {
+        "data": url_for("facturas_electronicas.data"),
+        "importarLote": url_for("facturas_electronicas.importar_lote"),
+        "crearManual": url_for("facturas_electronicas.api_crear_factura_manual"),
+        "unidadesNegocio": url_for("facturas_electronicas.unidades_negocio"),
+        "cuentasPostables": url_for("facturas_electronicas.api_cuentas_postables"),
+        "auxiliaresClientes": url_for("facturas_electronicas.api_auxiliares_clientes"),
+        "facturaDetalleBase": url_for("facturas_electronicas.api_factura_detalle", factura_id=0),
+        "asientoDetalleBase": url_for("facturas_electronicas.api_factura_asiento", factura_id=0),
+        "asientoPdfBase": url_for("facturas_electronicas.pdf_factura_asiento", factura_id=0),
+        "movimientosBase": url_for("facturas_electronicas.api_factura_movimientos", factura_id=0),
+        "contabilizarBase": url_for("facturas_electronicas.api_contabilizar_factura", factura_id=0),
+        "cerrarManual": url_for("facturas_electronicas.api_cerrar_manual"),
+        "reabrirCierre": url_for("facturas_electronicas.api_reabrir_cierre")
+      }
+    } | tojson }}
+  </script>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='office/xlsx.full.min.js') }}"></script>
+<script>
+  (() => {
+    "use strict";
+
+    const bootEl = document.getElementById("facturasElectronicasBootstrap");
+    if (!bootEl) return;
+    const boot = JSON.parse(bootEl.textContent || "{}");
+
+    const state = {
+      file: null,
+      fileMeta: { nitEmisor: "", razonSocialEmisor: "", sucursalCabecera: "" },
+      rows: [],
+      importing: false,
+      table: null,
+      detailLog: [],
+      unidadesNegocio: [],
+    };
+
+    const els = {
+      dropzone: document.getElementById("dropzoneFacturas"),
+      fileInput: document.getElementById("fileFacturas"),
+      btnSeleccionarArchivo: document.getElementById("btnSeleccionarArchivo"),
+      btnImportar: document.getElementById("btnImportar"),
+      btnLimpiarArchivo: document.getElementById("btnLimpiarArchivo"),
+      fileInfoPanel: document.getElementById("fileInfoPanel"),
+      metricNombreArchivo: document.getElementById("metricNombreArchivo"),
+      metricArchivoMeta: document.getElementById("metricArchivoMeta"),
+      metricFilasDetectadas: document.getElementById("metricFilasDetectadas"),
+      metricFilasAnuladas: document.getElementById("metricFilasAnuladas"),
+      metricNitEmisor: document.getElementById("metricNitEmisor"),
+      progressPanel: document.getElementById("progressPanel"),
+      progressLabel: document.getElementById("progressLabel"),
+      progressPercentText: document.getElementById("progressPercentText"),
+      progressBar: document.getElementById("progressBar"),
+      progressExtraText: document.getElementById("progressExtraText"),
+      reportPanel: document.getElementById("reportPanel"),
+      reportText: document.getElementById("reportText"),
+      reportLog: document.getElementById("reportLog"),
+      txtBuscarFactura: document.getElementById("txtBuscarFactura"),
+      txtFechaDesde: document.getElementById("txtFechaDesde"),
+      txtFechaHasta: document.getElementById("txtFechaHasta"),
+      selUnidadNegocio: document.getElementById("selUnidadNegocio"),
+      btnFiltrarTabla: document.getElementById("btnFiltrarTabla"),
+      btnLimpiarFiltros: document.getElementById("btnLimpiarFiltros"),
+      btnRefrescarTabla: document.getElementById("btnRefrescarTabla"),
+      btnRegistrarManual: document.getElementById("btnRegistrarManual"),
+      tblFacturas: document.getElementById("tblFacturas"),
+      panelFacturas: document.getElementById("panelFacturas"),
+      modalManual: document.getElementById("modalFacturaManual"),
+      formManual: document.getElementById("formFacturaManual"),
+      selManualUnidadNegocio: document.getElementById("selManualUnidadNegocio"),
+      txtManualNumeroFactura: document.getElementById("txtManualNumeroFactura"),
+      txtManualFechaEmision: document.getElementById("txtManualFechaEmision"),
+      txtManualNitCliente: document.getElementById("txtManualNitCliente"),
+      txtManualNombreCliente: document.getElementById("txtManualNombreCliente"),
+      txtManualTotalFactura: document.getElementById("txtManualTotalFactura"),
+      txtManualDescuento: document.getElementById("txtManualDescuento"),
+      selManualEstado: document.getElementById("selManualEstado"),
+      txtManualCuf: document.getElementById("txtManualCuf"),
+      txtManualMetodoPago: document.getElementById("txtManualMetodoPago"),
+      txtManualObservacion: document.getElementById("txtManualObservacion"),
+      btnGuardarManual: document.getElementById("btnGuardarManual"),
+      modalContabilizar: document.getElementById("modalContabilizarFactura"),
+      formContabilizar: document.getElementById("formContabilizarFactura"),
+      contabilizarFacturaId: document.getElementById("contabilizarFacturaId"),
+      contabilizarResumen: document.getElementById("contabilizarResumen"),
+      selAuxiliarContable: document.getElementById("selAuxiliarContable"),
+      txtFechaAsiento: document.getElementById("txtFechaAsiento"),
+      selCuentaCobrar: document.getElementById("selCuentaCobrar"),
+      selCuentaContra: document.getElementById("selCuentaContra"),
+      txtGlosaContable: document.getElementById("txtGlosaContable"),
+      btnGuardarContabilizacion: document.getElementById("btnGuardarContabilizacion"),
+      modalCerrar: document.getElementById("modalCerrarFactura"),
+      formCerrar: document.getElementById("formCerrarFactura"),
+      cerrarFacturaId: document.getElementById("cerrarFacturaId"),
+      cerrarResumen: document.getElementById("cerrarResumen"),
+      txtMotivoCierre: document.getElementById("txtMotivoCierre"),
+      txtObservacionCierre: document.getElementById("txtObservacionCierre"),
+      btnGuardarCierre: document.getElementById("btnGuardarCierre"),
+      modalVerAsiento: document.getElementById("modalVerAsiento"),
+      asientoResumen: document.getElementById("asientoResumen"),
+      asientoDetalleBody: document.getElementById("asientoDetalleBody"),
+      asientoTotales: document.getElementById("asientoTotales"),
+      btnAsientoPdf: document.getElementById("btnAsientoPdf"),
+      modalMovimientos: document.getElementById("modalMovimientosFactura"),
+      movimientosResumen: document.getElementById("movimientosResumen"),
+      movimientosDetalleBody: document.getElementById("movimientosDetalleBody"),
+      movimientosTotales: document.getElementById("movimientosTotales"),
+    };
+
+    function escHtml(v) {
+      return String(v ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function formatInt(v) {
+      return new Intl.NumberFormat("es-BO").format(Number(v || 0));
+    }
+
+    function formatMoney(v) {
+      return new Intl.NumberFormat("es-BO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(Number(v || 0));
+    }
+
+    function toUpperTrim(v) {
+      return String(v ?? "").trim().toUpperCase();
+    }
+
+    function parseNumber(v) {
+      if (v === null || v === undefined || v === "") return 0;
+      if (typeof v === "number" && Number.isFinite(v)) return Number(v);
+      let t = String(v).trim().replace(/Bs\.?/gi, "").replace(/\s+/g, "");
+      if (!t) return 0;
+      if (t.includes(",") && t.includes(".")) t = t.replace(/,/g, "");
+      else if (t.includes(",")) t = t.replace(/,/g, ".");
+      const p = Number(t);
+      return Number.isFinite(p) ? p : 0;
+    }
+
+    function parseExcelSerial(v) {
+      if (typeof v !== "number" || !Number.isFinite(v)) return "";
+      const r = new Date(new Date(Date.UTC(1899, 11, 30)).getTime() + v * 86400000);
+      return `${r.getUTCFullYear()}-${String(r.getUTCMonth() + 1).padStart(2, "0")}-${String(r.getUTCDate()).padStart(2, "0")}`;
+    }
+
+    function parseDate(v) {
+      if (v instanceof Date && !Number.isNaN(v.getTime())) {
+        return `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, "0")}-${String(v.getDate()).padStart(2, "0")}`;
+      }
+      if (typeof v === "number") return parseExcelSerial(v);
+      const t = String(v ?? "").trim();
+      if (!t) return "";
+      if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return t;
+      const s = t.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (s) return `${s[3]}-${String(s[2]).padStart(2, "0")}-${String(s[1]).padStart(2, "0")}`;
+      const p = new Date(t);
+      if (!Number.isNaN(p.getTime())) {
+        return `${p.getFullYear()}-${String(p.getMonth() + 1).padStart(2, "0")}-${String(p.getDate()).padStart(2, "0")}`;
+      }
+      return "";
+    }
+
+    function showPanel(el, show) {
+      if (!el) return;
+      el.classList.toggle("is-visible", !!show);
+    }
+
+    function setImportUiDisabled(disabled) {
+      els.dropzone.classList.toggle("disabled", !!disabled);
+      els.fileInput.disabled = !!disabled;
+      els.btnSeleccionarArchivo.disabled = !!disabled;
+      els.btnLimpiarArchivo.disabled = !!disabled || !state.rows.length;
+      els.btnImportar.disabled = !!disabled || !boot.canEdit || !state.rows.length;
+    }
+
+    function clearFileState() {
+      state.file = null;
+      state.fileMeta = { nitEmisor: "", razonSocialEmisor: "", sucursalCabecera: "" };
+      state.rows = [];
+      state.detailLog = [];
+      els.fileInput.value = "";
+      els.metricNombreArchivo.textContent = "—";
+      els.metricArchivoMeta.textContent = "Archivo listo para importar";
+      els.metricFilasDetectadas.textContent = "0";
+      els.metricFilasAnuladas.textContent = "0";
+      els.metricNitEmisor.textContent = "—";
+      showPanel(els.fileInfoPanel, false);
+      showPanel(els.progressPanel, false);
+      showPanel(els.reportPanel, false);
+      els.progressBar.style.width = "0%";
+      els.progressPercentText.textContent = "0%";
+      els.progressLabel.textContent = "Preparando importación...";
+      els.progressExtraText.textContent = "Esperando archivo...";
+      setImportUiDisabled(false);
+    }
+
+    function updateFileInfo() {
+      const anuladas = state.rows.filter((r) => toUpperTrim(r.estado_archivo).includes("ANUL")).length;
+      els.metricNombreArchivo.textContent = state.file ? state.file.name : "—";
+      els.metricFilasDetectadas.textContent = formatInt(state.rows.length);
+      els.metricFilasAnuladas.textContent = formatInt(anuladas);
+      els.metricNitEmisor.textContent = state.fileMeta.nitEmisor || "—";
+      const metaParts = [];
+      if (state.fileMeta.razonSocialEmisor) metaParts.push(state.fileMeta.razonSocialEmisor);
+      if (state.fileMeta.sucursalCabecera) metaParts.push(state.fileMeta.sucursalCabecera);
+      els.metricArchivoMeta.textContent = metaParts.join(" · ") || "Archivo listo para importar";
+      showPanel(els.fileInfoPanel, state.rows.length > 0);
+      els.btnLimpiarArchivo.disabled = !state.rows.length || state.importing;
+      els.btnImportar.disabled = !boot.canEdit || !state.rows.length || state.importing;
+    }
+
+    function updateSummaryCards(resumen) {
+      document.querySelectorAll("[data-summary]").forEach((el) => {
+        const key = el.getAttribute("data-summary");
+        el.textContent = formatInt(resumen && resumen[key] ? resumen[key] : 0);
+      });
+    }
+
+    function detectHtmlXls(file, text) {
+      const fname = String(file?.name || "").toLowerCase();
+      return /\.(xls|htm|html)$/i.test(fname) && /<\s*(html|table|frameset|frame|meta|body)\b/i.test(text || "");
+    }
+
+    function isExcelFramesetHtml(text) {
+      const t = String(text || "");
+      return /Excel Workbook Frameset/i.test(t)
+        || /<\s*frameset\b/i.test(t)
+        || /<\s*frame\b[^>]+src\s*=\s*["'][^"']*sheet\d+\.htm/i.test(t)
+        || /sheet\d+\.htm/i.test(t);
+    }
+
+    function rowText(row) {
+      return (Array.isArray(row) ? row : []).map((c) => toUpperTrim(c)).join(" ");
+    }
+
+    function findInvoiceHeaderIndex(rows) {
+      return (rows || []).findIndex((r, idx) => {
+        const j = rowText(r);
+        const next1 = rowText((rows || [])[idx + 1] || []);
+        const next2 = rowText((rows || [])[idx + 2] || []);
+        const joined = `${j} ${next1} ${next2}`;
+
+        const hasMainColumns = j.includes("CUF") && j.includes("ESTADO");
+        const hasFacturaLabel = joined.includes("FACTURA") || /N[°º]/.test(j) || /NRO/.test(j) || /NUMERO/.test(j) || /NÚMERO/.test(j);
+        const hasClienteLabel = joined.includes("CLIENTE") || j.includes("NIT") || j.includes("NOMBRE");
+
+        return hasMainColumns && hasFacturaLabel && hasClienteLabel;
+      });
+    }
+
+    function findMetaRowsInWorkbook(sheets) {
+      return (sheets || []).find((rows) =>
+        (rows || []).some((row) => rowText(row).includes("NIT"))
+      ) || null;
+    }
+
+    function extractValueAfterLabel(rows, labelRegex) {
+      for (const row of rows || []) {
+        const cells = Array.isArray(row) ? row : [];
+        for (let i = 0; i < cells.length; i += 1) {
+          const raw = String(cells[i] ?? "").replace(/\s+/g, " ").trim();
+          const match = raw.match(labelRegex);
+          if (!match) continue;
+          const inlineValue = raw.replace(labelRegex, "").replace(/^\s*:\s*/, "").trim();
+          if (inlineValue) return inlineValue;
+          for (let j = i + 1; j < cells.length; j += 1) {
+            const value = String(cells[j] ?? "").replace(/\s+/g, " ").trim();
+            if (value) return value;
+          }
+        }
+      }
+      return "";
+    }
+
+    function extractSheetMeta(metaRows) {
+      const rows = Array.isArray(metaRows) ? metaRows : [];
+      const row1 = Array.isArray(rows[0]) ? rows[0] : [];
+      const row2 = Array.isArray(rows[1]) ? rows[1] : [];
+      const nitEmisor = String(
+        extractValueAfterLabel(rows, /^\s*NIT\s*:?\s*/i) || row1[3] || ""
+      ).trim();
+      const razonSocialEmisor = String(
+        extractValueAfterLabel(rows, /^\s*NOMBRE\s*O\s*RAZ[ÓO]N\s*SOCIAL\s*:?\s*/i) || row1[1] || ""
+      ).trim();
+      const sucursalCabecera = String(
+        extractValueAfterLabel(rows, /^\s*SUCURSAL\s*:?\s*/i) || row2[1] || ""
+      ).trim();
+      if (!nitEmisor) {
+        throw new Error("No se encontró el NIT emisor en los datos de cabecera del archivo.");
+      }
+      return { nitEmisor, razonSocialEmisor, sucursalCabecera };
+    }
+
+    function normalizeSheetRows(rows, metaRows) {
+      const hi = findInvoiceHeaderIndex(rows);
+      if (hi === -1) throw new Error("No se detectó la fila de cabecera del archivo.");
+      const items = [];
+      rows.slice(hi + 1).forEach((row, idx) => {
+        if (!Array.isArray(row) || !row.length) return;
+        const fc = toUpperTrim(row[0]);
+        if (!fc || fc.includes("TOTALES")) return;
+        const nf = String(row[3] ?? "").trim();
+        const fe = parseDate(row[2]);
+        if (!nf || !fe) return;
+        items.push({
+          fila_origen: idx + hi + 2,
+          sucursal: String(row[1] ?? "").trim(),
+          fecha_emision: fe,
+          numero_factura: nf,
+          cuf: String(row[4] ?? "").trim(),
+          estado_archivo: String(row[5] ?? "").trim(),
+          nit_cliente: String(row[6] ?? "").trim(),
+          nombre_cliente: String(row[7] ?? "").trim(),
+          punto_venta: String(row[8] ?? "").trim(),
+          importe_total: parseNumber(row[9]),
+          subtotal: parseNumber(row[13] ?? row[9]),
+          descuento: parseNumber(row[14]),
+          importe_base_debito: parseNumber(row[15] ?? row[9]),
+          debito_fiscal: parseNumber(row[16]),
+          tipo_emision: String(row[17] ?? "").trim(),
+          metodo_pago: String(row[18] ?? "").trim(),
+          usuario: String(row[19] ?? "").trim(),
+          raw: Object.fromEntries([...Array(20)].map((_, i) => ["columna_" + (i + 1), String(row[i] ?? "").trim()])),
+        });
+      });
+      if (!items.length) throw new Error("No se encontraron facturas válidas en el archivo.");
+      return { meta: extractSheetMeta(metaRows || rows), rows: items };
+    }
+
+    function parseHtmlXls(text) {
+      const doc = new DOMParser().parseFromString(text, "text/html");
+      const tables = Array.from(doc.querySelectorAll("table"));
+      function tableToRows(t) {
+        return Array.from(t.querySelectorAll("tr")).map((tr) =>
+          Array.from(tr.querySelectorAll("th,td")).map((c) => c.textContent.trim())
+        );
+      }
+      const tableRows = tables.map(tableToRows).filter((rows) => rows.length);
+      const metaRows = findMetaRowsInWorkbook(tableRows);
+      const dataRows = tableRows.find((rows) => findInvoiceHeaderIndex(rows) !== -1);
+      if (dataRows) return normalizeSheetRows(dataRows, metaRows || dataRows);
+      if (isExcelFramesetHtml(text)) {
+        throw new Error(
+          "El archivo .xls fue guardado por Excel como página web con hojas externas y no contiene la tabla de facturas dentro del archivo seleccionado. Guárdalo como .xlsx o exporta/selecciona el archivo de hoja que contiene la tabla de facturas."
+        );
+      }
+      if (!tables.length) throw new Error("El archivo .xls no contiene tablas legibles.");
+      throw new Error("El archivo .xls no contiene la tabla de facturas esperada.");
+    }
+
+    function parseWorkbook(buf) {
+      const wb = XLSX.read(buf, { type: "array", cellDates: true });
+      const sheetNames = wb.SheetNames || [];
+      if (!sheetNames.length) throw new Error("El archivo no contiene hojas legibles.");
+      const sheets = sheetNames.map((s) =>
+        XLSX.utils.sheet_to_json(wb.Sheets[s], { header: 1, defval: "", raw: true })
+      );
+      const metaRows = findMetaRowsInWorkbook(sheets);
+      const dataRows = sheets.find((rows) => findInvoiceHeaderIndex(rows) !== -1);
+      if (!dataRows) throw new Error("No se detectó la tabla de facturas esperada en ninguna hoja del archivo.");
+      return normalizeSheetRows(dataRows, metaRows || dataRows);
+    }
+
+    function parseXlsx(buf) {
+      return parseWorkbook(buf);
+    }
+
+    function parseCsv(text) {
+      const wb = XLSX.read(text, { type: "string" });
+      const s = wb.SheetNames[0];
+      if (!s) throw new Error("El CSV no contiene información legible.");
+      return normalizeSheetRows(XLSX.utils.sheet_to_json(wb.Sheets[s], { header: 1, defval: "", raw: true }));
+    }
+
+    async function readRowsFromFile(file) {
+      const fname = String(file.name || "").toLowerCase();
+      const buf = await file.arrayBuffer();
+      if (fname.endsWith(".csv")) {
+        try { return parseCsv(new TextDecoder("windows-1252").decode(buf)); }
+        catch { return parseCsv(new TextDecoder("utf-8", { fatal: false }).decode(buf)); }
+      }
+
+      let workbookError = "";
+      try { return parseWorkbook(buf); }
+      catch (err) { workbookError = err?.message || String(err); }
+
+      const texts = [
+        new TextDecoder("windows-1252").decode(buf),
+        new TextDecoder("utf-8", { fatal: false }).decode(buf),
+      ];
+      let htmlError = "";
+      for (const text of texts) {
+        if (!detectHtmlXls(file, text)) continue;
+        try { return parseHtmlXls(text); }
+        catch (err) { htmlError = err?.message || String(err); }
+      }
+      if (texts.some(isExcelFramesetHtml)) {
+        throw new Error(
+          "El archivo .xls seleccionado no es autocontenido: Excel lo guardó como página web con hojas externas. Guárdalo como .xlsx y vuelve a importarlo, o exporta desde SIAT el archivo .xls original sin abrirlo/guardarlo en Excel."
+        );
+      }
+      throw new Error(htmlError || workbookError || "No se pudo leer el archivo Excel seleccionado.");
+    }
+
+    async function handleSelectedFile(file) {
+      if (!file) return;
+      state.file = file;
+      state.detailLog = [];
+      showPanel(els.reportPanel, false);
+      showPanel(els.progressPanel, false);
+      setImportUiDisabled(true);
+      try {
+        const parsed = await readRowsFromFile(file);
+        state.rows = Array.isArray(parsed.rows) ? parsed.rows : [];
+        state.fileMeta = parsed.meta || { nitEmisor: "", razonSocialEmisor: "", sucursalCabecera: "" };
+        updateFileInfo();
+      } catch (err) {
+        clearFileState();
+        Swal.fire({ icon: "error", title: "No se pudo leer el archivo", text: err.message || "Archivo no válido.", confirmButtonText: "Entendido" });
+      } finally {
+        setImportUiDisabled(false);
+      }
+    }
+
+    function appendDetailLog(items) {
+      if (!Array.isArray(items) || !items.length) return;
+      state.detailLog.push(...items);
+      if (state.detailLog.length > 120) state.detailLog = state.detailLog.slice(0, 120);
+    }
+
+    function renderReport() {
+      showPanel(els.reportPanel, true);
+      els.reportText.textContent = "Importación terminada. El grid muestra el estado operativo actualizado.";
+      const html = state.detailLog.length
+        ? state.detailLog.map((item) => {
+          const action = String(item.accion || "");
+          let bc = "fe-log-warn", bt = "Omitida";
+          if (["insertada", "anulada_insertada", "actualizada_a_anulada"].includes(action)) {
+            bc = "fe-log-ok";
+            bt = action === "actualizada_a_anulada" ? "Anulada" : "Importada";
+          } else if (action === "error") {
+            bc = "fe-log-danger";
+            bt = "Error";
+          }
+          const fila = item.fila_origen ? `Fila ${escHtml(item.fila_origen)} · ` : "";
+          return `<div class="fe-log-item"><span class="fe-log-badge ${bc}">${bt}</span><div>${fila}${escHtml(item.mensaje || "")}</div></div>`;
+        }).join("")
+        : '<div class="fe-muted">Sin novedades para mostrar.</div>';
+      els.reportLog.innerHTML = html;
+    }
+
+    function chunkArray(items, size) {
+      const c = [];
+      for (let i = 0; i < items.length; i += size) c.push(items.slice(i, i + size));
+      return c;
+    }
+
+    async function ejecutarImportacion() {
+      if (!boot.canEdit || !state.rows.length || !state.file || state.importing) return;
+      const cf = await Swal.fire({
+        icon: "question",
+        title: "Confirmar importación",
+        text: `Se analizarán ${formatInt(state.rows.length)} filas del archivo ${state.file.name}.`,
+        showCancelButton: true,
+        confirmButtonText: "Sí, importar",
+        cancelButtonText: "Cancelar",
+      });
+      if (!cf.isConfirmed) return;
+      state.importing = true;
+      state.detailLog = [];
+      showPanel(els.reportPanel, false);
+      showPanel(els.progressPanel, true);
+      els.progressBar.style.width = "0%";
+      els.progressPercentText.textContent = "0%";
+      els.progressLabel.textContent = "Importando facturas...";
+      els.progressExtraText.textContent = "Preparando lotes...";
+      setImportUiDisabled(true);
+      const chunks = chunkArray(state.rows, 100);
+      try {
+        for (let i = 0; i < chunks.length; i += 1) {
+          const resp = await fetch(boot.urls.importarLote, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              nombre_archivo: state.file.name,
+              nit_emisor: state.fileMeta.nitEmisor,
+              razon_social_emisor: state.fileMeta.razonSocialEmisor,
+              sucursal_cabecera: state.fileMeta.sucursalCabecera,
+              lote_numero: i + 1,
+              total_lotes: chunks.length,
+              filas: chunks[i],
+            }),
+          });
+          const json = await resp.json();
+          if (!resp.ok || !json.ok) throw new Error(json.message || "No se pudo procesar el lote.");
+          appendDetailLog(json.detalles || []);
+          updateSummaryCards(json.resumen_general || {});
+          const pct = Math.round(((i + 1) / chunks.length) * 100);
+          els.progressBar.style.width = `${pct}%`;
+          els.progressPercentText.textContent = `${pct}%`;
+          els.progressExtraText.textContent = `Lote ${i + 1} de ${chunks.length}`;
+        }
+        renderReport();
+        await loadTable();
+        els.panelFacturas.scrollIntoView({ behavior: "smooth", block: "start" });
+        Swal.fire({ icon: "success", title: "Importación completada", text: "El archivo fue procesado correctamente.", confirmButtonText: "Aceptar" });
+      } catch (err) {
+        Swal.fire({ icon: "error", title: "Importación fallida", text: err.message || "Ocurrió un error durante la importación.", confirmButtonText: "Entendido" });
+      } finally {
+        state.importing = false;
+        setImportUiDisabled(false);
+        els.btnImportar.disabled = !boot.canEdit || !state.rows.length;
+      }
+    }
+
+    function buildQueryString() {
+      const p = new URLSearchParams();
+      const q = String(els.txtBuscarFactura.value || "").trim();
+      const fd = String(els.txtFechaDesde.value || "").trim();
+      const fh = String(els.txtFechaHasta.value || "").trim();
+      const unidad = String(els.selUnidadNegocio.value || "").trim();
+      if (q) p.set("q", q);
+      if (fd) p.set("fecha_desde", fd);
+      if (fh) p.set("fecha_hasta", fh);
+      if (unidad) p.set("unidad_negocio_id", unidad);
+      return p.toString();
+    }
+
+    function chipEstado(row) {
+      const estado = String(row.proceso_estado || row.estado || "");
+      if (estado === "ANULADA") return '<span class="fe-chip danger"><i class="fas fa-ban"></i>Anulada</span>';
+      if (estado === "CERRADA_TESORERIA") return '<span class="fe-chip warning"><i class="fas fa-lock"></i>Cerrada</span>';
+      if (estado === "COBRADA_TOTAL") return '<span class="fe-chip success"><i class="fas fa-circle-check"></i>Cobrada total</span>';
+      if (estado === "CONTABILIZADA" || estado === "REGISTRADA") return '<span class="fe-chip success"><i class="fas fa-scale-balanced"></i>Contabilizada</span>';
+      if (estado === "RECIBIDA") return '<span class="fe-chip warning"><i class="fas fa-link-slash"></i>Recibida</span>';
+      return '<span class="fe-chip info"><i class="fas fa-inbox"></i>Disponible</span>';
+    }
+
+    function accionesFactura(row) {
+      if (!boot.canEdit) return '<span class="fe-muted">Solo lectura</span>';
+      const parts = [];
+      const puedeContabilizar = row.estado !== "ANULADA" && !row.cierre_manual_activo && !row.asiento_id && Number(row.saldo_pendiente || 0) > 0;
+      const puedeCerrar = row.estado !== "ANULADA" && !row.cierre_manual_activo && Number(row.saldo_pendiente || 0) > 0;
+      const puedeReabrir = row.cierre_manual_activo;
+      if (puedeContabilizar) {
+        parts.push(`<button type="button" class="btn btn-sm btn-success fe-icon-btn js-contabilizar" data-id="${row.id}" title="Contabilizar"><i class="fas fa-scale-balanced"></i></button>`);
+      }
+      if (puedeCerrar) {
+        parts.push(`<button type="button" class="btn btn-sm btn-warning fe-icon-btn js-cerrar" data-id="${row.id}" title="Cerrar tesorería"><i class="fas fa-lock"></i></button>`);
+      }
+      if (puedeReabrir) {
+        parts.push(`<button type="button" class="btn btn-sm btn-secondary fe-icon-btn js-reabrir" data-id="${row.id}" title="Reabrir cierre"><i class="fas fa-lock-open"></i></button>`);
+      }
+      return parts.length ? parts.join("") : '<span class="fe-muted">Sin acción</span>';
+    }
+
+    function renderFacturaCol(row) {
+      const inicial = row.es_saldo_inicial ? '<div class="fe-muted">Saldo inicial</div>' : '';
+      return `<div><strong>${escHtml(row.numero_factura || "—")}</strong>${inicial}</div>`;
+    }
+
+    function renderClienteAuxiliarCol(row) {
+      const cliente = `<strong>${escHtml(row.nombre_cliente || "Sin nombre")}</strong>`;
+      const nit = `<div class="fe-muted">NIT ${escHtml(row.nit_cliente || "—")}</div>`;
+      if (!row.asiento_id || !row.auxiliar_nombre) {
+        return `<div>${cliente}${nit}</div>`;
+      }
+      const auxNit = row.auxiliar_nit_ci ? ` · NIT/CI ${escHtml(row.auxiliar_nit_ci)}` : "";
+      return `<div>${cliente}${nit}<div class="fe-muted">Auxiliar: ${escHtml(row.auxiliar_nombre)}${auxNit}</div></div>`;
+    }
+
+    function renderCuentasCol(row) {
+      if (!row.asiento_id) return '<span class="fe-muted">—</span>';
+
+      const cuentaCobrar = [row.cuenta_cobrar_codigo, row.cuenta_cobrar_nombre].filter(Boolean);
+      const cuentaContra = [row.cuenta_contra_codigo, row.cuenta_contra_nombre].filter(Boolean);
+      const cxc = cuentaCobrar.length
+        ? `<div><span class="fe-muted">Cuenta</span><br><strong>${escHtml(row.cuenta_cobrar_codigo || "")}</strong><div class="fe-muted">${escHtml(row.cuenta_cobrar_nombre || "")}</div></div>`
+        : '<div class="fe-muted">Cuenta no definida</div>';
+      const contra = cuentaContra.length
+        ? `<div class="mt-1"><span class="fe-muted">Contra cuenta</span><br><strong>${escHtml(row.cuenta_contra_codigo || "")}</strong><div class="fe-muted">${escHtml(row.cuenta_contra_nombre || "")}</div></div>`
+        : '<div class="fe-muted mt-1">Contra cuenta no definida</div>';
+      return `<div>${cxc}${contra}</div>`;
+    }
+
+    function renderTable(rows) {
+      if (state.table) {
+        state.table.destroy();
+        state.table = null;
+      }
+      state.table = $(els.tblFacturas).DataTable({
+        data: rows,
+        responsive: true,
+        autoWidth: false,
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+        order: [[0, "desc"]],
+        language: typeof getDtLanguage === "function" ? getDtLanguage() : undefined,
+        columns: [
+          {
+            data: null,
+            render: (d, t, r) => (t === "sort" || t === "type") ? (r.fecha_emision_iso || "") : (r.fecha_emision || ""),
+          },
+          {
+            data: "numero_factura",
+            render: (d, t, r) => t !== "display" ? d || "" : renderFacturaCol(r),
+          },
+          {
+            data: "nombre_cliente",
+            render: (d, t, r) => t !== "display" ? `${d || ""} ${r.auxiliar_nombre || ""} ${r.auxiliar_nit_ci || ""}` : renderClienteAuxiliarCol(r),
+          },
+          {
+            data: null,
+            render: (d, t, r) => {
+              const unidad = [r.unidad_negocio_codigo, r.unidad_negocio_nombre].filter(Boolean).join(" · ");
+              return `<div><strong>${escHtml(unidad || "Sin unidad")}</strong><div class="fe-muted">Emisor NIT ${escHtml(r.nit_emisor || "—")}</div></div>`;
+            },
+          },
+          { data: "importe_total", className: "text-end fe-money", render: (d) => formatMoney(d) },
+          { data: "saldo_pendiente", className: "text-end fe-money", render: (d) => formatMoney(d) },
+          { data: null, render: (d, t, r) => chipEstado(r) },
+          {
+            data: null,
+            render: (d, t, r) => t !== "display"
+              ? `${r.cuenta_cobrar_codigo || ""} ${r.cuenta_cobrar_nombre || ""} ${r.cuenta_contra_codigo || ""} ${r.cuenta_contra_nombre || ""}`
+              : renderCuentasCol(r),
+          },
+          {
+            data: null,
+            render: (d, t, r) => {
+              const movBtn = `<button type="button" class="fe-chip fe-chip-btn info js-ver-movimientos" data-id="${r.id}" title="Ver movimientos"><i class="fas fa-list-ul"></i>Mov.</button>`;
+              if (r.asiento_id) {
+                const pdfUrl = apiUrl(boot.urls.asientoPdfBase, r.id);
+                return `
+                  <div class="d-inline-flex flex-wrap gap-1">
+                    <button type="button" class="fe-chip fe-chip-btn success js-ver-asiento" data-id="${r.id}" title="Ver asiento contable"><i class="fas fa-eye"></i>Asiento ${escHtml(r.asiento_id)}</button>
+                    <a class="fe-chip fe-chip-btn info" href="${pdfUrl}" target="_blank" rel="noopener" title="Abrir PDF del asiento"><i class="fas fa-file-pdf"></i>PDF</a>
+                    ${movBtn}
+                  </div>`;
+              }
+              return `<div class="d-inline-flex flex-wrap gap-1"><span class="fe-chip warning"><i class="fas fa-triangle-exclamation"></i>Pendiente</span>${movBtn}</div>`;
+            },
+          },
+          { data: null, orderable: false, searchable: false, render: (d, t, r) => accionesFactura(r) },
+        ],
+      });
+    }
+
+    async function loadTable() {
+      const q = buildQueryString();
+      const url = q ? `${boot.urls.data}?${q}` : boot.urls.data;
+      const resp = await fetch(url);
+      const json = await resp.json();
+      renderTable(Array.isArray(json.data) ? json.data : []);
+      updateSummaryCards(json.resumen || {});
+    }
+
+    async function loadUnidadesNegocio() {
+      const resp = await fetch(boot.urls.unidadesNegocio);
+      const json = await resp.json();
+      const items = Array.isArray(json.data) ? json.data : [];
+      state.unidadesNegocio = items;
+      els.selUnidadNegocio.innerHTML = '<option value="">Todas</option>';
+      if (els.selManualUnidadNegocio) {
+        els.selManualUnidadNegocio.innerHTML = '<option value="">Seleccionar unidad...</option>';
+      }
+      items.forEach((item) => {
+        const label = [item.codigo, item.nombre].filter(Boolean).join(" · ");
+        const opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent = label;
+        els.selUnidadNegocio.appendChild(opt);
+        if (els.selManualUnidadNegocio) {
+          const optManual = document.createElement("option");
+          optManual.value = item.id;
+          optManual.textContent = `${label}${item.nit ? ` · NIT ${item.nit}` : ""}`;
+          els.selManualUnidadNegocio.appendChild(optManual);
+        }
+      });
+    }
+
+    function apiUrl(base, id) {
+      return String(base || "").replace(/0(?!.*0)/, String(id));
+    }
+
+    function renderResumenFactura(row) {
+      return `
+        <div class="fe-summary-item"><small>Factura</small><strong>${escHtml(row.numero_factura || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Fecha</small><strong>${escHtml(row.fecha_emision || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Cliente</small><strong>${escHtml(row.nombre_cliente || "—")}</strong></div>
+        <div class="fe-summary-item"><small>NIT</small><strong>${escHtml(row.nit_cliente || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Total</small><strong>${formatMoney(row.importe_total)}</strong></div>
+        <div class="fe-summary-item"><small>Saldo</small><strong>${formatMoney(row.saldo_pendiente)}</strong></div>
+      `;
+    }
+
+    function setSelectOption($element, value, text) {
+      $element.empty();
+      if (!value) {
+        $element.val(null).trigger("change");
+        return;
+      }
+      const opt = new Option(text || value, value, true, true);
+      $element.append(opt).trigger("change");
+    }
+
+    function renderAsientoResumen(data) {
+      const a = data.asiento || {};
+      const f = data.factura || {};
+      return `
+        <div class="fe-summary-item"><small>Asiento</small><strong>${escHtml(a.id || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Fecha asiento</small><strong>${escHtml(a.fecha || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Estado</small><strong>${escHtml(a.estado || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Unidad</small><strong>${escHtml(a.unidad || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Factura</small><strong>${escHtml(f.numero_factura || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Cliente</small><strong>${escHtml(f.nombre_cliente || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Glosa</small><strong>${escHtml(a.glosa || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Referencia</small><strong>${escHtml(a.referencia || "—")}</strong></div>
+      `;
+    }
+
+    function renderAsientoDetalle(data) {
+      const detalle = Array.isArray(data.detalle) ? data.detalle : [];
+      els.asientoDetalleBody.innerHTML = detalle.length ? detalle.map((row) => {
+        const cuenta = `${escHtml(row.cuenta_codigo || "")}<div class="fe-muted">${escHtml(row.cuenta_nombre || "")}</div>`;
+        const auxParts = [];
+        if (row.auxiliar_nombre) auxParts.push(escHtml(row.auxiliar_nombre));
+        if (row.auxiliar_nit_ci) auxParts.push(`<span class="fe-muted">NIT/CI ${escHtml(row.auxiliar_nit_ci)}</span>`);
+        const auxiliar = auxParts.length ? auxParts.join("<br>") : '<span class="fe-muted">—</span>';
+        return `
+          <tr>
+            <td>${escHtml(row.secuencia || "")}</td>
+            <td>${cuenta}</td>
+            <td>${auxiliar}</td>
+            <td>${escHtml(row.glosa || "")}</td>
+            <td class="text-end fe-money">${formatMoney(row.debe)}</td>
+            <td class="text-end fe-money">${formatMoney(row.haber)}</td>
+          </tr>
+        `;
+      }).join("") : '<tr><td colspan="6" class="text-center fe-muted">Sin detalle contable.</td></tr>';
+
+      const t = data.totales || {};
+      els.asientoTotales.innerHTML = `
+        <tr>
+          <th colspan="4" class="text-end">Totales</th>
+          <th class="text-end fe-money">${formatMoney(t.debe)}</th>
+          <th class="text-end fe-money">${formatMoney(t.haber)}</th>
+        </tr>
+        <tr>
+          <th colspan="4" class="text-end">Diferencia</th>
+          <th colspan="2" class="text-end fe-money">${formatMoney(t.diferencia)}</th>
+        </tr>
+      `;
+    }
+
+    async function openVerAsiento(id) {
+      const resp = await fetch(apiUrl(boot.urls.asientoDetalleBase, id));
+      const json = await resp.json();
+      if (!resp.ok || !json.success) throw new Error(json.message || "No se pudo obtener el asiento.");
+      const data = json.data || {};
+      els.asientoResumen.innerHTML = renderAsientoResumen(data);
+      renderAsientoDetalle(data);
+      if (els.btnAsientoPdf) {
+        els.btnAsientoPdf.href = apiUrl(boot.urls.asientoPdfBase, id);
+      }
+      bootstrap.Modal.getOrCreateInstance(els.modalVerAsiento).show();
+    }
+
+    function renderMovimientosResumen(data) {
+      const f = data.factura || {};
+      const t = data.totales || {};
+      return `
+        <div class="fe-summary-item"><small>Factura</small><strong>${escHtml(f.numero_factura || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Cliente</small><strong>${escHtml(f.cliente || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Estado</small><strong>${escHtml(f.estado || "—")}</strong></div>
+        <div class="fe-summary-item"><small>Total</small><strong>${formatMoney(t.debe)}</strong></div>
+        <div class="fe-summary-item"><small>Cobrado / regularizado</small><strong>${formatMoney(t.haber)}</strong></div>
+        <div class="fe-summary-item"><small>Saldo</small><strong>${formatMoney(t.saldo)}</strong></div>
+      `;
+    }
+
+    function renderMovimientosDetalle(data) {
+      const rows = Array.isArray(data.movimientos) ? data.movimientos : [];
+      els.movimientosDetalleBody.innerHTML = rows.length ? rows.map((row) => `
+        <tr>
+          <td>${escHtml(row.fecha || "")}</td>
+          <td>${escHtml(row.origen || "")}</td>
+          <td>${escHtml(row.glosa || "")}</td>
+          <td class="text-end fe-money">${formatMoney(row.debe)}</td>
+          <td class="text-end fe-money">${formatMoney(row.haber)}</td>
+        </tr>
+      `).join("") : '<tr><td colspan="5" class="text-center fe-muted">Sin movimientos registrados.</td></tr>';
+      const t = data.totales || {};
+      els.movimientosTotales.innerHTML = `
+        <tr>
+          <th colspan="3" class="text-end">Totales</th>
+          <th class="text-end fe-money">${formatMoney(t.debe)}</th>
+          <th class="text-end fe-money">${formatMoney(t.haber)}</th>
+        </tr>
+        <tr>
+          <th colspan="3" class="text-end">Saldo</th>
+          <th colspan="2" class="text-end fe-money">${formatMoney(t.saldo)}</th>
+        </tr>
+      `;
+    }
+
+    async function openMovimientosFactura(id) {
+      const resp = await fetch(apiUrl(boot.urls.movimientosBase, id));
+      const json = await resp.json();
+      if (!resp.ok || !json.success) throw new Error(json.message || "No se pudieron obtener los movimientos.");
+      const data = json.data || {};
+      els.movimientosResumen.innerHTML = renderMovimientosResumen(data);
+      renderMovimientosDetalle(data);
+      bootstrap.Modal.getOrCreateInstance(els.modalMovimientos).show();
+    }
+
+    function todayIso() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function resetManualForm() {
+      if (!els.formManual) return;
+      els.formManual.reset();
+      els.txtManualFechaEmision.value = todayIso();
+      els.txtManualDescuento.value = "0.00";
+      els.txtManualCuf.value = "CERO";
+      els.selManualEstado.value = "Recepcionada";
+    }
+
+    function openManualFactura() {
+      resetManualForm();
+      bootstrap.Modal.getOrCreateInstance(els.modalManual).show();
+    }
+
+    async function guardarFacturaManual(event) {
+      event.preventDefault();
+      const payload = {
+        unidad_negocio_id: els.selManualUnidadNegocio.value,
+        numero_factura: els.txtManualNumeroFactura.value,
+        fecha_emision: els.txtManualFechaEmision.value,
+        nit_cliente: els.txtManualNitCliente.value,
+        nombre_cliente: els.txtManualNombreCliente.value,
+        importe_total: els.txtManualTotalFactura.value,
+        descuento: els.txtManualDescuento.value || "0",
+        cuf: els.txtManualCuf.value,
+        estado_archivo: els.selManualEstado.value,
+        metodo_pago: els.txtManualMetodoPago.value,
+        observacion: els.txtManualObservacion.value,
+      };
+      els.btnGuardarManual.disabled = true;
+      try {
+        const resp = await fetch(boot.urls.crearManual, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = await resp.json();
+        if (!resp.ok || !json.success) throw new Error(json.message || "No se pudo registrar la factura manual.");
+        bootstrap.Modal.getOrCreateInstance(els.modalManual).hide();
+        await loadTable();
+        Swal.fire({ icon: "success", title: "Factura registrada", text: json.message || "Registro guardado correctamente.", confirmButtonText: "Aceptar" });
+      } catch (err) {
+        Swal.fire({ icon: "error", title: "No se pudo registrar", text: err.message || "Error inesperado.", confirmButtonText: "Entendido" });
+      } finally {
+        els.btnGuardarManual.disabled = false;
+      }
+    }
+
+    async function openContabilizar(id) {
+      const resp = await fetch(apiUrl(boot.urls.facturaDetalleBase, id));
+      const json = await resp.json();
+      if (!json.success) throw new Error(json.message || "No se pudo obtener la factura.");
+      const row = json.data || {};
+      els.contabilizarFacturaId.value = id;
+      els.contabilizarResumen.innerHTML = renderResumenFactura(row);
+      els.txtFechaAsiento.value = row.fecha_emision || new Date().toISOString().slice(0, 10);
+      els.txtGlosaContable.value = `Contabilización factura ${row.numero_factura || ""} - ${row.nombre_cliente || ""}`.trim();
+      setSelectOption($(els.selAuxiliarContable), row.cliente_auxiliar_id, `${row.nombre_cliente || "Cliente"} · NIT/CI ${row.nit_cliente || "—"}`);
+      const cuentaCobrarCodigo = row.cuenta_cobrar_codigo || row.default_cuenta_cobrar_codigo || "";
+      const cuentaCobrarText = row.cuenta_cobrar_codigo
+        ? `${row.cuenta_cobrar_codigo}${row.cuenta_cobrar_nombre ? ` · ${row.cuenta_cobrar_nombre}` : ""}`
+        : (row.default_cuenta_cobrar_text || row.default_cuenta_cobrar_codigo || "");
+      const cuentaContraCodigo = row.cuenta_contra_codigo || row.default_cuenta_contra_codigo || "";
+      const cuentaContraText = row.cuenta_contra_codigo
+        ? `${row.cuenta_contra_codigo}${row.cuenta_contra_nombre ? ` · ${row.cuenta_contra_nombre}` : ""}`
+        : (row.default_cuenta_contra_text || row.default_cuenta_contra_codigo || "");
+      setSelectOption($(els.selCuentaCobrar), cuentaCobrarCodigo, cuentaCobrarText);
+      setSelectOption($(els.selCuentaContra), cuentaContraCodigo, cuentaContraText);
+      bootstrap.Modal.getOrCreateInstance(els.modalContabilizar).show();
+    }
+
+    async function guardarContabilizacion(event) {
+      event.preventDefault();
+      const id = els.contabilizarFacturaId.value;
+      const payload = {
+        auxiliar_id: $(els.selAuxiliarContable).val(),
+        cuenta_cobrar_codigo: $(els.selCuentaCobrar).val(),
+        cuenta_contra_codigo: $(els.selCuentaContra).val(),
+        fecha_asiento: els.txtFechaAsiento.value,
+        glosa: els.txtGlosaContable.value,
+      };
+      els.btnGuardarContabilizacion.disabled = true;
+      try {
+        const resp = await fetch(apiUrl(boot.urls.contabilizarBase, id), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = await resp.json();
+        if (!resp.ok || !json.success) throw new Error(json.message || "No se pudo contabilizar.");
+        bootstrap.Modal.getOrCreateInstance(els.modalContabilizar).hide();
+        await loadTable();
+        Swal.fire({ icon: "success", title: "Factura contabilizada", text: json.message || "Asiento generado correctamente.", confirmButtonText: "Aceptar" });
+      } catch (err) {
+        Swal.fire({ icon: "error", title: "No se pudo contabilizar", text: err.message || "Error inesperado.", confirmButtonText: "Entendido" });
+      } finally {
+        els.btnGuardarContabilizacion.disabled = false;
+      }
+    }
+
+    async function openCerrar(id) {
+      const resp = await fetch(apiUrl(boot.urls.facturaDetalleBase, id));
+      const json = await resp.json();
+      if (!json.success) throw new Error(json.message || "No se pudo obtener la factura.");
+      const row = json.data || {};
+      els.cerrarFacturaId.value = id;
+      els.cerrarResumen.innerHTML = renderResumenFactura(row);
+      els.txtMotivoCierre.value = "";
+      els.txtObservacionCierre.value = "";
+      bootstrap.Modal.getOrCreateInstance(els.modalCerrar).show();
+    }
+
+    async function guardarCierre(event) {
+      event.preventDefault();
+      const payload = {
+        factura_id: els.cerrarFacturaId.value,
+        motivo: els.txtMotivoCierre.value,
+        observacion: els.txtObservacionCierre.value,
+      };
+      els.btnGuardarCierre.disabled = true;
+      try {
+        const resp = await fetch(boot.urls.cerrarManual, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = await resp.json();
+        if (!resp.ok || !json.success) throw new Error(json.message || "No se pudo cerrar.");
+        bootstrap.Modal.getOrCreateInstance(els.modalCerrar).hide();
+        await loadTable();
+        Swal.fire({ icon: "success", title: "Factura cerrada", text: json.message || "Cierre aplicado.", confirmButtonText: "Aceptar" });
+      } catch (err) {
+        Swal.fire({ icon: "error", title: "No se pudo cerrar", text: err.message || "Error inesperado.", confirmButtonText: "Entendido" });
+      } finally {
+        els.btnGuardarCierre.disabled = false;
+      }
+    }
+
+    async function reabrirCierre(id) {
+      const cf = await Swal.fire({
+        icon: "question",
+        title: "Reabrir cierre",
+        text: "La factura volverá a estar disponible para gestión de tesorería.",
+        showCancelButton: true,
+        confirmButtonText: "Sí, reabrir",
+        cancelButtonText: "Cancelar",
+      });
+      if (!cf.isConfirmed) return;
+      const resp = await fetch(boot.urls.reabrirCierre, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ factura_id: id }),
+      });
+      const json = await resp.json();
+      if (!resp.ok || !json.success) {
+        Swal.fire({ icon: "error", title: "No se pudo reabrir", text: json.message || "Error inesperado.", confirmButtonText: "Entendido" });
+        return;
+      }
+      await loadTable();
+      Swal.fire({ icon: "success", title: "Cierre reabierto", text: json.message || "La factura volvió a estar disponible.", confirmButtonText: "Aceptar" });
+    }
+
+    function initSelect2() {
+      if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.select2) return;
+      $(els.selAuxiliarContable).select2({
+        dropdownParent: $(els.modalContabilizar),
+        width: "100%",
+        placeholder: "Buscar cliente/auxiliar",
+        allowClear: true,
+        ajax: {
+          url: boot.urls.auxiliaresClientes,
+          dataType: "json",
+          delay: 220,
+          data: (params) => ({ q: params.term || "" }),
+          processResults: (data) => ({ results: data.results || [] }),
+        },
+      });
+      [els.selCuentaCobrar, els.selCuentaContra].forEach((el) => {
+        $(el).select2({
+          dropdownParent: $(els.modalContabilizar),
+          width: "100%",
+          placeholder: "Buscar cuenta contable",
+          allowClear: true,
+          ajax: {
+            url: boot.urls.cuentasPostables,
+            dataType: "json",
+            delay: 220,
+            data: (params) => ({ q: params.term || "" }),
+            processResults: (data) => ({ results: data.results || [] }),
+          },
+        });
+      });
+    }
+
+    function bindEvents() {
+      els.btnSeleccionarArchivo.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!state.importing) els.fileInput.click();
+      });
+      els.fileInput.addEventListener("change", async (e) => {
+        const [f] = e.target.files || [];
+        await handleSelectedFile(f);
+      });
+      els.dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        if (!state.importing) els.dropzone.classList.add("dragover");
+      });
+      ["dragleave", "dragend", "drop"].forEach((n) =>
+        els.dropzone.addEventListener(n, () => els.dropzone.classList.remove("dragover"))
+      );
+      els.dropzone.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        if (state.importing) return;
+        const [f] = e.dataTransfer.files || [];
+        await handleSelectedFile(f);
+      });
+      els.dropzone.addEventListener("click", () => { if (!state.importing) els.fileInput.click(); });
+      els.dropzone.addEventListener("keydown", (e) => {
+        if ((e.key === "Enter" || e.key === " ") && !state.importing) {
+          e.preventDefault();
+          els.fileInput.click();
+        }
+      });
+      els.btnLimpiarArchivo.addEventListener("click", clearFileState);
+      els.btnImportar.addEventListener("click", ejecutarImportacion);
+      if (els.btnRegistrarManual) els.btnRegistrarManual.addEventListener("click", openManualFactura);
+      if (els.formManual) els.formManual.addEventListener("submit", guardarFacturaManual);
+      els.btnFiltrarTabla.addEventListener("click", loadTable);
+      els.btnRefrescarTabla.addEventListener("click", loadTable);
+      els.txtBuscarFactura.addEventListener("keydown", (e) => { if (e.key === "Enter") loadTable(); });
+      els.btnLimpiarFiltros.addEventListener("click", () => {
+        els.txtBuscarFactura.value = "";
+        els.txtFechaDesde.value = "";
+        els.txtFechaHasta.value = "";
+        els.selUnidadNegocio.value = "";
+        loadTable();
+      });
+      els.tblFacturas.addEventListener("click", async (e) => {
+        const btnCont = e.target.closest(".js-contabilizar");
+        const btnVerAsiento = e.target.closest(".js-ver-asiento");
+        const btnMovimientos = e.target.closest(".js-ver-movimientos");
+        const btnCerrar = e.target.closest(".js-cerrar");
+        const btnReabrir = e.target.closest(".js-reabrir");
+        try {
+          if (btnCont) await openContabilizar(btnCont.dataset.id);
+          if (btnVerAsiento) await openVerAsiento(btnVerAsiento.dataset.id);
+          if (btnMovimientos) await openMovimientosFactura(btnMovimientos.dataset.id);
+          if (btnCerrar) await openCerrar(btnCerrar.dataset.id);
+          if (btnReabrir) await reabrirCierre(btnReabrir.dataset.id);
+        } catch (err) {
+          Swal.fire({ icon: "error", title: "No se pudo abrir la acción", text: err.message || "Error inesperado.", confirmButtonText: "Entendido" });
+        }
+      });
+      els.formContabilizar.addEventListener("submit", guardarContabilizacion);
+      els.formCerrar.addEventListener("submit", guardarCierre);
+    }
+
+    async function init() {
+      initSelect2();
+      bindEvents();
+      await loadUnidadesNegocio();
+      await loadTable();
+    }
+
+    init().catch((err) => {
+      console.error(err);
+      Swal.fire({ icon: "error", title: "No se pudo iniciar el módulo", text: err.message || "Error inesperado.", confirmButtonText: "Entendido" });
+    });
+  })();
+</script>
+{% endblock extra_js %}

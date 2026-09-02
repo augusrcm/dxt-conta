@@ -1,0 +1,208 @@
+{% extends "layout.html" %}
+{% block title %}{{ planilla.codigo }}{% endblock title %}
+{% block page_help_url %}{{ url_for('planilla_honorarios_colaboradores.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root{--pd-navy:#0f2340;--pd-blue:#17406f;--pd-border:#dfe7f1;--pd-muted:#64748b;--pd-radius:1rem}.pd-page{display:grid;gap:1rem}.pd-header{align-items:center;background:linear-gradient(135deg,var(--pd-navy),var(--pd-blue));border-radius:var(--pd-radius);box-shadow:0 18px 38px rgba(15,35,64,.18);color:#fff;display:flex;gap:1rem;justify-content:space-between;padding:1.1rem 1.25rem}.pd-left{align-items:center;display:flex;gap:.85rem}.pd-icon{align-items:center;background:rgba(255,255,255,.14);border-radius:.9rem;display:flex;height:46px;justify-content:center;width:46px}.pd-kicker{color:rgba(255,255,255,.72);font-size:.73rem;font-weight:800;text-transform:uppercase}.pd-title{font-size:1.45rem;font-weight:900;line-height:1;margin:0}.pd-sub{color:rgba(255,255,255,.82);font-size:.84rem;font-weight:700;margin-top:.25rem}.pd-toolbar{display:flex;gap:.5rem;flex-wrap:wrap}.pd-btn{align-items:center;border:1px solid transparent;border-radius:.7rem;display:inline-flex;font-weight:800;gap:.45rem;padding:.58rem .85rem;text-decoration:none}.pd-btn-primary{background:#fff;color:#0d47a1}.pd-btn-outline{background:#fff;border-color:var(--pd-border);color:#17406f}.pd-btn-success{background:#0f766e;color:#fff}.pd-btn-danger{background:#dc2626;color:#fff}.pd-btn-warning{background:#f59e0b;color:#111827}.pd-card{background:#fff;border:1px solid var(--pd-border);border-radius:var(--pd-radius);box-shadow:0 12px 28px rgba(15,35,64,.08);padding:1rem}.pd-metrics{display:grid;gap:.9rem;grid-template-columns:repeat(5,minmax(0,1fr))}.pd-metric{background:#fff;border:1px solid var(--pd-border);border-left:5px solid #2563eb;border-radius:.85rem;padding:.85rem}.pd-metric:nth-child(2){border-left-color:#0f766e}.pd-metric:nth-child(3){border-left-color:#f97316}.pd-metric:nth-child(4){border-left-color:#7c3aed}.pd-metric:nth-child(5){border-left-color:#dc2626}.pd-metric-label{color:#64748b;font-size:.72rem;font-weight:900;text-transform:uppercase}.pd-metric-value{color:#0f2340;font-size:1.13rem;font-weight:900}.pd-table-wrap{overflow:auto}.pd-table{margin:0;min-width:1280px;width:100%}.pd-table th{background:#f7fafc;color:#334155;font-size:.72rem;font-weight:900;text-transform:uppercase;white-space:nowrap}.pd-table td{font-size:.82rem;vertical-align:middle}.pd-table .money{text-align:right;font-variant-numeric:tabular-nums}.pd-table .concept-col{min-width:120px}.pd-unit-row td{background:#eef6ff!important;color:#0f2340;font-weight:900;text-transform:uppercase;border-top:2px solid #bfdbfe}.pd-unit-row .small{font-weight:700;text-transform:none;color:#64748b}.pd-badge{border-radius:999px;display:inline-flex;font-size:.69rem;font-weight:900;padding:.28rem .55rem;text-transform:uppercase}.pd-badge-borrador{background:#eff6ff;color:#1d4ed8}.pd-badge-consolidada{background:#ecfdf5;color:#047857}.pd-badge-pagada{background:#f0fdfa;color:#0f766e}.pd-badge-excluido{background:#fef2f2;color:#b91c1c}.pd-icon-btn{align-items:center;background:#fff;border:1px solid #d7e0ec;border-radius:.55rem;color:#17406f;display:inline-flex;height:32px;justify-content:center;text-decoration:none;width:32px}.pd-icon-btn:hover{background:#eef6ff}.modal-header.pd-modal-head{background:linear-gradient(135deg,var(--pd-navy),var(--pd-blue));color:#fff}.pd-grid-2{display:grid;gap:.85rem;grid-template-columns:1fr 1fr}.pd-field label{color:#334155;font-size:.74rem;font-weight:900;margin-bottom:.25rem;text-transform:uppercase}.pd-field input,.pd-field textarea{border:1px solid #d7e0ec;border-radius:.65rem;font-weight:700}.pd-concept-row{border:1px solid #e2e8f0;border-radius:.75rem;margin-bottom:.6rem;padding:.7rem}.pd-concept-title{align-items:center;display:flex;gap:.45rem;justify-content:space-between;margin-bottom:.45rem}.pd-concept-name{font-weight:900;color:#0f2340}.pd-concept-meta{color:#64748b;font-size:.72rem;font-weight:700}.pd-hide{display:none!important}@media(max-width:992px){.pd-metrics,.pd-grid-2{grid-template-columns:1fr}.pd-header{align-items:flex-start;flex-direction:column}}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="pd-page">
+  <section class="pd-header">
+    <div class="pd-left">
+      <div class="pd-icon"><i class="fas fa-table fa-lg"></i></div>
+      <div>
+        <div class="pd-kicker">Planilla de honorarios - Colaboradores</div>
+        <h1 class="pd-title">{{ planilla.codigo }}</h1>
+        <div class="pd-sub">{{ meses[planilla.mes] }} {{ planilla.gestion }} · Honorarios agrupados por unidad de negocio · {{ planilla.moneda_codigo }}</div>
+      </div>
+    </div>
+    <div class="pd-toolbar">
+      <a class="pd-btn pd-btn-outline" href="{{ url_for('planilla_honorarios_colaboradores.index') }}"><i class="fas fa-arrow-left"></i> Volver</a>
+      <a class="pd-btn pd-btn-primary" target="_blank" href="{{ url_for('planilla_honorarios_colaboradores.pdf_planilla', planilla_id=planilla.id) }}"><i class="fas fa-file-pdf"></i> PDF</a>
+      {% if puede_editar and planilla.estado == 'BORRADOR' %}
+        <button type="button" class="pd-btn pd-btn-danger" id="btnEliminar"><i class="fas fa-trash"></i> Eliminar</button>
+        <button type="button" class="pd-btn pd-btn-success" id="btnConsolidar"><i class="fas fa-lock"></i> Consolidar</button>
+      {% elif puede_editar and planilla.estado == 'CONSOLIDADA' and (planilla.total_pagado|float) <= 0 %}
+        <button type="button" class="pd-btn pd-btn-warning" id="btnRevertir"><i class="fas fa-unlock"></i> Revertir a borrador</button>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="pd-metrics">
+    <div class="pd-metric"><div class="pd-metric-label">Estado</div><div class="pd-metric-value">{{ planilla.estado }}</div></div>
+    <div class="pd-metric"><div class="pd-metric-label">Ganado</div><div class="pd-metric-value">{{ '%.2f'|format(planilla.total_ingresos|float) }}</div></div>
+    <div class="pd-metric"><div class="pd-metric-label">Descuentos</div><div class="pd-metric-value">{{ '%.2f'|format(planilla.total_descuentos|float) }}</div></div>
+    <div class="pd-metric"><div class="pd-metric-label">Retenciones</div><div class="pd-metric-value">{{ '%.2f'|format(planilla.total_retenciones|float) }}</div></div>
+    <div class="pd-metric"><div class="pd-metric-label">Líquido</div><div class="pd-metric-value">{{ '%.2f'|format(planilla.total_liquido|float) }}</div></div>
+  </section>
+
+  <section class="pd-card">
+    <div class="pd-table-wrap">
+      <table class="table table-hover pd-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Colaborador</th><th>Servicio</th><th>Respaldo</th><th>Factura</th><th class="text-end">Monto base</th>
+            {% for c in conceptos %}<th class="concept-col text-end">{{ c.nombre_concepto }}</th>{% endfor %}
+            <th class="text-end">Ganado</th><th class="text-end">Desc.</th><th class="text-end">Ret.</th><th class="text-end">Líquido</th><th>Estado</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set ns = namespace(unidad_actual='') %}
+          {% for d in detalles %}
+          {% set unidad_label = (d.unidad_negocio_codigo or 'S/U') ~ ' - ' ~ (d.unidad_negocio_nombre or 'Sin unidad') %}
+          {% if unidad_label != ns.unidad_actual %}
+          {% set ns.unidad_actual = unidad_label %}
+          <tr class="pd-unit-row">
+            <td colspan="{{ conceptos|length + 13 }}">
+              <i class="fas fa-building me-2"></i>{{ unidad_label }}
+            </td>
+          </tr>
+          {% endif %}
+          <tr class="{% if d.estado == 'EXCLUIDO' %}table-danger{% endif %}">
+            <td>{{ d.secuencia }}</td>
+            <td><strong>{{ d.nombre_completo }}</strong><div class="text-muted small">{{ d.ci_nit }}</div></td>
+            <td>{{ d.descripcion_servicio or d.ocupacion_referencia or d.cargo_referencia or '-' }}</td>
+            <td><span class="pd-badge pd-badge-borrador">{{ d.tipo_respaldo }}</span></td>
+            <td>{{ d.numero_factura or '-' }}</td>
+            <td class="money fw-bold">{{ '%.2f'|format(d.monto_base|float) }}</td>
+            {% for c in conceptos %}
+              {% set item = d.conceptos_map.get(c.codigo_concepto) %}
+              <td class="money">{{ '%.2f'|format((item.monto if item else 0)|float) }}</td>
+            {% endfor %}
+            <td class="money fw-bold">{{ '%.2f'|format(d.total_ganado|float) }}</td>
+            <td class="money">{{ '%.2f'|format(d.descuentos_laborales|float) }}</td>
+            <td class="money">{{ '%.2f'|format(d.retenciones|float) }}</td>
+            <td class="money fw-bold">{{ '%.2f'|format(d.liquido_pagable|float) }}</td>
+            <td><span class="pd-badge pd-badge-{{ d.estado|lower }}">{{ d.estado }}</span></td>
+            <td>
+              {% if puede_editar and planilla.estado == 'BORRADOR' and d.estado != 'EXCLUIDO' %}
+                <button type="button" class="pd-icon-btn btnEditar" data-id="{{ d.id }}" title="Editar fila"><i class="fas fa-pen"></i></button>
+                <button type="button" class="pd-icon-btn btnExcluir" data-id="{{ d.id }}" title="Excluir"><i class="fas fa-user-minus"></i></button>
+              {% else %}-{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div class="modal fade" id="modalFila" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header pd-modal-head">
+        <div><h5 class="modal-title fw-black mb-0" id="filaTitulo">Editar fila</h5><small>Importes y justificativos aplican solo a esta planilla.</small></div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="filaId">
+        <div class="pd-grid-2 mb-3">
+          <div class="pd-field"><label>Respaldo</label><select class="form-select" id="filaTipoRespaldo"><option value="SIN_FACTURA">Sin factura</option><option value="FACTURA">Con factura</option></select></div>
+          <div class="pd-field"><label>Monto base</label><input type="number" step="0.01" min="0" class="form-control" id="filaMontoBase"></div>
+        </div>
+        <div class="pd-grid-2 mb-3">
+          <div class="pd-field"><label>Nro. factura</label><input type="text" maxlength="80" class="form-control" id="filaNumeroFactura"></div>
+          <div class="pd-field"><label>NIT factura</label><input type="text" maxlength="50" class="form-control" id="filaNitFactura"></div>
+        </div>
+        <div class="pd-grid-2 mb-3">
+          <div class="pd-field"><label>Fecha factura</label><input type="date" class="form-control" id="filaFechaFactura"></div>
+          <div class="pd-field"><label>Servicio / tarea</label><input type="text" maxlength="500" class="form-control" id="filaServicio"></div>
+        </div>
+        <div id="filaConceptos"></div>
+        <div class="pd-field mt-2"><label>Observación de la fila</label><textarea class="form-control" id="filaObservacion" rows="2"></textarea></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary fw-bold" id="btnGuardarFila"><i class="fas fa-save me-1"></i> Guardar</button></div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+(() => {
+  const planillaId = {{ planilla.id }};
+  const urls = {
+    filaBase: {{ url_for('planilla_honorarios_colaboradores.fila', planilla_id=planilla.id, detalle_id=0)|tojson }},
+    consolidar: {{ url_for('planilla_honorarios_colaboradores.consolidar', planilla_id=planilla.id)|tojson }},
+    revertir: {{ url_for('planilla_honorarios_colaboradores.revertir', planilla_id=planilla.id)|tojson }},
+    eliminar: {{ url_for('planilla_honorarios_colaboradores.eliminar', planilla_id=planilla.id)|tojson }},
+    excluirBase: {{ url_for('planilla_honorarios_colaboradores.excluir_fila', planilla_id=planilla.id, detalle_id=0)|tojson }}
+  };
+  const modalFila = new bootstrap.Modal(document.getElementById('modalFila'));
+  const $ = (id) => document.getElementById(id);
+  const money = (v) => Number(v || 0).toFixed(2);
+  const route = (base, id) => base.replace('/0', `/${id}`);
+  const swalErr = (msg) => window.Swal ? Swal.fire('No se pudo completar', msg, 'error') : console.error(msg);
+  const swalOk = (msg) => window.Swal ? Swal.fire('Correcto', msg, 'success') : console.log(msg);
+  async function api(url, options={}){
+    const res = await fetch(url, options);
+    const text = await res.text();
+    let data; try{ data = JSON.parse(text); }catch(e){ throw new Error('Respuesta inválida del servidor.'); }
+    if(!res.ok || data.success === false) throw new Error(data.message || 'Operación no completada.');
+    return data;
+  }
+  async function abrirFila(id){
+    try{
+      const data = await api(route(urls.filaBase, id));
+      $('filaId').value = id;
+      $('filaTitulo').textContent = data.detalle.nombre_completo;
+      $('filaTipoRespaldo').value = data.detalle.tipo_respaldo || 'SIN_FACTURA';
+      $('filaMontoBase').value = money(data.detalle.monto_base || 0);
+      $('filaNumeroFactura').value = data.detalle.numero_factura || '';
+      $('filaNitFactura').value = data.detalle.nit_factura || '';
+      $('filaFechaFactura').value = data.detalle.fecha_factura || '';
+      $('filaServicio').value = data.detalle.descripcion_servicio || data.detalle.ocupacion_referencia || data.detalle.cargo_referencia || '';
+      $('filaObservacion').value = data.detalle.observacion || '';
+      $('filaConceptos').innerHTML = (data.conceptos || []).map(c => `
+        <div class="pd-concept-row" data-id="${c.id}">
+          <div class="pd-concept-title"><div><div class="pd-concept-name">${c.nombre_concepto}</div><div class="pd-concept-meta">${c.codigo_concepto || ''} · ${c.tipo_concepto} · ${c.impacto_liquido}</div></div></div>
+          <div class="pd-grid-2">
+            <div class="pd-field"><label>Monto</label><input type="number" step="0.01" min="0" class="form-control conceptoMonto" value="${money(c.monto)}"></div>
+            <div class="pd-field"><label>Justificativo</label><input type="text" maxlength="800" class="form-control conceptoJustificativo" value="${(c.justificativo || '').replaceAll('"','&quot;')}"></div>
+          </div>
+        </div>`).join('');
+      modalFila.show();
+    }catch(err){ swalErr(err.message); }
+  }
+  async function guardarFila(){
+    try{
+      const detalleId = $('filaId').value;
+      const conceptos = [...document.querySelectorAll('.pd-concept-row')].map(row => ({id: row.dataset.id, monto: row.querySelector('.conceptoMonto').value, justificativo: row.querySelector('.conceptoJustificativo').value}));
+      await api(route(urls.filaBase, detalleId), {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({conceptos, tipo_respaldo:$('filaTipoRespaldo').value, monto_base:$('filaMontoBase').value, numero_factura:$('filaNumeroFactura').value, nit_factura:$('filaNitFactura').value, fecha_factura:$('filaFechaFactura').value, descripcion_servicio:$('filaServicio').value, observacion:$('filaObservacion').value})});
+      await swalOk('Fila actualizada.');
+      window.location.reload();
+    }catch(err){ swalErr(err.message); }
+  }
+  async function excluirFila(id){
+    const ok = window.Swal ? await Swal.fire({title:'Excluir colaborador', text:'La fila quedará fuera de los totales de esta planilla.', icon:'warning', showCancelButton:true, confirmButtonText:'Sí, excluir', cancelButtonText:'Cancelar'}) : {isConfirmed:confirm('Excluir fila?')};
+    if(!ok.isConfirmed) return;
+    try{ await api(route(urls.excluirBase, id), {method:'POST'}); window.location.reload(); }catch(err){ swalErr(err.message); }
+  }
+  async function consolidar(){
+    const res = window.Swal ? await Swal.fire({title:'Consolidar planilla', input:'textarea', inputLabel:'Justificativo', inputPlaceholder:'Motivo o respaldo de consolidación', icon:'question', showCancelButton:true, confirmButtonText:'Consolidar', cancelButtonText:'Cancelar', inputValidator:v=>!v?'Ingrese un justificativo.':undefined}) : {isConfirmed:true, value:prompt('Justificativo')};
+    if(!res.isConfirmed) return;
+    try{ await api(urls.consolidar, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({justificativo:res.value})}); await swalOk('Planilla consolidada y devengada.'); window.location.reload(); }catch(err){ swalErr(err.message); }
+  }
+  async function revertir(){
+    const res = window.Swal ? await Swal.fire({title:'Revertir a borrador', input:'textarea', inputLabel:'Justificativo documental', inputPlaceholder:'Explique por qué se revierte la planilla', icon:'warning', showCancelButton:true, confirmButtonText:'Revertir', cancelButtonText:'Cancelar', inputValidator:v=>!v?'Ingrese un justificativo.':undefined}) : {isConfirmed:true, value:prompt('Justificativo')};
+    if(!res.isConfirmed) return;
+    try{ await api(urls.revertir, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({justificativo:res.value})}); await swalOk('Planilla revertida.'); window.location.reload(); }catch(err){ swalErr(err.message); }
+  }
+  async function eliminar(){
+    const res = window.Swal ? await Swal.fire({title:'Eliminar planilla', text:'Solo se eliminará si está en borrador y sin efectos contables ni pagos.', input:'textarea', inputLabel:'Justificativo', inputPlaceholder:'Motivo de eliminación', icon:'warning', showCancelButton:true, confirmButtonText:'Eliminar', cancelButtonText:'Cancelar', confirmButtonColor:'#dc2626', inputValidator:v=>!v?'Ingrese un justificativo.':undefined}) : {isConfirmed:true, value:prompt('Justificativo')};
+    if(!res.isConfirmed) return;
+    try{ const data = await api(urls.eliminar, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({justificativo:res.value})}); await swalOk('Planilla eliminada.'); window.location.href = data.redirect || {{ url_for('planilla_honorarios_colaboradores.index')|tojson }}; }catch(err){ swalErr(err.message); }
+  }
+  document.querySelectorAll('.btnEditar').forEach(btn => btn.addEventListener('click', () => abrirFila(btn.dataset.id)));
+  document.querySelectorAll('.btnExcluir').forEach(btn => btn.addEventListener('click', () => excluirFila(btn.dataset.id)));
+  $('btnGuardarFila')?.addEventListener('click', guardarFila);
+  $('btnConsolidar')?.addEventListener('click', consolidar);
+  $('btnRevertir')?.addEventListener('click', revertir);
+  $('btnEliminar')?.addEventListener('click', eliminar);
+})();
+</script>
+{% endblock extra_js %}

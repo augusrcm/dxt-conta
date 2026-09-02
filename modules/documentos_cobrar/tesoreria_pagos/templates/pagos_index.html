@@ -1,0 +1,1268 @@
+{% extends "layout.html" %} {% block title %}Tesorería · Pagos{% endblock %} {%
+block page_help_url %}{{ url_for('tesoreria_pagos.help') }}{% endblock %} {%
+block extra_css %}
+<style>
+  #pagosIndexPage {
+    --tp-primary: #2563eb;
+    --tp-primary-soft: #eff6ff;
+    --tp-primary-border: #bfdbfe;
+    font-family: var(--dxt-font-sans, "Segoe UI", system-ui, sans-serif);
+  }
+
+  /* ── HEADER BANNER ────────────────────────────────────── */
+  .tp-index-head {
+    background: linear-gradient(120deg, #0f2340 0%, #1a4a7a 60%, #1f5d9e 100%);
+    border-radius: 14px;
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15, 35, 64, 0.18);
+    position: sticky;
+    top: 56px;
+    z-index: 40;
+    overflow: hidden;
+  }
+
+  .tp-index-head::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+  }
+
+  .tp-index-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    position: relative;
+  }
+
+  .tp-index-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  .tp-index-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    letter-spacing: -0.2px;
+  }
+
+  .tp-index-subtitle {
+    color: rgba(255, 255, 255, 0.62);
+    margin-top: 2px;
+    font-size: 0.8rem;
+  }
+
+  /* Botones en header */
+  .tp-index-head .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+  }
+
+  .tp-index-head .btn-primary:hover {
+    background: #eff6ff;
+    border-color: #eff6ff;
+  }
+
+  .tp-index-head .btn-outline-secondary {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.85);
+    background: transparent;
+  }
+
+  .tp-index-head .btn-outline-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #fff;
+  }
+
+  /* ── KPI GRID ─────────────────────────────────────────── */
+  .tp-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .tp-kpi-card {
+    background: #fff;
+    border: 1px solid #dde4ed;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(15, 35, 64, 0.06);
+    padding: 1rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    transition:
+      transform 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .tp-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15, 35, 64, 0.1);
+  }
+
+  .tp-kpi-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .tp-kpi-icon-blue {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+
+  .tp-kpi-icon-amber {
+    background: #fffbeb;
+    color: #d97706;
+  }
+
+  .tp-kpi-icon-green {
+    background: #f0fdf4;
+    color: #16a34a;
+  }
+
+  .tp-kpi-icon-indigo {
+    background: #eef2ff;
+    color: #4f46e5;
+  }
+
+  .tp-kpi-body {
+    min-width: 0;
+  }
+
+  .tp-kpi-label {
+    font-size: 0.71rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #8898aa;
+    margin-bottom: 0.2rem;
+  }
+
+  .tp-kpi-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #1e2d3d;
+    line-height: 1.1;
+    font-family: var(--dxt-font-mono, "Consolas", monospace);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tp-kpi-help {
+    font-size: 0.78rem;
+    color: #8898aa;
+    margin-top: 0.15rem;
+  }
+
+  /* ── FILTROS ──────────────────────────────────────────── */
+  .tp-filter-card {
+    background: #f5f8fc;
+    border: 1px solid #dde4ed;
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .tp-filter-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) 150px 150px 150px 150px 180px 180px;
+    gap: 0.75rem;
+    align-items: end;
+  }
+
+  /* ── SHORTCUTS BAR (rediseñado) ───────────────────────── */
+  .tp-shortcuts-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #dde4ed;
+  }
+
+  .tp-shortcuts-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #8898aa;
+    white-space: nowrap;
+    margin-right: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .tp-shortcuts-group {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .tp-date-chip {
+    border: 1.5px solid #cdd8e6;
+    background: #fff;
+    color: #35506b;
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    user-select: none;
+    line-height: 1;
+  }
+
+  .tp-date-chip i {
+    font-size: 0.7rem;
+    opacity: 0.7;
+  }
+
+  .tp-date-chip:hover {
+    border-color: #93c5fd;
+    color: #1d4ed8;
+    background: #eff6ff;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .tp-date-chip.active {
+    border-color: #2563eb;
+    color: #fff;
+    background: #2563eb;
+    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.25);
+  }
+
+  .tp-date-chip.active i {
+    opacity: 1;
+  }
+
+  .tp-shortcuts-divider {
+    width: 1px;
+    height: 20px;
+    background: #cdd8e6;
+    margin: 0 0.3rem;
+    flex-shrink: 0;
+  }
+
+  .tp-date-chip-clear {
+    border: 1.5px solid #e5c6c6;
+    background: #fff;
+    color: #b91c1c;
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    user-select: none;
+    line-height: 1;
+  }
+
+  .tp-date-chip-clear i {
+    font-size: 0.7rem;
+    opacity: 0.8;
+  }
+
+  .tp-date-chip-clear:hover {
+    border-color: #fca5a5;
+    color: #991b1b;
+    background: #fef2f2;
+    box-shadow: 0 2px 8px rgba(185, 28, 28, 0.1);
+    transform: translateY(-1px);
+  }
+
+  .tp-filter-card .form-label {
+    font-size: 0.71rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #4a6070;
+    margin-bottom: 5px;
+  }
+
+  .tp-filter-card .form-control,
+  .tp-filter-card .form-select {
+    border: 1.5px solid #dde4ed;
+    border-radius: 9px;
+    font-size: 0.875rem;
+    color: #1e2d3d;
+    background: #fff;
+    height: 38px;
+    transition:
+      border-color 0.16s,
+      box-shadow 0.16s;
+  }
+
+  .tp-filter-card .form-control:focus,
+  .tp-filter-card .form-select:focus {
+    border-color: #2d7dd2;
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+    outline: none;
+  }
+
+  /* ── TABLA CARD ───────────────────────────────────────── */
+  .tp-table-card {
+    background: #fff;
+    border: 1px solid #dde4ed;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+  }
+
+  .tp-table-head {
+    padding: 0.9rem 1.1rem;
+    border-bottom: 1px solid #dde4ed;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: #f5f8fc;
+  }
+
+  .tp-table-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: #8898aa;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .tp-table-title::before {
+    content: "";
+    display: block;
+    width: 3px;
+    height: 13px;
+    background: #2d7dd2;
+    border-radius: 2px;
+  }
+
+  .tp-table-subtitle {
+    font-size: 0.81rem;
+    color: #8898aa;
+    margin-top: 2px;
+  }
+
+  .tp-table-wrap {
+    padding: 0.5rem;
+  }
+
+  /* ── DATATABLE OVERRIDES ──────────────────────────────── */
+  #tablaPagos_wrapper .dataTables_scrollBody {
+    min-height: 42vh;
+    max-height: 58vh !important;
+  }
+
+  #tablaPagos_wrapper .dataTables_scrollHeadInner,
+  #tablaPagos_wrapper table {
+    width: 100% !important;
+  }
+
+  #tablaPagos_wrapper .dataTables_length,
+  #tablaPagos_wrapper .dataTables_filter {
+    display: none;
+  }
+
+  #tablaPagos td,
+  #tablaPagos th {
+    vertical-align: middle;
+  }
+
+  #tablaPagos th {
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.71rem;
+    font-weight: 700;
+    color: #8898aa;
+    background: #f5f8fc;
+    border-bottom: 2px solid #dde4ed;
+  }
+
+  #tablaPagos tbody tr {
+    transition: background 0.12s;
+  }
+
+  #tablaPagos tbody tr:nth-child(even) {
+    background: #f9fbfe;
+  }
+
+  #tablaPagos tbody tr:hover td {
+    background: #e8f1fc !important;
+  }
+
+  #tablaPagos tbody td {
+    font-size: 0.875rem;
+    color: #1e2d3d;
+    border-bottom: 1px solid #eef1f6;
+  }
+
+  /* ── FILA MAIN (Documento / Proveedor) ────────────────── */
+  .tp-row-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .tp-row-main strong {
+    font-size: 0.875rem;
+    color: #1e2d3d;
+  }
+
+  .tp-row-main small {
+    font-size: 0.78rem;
+    color: #8898aa;
+    font-family: var(--dxt-font-mono, "Consolas", monospace);
+  }
+
+  /* ── BADGES ───────────────────────────────────────────── */
+  .tp-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .tp-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.8;
+    flex-shrink: 0;
+  }
+
+  .tp-badge-borrador {
+    color: #b45309;
+    background: #fffbeb;
+    border-color: #fde68a;
+  }
+
+  .tp-badge-confirmado {
+    color: #047857;
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+  }
+
+  .tp-badge-anulado {
+    color: #b91c1c;
+    background: #fef2f2;
+    border-color: #fecaca;
+  }
+
+  .tp-badge-directo {
+    color: #1d4ed8;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+  }
+
+  .tp-badge-compromiso {
+    color: #6d28d9;
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+  }
+
+  /* ── ACCIONES ─────────────────────────────────────────── */
+  .tp-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .tp-btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid #dde4ed;
+    background: #fff;
+    color: #8898aa;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    text-decoration: none;
+  }
+
+  .tp-btn-icon:hover {
+    background: #e8f1fc;
+    border-color: #bfdbfe;
+    color: #2563eb;
+    transform: translateY(-1px);
+  }
+
+  /* ── TOTAL EN CELDA ───────────────────────────────────── */
+  .tp-money {
+    font-family: var(--dxt-font-mono, "Consolas", monospace);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── RESPONSIVE ───────────────────────────────────────── */
+  @media (max-width: 1100px) {
+    .tp-kpi-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tp-filter-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .tp-kpi-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .tp-index-head::before {
+      display: none;
+    }
+
+    .tp-shortcuts-bar {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .tp-shortcuts-divider {
+      display: none;
+    }
+  }
+
+  .pi-col-accion {
+    width: 90px;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid py-4 dxt-page" id="pagosIndexPage" data-puede-editar="{{ '1' if puede_editar else '0' }}">
+  <div class="tp-index-head">
+    <div class="tp-index-title-wrap">
+      <div class="tp-index-icon">
+        <i class="fas fa-cash-register"></i>
+      </div>
+      <div>
+        <h1 class="tp-index-title">Tesorería · Pagos</h1>
+        <div class="tp-index-subtitle">
+          Registro único de pagos con origen directo o por compromiso.
+        </div>
+      </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      {% if puede_editar %}
+      <a href="{{ url_for('tesoreria_pagos.nuevo') }}" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus me-1"></i> Nuevo pago
+      </a>
+      {% endif %}
+      <button type="button" class="btn btn-outline-secondary btn-sm" id="btnRecargarPagos">
+        <i class="fas fa-rotate me-1"></i> Actualizar
+      </button>
+    </div>
+  </div>
+
+  <div class="tp-kpi-grid">
+    <div class="tp-kpi-card">
+      <div class="tp-kpi-icon tp-kpi-icon-blue">
+        <i class="fas fa-file-invoice-dollar"></i>
+      </div>
+      <div class="tp-kpi-body">
+        <div class="tp-kpi-label">Documentos</div>
+        <div class="tp-kpi-value" id="kpiDocumentos">0</div>
+      </div>
+    </div>
+    <div class="tp-kpi-card">
+      <div class="tp-kpi-icon tp-kpi-icon-amber">
+        <i class="fas fa-clock-rotate-left"></i>
+      </div>
+      <div class="tp-kpi-body">
+        <div class="tp-kpi-label">Borradores</div>
+        <div class="tp-kpi-value" id="kpiBorradores">0</div>
+      </div>
+    </div>
+    <div class="tp-kpi-card">
+      <div class="tp-kpi-icon tp-kpi-icon-green">
+        <i class="fas fa-circle-check"></i>
+      </div>
+      <div class="tp-kpi-body">
+        <div class="tp-kpi-label">Confirmados</div>
+        <div class="tp-kpi-value" id="kpiConfirmados">0</div>
+      </div>
+    </div>
+    <div class="tp-kpi-card">
+      <div class="tp-kpi-icon tp-kpi-icon-indigo">
+        <i class="fas fa-coins"></i>
+      </div>
+      <div class="tp-kpi-body">
+        <div class="tp-kpi-label">Monto total</div>
+        <div class="tp-kpi-value tp-money" id="kpiMontoTotal">0.00</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tp-filter-card">
+    <div class="tp-filter-grid">
+      <div>
+        <label for="filtroTextoPagos" class="form-label">
+          <i class="fas fa-magnifying-glass me-1"></i>Buscar
+        </label>
+        <input type="text" id="filtroTextoPagos" class="form-control" maxlength="120"
+          placeholder="Proveedor, glosa, referencia, medio, importe o fecha" />
+      </div>
+      <div>
+        <label for="filtroFechaDesdePagos" class="form-label">Fecha desde</label>
+        <input type="date" id="filtroFechaDesdePagos" class="form-control" />
+      </div>
+      <div>
+        <label for="filtroFechaHastaPagos" class="form-label">Fecha hasta</label>
+        <input type="date" id="filtroFechaHastaPagos" class="form-control" />
+      </div>
+      <div>
+        <label for="filtroEstadoPagos" class="form-label">Estado</label>
+        <select id="filtroEstadoPagos" class="form-select">
+          <option value="">Todos</option>
+          <option value="BORRADOR">Borrador</option>
+          <option value="CONFIRMADO">Confirmado</option>
+          <option value="ANULADO">Anulado</option>
+        </select>
+      </div>
+      <div>
+        <label for="filtroOrigenPagos" class="form-label">Origen</label>
+        <select id="filtroOrigenPagos" class="form-select">
+          <option value="">Todos</option>
+          <option value="DIRECTO">Directo</option>
+          <option value="COMPROMISO">Compromiso</option>
+        </select>
+      </div>
+      <div>
+        <label for="filtroUnidadNegocioPagos" class="form-label">Unidad de negocio</label>
+        <select id="filtroUnidadNegocioPagos" class="form-select">
+          <option value="">Todas</option>
+          {% for unidad in unidades_negocio %}
+          <option value="{{ unidad.id }}">{{ unidad.codigo }} · {{ unidad.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="filtroRubroPagos" class="form-label">Rubro</label>
+        <select id="filtroRubroPagos" class="form-select">
+          <option value="">Todos</option>
+          {% for rubro in rubros %}
+          <option value="{{ rubro.id }}">{{ rubro.codigo }} · {{ rubro.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- ── SHORTCUTS BAR REDISEÑADO ──────────────────────── -->
+    <div class="tp-shortcuts-bar">
+      <span class="tp-shortcuts-label">
+        <i class="fas fa-bolt"></i> Rango rápido
+      </span>
+      <div class="tp-shortcuts-group">
+        <button type="button" class="tp-date-chip" data-range="hoy">
+          <i class="fas fa-calendar-day"></i> Hoy
+        </button>
+        <button type="button" class="tp-date-chip" data-range="7">
+          <i class="fas fa-calendar-week"></i> Últimos 7 días
+        </button>
+        <button type="button" class="tp-date-chip" data-range="30">
+          <i class="fas fa-calendar"></i> Últimos 30 días
+        </button>
+        <button type="button" class="tp-date-chip" data-range="mes">
+          <i class="fas fa-calendar-check"></i> Mes actual
+        </button>
+      </div>
+      <div class="tp-shortcuts-divider"></div>
+      <button type="button" class="tp-date-chip-clear" id="btnLimpiarFiltrosPagos">
+        <i class="fas fa-xmark"></i> Limpiar filtros
+      </button>
+    </div>
+  </div>
+
+  <div class="tp-table-card">
+    <div class="tp-table-head">
+      <div>
+        <div class="tp-table-title">Listado de pagos</div>
+      </div>
+    </div>
+    <div class="tp-table-wrap">
+      <table id="tablaPagos" class="table table-hover align-middle w-100">
+        <thead>
+          <tr>
+            <th>Documento</th>
+            <th>Fecha</th>
+            <th>Proveedor</th>
+            <th>Unidad de negocio</th>
+            <th>Rubro</th>
+            <th>Origen</th>
+            <th>Salida</th>
+            <th>Líneas</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th class="pi-col-accion">Acción</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script id="tesoreriaPagosIndexBootstrap" type="application/json">
+  {{ {
+    'puedeEditar': puede_editar
+  } | tojson }}
+</script>
+{% endblock %} {% block extra_js %}
+<script>
+  (function () {
+    "use strict";
+
+    const page = document.getElementById("pagosIndexPage");
+    const bootEl = document.getElementById("tesoreriaPagosIndexBootstrap");
+    if (!page || !bootEl || !window.jQuery) return;
+
+    const boot = JSON.parse(bootEl.textContent || "{}");
+    const puedeEditar = Boolean(boot.puedeEditar);
+    const $ = window.jQuery;
+    let table = null;
+    let activeRange = null;
+
+    function money(value) {
+      return Number(value || 0).toLocaleString("es-BO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    function dateShort(value) {
+      return window.DXTBase &&
+        typeof window.DXTBase.formatDateShortEs === "function"
+        ? window.DXTBase.formatDateShortEs(value)
+        : value || "—";
+    }
+
+    function isoDateLocal(inputDate) {
+      const d = inputDate instanceof Date ? inputDate : new Date(inputDate);
+      if (Number.isNaN(d.getTime())) return "";
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function parseIsoDate(value) {
+      if (!value) return null;
+      const parts = String(value).split("-");
+      if (parts.length !== 3) return null;
+      const y = Number(parts[0]);
+      const m = Number(parts[1]);
+      const d = Number(parts[2]);
+      if (!y || !m || !d) return null;
+      return new Date(y, m - 1, d);
+    }
+
+    function clearActiveChips() {
+      $(".tp-date-chip").removeClass("active");
+      activeRange = null;
+    }
+
+    function applyDateRange(mode) {
+      const today = new Date();
+      let from = null;
+      let to = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+      if (mode === "hoy") {
+        from = new Date(to);
+      } else if (mode === "7") {
+        from = new Date(to);
+        from.setDate(from.getDate() - 6);
+      } else if (mode === "30") {
+        from = new Date(to);
+        from.setDate(from.getDate() - 29);
+      } else if (mode === "mes") {
+        from = new Date(to.getFullYear(), to.getMonth(), 1);
+      }
+
+      $("#filtroFechaDesdePagos").val(from ? isoDateLocal(from) : "");
+      $("#filtroFechaHastaPagos").val(to ? isoDateLocal(to) : "");
+
+      /* Marcar chip activo */
+      clearActiveChips();
+      if (mode) {
+        $(`.tp-date-chip[data-range="${mode}"]`).addClass("active");
+        activeRange = mode;
+      }
+
+      table && table.draw();
+    }
+
+    function stateBadge(state) {
+      const key = String(state || "").toUpperCase();
+      const map = {
+        BORRADOR: "tp-badge tp-badge-borrador",
+        CONFIRMADO: "tp-badge tp-badge-confirmado",
+        ANULADO: "tp-badge tp-badge-anulado",
+      };
+      return `<span class="${map[key] || "tp-badge"}">${key || "—"}</span>`;
+    }
+
+    function originBadge(origin) {
+      const key = String(origin || "").toUpperCase();
+      const cls =
+        key === "COMPROMISO"
+          ? "tp-badge tp-badge-compromiso"
+          : "tp-badge tp-badge-directo";
+      return `<span class="${cls}">${key || "DIRECTO"}</span>`;
+    }
+
+    function updateKpis(rows) {
+      const totalDocs = rows.length;
+      const borradores = rows.filter((row) => row.estado === "BORRADOR").length;
+      const confirmados = rows.filter(
+        (row) => row.estado === "CONFIRMADO",
+      ).length;
+      const monto = rows.reduce(
+        (sum, row) => sum + Number(row.monto_total || 0),
+        0,
+      );
+
+      document.getElementById("kpiDocumentos").textContent = String(totalDocs);
+      document.getElementById("kpiBorradores").textContent = String(borradores);
+      document.getElementById("kpiConfirmados").textContent =
+        String(confirmados);
+      document.getElementById("kpiMontoTotal").textContent = money(monto);
+    }
+
+    async function loadRows() {
+      try {
+        const response = await fetch(
+          `{{ url_for('tesoreria_pagos.api_lista') }}`,
+          {
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+          },
+        );
+        const data = await response.json();
+        const rows = (data && data.data) || [];
+
+        if (table) {
+          table.clear().rows.add(rows).draw();
+        } else {
+          table = $("#tablaPagos").DataTable({
+            data: rows,
+            deferRender: true,
+            autoWidth: false,
+            pageLength: 25,
+            order: [
+              [1, "desc"],
+              [0, "desc"],
+            ],
+            scrollX: true,
+            scrollY: "56vh",
+            scrollCollapse: true,
+            language:
+              window.DXTBase &&
+                typeof window.DXTBase.getDataTableLanguageEs === "function"
+                ? window.DXTBase.getDataTableLanguageEs({
+                  emptyTable: "No existen pagos registrados.",
+                  zeroRecords:
+                    "No se encontraron pagos con los filtros aplicados.",
+                  info: "Mostrando _START_ a _END_ de _TOTAL_ pagos",
+                  infoEmpty: "Mostrando 0 a 0 de 0 pagos",
+                  infoFiltered: "(filtrados de _MAX_ pagos)",
+                })
+                : {
+                  emptyTable: "No existen pagos registrados.",
+                  zeroRecords:
+                    "No se encontraron pagos con los filtros aplicados.",
+                  info: "Mostrando _START_ a _END_ de _TOTAL_ pagos",
+                  infoEmpty: "Mostrando 0 a 0 de 0 pagos",
+                  infoFiltered: "(filtrados de _MAX_ pagos)",
+                },
+            columns: [
+              {
+                data: null,
+                render: function (data, type, row) {
+                  if (type !== "display") return row.id;
+                  return `
+                  <div class="tp-row-main">
+                    <strong>Pago #${row.id}</strong>
+                    <small>${row.glosa || row.referencia || "Documento de pago"
+                    }</small>
+                  </div>
+                `;
+                },
+              },
+              {
+                data: "fecha",
+                render: function (data, type) {
+                  if (type !== "display") return data || "";
+                  return `
+                  <div class="tp-row-main">
+                    <strong>${dateShort(data)}</strong>
+                    <small>${data || "—"}</small>
+                  </div>
+                `;
+                },
+              },
+              {
+                data: null,
+                render: function (data, type, row) {
+                  if (type !== "display") return row.proveedor_nombre;
+                  return `
+                  <div class="tp-row-main">
+                    <strong>${row.proveedor_nombre || "Sin proveedor"}</strong>
+                    <small>${row.referencia || "Sin referencia"}</small>
+                  </div>
+                `;
+                },
+              },
+              {
+                data: null,
+                render: function (data, type, row) {
+                  const unidadLabel = row.unidad_negocio_codigo || row.unidad_negocio_nombre || "—";
+                  if (type !== "display") return unidadLabel;
+                  return `
+                  <div class="tp-row-main">
+                    <strong>${row.unidad_negocio_codigo || "—"}</strong>
+                    <small>${row.unidad_negocio_nombre || "Sin unidad"}</small>
+                  </div>
+                `;
+                },
+              },
+              {
+                data: null,
+                render: function (data, type, row) {
+                  const rubroLabel = row.rubro_codigo || row.rubro_nombre || "—";
+                  if (type !== "display") return rubroLabel;
+                  return `
+                  <div class="tp-row-main">
+                    <strong>${row.rubro_codigo || "—"}</strong>
+                    <small>${row.rubro_nombre || "Sin rubro"}</small>
+                  </div>
+                `;
+                },
+              },
+              {
+                data: "origen_operacion",
+                render: function (data, type) {
+                  return type === "display" ? originBadge(data) : data;
+                },
+              },
+              {
+                data: null,
+                render: function (data, type, row) {
+                  if (type !== "display")
+                    return `${row.medio_pago} ${row.salida_nombre}`;
+                  return `
+                  <div class="tp-row-main">
+                    <strong>${row.medio_pago || "—"}</strong>
+                    <small>${row.salida_nombre || "No definido"}</small>
+                  </div>
+                `;
+                },
+              },
+              {
+                data: null,
+                className: "text-center",
+                render: function (data, type, row) {
+                  if (type !== "display") return row.cantidad_lineas;
+                  return `
+                  <div class="tp-row-main">
+                    <strong>${row.cantidad_lineas || 0}</strong>
+                    <small>${row.cantidad_compromisos || 0} compromiso · ${row.cantidad_directas || 0
+                    } directo</small>
+                  </div>
+                `;
+                },
+              },
+              {
+                data: "monto_total",
+                className: "text-end",
+                render: function (data, type, row) {
+                  if (type !== "display") return Number(data || 0);
+                  return `
+                  <div class="tp-row-main text-end">
+                    <strong class="tp-money">${money(data)}</strong>
+                    <small>${row.moneda_codigo || "BOB"} · TC ${money(
+                    row.tipo_cambio || 1,
+                  )}</small>
+                  </div>
+                `;
+                },
+              },
+              {
+                data: "estado",
+                render: function (data, type) {
+                  return type === "display" ? stateBadge(data) : data;
+                },
+              },
+              {
+                data: null,
+                orderable: false,
+                searchable: false,
+                className: "text-center",
+                render: function (data, type, row) {
+                  if (type !== "display") return row.id;
+                  const href =
+                    `{{ url_for('tesoreria_pagos.index') }}`.replace(
+                      /\/$/,
+                      "",
+                    ) + `/${row.id}/editar`;
+                  const pdfHref = `{{ url_for('tesoreria_pagos.pdf', pago_id=0) }}`.replace(
+                    "/0/pdf",
+                    `/${row.id}/pdf`,
+                  );
+                  const canDelete = puedeEditar && row.estado === "BORRADOR";
+                  return `
+                  <div class="tp-actions">
+                    <a href="${href}" class="tp-btn-icon" title="${canDelete ? "Editar pago" : "Ver pago"}">
+                      <i class="fas ${canDelete ? "fa-pen-to-square" : "fa-eye"}"></i>
+                    </a>
+                    <a href="${pdfHref}" class="tp-btn-icon" target="_blank" rel="noopener" title="Generar PDF">
+                      <i class="fas fa-file-pdf"></i>
+                    </a>
+                    ${canDelete
+                      ? `<button type="button" class="tp-btn-icon js-delete-pago" data-id="${row.id}" title="Eliminar borrador">
+                          <i class="fas fa-trash-can"></i>
+                        </button>`
+                      : ""
+                    }
+                  </div>
+                `;
+                },
+              },
+            ],
+          });
+
+          $.fn.dataTable.ext.search.push(function (settings, data, dataIndex) {
+            if (settings.nTable.id !== "tablaPagos") return true;
+            const row = table.row(dataIndex).data();
+            const filtroEstado = (
+              $("#filtroEstadoPagos").val() || ""
+            ).toUpperCase();
+            const filtroOrigen = (
+              $("#filtroOrigenPagos").val() || ""
+            ).toUpperCase();
+            const filtroTexto = ($("#filtroTextoPagos").val() || "")
+              .trim()
+              .toLowerCase();
+            const filtroUnidadNegocio = $("#filtroUnidadNegocioPagos").val() || "";
+            const filtroRubro = $("#filtroRubroPagos").val() || "";
+            const filtroDesde = $("#filtroFechaDesdePagos").val() || "";
+            const filtroHasta = $("#filtroFechaHastaPagos").val() || "";
+
+            if (
+              filtroEstado &&
+              String(row.estado || "").toUpperCase() !== filtroEstado
+            )
+              return false;
+            if (
+              filtroOrigen &&
+              String(row.origen_operacion || "").toUpperCase() !== filtroOrigen
+            )
+              return false;
+            if (
+              filtroUnidadNegocio &&
+              String(row.unidad_negocio_id || "") !== String(filtroUnidadNegocio)
+            )
+              return false;
+            if (
+              filtroRubro &&
+              String(row.rubro_id || "") !== String(filtroRubro)
+            )
+              return false;
+
+            const fechaRow = String(row.fecha || "");
+            if (filtroDesde && fechaRow && fechaRow < filtroDesde) return false;
+            if (filtroHasta && fechaRow && fechaRow > filtroHasta) return false;
+            if ((filtroDesde || filtroHasta) && !fechaRow) return false;
+
+            if (filtroTexto) {
+              const bag = [
+                row.id,
+                row.proveedor_nombre,
+                row.referencia,
+                row.glosa,
+                row.fecha,
+                dateShort(row.fecha),
+                row.medio_pago,
+                row.salida_nombre,
+                row.moneda_codigo,
+                row.unidad_negocio_codigo,
+                row.unidad_negocio_nombre,
+                row.rubro_codigo,
+                row.rubro_nombre,
+                row.publicidad_elemento_codigo_ref,
+                row.origen_operacion,
+                row.estado,
+                row.monto_total,
+              ]
+                .join(" ")
+                .toLowerCase();
+              if (!bag.includes(filtroTexto)) return false;
+            }
+            return true;
+          });
+
+          table.on("draw", function () {
+            updateKpis(table.rows({ search: "applied" }).data().toArray());
+          });
+        }
+
+        updateKpis(table.rows({ search: "applied" }).data().toArray());
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "No se pudo cargar la lista",
+          text: error.message || "Ocurrió un error al obtener los pagos.",
+        });
+      }
+    }
+
+    async function deletePaymentFromGrid(pagoId) {
+      const result = await Swal.fire({
+        icon: "warning",
+        title: "¿Eliminar borrador?",
+        text: "Esta acción eliminará definitivamente el pago en borrador.",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+      });
+      if (!result.isConfirmed) return;
+
+      try {
+        const response = await fetch(
+          `{{ url_for('tesoreria_pagos.api_eliminar', pago_id=0) }}`.replace(
+            "/0/eliminar",
+            `/${pagoId}/eliminar`,
+          ),
+          {
+            method: "POST",
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+          },
+        );
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "No se pudo eliminar el pago.");
+        }
+
+        await Swal.fire({
+          icon: "success",
+          title: "Pago eliminado",
+          text: data.message || "El pago fue eliminado correctamente.",
+        });
+        await loadRows();
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "No se pudo eliminar",
+          text: error.message || "Ocurrió un error al eliminar el pago.",
+        });
+      }
+    }
+
+    function bindGridActions() {
+      $(document).on("click", ".js-delete-pago", function () {
+        const pagoId = Number(this.dataset.id || 0);
+        if (!pagoId) return;
+        deletePaymentFromGrid(pagoId);
+      });
+    }
+
+    function bindFilters() {
+      $("#filtroTextoPagos").on("input", function () {
+        table && table.draw();
+      });
+      $(
+        "#filtroEstadoPagos, #filtroOrigenPagos, #filtroUnidadNegocioPagos, #filtroRubroPagos",
+      ).on("change", function () {
+        table && table.draw();
+      });
+
+      /* Cuando el usuario cambia las fechas manualmente, quitar chip activo */
+      $("#filtroFechaDesdePagos, #filtroFechaHastaPagos").on("change", function () {
+        clearActiveChips();
+        table && table.draw();
+      });
+
+      /* Chips de rango rápido */
+      $(".tp-date-chip").on("click", function () {
+        const range = this.dataset.range || "";
+        /* Si ya está activo, desactivar (toggle) */
+        if (activeRange === range) {
+          $("#filtroFechaDesdePagos").val("");
+          $("#filtroFechaHastaPagos").val("");
+          clearActiveChips();
+          table && table.draw();
+        } else {
+          applyDateRange(range);
+        }
+      });
+
+      /* Botón Limpiar filtros */
+      $("#btnLimpiarFiltrosPagos").on("click", function () {
+        $("#filtroTextoPagos").val("");
+        $("#filtroEstadoPagos").val("");
+        $("#filtroOrigenPagos").val("");
+        $("#filtroUnidadNegocioPagos").val("");
+        $("#filtroRubroPagos").val("");
+        $("#filtroFechaDesdePagos").val("");
+        $("#filtroFechaHastaPagos").val("");
+        clearActiveChips();
+        table && table.draw();
+      });
+
+      $("#btnRecargarPagos").on("click", loadRows);
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      bindFilters();
+      bindGridActions();
+      loadRows();
+    });
+  })();
+</script>
+{% endblock %}

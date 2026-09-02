@@ -1,0 +1,1150 @@
+{% extends "layout.html" %}
+{% block title %}Estado de Cuenta de Auxiliar{% endblock title %}
+{% block page_help_url %}{{ url_for('estado_cuenta_auxiliar.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ══════════════════════════════════════════════════════════════
+     VARIABLES
+  ══════════════════════════════════════════════════════════════ */
+  #ecaPage {
+    --eca-navy: #0c1e35;
+    --eca-blue: #1a4d8f;
+    --eca-blue-mid: #2266b3;
+    --eca-blue-light: #3a8ee0;
+    --eca-blue-soft: #e8f1fb;
+    --eca-border: #dde6f0;
+    --eca-surface: #f3f7fc;
+    --eca-surface-2: #fafcff;
+    --eca-text: #1c2b3a;
+    --eca-muted: #7389a0;
+    --eca-debe: #1a5ca8;
+    --eca-debe-bg: #e8f0fb;
+    --eca-haber: #b03a1a;
+    --eca-haber-bg: #fbeee8;
+    --eca-saldo-pos: #127a50;
+    --eca-saldo-bg: #e8f5ef;
+    --eca-post-color: #8a5a10;
+    --eca-post-bg: #fef6e4;
+    --eca-radius: 18px;
+    color: var(--eca-text);
+    font-size: 0.925rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     HERO
+  ══════════════════════════════════════════════════════════════ */
+  #ecaPage .eca-hero {
+    background: linear-gradient(130deg, var(--eca-navy) 0%, #1a3f70 55%, #1f5da8 100%);
+    border-radius: var(--eca-radius);
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 14px 36px rgba(12, 30, 53, 0.18);
+  }
+
+  #ecaPage .eca-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 55% 80% at 92% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  #ecaPage .eca-hero-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+  }
+
+  #ecaPage .eca-hero-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  #ecaPage .eca-hero h1 {
+    color: #fff;
+    margin: 0;
+    font-size: 1.18rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  #ecaPage .eca-hero-pills {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    position: relative;
+  }
+
+  #ecaPage .eca-hero-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.42rem 0.8rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     CARDS
+  ══════════════════════════════════════════════════════════════ */
+  #ecaPage .eca-card {
+    background: #fff;
+    border: 1px solid var(--eca-border);
+    border-radius: var(--eca-radius);
+    box-shadow: 0 4px 18px rgba(12, 30, 53, 0.055);
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  #ecaPage .eca-card-head {
+    padding: 0.8rem 1.15rem;
+    border-bottom: 1px solid var(--eca-border);
+    background: linear-gradient(180deg, #fafcff 0%, #f3f7fc 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  #ecaPage .eca-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--eca-navy);
+  }
+
+  #ecaPage .eca-card-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--eca-blue) 0%, var(--eca-blue-mid) 100%);
+    flex-shrink: 0;
+  }
+
+  #ecaPage .eca-card-body {
+    padding: 1.05rem 1.15rem 1.15rem;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     FILTROS — GRID 12 COL (IDs y names sin cambios)
+  ══════════════════════════════════════════════════════════════ */
+  #ecaPage .eca-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  #ecaPage .eca-field {
+    grid-column: span 2;
+  }
+
+  #ecaPage .eca-field-wide {
+    grid-column: span 6;
+  }
+
+  #ecaPage .eca-field-actions {
+    grid-column: span 12;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    padding-top: 0.2rem;
+    border-top: 1px solid var(--eca-border);
+    margin-top: 0.1rem;
+  }
+
+  #ecaPage .eca-field label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.35rem;
+    color: var(--eca-navy);
+    font-weight: 700;
+    font-size: 0.82rem;
+  }
+
+  #ecaPage .eca-field label i {
+    color: var(--eca-muted);
+    font-size: 0.76rem;
+    width: 14px;
+    text-align: center;
+  }
+
+  #ecaPage .eca-field input,
+  #ecaPage .eca-field select,
+  #ecaPage .eca-field-wide input,
+  #ecaPage .eca-field-wide select {
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid #d0dcea;
+    border-radius: 11px;
+    padding: 0.42rem 0.65rem;
+    color: var(--eca-text);
+    background: #fff;
+    font-size: 0.88rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+
+  #ecaPage .eca-field input:focus,
+  #ecaPage .eca-field select:focus,
+  #ecaPage .eca-field-wide input:focus,
+  #ecaPage .eca-field-wide select:focus {
+    border-color: var(--eca-blue-light);
+    box-shadow: 0 0 0 3px rgba(58, 142, 224, 0.15);
+    outline: none;
+  }
+
+  #ecaPage .eca-field-wide label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.35rem;
+    color: var(--eca-navy);
+    font-weight: 700;
+    font-size: 0.82rem;
+  }
+
+  #ecaPage .eca-field-wide label i {
+    color: var(--eca-muted);
+    font-size: 0.76rem;
+    width: 14px;
+    text-align: center;
+  }
+
+  /* Separador visual entre grupo temporal y auxiliar */
+  #ecaPage .eca-filter-sep {
+    grid-column: span 12;
+    height: 1px;
+    background: var(--eca-border);
+    margin: 0.1rem 0;
+  }
+
+  /* Checkbox con switch look */
+  #ecaPage .eca-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--eca-text);
+    font-size: 0.87rem;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  #ecaPage .eca-check input[type="checkbox"] {
+    width: 2.6em;
+    height: 1.4em;
+    border-radius: 999px;
+    cursor: pointer;
+    accent-color: var(--eca-blue-mid);
+    transition: accent-color 0.15s;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     BOTONES
+  ══════════════════════════════════════════════════════════════ */
+  #ecaPage .eca-btn {
+    border: 0;
+    border-radius: 11px;
+    min-height: 40px;
+    padding: 0.5rem 1rem;
+    font-weight: 700;
+    font-size: 0.87rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.13s, box-shadow 0.13s, background 0.13s;
+    white-space: nowrap;
+  }
+
+  #ecaPage .eca-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  #ecaPage .eca-btn:active {
+    transform: translateY(0);
+  }
+
+  #ecaPage .eca-btn-primary {
+    color: #fff;
+    background: linear-gradient(135deg, var(--eca-blue-light) 0%, var(--eca-blue-mid) 100%);
+    box-shadow: 0 6px 18px rgba(34, 102, 179, 0.28);
+  }
+
+  #ecaPage .eca-btn-primary:hover {
+    color: #fff;
+    background: linear-gradient(135deg, #4a9de8 0%, var(--eca-blue-light) 100%);
+    box-shadow: 0 10px 22px rgba(34, 102, 179, 0.36);
+  }
+
+  #ecaPage .eca-btn-pdf {
+    color: #b01f1f;
+    background: #fdeaea;
+    border: 1px solid #f5c0c0;
+  }
+
+  #ecaPage .eca-btn-pdf:hover {
+    color: #8a1010;
+    background: #fbd5d5;
+    border-color: #e8a0a0;
+  }
+
+  #ecaPage .eca-btn-excel {
+    color: #1a7a45;
+    background: #e8f5ee;
+    border: 1px solid #b0ddc0;
+  }
+
+  #ecaPage .eca-btn-excel:hover {
+    color: #125c33;
+    background: #d4eddd;
+    border-color: #8ecba4;
+  }
+
+  #ecaPage .eca-btn-sm {
+    min-height: 30px;
+    padding: 0.28rem 0.7rem;
+    font-size: 0.78rem;
+    border-radius: 9px;
+  }
+
+  #ecaPage .eca-btn-outline-sm {
+    background: #fff;
+    border: 1px solid var(--eca-border);
+    color: var(--eca-text);
+  }
+
+  #ecaPage .eca-btn-outline-sm:hover {
+    background: var(--eca-blue-soft);
+    border-color: #b0c8e4;
+    color: var(--eca-blue);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     SUMMARY GRID — 6 métricas con color semántico
+  ══════════════════════════════════════════════════════════════ */
+  #ecaPage .eca-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  #ecaPage .eca-summary-item {
+    border: 1px solid var(--eca-border);
+    border-radius: 14px;
+    padding: 0.85rem 0.9rem;
+    background: #fff;
+    border-left: 4px solid var(--eca-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  /* Color por tipo */
+  #ecaPage .eca-summary-item.s-neutral {
+    border-left-color: var(--eca-blue-mid);
+    background: var(--eca-blue-soft);
+    border-color: #c0d6f0;
+  }
+
+  #ecaPage .eca-summary-item.s-debe {
+    border-left-color: var(--eca-debe);
+    background: var(--eca-debe-bg);
+    border-color: #b8cfee;
+  }
+
+  #ecaPage .eca-summary-item.s-haber {
+    border-left-color: var(--eca-haber);
+    background: var(--eca-haber-bg);
+    border-color: #f0c8b8;
+  }
+
+  #ecaPage .eca-summary-item.s-corte {
+    border-left-color: var(--eca-navy);
+    background: #e8edf5;
+    border-color: #b0bdd0;
+  }
+
+  #ecaPage .eca-summary-item.s-post {
+    border-left-color: var(--eca-post-color);
+    background: var(--eca-post-bg);
+    border-color: #f0d898;
+  }
+
+  #ecaPage .eca-summary-item.s-actual {
+    border-left-color: var(--eca-saldo-pos);
+    background: var(--eca-saldo-bg);
+    border-color: #b0d8c0;
+  }
+
+  #ecaPage .eca-summary-label {
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--eca-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  #ecaPage .eca-summary-value {
+    color: var(--eca-navy);
+    font-size: 1.05rem;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+
+  #ecaPage .eca-summary-item.s-debe .eca-summary-value {
+    color: var(--eca-debe);
+  }
+
+  #ecaPage .eca-summary-item.s-haber .eca-summary-value {
+    color: var(--eca-haber);
+  }
+
+  #ecaPage .eca-summary-item.s-actual .eca-summary-value {
+    color: var(--eca-saldo-pos);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     TOOLBAR DE TABLA
+  ══════════════════════════════════════════════════════════════ */
+  #ecaPage .eca-table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  #ecaPage .eca-table-info {
+    color: var(--eca-muted);
+    font-weight: 700;
+    font-size: 0.84rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  #ecaPage .eca-table-info i {
+    color: var(--eca-blue-mid);
+  }
+
+  #ecaPage .eca-page-size {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--eca-text);
+    font-size: 0.84rem;
+    font-weight: 700;
+  }
+
+  #ecaPage .eca-page-size select {
+    border: 1px solid var(--eca-border);
+    border-radius: 9px;
+    padding: 0.3rem 0.55rem;
+    background: #fff;
+    font-size: 0.84rem;
+    min-height: 32px;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     TABLA
+  ══════════════════════════════════════════════════════════════ */
+  #ecaPage .eca-grid-wrap {
+    max-height: 520px;
+    overflow: auto;
+    border: 1px solid var(--eca-border);
+    border-radius: 14px;
+    scrollbar-width: thin;
+    scrollbar-color: #c8d8ea transparent;
+  }
+
+  #ecaPage .eca-table {
+    width: 100%;
+    min-width: 1280px;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  #ecaPage .eca-table th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #e8f0f8;
+    color: var(--eca-navy);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 2px solid #c8d8ea;
+    padding: 0.7rem 0.7rem;
+    white-space: nowrap;
+    border-right: 1px solid #d8e8f4;
+  }
+
+  #ecaPage .eca-table th:last-child {
+    border-right: none;
+  }
+
+  #ecaPage .eca-table td {
+    border-bottom: 1px solid #edf2f8;
+    border-right: 1px solid #f0f5fa;
+    padding: 0.6rem 0.7rem;
+    vertical-align: middle;
+    color: var(--eca-text);
+    font-size: 0.85rem;
+  }
+
+  #ecaPage .eca-table td:last-child {
+    border-right: none;
+  }
+
+  #ecaPage .eca-table tbody tr:hover td {
+    background: #f0f6ff !important;
+  }
+
+  #ecaPage .eca-table tr:nth-child(even) td {
+    background: #fafcff;
+  }
+
+  /* Fila de control (saldo anterior, al corte, actual) */
+  #ecaPage .eca-table .eca-control-row td {
+    background: #f0f4fa !important;
+    color: var(--eca-navy);
+    font-weight: 800;
+    border-bottom: 2px solid #d0dcee;
+  }
+
+  /* Columnas numéricas */
+  #ecaPage .eca-right {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  #ecaPage .eca-center {
+    text-align: center;
+  }
+
+  /* Valor debe/haber coloreado */
+  #ecaPage .eca-num-debe {
+    color: var(--eca-debe);
+    font-weight: 700;
+  }
+
+  #ecaPage .eca-num-haber {
+    color: var(--eca-haber);
+    font-weight: 700;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     BADGES
+  ══════════════════════════════════════════════════════════════ */
+  #ecaPage .eca-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+  }
+
+  #ecaPage .eca-badge-range {
+    background: var(--eca-debe-bg);
+    color: var(--eca-debe);
+    border: 1px solid #b8cfee;
+  }
+
+  #ecaPage .eca-badge-post {
+    background: var(--eca-post-bg);
+    color: var(--eca-post-color);
+    border: 1px solid #f0d898;
+  }
+
+  #ecaPage .eca-badge-control {
+    background: #ece8ff;
+    color: #4b3b8f;
+    border: 1px solid #c8c0ee;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     PAGINACIÓN
+  ══════════════════════════════════════════════════════════════ */
+  #ecaPage .eca-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin-top: 0.85rem;
+  }
+
+  #ecaPage .eca-pagination button {
+    border: 1px solid var(--eca-border);
+    background: #fff;
+    color: var(--eca-text);
+    border-radius: 9px;
+    min-width: 34px;
+    min-height: 32px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    transition: background 0.13s, border-color 0.13s, color 0.13s;
+    cursor: pointer;
+    padding: 0 0.4rem;
+  }
+
+  #ecaPage .eca-pagination button:hover:not(:disabled) {
+    background: var(--eca-blue-soft);
+    border-color: #b0c8e4;
+    color: var(--eca-blue);
+  }
+
+  #ecaPage .eca-pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ESTADOS VACÍO / CARGA
+  ══════════════════════════════════════════════════════════════ */
+  #ecaPage .eca-empty {
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--eca-muted);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  #ecaPage .eca-empty i {
+    display: block;
+    font-size: 1.8rem;
+    margin-bottom: 0.6rem;
+    color: #c8d8ea;
+  }
+
+  #ecaPage .eca-muted {
+    color: var(--eca-muted);
+  }
+
+  #ecaPage.eca-loading {
+    opacity: 0.62;
+    pointer-events: none;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     RESPONSIVE
+  ══════════════════════════════════════════════════════════════ */
+  @media (max-width: 1100px) {
+
+    #ecaPage .eca-field,
+    #ecaPage .eca-field-wide {
+      grid-column: span 6;
+    }
+
+    #ecaPage .eca-summary-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+
+    #ecaPage .eca-field,
+    #ecaPage .eca-field-wide {
+      grid-column: span 12;
+    }
+
+    #ecaPage .eca-summary-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #ecaPage .eca-table-toolbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+
+{% block content %}
+<div id="ecaPage">
+
+  <!-- ── Hero ── -->
+  <div class="eca-hero">
+    <div class="eca-hero-main">
+      <div class="eca-hero-icon">
+        <i class="fas fa-scale-balanced"></i>
+      </div>
+      <div>
+        <h1>Estado de Cuenta de Auxiliar</h1>
+      </div>
+    </div>
+    <div class="eca-hero-pills">
+      <span class="eca-hero-pill"><i class="fas fa-filter"></i> Filtro por rango de fechas</span>
+      <span class="eca-hero-pill"><i class="fas fa-eye"></i> Solo lectura</span>
+    </div>
+  </div>
+
+  <!-- ── Panel de filtros ── -->
+  <div class="eca-card">
+    <div class="eca-card-head">
+      <div class="eca-card-title">
+        <div class="eca-card-icon"><i class="fas fa-sliders"></i></div>
+        Parámetros de consulta
+      </div>
+    </div>
+    <div class="eca-card-body">
+      <form id="ecaForm" autocomplete="off">
+        <div class="eca-filter-grid">
+
+          <!-- Gestión y fechas -->
+          <div class="eca-field">
+            <label for="gestion">
+              <i class="fas fa-calendar-alt"></i> Gestión
+            </label>
+            <select id="gestion" name="gestion">
+              {% for gestion in gestiones %}
+              <option value="{{ gestion }}" {% if gestion==gestion_preferida %}selected{% endif %}>{{ gestion }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="eca-field">
+            <label for="fecha_desde">
+              <i class="fas fa-calendar-day"></i> Fecha desde
+            </label>
+            <input id="fecha_desde" name="fecha_desde" type="date" value="{{ fecha_desde }}">
+          </div>
+          <div class="eca-field">
+            <label for="fecha_hasta">
+              <i class="fas fa-calendar-check"></i> Fecha hasta
+            </label>
+            <input id="fecha_hasta" name="fecha_hasta" type="date" value="{{ fecha_hasta }}">
+          </div>
+          <div class="eca-field">
+            <label for="unidad_negocio_id">
+              <i class="fas fa-building"></i> Unidad de negocio
+            </label>
+            <select id="unidad_negocio_id" name="unidad_negocio_id">
+              <option value="">Todas</option>
+              {% for unidad in unidades_negocio %}
+              <option value="{{ unidad.id }}">{{ unidad.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="eca-field">
+            <label for="moneda_codigo">
+              <i class="fas fa-coins"></i> Moneda
+            </label>
+            <select id="moneda_codigo" name="moneda_codigo">
+              {% for moneda in monedas %}
+              <option value="{{ moneda.codigo }}" {% if moneda.codigo == 'BOB' %}selected{% endif %}>{{ moneda.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="eca-filter-sep"></div>
+
+          <!-- Auxiliar y cuenta -->
+          <div class="eca-field-wide">
+            <label for="auxiliar_id">
+              <i class="fas fa-user-tag"></i> Auxiliar
+              <span style="color:#b03a1a;font-size:0.72rem;margin-left:0.2rem">(requerido)</span>
+            </label>
+            <select id="auxiliar_id" name="auxiliar_id" required></select>
+          </div>
+          <div class="eca-field-wide">
+            <label for="cuenta_codigo">
+              <i class="fas fa-landmark"></i> Cuenta contable
+              <span style="color:var(--eca-muted);font-size:0.72rem;margin-left:0.2rem">(opcional)</span>
+            </label>
+            <select id="cuenta_codigo" name="cuenta_codigo"></select>
+          </div>
+
+          <!-- Acciones -->
+          <div class="eca-field-actions">
+            <label class="eca-check" for="incluir_posteriores">
+              <input id="incluir_posteriores" name="incluir_posteriores" type="checkbox" value="1" checked>
+              Incluir posteriores al corte
+            </label>
+            <button class="eca-btn eca-btn-primary" type="submit">
+              <i class="fas fa-magnifying-glass"></i> Consultar
+            </button>
+            <a class="eca-btn eca-btn-pdf" id="btnPdf" href="#" target="_blank" rel="noopener">
+              <i class="fas fa-file-pdf"></i> PDF
+            </a>
+            <a class="eca-btn eca-btn-excel" id="btnExcel" href="#">
+              <i class="fas fa-file-excel"></i> Excel
+            </a>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Summary ── -->
+  <section class="eca-summary-grid" id="summaryGrid">
+    <div class="eca-summary-item s-neutral">
+      <div class="eca-summary-label"><i class="fas fa-clock-rotate-left"></i> Saldo anterior</div>
+      <div class="eca-summary-value" data-summary="saldo_anterior_label">0.00</div>
+    </div>
+    <div class="eca-summary-item s-debe">
+      <div class="eca-summary-label"><i class="fas fa-arrow-right-to-bracket"></i> Debe del rango</div>
+      <div class="eca-summary-value" data-summary="total_debe_rango_label">0.00</div>
+    </div>
+    <div class="eca-summary-item s-haber">
+      <div class="eca-summary-label"><i class="fas fa-arrow-right-from-bracket"></i> Haber del rango</div>
+      <div class="eca-summary-value" data-summary="total_haber_rango_label">0.00</div>
+    </div>
+    <div class="eca-summary-item s-corte">
+      <div class="eca-summary-label"><i class="fas fa-scissors"></i> Saldo al corte</div>
+      <div class="eca-summary-value" data-summary="saldo_corte_label">0.00</div>
+    </div>
+    <div class="eca-summary-item s-post">
+      <div class="eca-summary-label"><i class="fas fa-clock"></i> Posteriores</div>
+      <div class="eca-summary-value" data-summary="posterior_label">0</div>
+    </div>
+    <div class="eca-summary-item s-actual">
+      <div class="eca-summary-label"><i class="fas fa-circle-check"></i> Saldo actual</div>
+      <div class="eca-summary-value" data-summary="saldo_actual_label">0.00</div>
+    </div>
+  </section>
+
+  <!-- ── Tabla de movimientos ── -->
+  <section class="eca-card">
+    <div class="eca-card-head">
+      <div class="eca-card-title">
+        <div class="eca-card-icon"><i class="fas fa-table-list"></i></div>
+        Movimientos
+      </div>
+    </div>
+    <div class="eca-card-body">
+
+      <div class="eca-table-toolbar">
+        <div class="eca-table-info" id="tableInfo">
+          <i class="fas fa-circle-info"></i>
+          Seleccione un auxiliar y consulte.
+        </div>
+        <label class="eca-page-size" for="pageSize">
+          Filas
+          <select id="pageSize">
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="eca-grid-wrap">
+        <table class="eca-table">
+          <thead>
+            <tr>
+              <th>Bloque</th>
+              <th>Fecha</th>
+              <th>Comp.</th>
+              <th>Referencia</th>
+              <th>Cuenta</th>
+              <th>Unidad</th>
+              <th>Mon.</th>
+              <th class="eca-right">Debe</th>
+              <th class="eca-right">Haber</th>
+              <th class="eca-right">Saldo</th>
+              <th>Glosa</th>
+              <th class="eca-center">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="ecaBody">
+            <tr>
+              <td colspan="12" class="eca-empty">
+                <i class="fas fa-inbox"></i>
+                Sin datos consultados.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="eca-pagination" id="pagination"></div>
+
+    </div>
+  </section>
+
+</div>
+
+<script type="application/json" id="ecaBootstrap">
+  {{ bootstrap | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  (() => {
+    const bootEl = document.getElementById('ecaBootstrap');
+    const boot = JSON.parse(bootEl.textContent || '{}');
+    const form = document.getElementById('ecaForm');
+    const page = document.getElementById('ecaPage');
+    const body = document.getElementById('ecaBody');
+    const pagination = document.getElementById('pagination');
+    const pageSizeEl = document.getElementById('pageSize');
+    const tableInfo = document.getElementById('tableInfo');
+    const btnPdf = document.getElementById('btnPdf');
+    const btnExcel = document.getElementById('btnExcel');
+    const auxiliarSelect = document.getElementById('auxiliar_id');
+    const cuentaSelect = document.getElementById('cuenta_codigo');
+    const gestionSelect = document.getElementById('gestion');
+    const fechaDesde = document.getElementById('fecha_desde');
+    const fechaHasta = document.getElementById('fecha_hasta');
+
+    let rows = [];
+    let currentPage = 1;
+    let pageSize = 10;
+
+    function notify(message, icon = 'info') {
+      if (window.Swal) {
+        window.Swal.fire({ text: message, icon, confirmButtonText: 'Aceptar' });
+        return;
+      }
+      window.alert(message);
+    }
+
+    function option(label, value) {
+      const el = document.createElement('option');
+      el.value = value;
+      el.textContent = label;
+      return el;
+    }
+
+    function loadCatalogs() {
+      auxiliarSelect.appendChild(option('Seleccione auxiliar', ''));
+      (boot.auxiliares || []).forEach((item) => {
+        auxiliarSelect.appendChild(option(item.label, item.id));
+      });
+
+      cuentaSelect.appendChild(option('Todas las cuentas con movimiento', ''));
+      (boot.cuentas || []).forEach((item) => {
+        cuentaSelect.appendChild(option(item.label, item.codigo));
+      });
+    }
+
+    function params() {
+      const data = new FormData(form);
+      if (!document.getElementById('incluir_posteriores').checked) {
+        data.set('incluir_posteriores', '0');
+      }
+      return new URLSearchParams(data);
+    }
+
+    function setExportLinks() {
+      const query = params().toString();
+      btnPdf.href = `${boot.urls.pdf}?${query}`;
+      btnExcel.href = `${boot.urls.excel}?${query}`;
+    }
+
+    function updateDatesFromGestion() {
+      const gestion = gestionSelect.value;
+      if (!gestion) return;
+      fechaDesde.value = `${gestion}-01-01`;
+      fechaHasta.value = `${gestion}-12-31`;
+    }
+
+    function renderSummary(summary = {}) {
+      document.querySelectorAll('[data-summary]').forEach((el) => {
+        const key = el.dataset.summary;
+        if (key === 'posterior_label') {
+          el.textContent = `${summary.movimientos_posteriores || 0} mov.`;
+          return;
+        }
+        el.textContent = summary[key] || '0.00';
+      });
+    }
+
+    function badgeClass(row) {
+      if (row.tipo_linea && row.tipo_linea !== 'MOVIMIENTO') return 'eca-badge-control';
+      if (row.bloque === 'Posterior al corte') return 'eca-badge-post';
+      return 'eca-badge-range';
+    }
+
+    function renderRows() {
+      body.innerHTML = '';
+      const total = rows.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      currentPage = Math.min(currentPage, totalPages);
+      const start = (currentPage - 1) * pageSize;
+      const visible = rows.slice(start, start + pageSize);
+
+      if (!visible.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 12;
+        td.className = 'eca-empty';
+        td.innerHTML = '<i class="fas fa-inbox"></i>No se encontraron movimientos para los filtros seleccionados.';
+        tr.appendChild(td);
+        body.appendChild(tr);
+      }
+
+      visible.forEach((row) => {
+        const tr = document.createElement('tr');
+        if (row.tipo_linea && row.tipo_linea !== 'MOVIMIENTO') {
+          tr.classList.add('eca-control-row');
+        }
+
+        const cells = [
+          { value: row.bloque || '', badge: true },
+          { value: row.fecha || '', className: 'eca-center' },
+          { value: row.asiento_id || '', className: 'eca-center' },
+          { value: row.referencia || '' },
+          { value: row.cuenta || '' },
+          { value: row.unidad || '' },
+          { value: row.moneda_codigo || '', className: 'eca-center' },
+          { value: row.debe_label || '', className: 'eca-right eca-num-debe' },
+          { value: row.haber_label || '', className: 'eca-right eca-num-haber' },
+          { value: row.saldo_label || '', className: 'eca-right' },
+          { value: row.glosa || '' },
+        ];
+
+        cells.forEach((cell) => {
+          const td = document.createElement('td');
+          if (cell.className) td.className = cell.className;
+          if (cell.badge) {
+            const span = document.createElement('span');
+            span.className = `eca-badge ${badgeClass(row)}`;
+            span.textContent = cell.value;
+            td.appendChild(span);
+          } else {
+            td.textContent = cell.value;
+          }
+          tr.appendChild(td);
+        });
+
+        const actionTd = document.createElement('td');
+        actionTd.className = 'eca-center';
+        if (row.url_comprobante) {
+          const link = document.createElement('a');
+          link.className = 'eca-btn eca-btn-sm eca-btn-outline-sm';
+          link.href = row.url_comprobante;
+          link.innerHTML = '<i class="fas fa-eye"></i> Ver';
+          actionTd.appendChild(link);
+        } else {
+          actionTd.innerHTML = '<span class="eca-muted">—</span>';
+        }
+        tr.appendChild(actionTd);
+        body.appendChild(tr);
+      });
+
+      const icon = total ? 'fa-table-list' : 'fa-inbox';
+      tableInfo.innerHTML = total
+        ? `<i class="fas ${icon}"></i> ${total} línea(s) · Página ${currentPage} de ${totalPages}`
+        : `<i class="fas ${icon}"></i> Sin movimientos`;
+      renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+      pagination.innerHTML = '';
+      const buttons = [
+        { label: '«', page: 1, disabled: currentPage === 1 },
+        { label: '‹', page: currentPage - 1, disabled: currentPage === 1 },
+        { label: `${currentPage} / ${totalPages}`, page: currentPage, disabled: true },
+        { label: '›', page: currentPage + 1, disabled: currentPage === totalPages },
+        { label: '»', page: totalPages, disabled: currentPage === totalPages },
+      ];
+
+      buttons.forEach((item) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = item.label;
+        btn.disabled = item.disabled;
+        btn.addEventListener('click', () => {
+          currentPage = item.page;
+          renderRows();
+        });
+        pagination.appendChild(btn);
+      });
+    }
+
+    async function loadData() {
+      if (!auxiliarSelect.value) {
+        notify('Debe seleccionar un auxiliar.', 'warning');
+        return;
+      }
+      setExportLinks();
+      page.classList.add('eca-loading');
+      try {
+        const response = await fetch(`${boot.urls.api}?${params().toString()}`);
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.msg || 'No se pudo consultar el estado de cuenta.');
+        }
+        rows = payload.rows || [];
+        currentPage = 1;
+        renderSummary(payload.summary || {});
+        renderRows();
+      } catch (error) {
+        rows = [];
+        renderRows();
+        notify(error.message, 'error');
+      } finally {
+        page.classList.remove('eca-loading');
+      }
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      loadData();
+    });
+
+    pageSizeEl.addEventListener('change', () => {
+      pageSize = Number(pageSizeEl.value || 10);
+      currentPage = 1;
+      renderRows();
+    });
+
+    gestionSelect.addEventListener('change', updateDatesFromGestion);
+    form.addEventListener('change', setExportLinks);
+
+    loadCatalogs();
+    setExportLinks();
+  })();
+</script>
+{% endblock extra_js %}

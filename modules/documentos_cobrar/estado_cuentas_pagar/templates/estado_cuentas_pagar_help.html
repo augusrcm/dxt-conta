@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block title %}Ayuda · Estado de CxP{% endblock title %}
+
+{% block extra_css %}
+<style>
+  .help-wrap{display:grid;gap:1rem}.help-header{background:linear-gradient(135deg,#0f2340,#17406f);border-radius:1.15rem;box-shadow:0 18px 38px rgba(15,35,64,.18);color:#fff;padding:1.15rem 1.3rem}.help-header-kicker{align-items:center;color:rgba(255,255,255,.82);display:flex;font-size:.78rem;font-weight:800;gap:.45rem;letter-spacing:.06em;text-transform:uppercase}.help-header-title{font-size:clamp(1.35rem,2vw,2rem);font-weight:850;margin:.35rem 0 0}.help-card{background:#fff;border:1px solid #dfe7f1;border-radius:1.15rem;box-shadow:0 14px 34px rgba(15,35,64,.08);padding:1rem 1.1rem}.help-card h2{color:#0f2340;font-size:1rem;font-weight:900;margin:0 0 .45rem}.help-card p,.help-card li{color:#334155}.help-action{border-radius:.85rem;font-weight:800}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="help-wrap">
+  <section class="help-header">
+    <div class="help-header-kicker"><i class="fas fa-circle-question"></i> Ayuda</div>
+    <h1 class="help-header-title">Estado de Cuentas por Pagar</h1>
+  </section>
+  <section class="help-card">
+    <h2>Fuente</h2>
+    <p>Compromisos activos de tipo <strong>PAGAR</strong>, vencimientos y pagos confirmados asociados.</p>
+    <h2>Corte</h2>
+    <p>El importe pagado se calcula con pagos confirmados hasta la fecha de corte.</p>
+    <h2>Lectura</h2>
+    <ul>
+      <li><strong>Registrado:</strong> obligación programada.</li>
+      <li><strong>Pagado:</strong> pagos confirmados al corte.</li>
+      <li><strong>Pendiente:</strong> saldo por pagar al corte.</li>
+    </ul>
+    <a class="btn btn-outline-secondary help-action" href="{{ url_for('estado_cuentas_pagar.index') }}"><i class="fas fa-arrow-left me-1"></i> Volver</a>
+  </section>
+</div>
+{% endblock %}

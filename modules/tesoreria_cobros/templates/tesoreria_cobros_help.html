@@ -1,0 +1,373 @@
+{% extends "layouthelp.html" %}
+
+{% block title %}Ayuda · Tesorería Cobros{% endblock %}
+{% block help_title %}Ayuda rápida · Tesorería Cobros{% endblock %}
+{% block help_subtitle %}Guía práctica para la bandeja de pendientes, el historial de cobros y el editor del documento de cobro.{% endblock %}
+
+{% block help_summary %}
+<li>Cómo usar la bandeja de pendientes por cobrar.</li>
+<li>Cómo consultar el historial de cobros realizados.</li>
+<li>Cómo llenar la cabecera del cobro.</li>
+<li>Cómo trabajar cobros directos, por compromiso y por documento por cobrar.</li>
+<li>Qué validar antes de guardar, confirmar o eliminar un borrador.</li>
+{% endblock %}
+
+{% block help_content %}
+<section class="help-section">
+    <h2>1. Pantalla principal · Cobros</h2>
+    <div class="help-callout">
+        La pantalla separa la operación diaria en pendientes por cobrar y el control de cobros ya registrados.
+    </div>
+
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Buscar</h3>
+            <p>Permite localizar cobros por cliente, glosa, referencia, medio, importe o fecha.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Fecha desde / hasta</h3>
+            <p>Acota la consulta a un rango de fechas de operación.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Estado</h3>
+            <p>Filtra documentos en <strong>BORRADOR</strong>, <strong>CONFIRMADO</strong> o <strong>ANULADO</strong>.
+            </p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Origen</h3>
+            <p>Permite separar cobros <strong>DIRECTOS</strong>, desde <strong>COMPROMISOS</strong> o desde <strong>DOCUMENTOS POR COBRAR</strong>.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Unidad de negocio</h3>
+            <p>Permite separar la operación por unidad y evita mezclar cobros, compromisos y facturas de distintas unidades.</p>
+        </div>
+    </div>
+
+    <p>
+        También puede haber accesos rápidos por fecha como <strong>Hoy</strong>, <strong>Últimos 7 días</strong>,
+        <strong>Últimos 30 días</strong> o <strong>Mes actual</strong>, para facilitar el control operativo.
+    </p>
+</section>
+
+<section class="help-section">
+    <h2>2. Indicadores del listado</h2>
+    <div class="help-callout">
+        Los indicadores superiores resumen rápidamente los documentos visibles según los filtros aplicados.
+    </div>
+
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Total de documentos</h3>
+            <p>Cantidad de cobros visibles en la consulta actual.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Borradores</h3>
+            <p>Cobros aún no confirmados y que todavía pueden ajustarse o eliminarse si aún no corresponde registrarlos.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Confirmados</h3>
+            <p>Cobros ya consolidados dentro del flujo operativo.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Monto total</h3>
+            <p>Suma de los importes de los documentos filtrados.</p>
+        </div>
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>3. Tabla principal del listado</h2>
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Documento</h3>
+            <p>Identificador principal del cobro dentro del módulo.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Fecha</h3>
+            <p>Fecha de operación del cobro.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Cliente</h3>
+            <p>Tercero o auxiliar asociado al cobro.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Origen</h3>
+            <p>Indica si el cobro es directo o si proviene de compromisos programados.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Unidad de negocio</h3>
+            <p>Muestra la unidad a la que pertenece el documento para control y reportes.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Entrada</h3>
+            <p>Medio utilizado para recibir el cobro: caja o cuenta bancaria.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Líneas</h3>
+            <p>Cantidad de líneas o conceptos incluidos en el documento.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Total</h3>
+            <p>Importe total del cobro.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Estado</h3>
+            <p>Situación actual del documento: borrador, confirmado o anulado.</p>
+        </div>
+    </div>
+
+    <p>
+        Desde la columna <strong>Acción</strong> se accede al documento para editarlo o revisarlo según el estado y los
+        permisos del usuario. Cuando el cobro está en <strong>BORRADOR</strong>, también puede eliminarse.
+    </p>
+</section>
+
+<section class="help-section">
+    <h2>4. Pantalla de editor · Cabecera del cobro</h2>
+    <div class="help-callout">
+        Esta interfaz sirve para construir el documento de cobro completo: cabecera, medio de entrada, moneda, cliente,
+        cuenta y detalle.
+    </div>
+
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Unidad de negocio</h3>
+            <p>Es obligatoria. Condiciona las cajas, bancos, cuotas de compromiso y facturas disponibles.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Fecha de operación</h3>
+            <p>Fecha oficial del documento. Es obligatoria.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Entrada</h3>
+            <p>Define si el cobro ingresará por <strong>CAJA</strong> o por <strong>BANCO</strong>.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Caja</h3>
+            <p>Se usa cuando el medio de entrada es caja.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Cuenta bancaria</h3>
+            <p>Se usa cuando el medio de entrada es banco.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Moneda</h3>
+            <p>Moneda en la que se registra el cobro.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>T/C aplicado</h3>
+            <p>Tipo de cambio aplicado según la moneda y la fecha del documento.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>USD / UFV</h3>
+            <p>Valores de referencia del tipo de cambio disponibles para la fecha de operación.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Cliente</h3>
+            <p>Auxiliar o tercero del que proviene el cobro.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Contra cuenta</h3>
+            <p>Cuenta contable usada en cobros directos. En compromisos y documentos por cobrar, el sistema toma la cuenta del origen seleccionado.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Referencia</h3>
+            <p>Identifica el documento, soporte o comprobante asociado al cobro.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Glosa</h3>
+            <p>Describe claramente el motivo económico del cobro.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Total del cobro</h3>
+            <p>Se usa como total manual cuando el cobro directo no se registra por detalle de ítems.</p>
+        </div>
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>5. Origen del cobro · Directo, Compromiso o Documento por cobrar</h2>
+    <div class="help-callout">
+        El selector de origen aparece cuando se crea un cobro desde Nuevo cobro. Si el cobro nace desde un pendiente o se abre un cobro existente, el origen queda definido por el sistema.
+    </div>
+
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Directo</h3>
+            <p>Se usa para cobros libres por concepto general. Puede registrarse solo con cabecera, glosa y total, o con
+                detalle por ítems.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Compromiso</h3>
+            <p>Se usa cuando el cobro proviene de cuotas programadas previamente en el módulo de compromisos.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Documento por cobrar</h3>
+            <p>Se usa para aplicar cobros parciales o totales a documentos pendientes registrados o disponibles en cartera.</p>
+        </div>
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>6. Cobro directo</h2>
+    <p>
+        En modo <strong>Directo</strong>, el documento permite dos formas de trabajo:
+    </p>
+    <ul class="help-summary-list">
+        <li><strong>Cobro directo simple:</strong> se registra solo con cabecera, glosa y total.</li>
+        <li><strong>Cobro con detalle por ítems:</strong> se desglosa el cobro en varias líneas.</li>
+    </ul>
+
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Descripción</h3>
+            <p>Concepto principal de la línea del cobro.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Cantidad</h3>
+            <p>Número de unidades de la línea.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Precio unitario</h3>
+            <p>Valor unitario del concepto.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Subtotal</h3>
+            <p>Resultado de la línea. Contribuye al total del documento.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Observación</h3>
+            <p>Comentario adicional de apoyo para la línea específica.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Quitar</h3>
+            <p>Elimina la línea del detalle antes de guardar el documento.</p>
+        </div>
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>7. Cobro por compromiso</h2>
+    <div class="help-callout">
+        En modo <strong>Compromiso</strong>, el cobro se construye seleccionando cuotas pendientes desde la programación
+        previa.
+    </div>
+
+    <p>
+        Desde el botón <strong>Seleccionar cuotas</strong> se abre una ventana de búsqueda para elegir compromisos
+        pendientes.
+        Las cuotas seleccionadas pasan al documento y forman el total del cobro.
+    </p>
+
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Compromiso</h3>
+            <p>Identificador o referencia del compromiso de origen.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Cliente</h3>
+            <p>Tercero asociado a la cuota seleccionada.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Vencimiento</h3>
+            <p>Fecha programada de la cuota.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Cuenta</h3>
+            <p>Cuenta contable relacionada con la cuota del compromiso.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Monto</h3>
+            <p>Importe pendiente o programado de la cuota.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Estado</h3>
+            <p>Situación actual de la cuota dentro del seguimiento del compromiso.</p>
+        </div>
+    </div>
+
+    <div class="help-callout">
+        Regla importante: las cuotas seleccionadas deben pertenecer al mismo cliente y a la misma cuenta contable.
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>8. Cobro de documentos por cobrar</h2>
+    <div class="help-callout">
+        En este modo se seleccionan documentos pendientes y se aplica el monto cobrado a cada uno. El sistema actualiza saldos y genera el asiento al confirmar.
+    </div>
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Aplicación parcial</h3>
+            <p>Permite cobrar una parte del saldo disponible del documento.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Aplicación total</h3>
+            <p>Permite cancelar completamente el saldo pendiente del documento.</p>
+        </div>
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>9. Resumen del documento</h2>
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Origen</h3>
+            <p>Indica si el documento trabaja como cobro directo o por compromiso.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Cantidad de líneas</h3>
+            <p>Muestra cuántas líneas vigentes tiene el documento.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Total del cobro</h3>
+            <p>Importe consolidado del documento según el modo de trabajo y sus líneas.</p>
+        </div>
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>10. Estados del documento</h2>
+    <div class="help-grid-2">
+        <div class="help-mini-card">
+            <h3>Borrador</h3>
+            <p>Permite seguir editando el documento antes de consolidarlo.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Confirmado</h3>
+            <p>Documento validado y consolidado en el flujo operativo. Normalmente pasa a solo lectura.</p>
+        </div>
+        <div class="help-mini-card">
+            <h3>Anulado</h3>
+            <p>Documento dejado sin efecto dentro del sistema.</p>
+        </div>
+    </div>
+</section>
+
+<section class="help-section">
+    <h2>11. Flujo recomendado de uso</h2>
+    <ol class="help-steps">
+        <li>Define fecha, medio de entrada y moneda.</li>
+        <li>Selecciona cliente y contra cuenta.</li>
+        <li>Completa referencia y glosa.</li>
+        <li>Elige el origen: directo o compromiso.</li>
+        <li>Construye el detalle o selecciona cuotas, según corresponda.</li>
+        <li>Revisa total, líneas y coherencia del documento.</li>
+        <li>Guarda el documento.</li>
+        <li>Confirma únicamente cuando la información esté validada.</li>
+        <li>Si el documento quedó creado por error y sigue en borrador, elimínalo antes de continuar.</li>
+    </ol>
+</section>
+
+<section class="help-section">
+    <h2>12. Recomendaciones de control</h2>
+    <ul class="help-summary-list">
+        <li>Verifica que la fecha del cobro coincida con el tipo de cambio que corresponde.</li>
+        <li>Revisa que el medio de entrada sea correcto antes de confirmar.</li>
+        <li>No confirmes un cobro si cliente, cuenta o glosa todavía están incompletos.</li>
+        <li>En cobros por compromiso, valida que las cuotas seleccionadas correspondan realmente al documento que
+            quieres cobrar.</li>
+        <li>Usa la referencia para dejar trazabilidad del soporte o comprobante asociado.</li>
+    </ul>
+</section>
+{% endblock %}

@@ -1,0 +1,657 @@
+{% extends "layout.html" %}
+{% block title %}Balance General{% endblock %}
+{% block page_help_url %}{{ url_for('balance_general.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    #balanceGeneralPage {
+        --bg-navy: #0f2340;
+        --bg-blue: #173f6a;
+        --bg-accent: #2d7dd2;
+        --bg-accent-soft: #edf5ff;
+        --bg-border: #dde5ef;
+        --bg-surface-2: #fbfdff;
+        --bg-text: #1d2c3c;
+        --bg-muted: #6f7f90;
+        --bg-success: #177a53;
+        --bg-danger: #a61f2b;
+        --bg-radius: 18px;
+        color: var(--bg-text);
+    }
+
+    #balanceGeneralPage .bg-header {
+        background: linear-gradient(130deg, var(--bg-navy) 0%, var(--bg-blue) 55%, #1f5d9e 100%);
+        border-radius: var(--bg-radius);
+        padding: 1rem 1.2rem;
+        margin-bottom: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.9rem;
+        flex-wrap: wrap;
+        box-shadow: 0 14px 34px rgba(15, 35, 64, 0.16);
+    }
+
+    #balanceGeneralPage .bg-header-main { display:flex; align-items:center; gap:0.9rem; }
+    #balanceGeneralPage .bg-header-icon {
+        width: 44px; height: 44px; border-radius: 14px; background: rgba(255,255,255,0.14); color:#fff;
+        display:flex; align-items:center; justify-content:center; font-size:1rem;
+    }
+    #balanceGeneralPage .bg-title { margin:0; color:#fff; font-size:1.08rem; font-weight:700; }
+    #balanceGeneralPage .bg-subtitle { color:rgba(255,255,255,0.78); font-size:0.8rem; margin-top:2px; }
+    #balanceGeneralPage .bg-header-pill {
+        display:inline-flex; align-items:center; gap:.4rem; padding:.45rem .8rem; border-radius:999px;
+        background: rgba(255,255,255,0.12); color:#fff; font-weight:700; font-size:.78rem;
+    }
+
+    #balanceGeneralPage .bg-card {
+        background:#fff; border:1px solid var(--bg-border); border-radius:var(--bg-radius);
+        box-shadow:0 8px 24px rgba(15,35,64,.06); overflow:hidden; margin-bottom:.85rem;
+    }
+    #balanceGeneralPage .bg-card-head {
+        padding:.82rem 1rem; border-bottom:1px solid var(--bg-border); display:flex; align-items:center; justify-content:space-between;
+        gap:.75rem; flex-wrap:wrap; background:linear-gradient(180deg,#fff 0%,#f9fbfe 100%);
+    }
+    #balanceGeneralPage .bg-card-title { display:flex; align-items:center; gap:.65rem; font-weight:700; color:var(--bg-navy); }
+    #balanceGeneralPage .bg-card-title small { display:block; margin-top:2px; color:var(--bg-muted); font-size:.76rem; font-weight:500; }
+    #balanceGeneralPage .bg-card-body { padding:.9rem 1rem 1rem; }
+
+    #balanceGeneralPage .bg-filter-grid {
+        display:grid; grid-template-columns: 170px 220px minmax(240px,1fr) auto; gap:.8rem; align-items:end;
+    }
+    #balanceGeneralPage .bg-actions-inline { display:flex; gap:.55rem; justify-content:flex-end; flex-wrap:wrap; }
+    #balanceGeneralPage .bg-actions-inline .btn { min-width:120px; }
+
+    #balanceGeneralPage .form-label { color:var(--bg-navy); font-weight:700; margin-bottom:.35rem; font-size:.8rem; }
+    #balanceGeneralPage .form-control,
+    #balanceGeneralPage .form-select {
+        min-height:42px; border-radius:12px; border:1px solid #d7e2ee; box-shadow:none; font-size:.9rem;
+    }
+    #balanceGeneralPage .form-control:focus,
+    #balanceGeneralPage .form-select:focus { border-color:#8fb8eb; box-shadow:0 0 0 .2rem rgba(45,125,210,.15); }
+
+    #balanceGeneralPage .bg-date-wrap { position:relative; }
+    #balanceGeneralPage .bg-date-input { padding-right:2.8rem; cursor:pointer; background-color:#fff; }
+    #balanceGeneralPage .bg-date-button {
+        position:absolute; top:50%; right:.55rem; transform:translateY(-50%); width:1.9rem; height:1.9rem; border:none;
+        border-radius:10px; background:var(--bg-accent-soft); color:var(--bg-blue); display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+    }
+
+    #balanceGeneralPage .bg-chip-row { display:flex; flex-wrap:wrap; gap:.5rem; }
+    #balanceGeneralPage .bg-chip {
+        display:inline-flex; align-items:center; gap:.38rem; padding:.4rem .75rem; border-radius:999px;
+        background:var(--bg-accent-soft); color:var(--bg-blue); font-weight:700; font-size:.78rem;
+    }
+    #balanceGeneralPage .bg-chip.ok { background:#edf8f3; color:var(--bg-success); }
+    #balanceGeneralPage .bg-chip.bad { background:#fdeff1; color:var(--bg-danger); }
+
+    #balanceGeneralPage .bg-summary-grid { display:grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap:.75rem; }
+    #balanceGeneralPage .bg-summary-box {
+        background:linear-gradient(180deg,#fff 0%, var(--bg-surface-2) 100%); border:1px solid var(--bg-border);
+        border-radius:16px; padding:.78rem .9rem;
+    }
+    #balanceGeneralPage .bg-summary-label { text-transform:uppercase; letter-spacing:.08em; font-size:.68rem; color:var(--bg-muted); font-weight:700; margin-bottom:.26rem; }
+    #balanceGeneralPage .bg-summary-value { color:var(--bg-navy); font-weight:700; font-size:.96rem; }
+
+    #balanceGeneralPage .bg-sections { display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap:.9rem; }
+    #balanceGeneralPage .bg-section-card { border:1px solid var(--bg-border); border-radius:18px; overflow:hidden; background:#fff; }
+    #balanceGeneralPage .bg-section-head { padding:.78rem .9rem; background:linear-gradient(180deg,#f7faff 0%, #eef4fb 100%); border-bottom:1px solid var(--bg-border); }
+    #balanceGeneralPage .bg-section-name { font-weight:800; color:var(--bg-navy); font-size:.92rem; }
+    #balanceGeneralPage .bg-section-total { font-size:.78rem; color:var(--bg-muted); margin-top:.18rem; }
+    #balanceGeneralPage .bg-table-wrap { max-height:520px; overflow:auto; }
+    #balanceGeneralPage .bg-table { width:100%; border-collapse:collapse; }
+    #balanceGeneralPage .bg-table thead th { position:sticky; top:0; background:#f2f6fb; color:var(--bg-blue); border-bottom:1px solid var(--bg-border); font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; padding:.62rem .72rem; }
+    #balanceGeneralPage .bg-table tbody td { border-bottom:1px solid #edf2f7; padding:.58rem .72rem; font-size:.83rem; vertical-align:middle; }
+    #balanceGeneralPage .bg-money { text-align:right; font-weight:700; white-space:nowrap; }
+    #balanceGeneralPage .bg-currency { white-space:nowrap; font-weight:700; color:var(--bg-blue); }
+    #balanceGeneralPage .bg-totals-wrap { margin-top:.85rem; border:1px solid var(--bg-border); border-radius:16px; overflow:hidden; }
+    #balanceGeneralPage .bg-totals-title { padding:.7rem .85rem; background:#f3f7fc; color:var(--bg-navy); font-weight:800; font-size:.86rem; border-bottom:1px solid var(--bg-border); }
+    #balanceGeneralPage .bg-row-result { background:#fff8eb; }
+    #balanceGeneralPage .bg-empty { text-align:center; padding:1.4rem .9rem; color:var(--bg-muted); }
+
+    @media (max-width: 1200px) {
+        #balanceGeneralPage .bg-filter-grid { grid-template-columns: 1fr 1fr; }
+        #balanceGeneralPage .bg-summary-grid,
+        #balanceGeneralPage .bg-sections { grid-template-columns: 1fr 1fr; }
+        #balanceGeneralPage .bg-actions-inline { grid-column: 1 / -1; justify-content:flex-start; }
+    }
+
+    @media (max-width: 900px) {
+        #balanceGeneralPage .bg-filter-grid,
+        #balanceGeneralPage .bg-summary-grid,
+        #balanceGeneralPage .bg-sections { grid-template-columns:1fr; }
+        #balanceGeneralPage .bg-actions-inline .btn { width:100%; }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div id="balanceGeneralPage">
+    <div class="bg-header">
+        <div class="bg-header-main">
+            <div class="bg-header-icon"><i class="fas fa-building-columns"></i></div>
+            <div>
+                <h1 class="bg-title">Balance General</h1>
+                <div class="bg-subtitle">Situación patrimonial a una fecha de corte, con filtro por Unidad de Negocio y salida PDF.</div>
+            </div>
+        </div>
+        <div class="bg-header-pill"><i class="fas fa-scale-balanced"></i> Corte contable</div>
+    </div>
+
+    <div class="bg-card">
+        <div class="bg-card-head">
+            <div class="bg-card-title">
+                <i class="fas fa-filter"></i>
+                <div>Filtros<small>Consulta compacta del balance a una fecha de corte.</small></div>
+            </div>
+            <div class="bg-chip ok"><i class="fas fa-circle-check"></i> Confirmados</div>
+        </div>
+        <div class="bg-card-body">
+            <div class="bg-filter-grid">
+                <div>
+                    <label for="gestion" class="form-label">Gestión</label>
+                    <select id="gestion" class="form-select">
+                        {% for item in gestiones %}
+                        <option value="{{ item }}" {% if item == gestion_actual %}selected{% endif %}>{{ item }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="fechaCorte" class="form-label">Fecha de corte</label>
+                    <div class="bg-date-wrap">
+                        <input id="fechaCorte" type="text" class="form-control bg-date-input" value="{{ fecha_hoy }}" autocomplete="off" readonly />
+                        <button id="btnFechaCorte" type="button" class="bg-date-button" aria-label="Seleccionar fecha de corte">
+                            <i class="fas fa-calendar-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label for="unidadNegocio" class="form-label">Unidad de Negocio</label>
+                    <select id="unidadNegocio" class="form-select">
+                        <option value="">Todas las unidades</option>
+                        {% for item in unidades_negocio %}
+                        <option value="{{ item.id }}">{{ item.codigo }} · {{ item.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="bg-actions-inline">
+                    <button id="btnConsultar" type="button" class="btn btn-primary btn-sm"><i class="fas fa-search me-1"></i> Consultar</button>
+                    <button id="btnLimpiar" type="button" class="btn btn-light btn-sm"><i class="fas fa-rotate-left me-1"></i> Limpiar</button>
+                    <button id="btnPdf" type="button" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-pdf me-1"></i> PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-card">
+        <div class="bg-card-head">
+            <div class="bg-card-title">
+                <i class="fas fa-chart-pie"></i>
+                <div>
+                    Resumen<small>Comparación de activo vs pasivo + patrimonio</small>
+                </div>
+            </div>
+            <div class="bg-chip-row">
+                <div id="periodoBadge" class="bg-chip">
+                    <i class="fas fa-calendar-days"></i> Sin consulta realizada
+                </div>
+                <div id="resultadoBadge" class="bg-chip">
+                    <i class="fas fa-sack-dollar"></i> Resultado período: 0,00
+                </div>
+                <div id="estadoBadge" class="bg-chip">
+                    <i class="fas fa-scale-balanced"></i> Estado pendiente
+                </div>
+            </div>
+        </div>
+        <div class="bg-card-body">
+            <div class="bg-summary-grid">
+                <div class="bg-summary-box">
+                    <div class="bg-summary-label">Unidad</div>
+                    <div id="sumUnidad" class="bg-summary-value">Todas las unidades</div>
+                </div>
+                <div class="bg-summary-box">
+                    <div class="bg-summary-label">Monedas</div>
+                    <div id="sumCantidadMonedas" class="bg-summary-value">0</div>
+                </div>
+                <div class="bg-summary-box">
+                    <div class="bg-summary-label">Total activo</div>
+                    <div id="sumActivo" class="bg-summary-value">0,00</div>
+                </div>
+                <div class="bg-summary-box">
+                    <div class="bg-summary-label">Total pasivo</div>
+                    <div id="sumPasivo" class="bg-summary-value">0,00</div>
+                </div>
+                <div class="bg-summary-box">
+                    <div class="bg-summary-label">Total patrimonio</div>
+                    <div id="sumPatrimonio" class="bg-summary-value">0,00</div>
+                </div>
+                <div class="bg-summary-box">
+                    <div class="bg-summary-label">Pasivo + patrimonio</div>
+                    <div id="sumPasivoPatrimonio" class="bg-summary-value">0,00</div>
+                </div>
+            </div>
+            <div class="bg-totals-wrap">
+                <div class="bg-totals-title"><i class="fas fa-coins me-1"></i> Totales por moneda</div>
+                <div class="bg-table-wrap">
+                    <table class="bg-table">
+                        <thead>
+                            <tr>
+                                <th>Moneda</th>
+                                <th>Activo</th>
+                                <th>Pasivo</th>
+                                <th>Patrimonio</th>
+                                <th>Pasivo + Patrimonio</th>
+                                <th>Diferencia</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyTotalesMoneda"></tbody>
+                    </table>
+                    <div id="emptyTotalesMoneda" class="bg-empty">Sin datos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-card">
+        <div class="bg-card-head">
+            <div class="bg-card-title">
+                <i class="fas fa-table"></i>
+                <div>
+                    Estructura del balance<small>Activo, pasivo y patrimonio</small>
+                </div>
+            </div>
+        </div>
+        <div class="bg-card-body">
+            <div class="bg-sections">
+                <div class="bg-section-card">
+                    <div class="bg-section-head">
+                        <div class="bg-section-name">Activo</div>
+                        <div id="totActivoCard" class="bg-section-total">Total: 0,00</div>
+                    </div>
+                    <div class="bg-table-wrap">
+                        <table class="bg-table">
+                            <thead>
+                                <tr>
+                                    <th>Moneda</th>
+                                    <th>Código</th>
+                                    <th>Cuenta</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyActivo"></tbody>
+                        </table>
+                        <div id="emptyActivo" class="bg-empty">Sin datos</div>
+                    </div>
+                </div>
+
+                <div class="bg-section-card">
+                    <div class="bg-section-head">
+                        <div class="bg-section-name">Pasivo</div>
+                        <div id="totPasivoCard" class="bg-section-total">Total: 0,00</div>
+                    </div>
+                    <div class="bg-table-wrap">
+                        <table class="bg-table">
+                            <thead>
+                                <tr>
+                                    <th>Moneda</th>
+                                    <th>Código</th>
+                                    <th>Cuenta</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyPasivo"></tbody>
+                        </table>
+                        <div id="emptyPasivo" class="bg-empty">Sin datos</div>
+                    </div>
+                </div>
+
+                <div class="bg-section-card">
+                    <div class="bg-section-head">
+                        <div class="bg-section-name">Patrimonio</div>
+                        <div id="totPatrimonioCard" class="bg-section-total">Total: 0,00</div>
+                    </div>
+                    <div class="bg-table-wrap">
+                        <table class="bg-table">
+                            <thead>
+                                <tr>
+                                    <th>Moneda</th>
+                                    <th>Código</th>
+                                    <th>Cuenta</th>
+                                    <th>Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyPatrimonio"></tbody>
+                        </table>
+                        <div id="emptyPatrimonio" class="bg-empty">Sin datos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="balanceGeneralBootstrap" type="application/json">
+  {{ {
+    "fecha_hoy": fecha_hoy,
+    "gestion_actual": gestion_actual,
+    "urls": {
+      "datos": url_for('balance_general.datos'),
+      "pdf": url_for('balance_general.pdf')
+    }
+  } | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const bootEl = document.getElementById("balanceGeneralBootstrap");
+        if (!bootEl) {
+            return;
+        }
+
+        if (typeof flatpickr === "undefined") {
+            Swal.fire({
+                icon: "error",
+                title: "Balance General",
+                text: "No se pudieron cargar los componentes requeridos de la pantalla.",
+                confirmButtonText: "Aceptar",
+                confirmButtonColor: "#1d4ed8",
+            });
+            return;
+        }
+
+        const boot = JSON.parse(bootEl.textContent || "{}");
+
+        const gestion = document.getElementById("gestion");
+        const fechaCorte = document.getElementById("fechaCorte");
+        const unidadNegocio = document.getElementById("unidadNegocio");
+        const btnFechaCorte = document.getElementById("btnFechaCorte");
+        const btnConsultar = document.getElementById("btnConsultar");
+        const btnLimpiar = document.getElementById("btnLimpiar");
+        const btnPdf = document.getElementById("btnPdf");
+
+        const periodoBadge = document.getElementById("periodoBadge");
+        const resultadoBadge = document.getElementById("resultadoBadge");
+        const estadoBadge = document.getElementById("estadoBadge");
+
+        const sumUnidad = document.getElementById("sumUnidad");
+        const sumCantidadMonedas = document.getElementById("sumCantidadMonedas");
+        const sumActivo = document.getElementById("sumActivo");
+        const sumPasivo = document.getElementById("sumPasivo");
+        const sumPatrimonio = document.getElementById("sumPatrimonio");
+        const sumPasivoPatrimonio = document.getElementById("sumPasivoPatrimonio");
+
+        const totActivoCard = document.getElementById("totActivoCard");
+        const totPasivoCard = document.getElementById("totPasivoCard");
+        const totPatrimonioCard = document.getElementById("totPatrimonioCard");
+
+        const tbodyActivo = document.getElementById("tbodyActivo");
+        const tbodyPasivo = document.getElementById("tbodyPasivo");
+        const tbodyPatrimonio = document.getElementById("tbodyPatrimonio");
+
+        const emptyActivo = document.getElementById("emptyActivo");
+        const emptyPasivo = document.getElementById("emptyPasivo");
+        const emptyPatrimonio = document.getElementById("emptyPatrimonio");
+        const tbodyTotalesMoneda = document.getElementById("tbodyTotalesMoneda");
+        const emptyTotalesMoneda = document.getElementById("emptyTotalesMoneda");
+
+        let ultimaConsulta = null;
+
+        function formatMoney(value) {
+            return Number(value || 0).toLocaleString("es-BO", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+        }
+
+        function formatAmountMoneda(value, simbolo) {
+            const prefijo = simbolo ? `${simbolo} ` : "";
+            return `${prefijo}${formatMoney(value)}`;
+        }
+
+        function resumenMonto(resumen, campo) {
+            if (resumen.moneda_unica) {
+                return formatAmountMoneda(resumen[campo], resumen.moneda_principal_simbolo);
+            }
+            if (Number(resumen.cantidad_monedas || 0) > 1) {
+                return "Por moneda";
+            }
+            return "0,00";
+        }
+
+        function showError(message) {
+            Swal.fire({
+                icon: "error",
+                title: "Balance General",
+                text: message,
+                confirmButtonText: "Aceptar",
+                confirmButtonColor: "#1d4ed8",
+            });
+        }
+
+        function clearBody(tbody, emptyEl, text) {
+            tbody.innerHTML = "";
+            emptyEl.textContent = text || "Sin datos";
+            emptyEl.style.display = "block";
+        }
+
+        function setSectionRows(tbody, emptyEl, rows) {
+            tbody.innerHTML = "";
+
+            if (!rows || !rows.length) {
+                emptyEl.style.display = "block";
+                return;
+            }
+
+            emptyEl.style.display = "none";
+
+            rows.forEach((row) => {
+                const tr = document.createElement("tr");
+                if (row.es_resultado_periodo) {
+                    tr.classList.add("bg-row-result");
+                }
+
+                const tdMoneda = document.createElement("td");
+                tdMoneda.className = "bg-currency";
+                tdMoneda.textContent = row.moneda_codigo || "";
+
+                const tdCodigo = document.createElement("td");
+                tdCodigo.textContent = row.codigo || "";
+
+                const tdNombre = document.createElement("td");
+                tdNombre.textContent = row.nombre || "";
+
+                const tdMonto = document.createElement("td");
+                tdMonto.className = "bg-money";
+                tdMonto.textContent = formatAmountMoneda(row.monto, row.moneda_simbolo);
+
+                tr.appendChild(tdMoneda);
+                tr.appendChild(tdCodigo);
+                tr.appendChild(tdNombre);
+                tr.appendChild(tdMonto);
+                tbody.appendChild(tr);
+            });
+        }
+
+        function setTotalsRows(rows) {
+            tbodyTotalesMoneda.innerHTML = "";
+
+            if (!rows || !rows.length) {
+                emptyTotalesMoneda.style.display = "block";
+                return;
+            }
+
+            emptyTotalesMoneda.style.display = "none";
+            rows.forEach((row) => {
+                const tr = document.createElement("tr");
+                const estado = row.cuadrado ? "Cuadrado" : "Diferencia";
+
+                const cells = [
+                    { text: row.moneda_codigo || "", className: "bg-currency" },
+                    { text: formatAmountMoneda(row.total_activo, row.moneda_simbolo), className: "bg-money" },
+                    { text: formatAmountMoneda(row.total_pasivo, row.moneda_simbolo), className: "bg-money" },
+                    { text: formatAmountMoneda(row.total_patrimonio, row.moneda_simbolo), className: "bg-money" },
+                    { text: formatAmountMoneda(row.total_pasivo_patrimonio, row.moneda_simbolo), className: "bg-money" },
+                    { text: formatAmountMoneda(row.diferencia, row.moneda_simbolo), className: "bg-money" },
+                    { text: estado, className: row.cuadrado ? "bg-currency" : "bg-money" },
+                ];
+
+                cells.forEach((cell) => {
+                    const td = document.createElement("td");
+                    td.textContent = cell.text;
+                    td.className = cell.className;
+                    tr.appendChild(td);
+                });
+                tbodyTotalesMoneda.appendChild(tr);
+            });
+        }
+
+        function resetSummary() {
+            periodoBadge.innerHTML =
+                '<i class="fas fa-calendar-days"></i> Sin consulta realizada';
+            resultadoBadge.innerHTML =
+                '<i class="fas fa-sack-dollar"></i> Resultado período: 0,00';
+            estadoBadge.className = "bg-chip";
+            estadoBadge.innerHTML =
+                '<i class="fas fa-scale-balanced"></i> Estado pendiente';
+
+            sumUnidad.textContent = "Todas las unidades";
+            sumCantidadMonedas.textContent = "0";
+            sumActivo.textContent = "0,00";
+            sumPasivo.textContent = "0,00";
+            sumPatrimonio.textContent = "0,00";
+            sumPasivoPatrimonio.textContent = "0,00";
+
+            totActivoCard.textContent = "Total: 0,00";
+            totPasivoCard.textContent = "Total: 0,00";
+            totPatrimonioCard.textContent = "Total: 0,00";
+            setTotalsRows([]);
+        }
+
+        function currentParams() {
+            return {
+                gestion: gestion.value || boot.gestion_actual,
+                fecha_corte: fechaCorte.value || boot.fecha_hoy,
+                unidad_negocio_id: unidadNegocio.value || "",
+            };
+        }
+
+        function setLoading(isLoading) {
+            btnConsultar.disabled = isLoading;
+            btnPdf.disabled = isLoading;
+            btnLimpiar.disabled = isLoading;
+            btnConsultar.innerHTML = isLoading
+                ? '<span class="spinner-border spinner-border-sm me-1"></span> Consultando...'
+                : '<i class="fas fa-search me-1"></i> Consultar';
+        }
+
+        const fpCorte = flatpickr(fechaCorte, {
+            locale: flatpickr.l10ns.es || "es",
+            dateFormat: "Y-m-d",
+            allowInput: false,
+            clickOpens: true,
+            disableMobile: true,
+            defaultDate: boot.fecha_hoy,
+        });
+
+        btnFechaCorte.addEventListener("click", function () {
+            fpCorte.open();
+        });
+
+        fechaCorte.addEventListener("click", function () {
+            fpCorte.open();
+        });
+
+        async function consultar() {
+            const params = currentParams();
+            setLoading(true);
+
+            try {
+                const query = new URLSearchParams(params);
+                const response = await fetch(`${boot.urls.datos}?${query.toString()}`, {
+                    headers: {
+                        Accept: "application/json",
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                });
+
+                const payload = await response.json();
+
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.message || "No se pudo consultar el balance general.");
+                }
+
+                const resumen = payload.resumen || {};
+                const activo = payload.activo || [];
+                const pasivo = payload.pasivo || [];
+                const patrimonio = payload.patrimonio || [];
+                const totalesPorMoneda = payload.totales_por_moneda || [];
+
+                periodoBadge.innerHTML = `<i class="fas fa-calendar-days"></i> ${resumen.descripcion_periodo || "Sin período"}`;
+                resultadoBadge.innerHTML = `<i class="fas fa-sack-dollar"></i> Resultado período: ${resumenMonto(resumen, "resultado_periodo")}`;
+
+                estadoBadge.className = resumen.cuadrado ? "bg-chip ok" : "bg-chip bad";
+                estadoBadge.innerHTML = resumen.cuadrado
+                    ? '<i class="fas fa-circle-check"></i> Cuadrado'
+                    : '<i class="fas fa-triangle-exclamation"></i> Descuadrado';
+
+                sumUnidad.textContent = resumen.unidad_negocio_nombre || "Todas las unidades";
+                sumCantidadMonedas.textContent = String(resumen.cantidad_monedas || 0);
+                sumActivo.textContent = resumenMonto(resumen, "total_activo");
+                sumPasivo.textContent = resumenMonto(resumen, "total_pasivo");
+                sumPatrimonio.textContent = resumenMonto(resumen, "total_patrimonio");
+                sumPasivoPatrimonio.textContent = resumenMonto(resumen, "total_pasivo_patrimonio");
+
+                totActivoCard.textContent = `Total: ${resumenMonto(resumen, "total_activo")}`;
+                totPasivoCard.textContent = `Total: ${resumenMonto(resumen, "total_pasivo")}`;
+                totPatrimonioCard.textContent = `Total: ${resumenMonto(resumen, "total_patrimonio")}`;
+
+                setSectionRows(tbodyActivo, emptyActivo, activo);
+                setSectionRows(tbodyPasivo, emptyPasivo, pasivo);
+                setSectionRows(tbodyPatrimonio, emptyPatrimonio, patrimonio);
+                setTotalsRows(totalesPorMoneda);
+
+                ultimaConsulta = params;
+            } catch (error) {
+                clearBody(tbodyActivo, emptyActivo, "Sin datos");
+                clearBody(tbodyPasivo, emptyPasivo, "Sin datos");
+                clearBody(tbodyPatrimonio, emptyPatrimonio, "Sin datos");
+                setTotalsRows([]);
+                resetSummary();
+                ultimaConsulta = null;
+                showError(error.message || "No se pudo consultar el balance general.");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        btnConsultar.addEventListener("click", consultar);
+
+        btnLimpiar.addEventListener("click", function () {
+            gestion.value = String(boot.gestion_actual || "");
+            unidadNegocio.value = "";
+            fpCorte.setDate(boot.fecha_hoy, true);
+            ultimaConsulta = null;
+            resetSummary();
+            clearBody(tbodyActivo, emptyActivo, "Consulte para visualizar el activo.");
+            clearBody(tbodyPasivo, emptyPasivo, "Consulte para visualizar el pasivo.");
+            clearBody(tbodyPatrimonio, emptyPatrimonio, "Consulte para visualizar el patrimonio.");
+            setTotalsRows([]);
+        });
+
+        btnPdf.addEventListener("click", function () {
+            const params = ultimaConsulta || currentParams();
+            const query = new URLSearchParams(params);
+            window.open(`${boot.urls.pdf}?${query.toString()}`, "_blank");
+        });
+
+        resetSummary();
+        clearBody(tbodyActivo, emptyActivo, "Consulte para visualizar el activo.");
+        clearBody(tbodyPasivo, emptyPasivo, "Consulte para visualizar el pasivo.");
+        clearBody(tbodyPatrimonio, emptyPatrimonio, "Consulte para visualizar el patrimonio.");
+        setTotalsRows([]);
+    })();
+</script>
+{% endblock extra_js %}

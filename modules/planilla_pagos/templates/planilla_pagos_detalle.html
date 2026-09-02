@@ -1,0 +1,205 @@
+{% extends "layout.html" %}
+{% block title %}Pago de Planilla {{ planilla.codigo }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-3 pago-planilla-detalle">
+  <div class="page-hero d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <div class="hero-kicker">{{ tipos.get(planilla.tipo_planilla, planilla.tipo_planilla) }}</div>
+      <h2 class="mb-0">{{ planilla.codigo }}</h2>
+      <small>{{ meses[planilla.mes-1][1] }} {{ planilla.gestion }} · {{ planilla.moneda_codigo }}</small>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-light btn-sm" href="{{ url_for('planilla_pagos.pdf_masivo', planilla_id=planilla.id) }}" target="_blank"><i class="fas fa-file-pdf me-1"></i>PDF boletas</a>
+      <a class="btn btn-outline-light btn-sm" href="{{ url_for('planilla_pagos.index') }}"><i class="fas fa-arrow-left me-1"></i>Volver</a>
+    </div>
+  </div>
+
+  <div class="row g-2 mb-3">
+    <div class="col-md-4"><div class="metric-card primary"><span>Líquido</span><strong>{{ moneyfmt(planilla.total_liquido) }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card success"><span>Pagado</span><strong>{{ moneyfmt(planilla.total_pagado_real) }}</strong></div></div>
+    <div class="col-md-4"><div class="metric-card warning"><span>Pendiente</span><strong>{{ moneyfmt(planilla.saldo_pendiente_real) }}</strong></div></div>
+  </div>
+
+  {% if puede_editar %}
+  <div class="toolbar-card mb-3 d-flex gap-2 flex-wrap">
+    <button class="btn btn-primary btn-sm" onclick="abrirPago('GLOBAL')"><i class="fas fa-check-double me-1"></i>Pagar todo pendiente</button>
+    <button class="btn btn-outline-primary btn-sm" onclick="abrirPago('SELECCION')"><i class="fas fa-user-check me-1"></i>Pagar seleccionados</button>
+    <button class="btn btn-outline-danger btn-sm" onclick="abrirReversion('GLOBAL')"><i class="fas fa-rotate-left me-1"></i>Revertir pagos vigentes</button>
+  </div>
+  {% endif %}
+
+  <div class="card grid-card mb-3">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead><tr><th><input type="checkbox" id="chkAll"></th><th>Beneficiario</th><th>Unidad</th><th>Banco ref.</th><th class="text-end">Líquido</th><th class="text-end">Pagado</th><th class="text-end">Saldo</th><th>Estado</th><th class="text-center">Pago</th><th class="text-center">PDF</th></tr></thead>
+        <tbody>
+          {% for d in detalles %}
+          <tr>
+            <td>{% if d.saldo_real > 0 %}<input type="checkbox" class="chk-detalle" value="{{ d.id }}">{% endif %}</td>
+            <td><strong>{{ d.nombre_completo }}</strong><br><small>{{ d.ci_nit }}</small></td>
+            <td><span class="badge bg-light text-dark border">{{ d.unidad_negocio_codigo }}</span></td>
+            <td><small>{{ d.banco_referencia or '-' }} {{ d.cuenta_bancaria_referencia or '' }}</small></td>
+            <td class="text-end">{{ moneyfmt(d.liquido_pagable) }}</td>
+            <td class="text-end">{{ moneyfmt(d.pagado_real) }}</td>
+            <td class="text-end fw-bold">{{ moneyfmt(d.saldo_real) }}</td>
+            <td>{% if d.estado_pago_real == 'PAGADO' %}<span class="badge bg-success">Pagado</span>{% elif d.estado_pago_real == 'PARCIAL' %}<span class="badge bg-warning text-dark">Parcial</span>{% else %}<span class="badge bg-secondary">Pendiente</span>{% endif %}</td>
+            <td class="text-center">
+              {% if puede_editar and d.saldo_real > 0 %}
+              <button class="btn btn-sm btn-outline-primary" onclick='abrirPagoIndividual({{ d.id }}, {{ (d.nombre_completo or "")|tojson }}, "{{ moneyfmt(d.saldo_real) }}", {{ (d.banco_referencia or "")|tojson }}, {{ (d.cuenta_bancaria_referencia or "")|tojson }})' title="Pagar individual"><i class="fas fa-money-bill-transfer"></i></button>
+              {% else %}<span class="text-muted">-</span>{% endif %}
+            </td>
+            <td class="text-center"><a class="btn btn-sm btn-outline-danger" target="_blank" href="{{ url_for('planilla_pagos.pdf_individual', detalle_id=d.id) }}"><i class="fas fa-file-pdf"></i></a></td>
+          </tr>
+          {% else %}<tr><td colspan="10" class="text-center text-muted py-4">Sin beneficiarios.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card grid-card">
+    <div class="d-flex justify-content-between align-items-center mb-2"><h6 class="mb-0">Pagos registrados</h6>{% if puede_editar %}<button class="btn btn-outline-danger btn-sm" onclick="abrirReversion('SELECCION')"><i class="fas fa-rotate-left me-1"></i>Revertir seleccionados</button>{% endif %}</div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead><tr><th></th><th>Fecha</th><th>Unidad</th><th>Salida</th><th>Entrega</th><th>Referencia</th><th class="text-end">Monto</th><th>Estado</th></tr></thead>
+        <tbody>
+          {% for p in pagos %}
+          <tr>
+            <td>{% if p.estado == 'CONFIRMADO' %}<input type="checkbox" class="chk-pago" value="{{ p.id }}">{% endif %}</td>
+            <td>{{ p.fecha }}</td><td>{{ p.unidad_codigo or '-' }}</td><td>{{ p.medio_pago }}</td>
+            <td>
+              {% if p.medio_entrega %}
+                <small><strong>{{ p.medio_entrega }}</strong>{% if p.banco_destino %}<br>{{ p.banco_destino }}{% endif %}{% if p.numero_cheque %}<br>Ch. {{ p.numero_cheque }}{% endif %}</small>
+              {% else %}<span class="text-muted">Masivo</span>{% endif %}
+            </td>
+            <td>{{ p.referencia }}</td><td class="text-end">{{ moneyfmt(p.monto_total) }}</td>
+            <td>{% if p.estado == 'CONFIRMADO' %}<span class="badge bg-success">Vigente</span>{% else %}<span class="badge bg-danger">Anulado</span>{% endif %}</td>
+          </tr>
+          {% else %}<tr><td colspan="8" class="text-center text-muted py-3">Sin pagos registrados.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalPagoPlanilla" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered"><div class="modal-content">
+    <div class="modal-header modal-dxt"><div><h5 class="modal-title">Registrar pago</h5><small>Pago individual, seleccionado o global.</small></div><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <input type="hidden" id="pagoScope" value="SELECCION">
+      <input type="hidden" id="pagoDetalleIndividual" value="">
+      <div id="pagoIndividualResumen" class="alert alert-light border d-none mb-3">
+        <div class="small text-muted text-uppercase fw-bold">Beneficiario seleccionado</div>
+        <div><strong id="pagoIndividualNombre">-</strong></div>
+        <div class="small">Saldo pendiente: <strong id="pagoIndividualSaldo">0.00</strong></div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-4"><label class="form-label">Fecha</label><input type="date" id="pagoFecha" class="form-control" value="{{ planilla.fecha_planilla or '' }}"></div>
+        <div class="col-md-4"><label class="form-label">Medio</label><select id="pagoMedio" class="form-select"><option value="CAJA">Caja</option><option value="BANCO">Banco</option></select></div>
+        <div class="col-md-4 pago-caja"><label class="form-label">Caja</label><select id="pagoCaja" class="form-select">{% for c in cajas %}<option value="{{ c.id }}">{{ c.codigo }} - {{ c.nombre }}</option>{% endfor %}</select></div>
+        <div class="col-md-8 pago-banco d-none"><label class="form-label">Banco</label><select id="pagoBanco" class="form-select">{% for b in bancos %}<option value="{{ b.id }}">{{ b.nombre_banco or b.banco }} - {{ b.numero_cuenta }}</option>{% endfor %}</select></div>
+        <div class="col-md-4"><label class="form-label">Unidad</label><select id="pagoUnidad" class="form-select"><option value="">Todas / según selección</option>{% for u in unidades %}<option value="{{ u.id }}">{{ u.codigo }} - {{ u.nombre }}</option>{% endfor %}</select></div>
+        <div class="col-md-8"><label class="form-label">Referencia</label><input id="pagoReferencia" class="form-control" maxlength="150" placeholder="Opcional"></div>
+        <div class="col-12"><label class="form-label">Glosa</label><textarea id="pagoGlosa" class="form-control" rows="2">Pago de planilla {{ planilla.codigo }}</textarea></div>
+      </div>
+      <div id="bloqueDestinoIndividual" class="mt-3 d-none">
+        <div class="section-mini-title mb-2"><i class="fas fa-user-check me-1"></i>Entrega al beneficiario</div>
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Medio de entrega</label><select id="medioEntrega" class="form-select"><option value="EFECTIVO">Efectivo</option><option value="TRANSFERENCIA">Transferencia bancaria</option><option value="QR">QR</option><option value="CHEQUE">Cheque</option></select></div>
+          <div class="col-md-4 destino-banco"><label class="form-label">Banco destino</label><input id="bancoDestino" class="form-control" maxlength="120" placeholder="Banco del beneficiario"></div>
+          <div class="col-md-4 destino-cuenta"><label class="form-label">Cuenta destino</label><input id="cuentaDestino" class="form-control" maxlength="120" placeholder="Cuenta / celular / QR"></div>
+          <div class="col-md-4 destino-cheque d-none"><label class="form-label">Nro. cheque</label><input id="numeroCheque" class="form-control" maxlength="80" placeholder="Número de cheque"></div>
+          <div class="col-md-8"><label class="form-label">Referencia destino</label><input id="referenciaDestino" class="form-control" maxlength="180" placeholder="Código de transacción, recibo o referencia"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button id="btnRegistrarPago" class="btn btn-primary" type="button" onclick="registrarPago()"><i class="fas fa-check me-1"></i><span class="btn-registrar-texto">Registrar</span></button></div>
+  </div></div>
+</div>
+
+<script>
+const PLANILLA_ID = {{ planilla.id }};
+const CSRF = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+function swalMsg(icon,title,text){ if(window.Swal){ return Swal.fire({icon,title,text,confirmButtonText:'OK'}); } alert((title||'')+'\n'+(text||'')); }
+async function api(url, payload){ const r = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF(),'X-Requested-With':'XMLHttpRequest'},body:JSON.stringify(payload||{})}); const t = await r.text(); let j; try{j=JSON.parse(t)}catch(e){throw new Error('Respuesta inválida del servidor.')} if(!r.ok || !j.success){throw new Error(j.message||'No se pudo completar.')} return j; }
+document.getElementById('chkAll')?.addEventListener('change', e=>document.querySelectorAll('.chk-detalle').forEach(c=>c.checked=e.target.checked));
+document.getElementById('pagoMedio')?.addEventListener('change', e=>{document.querySelector('.pago-caja').classList.toggle('d-none', e.target.value!=='CAJA');document.querySelector('.pago-banco').classList.toggle('d-none', e.target.value!=='BANCO');});
+function seleccionDetalles(){ return Array.from(document.querySelectorAll('.chk-detalle:checked')).map(x=>Number(x.value)); }
+function seleccionPagos(){ return Array.from(document.querySelectorAll('.chk-pago:checked')).map(x=>Number(x.value)); }
+function actualizarDestinoIndividual(){
+  const medio=document.getElementById('medioEntrega')?.value || 'EFECTIVO';
+  document.querySelectorAll('.destino-banco,.destino-cuenta').forEach(x=>x.classList.toggle('d-none', !(medio==='TRANSFERENCIA'||medio==='QR')));
+  document.querySelector('.destino-cheque')?.classList.toggle('d-none', medio!=='CHEQUE');
+}
+document.getElementById('medioEntrega')?.addEventListener('change', actualizarDestinoIndividual);
+function prepararModalPago(scope){
+  document.getElementById('pagoScope').value=scope;
+  document.getElementById('pagoDetalleIndividual').value='';
+  document.getElementById('pagoIndividualResumen').classList.toggle('d-none', scope!=='INDIVIDUAL');
+  document.getElementById('bloqueDestinoIndividual').classList.toggle('d-none', scope!=='INDIVIDUAL');
+  document.getElementById('pagoUnidad').closest('.col-md-4').classList.toggle('d-none', scope==='INDIVIDUAL');
+  if(scope!=='INDIVIDUAL'){
+    document.getElementById('pagoIndividualNombre').textContent='-';
+    document.getElementById('pagoIndividualSaldo').textContent='0.00';
+    document.getElementById('bancoDestino').value='';
+    document.getElementById('cuentaDestino').value='';
+    document.getElementById('numeroCheque').value='';
+    document.getElementById('referenciaDestino').value='';
+  }
+  actualizarDestinoIndividual();
+}
+function abrirPago(scope){ prepararModalPago(scope); new bootstrap.Modal(document.getElementById('modalPagoPlanilla')).show(); }
+function abrirPagoIndividual(id,nombre,saldo,bancoRef,cuentaRef){
+  prepararModalPago('INDIVIDUAL');
+  document.getElementById('pagoDetalleIndividual').value=id;
+  document.getElementById('pagoIndividualNombre').textContent=nombre||'-';
+  document.getElementById('pagoIndividualSaldo').textContent=saldo||'0.00';
+  document.getElementById('bancoDestino').value=bancoRef||'';
+  document.getElementById('cuentaDestino').value=cuentaRef||'';
+  document.getElementById('pagoReferencia').value=`PAGO-IND-${id}`;
+  document.getElementById('pagoGlosa').value=`Pago individual de planilla {{ planilla.codigo }} - ${nombre||''}`;
+  new bootstrap.Modal(document.getElementById('modalPagoPlanilla')).show();
+}
+let pagoEnProceso=false;
+async function registrarPago(){
+  if(pagoEnProceso) return;
+  const scope=document.getElementById('pagoScope').value;
+  let ids=seleccionDetalles();
+  if(scope==='INDIVIDUAL') ids=[Number(document.getElementById('pagoDetalleIndividual').value||0)].filter(Boolean);
+  if(scope==='SELECCION' && ids.length===0){ return swalMsg('warning','Seleccione beneficiarios','Debe marcar al menos una persona pendiente.'); }
+  if(scope==='INDIVIDUAL' && ids.length!==1){ return swalMsg('warning','Beneficiario requerido','Debe seleccionar un beneficiario válido.'); }
+  const payload={scope,detalle_ids:ids,fecha:document.getElementById('pagoFecha').value,medio_pago:document.getElementById('pagoMedio').value,caja_id:document.getElementById('pagoCaja').value,cuenta_bancaria_id:document.getElementById('pagoBanco').value,unidad_id:document.getElementById('pagoUnidad').value,referencia:document.getElementById('pagoReferencia').value,glosa:document.getElementById('pagoGlosa').value};
+  if(scope==='INDIVIDUAL'){
+    payload.medio_entrega=document.getElementById('medioEntrega').value;
+    payload.banco_destino=document.getElementById('bancoDestino').value;
+    payload.cuenta_destino=document.getElementById('cuentaDestino').value;
+    payload.numero_cheque=document.getElementById('numeroCheque').value;
+    payload.referencia_destino=document.getElementById('referenciaDestino').value;
+  }
+  const btn=document.getElementById('btnRegistrarPago');
+  const texto=btn?.querySelector('.btn-registrar-texto');
+  pagoEnProceso=true;
+  if(btn) btn.disabled=true;
+  if(texto) texto.textContent='Registrando...';
+  try{
+    const j=await api(`{{ url_for('planilla_pagos.pagar', planilla_id=planilla.id) }}`, payload);
+    await swalMsg('success','Correcto',j.message);
+    location.href=j.redirect||location.href;
+  }catch(e){
+    pagoEnProceso=false;
+    if(btn) btn.disabled=false;
+    if(texto) texto.textContent='Registrar';
+    await swalMsg('error','No se pudo completar',e.message);
+  }
+}
+async function abrirReversion(scope){
+  const pago_ids = scope==='GLOBAL' ? [] : seleccionPagos();
+  if(scope!=='GLOBAL' && pago_ids.length===0){ return swalMsg('warning','Seleccione pagos','Debe marcar al menos un pago vigente.'); }
+  const res = await Swal.fire({icon:'warning',title:'Revertir pago(s)',input:'textarea',inputLabel:'Justificativo',inputPlaceholder:'Motivo documentado de la reversión',showCancelButton:true,confirmButtonText:'Revertir',cancelButtonText:'Cancelar',inputValidator:v=>!v?'Debe ingresar justificativo.':undefined});
+  if(!res.isConfirmed) return;
+  try{ const j=await api(`{{ url_for('planilla_pagos.revertir_pagos', planilla_id=planilla.id) }}`, {scope,pago_ids,justificativo:res.value}); await swalMsg('success','Correcto',j.message); location.href=j.redirect||location.href; }catch(e){ swalMsg('error','No se pudo completar',e.message); }
+}
+</script>
+<style>
+.page-hero{background:linear-gradient(135deg,#0f2340,#194a7a);color:#fff;border-radius:14px;padding:16px 18px}.hero-kicker{font-size:.72rem;font-weight:800;letter-spacing:.08em;opacity:.75}.metric-card{background:#fff;border:1px solid #d9e1ea;border-left:4px solid #0d6efd;border-radius:12px;padding:12px 14px;box-shadow:0 6px 18px rgba(15,35,64,.06)}.metric-card span{display:block;font-size:.72rem;font-weight:800;color:#5f6f83;text-transform:uppercase}.metric-card strong{font-size:1.25rem}.metric-card.success{border-left-color:#198754}.metric-card.warning{border-left-color:#ffc107}.toolbar-card,.grid-card{border:1px solid #d9e1ea;border-radius:12px;padding:12px}.table thead th{background:#eef3f8;color:#0f2340;font-size:.72rem;text-transform:uppercase}.modal-dxt{background:#143d68;color:#fff}.form-label{font-size:.72rem;font-weight:800;color:#26364a;text-transform:uppercase}.section-mini-title{font-size:.78rem;font-weight:900;color:#0f2340;text-transform:uppercase;border-bottom:1px solid #d9e1ea;padding-bottom:4px}
+</style>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends "layout.html" %}
+{% block title %}Reportes Especiales · Estado de Cartera{% endblock title %}
+{% block page_help_url %}{{ url_for('estado_cuentas_cobrar.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .ecc-page{display:grid;gap:1rem}.ecc-header{background:linear-gradient(135deg,#0f2340,#17406f);border-radius:1.15rem;box-shadow:0 18px 38px rgba(15,35,64,.18);color:#fff;padding:1.15rem 1.3rem}.ecc-header-kicker{align-items:center;color:rgba(255,255,255,.82);display:flex;font-size:.78rem;font-weight:800;gap:.45rem;letter-spacing:.06em;text-transform:uppercase}.ecc-header-title{font-size:clamp(1.35rem,2vw,2rem);font-weight:850;margin:.35rem 0 0}.ecc-card{background:#fff;border:1px solid #dfe7f1;border-radius:1.15rem;box-shadow:0 14px 34px rgba(15,35,64,.08)}.ecc-filter-card{padding:1rem}.ecc-filter-grid{align-items:end;display:grid;gap:.85rem;grid-template-columns:.9fr 1.1fr 1.25fr .78fr .85fr .95fr 1.1fr auto}.ecc-field label{color:#334155;font-size:.78rem;font-weight:800;margin-bottom:.3rem}.ecc-field .form-control,.ecc-field .form-select{border-color:#d5deea;border-radius:.8rem;min-height:40px}.ecc-actions{display:flex;gap:.45rem;justify-content:flex-end}.ecc-action-btn{align-items:center;border-radius:.85rem;display:inline-flex;font-weight:800;gap:.45rem;min-height:40px;padding-inline:.9rem;white-space:nowrap}.ecc-summary{display:grid;gap:.75rem;grid-template-columns:repeat(5,minmax(0,1fr))}.ecc-summary-card{border-left:5px solid #8aa1bd;padding:.95rem 1rem}.ecc-summary-card.is-primary{border-left-color:#2563eb}.ecc-summary-card.is-success{border-left-color:#0f766e}.ecc-summary-card.is-warning{border-left-color:#f97316}.ecc-summary-card.is-danger{border-left-color:#dc2626}.ecc-summary-label{color:#64748b;font-size:.74rem;font-weight:850;letter-spacing:.04em;text-transform:uppercase}.ecc-summary-value{color:#0f2340;font-size:1.16rem;font-weight:900;line-height:1.15;margin-top:.2rem}.ecc-summary-note{color:#64748b;font-size:.74rem;margin-top:.1rem}.ecc-table-card{overflow:hidden}.ecc-table-toolbar{align-items:center;border-bottom:1px solid #dfe7f1;display:flex;justify-content:space-between;padding:.9rem 1rem}.ecc-table-title{color:#0f2340;font-weight:900;margin:0}.ecc-table-note{color:#64748b;font-size:.78rem;margin:.15rem 0 0}.ecc-table-wrap{padding:1rem}.ecc-table{width:100%}.ecc-table thead th{background:#eef3f8;color:#0f2340;font-size:.72rem;letter-spacing:.03em;text-transform:uppercase;vertical-align:middle}.ecc-table td{vertical-align:middle}.ecc-main-text{color:#0f2340;display:block;font-weight:850}.ecc-sub-text{color:#64748b;display:block;font-size:.76rem;line-height:1.2}.ecc-money{font-feature-settings:"tnum";font-weight:850;text-align:right;white-space:nowrap}.ecc-money.is-pending{color:#b42318}.ecc-empty{color:#64748b;padding:2rem 1rem;text-align:center}.ecc-detail-button{border-radius:.75rem;font-weight:800;min-width:38px}.ecc-detail-summary{background:#f8fafc;border:1px solid #dfe7f1;border-radius:.9rem;display:grid;gap:.75rem;grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:.9rem;padding:.85rem}.ecc-detail-kv span{color:#64748b;display:block;font-size:.72rem;font-weight:850;letter-spacing:.03em;text-transform:uppercase}.ecc-detail-kv strong{color:#0f2340;display:block;margin-top:.15rem}@media(max-width:1450px){.ecc-filter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.ecc-actions{grid-column:1/-1;justify-content:flex-start}}@media(max-width:900px){.ecc-filter-grid,.ecc-summary,.ecc-detail-summary{grid-template-columns:1fr}.ecc-table-toolbar{align-items:flex-start;flex-direction:column;gap:.75rem}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ecc-page">
+  <section class="ecc-header">
+    <div class="ecc-header-kicker"><i class="fas fa-clipboard-check"></i> Reportes Especiales · Cartera</div>
+    <h1 class="ecc-header-title">Estado de Cartera por Cobrar</h1>
+  </section>
+
+  {% if error %}<div class="alert alert-danger mb-0">{{ error }}</div>{% endif %}
+
+  <section class="ecc-card ecc-filter-card">
+    <form method="get" autocomplete="off">
+      <div class="ecc-filter-grid">
+        <div class="ecc-field"><label for="fecha_corte">Fecha de corte</label><input type="date" class="form-control" id="fecha_corte" name="fecha_corte" value="{{ filtros.fecha_corte.isoformat() }}"></div>
+        <div class="ecc-field"><label for="unidad_negocio_id">Unidad</label><select class="form-select" id="unidad_negocio_id" name="unidad_negocio_id"><option value="">Todas</option>{% for unidad in unidades %}<option value="{{ unidad.id }}" {% if filtros.unidad_negocio_id == unidad.id %}selected{% endif %}>{{ unidad.codigo }} · {{ unidad.nombre }}</option>{% endfor %}</select></div>
+        <div class="ecc-field"><label for="auxiliar_id">Cliente</label><select class="form-select" id="auxiliar_id" name="auxiliar_id"><option value="">Todos</option>{% for auxiliar in auxiliares %}<option value="{{ auxiliar.id }}" {% if filtros.auxiliar_id == auxiliar.id %}selected{% endif %}>{{ auxiliar.nombre }}{% if auxiliar.nit_ci %} · {{ auxiliar.nit_ci }}{% endif %}</option>{% endfor %}</select></div>
+        <div class="ecc-field"><label for="moneda">Moneda</label><select class="form-select" id="moneda" name="moneda"><option value="">Todas</option>{% for moneda in monedas %}<option value="{{ moneda.codigo }}" {% if filtros.moneda == moneda.codigo %}selected{% endif %}>{{ moneda.simbolo or moneda.codigo }}</option>{% endfor %}</select></div>
+        <div class="ecc-field"><label for="origen">Origen</label><select class="form-select" id="origen" name="origen">{% for codigo, nombre in origenes.items() %}<option value="{{ codigo }}" {% if filtros.origen == codigo %}selected{% endif %}>{{ nombre }}</option>{% endfor %}</select></div>
+        <div class="ecc-field"><label for="estado">Estado</label><select class="form-select" id="estado" name="estado">{% for codigo, nombre in estados.items() %}<option value="{{ codigo }}" {% if filtros.estado == codigo %}selected{% endif %}>{{ nombre }}</option>{% endfor %}</select></div>
+        <div class="ecc-field"><label for="q">Buscar</label><input type="search" class="form-control" id="q" name="q" value="{{ filtros.q }}" placeholder="Cliente, doc., cuenta"></div>
+        <div class="ecc-actions"><button class="btn btn-primary ecc-action-btn" type="submit"><i class="fas fa-filter"></i> Filtrar</button><a class="btn btn-outline-secondary ecc-action-btn" href="{{ url_for('estado_cuentas_cobrar.index') }}"><i class="fas fa-eraser"></i></a></div>
+      </div>
+    </form>
+  </section>
+
+  <section class="ecc-summary">
+    <div class="ecc-card ecc-summary-card is-primary"><div class="ecc-summary-label">Clientes</div><div class="ecc-summary-value">{{ resumen.clientes }}</div></div>
+    <div class="ecc-card ecc-summary-card is-success"><div class="ecc-summary-label">Registros</div><div class="ecc-summary-value">{{ resumen.registros }}</div></div>
+    <div class="ecc-card ecc-summary-card is-danger"><div class="ecc-summary-label">Vencidas</div><div class="ecc-summary-value">{{ resumen.vencidas }}</div></div>
+    <div class="ecc-card ecc-summary-card is-warning"><div class="ecc-summary-label">Parciales</div><div class="ecc-summary-value">{{ resumen.parciales }}</div></div>
+    <div class="ecc-card ecc-summary-card"><div class="ecc-summary-label">Pendiente</div><div class="ecc-summary-value">{{ resumen.saldo_label }}</div><div class="ecc-summary-note">{{ resumen.monedas|map(attribute='moneda_label')|join(' · ') if resumen.monedas else 'Sin datos' }}</div></div>
+  </section>
+
+  <section class="ecc-card ecc-table-card">
+    <div class="ecc-table-toolbar">
+      <div><h2 class="h6 ecc-table-title mb-0">Estado por cliente</h2><p class="ecc-table-note">{{ periodo_label }}</p></div>
+      <button type="button" class="btn btn-outline-danger ecc-action-btn" id="eccBtnPdfGeneral"><i class="fas fa-file-pdf"></i> PDF</button>
+    </div>
+    <div class="ecc-table-wrap table-responsive">
+      <table class="table table-hover align-middle ecc-table">
+        <thead><tr><th>#</th><th>Estado</th><th>Cliente</th><th class="text-center">Moneda</th><th class="text-center">Reg.</th><th class="text-center">Venc.</th><th class="text-center">Parc.</th><th class="text-center">Sin venc.</th><th>Orígenes</th><th class="text-end">Total</th><th class="text-end">Cobrado</th><th class="text-end">Pendiente</th><th class="text-center">Detalle</th></tr></thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td class="text-center">{{ row.nro }}</td>
+            <td><span class="badge text-bg-{{ row.estado_badge }}">{{ row.estado_label }}</span></td>
+            <td><span class="ecc-main-text">{{ row.cliente_nombre }}</span><span class="ecc-sub-text">{{ row.cliente_doc or 'Sin NIT/CI' }}</span></td>
+            <td class="text-center"><span class="badge text-bg-light border">{{ row.moneda_label }}</span></td>
+            <td class="text-center fw-bold">{{ row.registros }}</td>
+            <td class="text-center">{{ row.vencidas }}</td>
+            <td class="text-center">{{ row.parciales }}</td>
+            <td class="text-center">{{ row.sin_vencimiento }}</td>
+            <td><span class="ecc-sub-text">{{ row.origenes_label or '-' }}</span></td>
+            <td class="ecc-money">{{ row.total_label }}</td>
+            <td class="ecc-money">{{ row.aplicado_label }}</td>
+            <td class="ecc-money is-pending">{{ row.saldo_label }}</td>
+            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-primary ecc-detail-button" data-action="detalle" data-cliente-key="{{ row.cliente_key }}" data-moneda="{{ row.moneda_codigo }}" data-cliente="{{ row.cliente_nombre }}"><i class="fas fa-eye"></i></button></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="13" class="ecc-empty">No existen saldos para los filtros seleccionados.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div class="modal fade" id="eccDetalleModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><div><h5 class="modal-title" id="eccDetalleModalLabel">Detalle</h5><small class="text-muted" id="eccDetallePeriodo"></small></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div><div class="modal-body"><div id="eccDetalleContent" class="ecc-empty">Cargando...</div></div><div class="modal-footer"><button type="button" class="btn btn-outline-danger ecc-action-btn" id="eccBtnPdfDetalle"><i class="fas fa-file-pdf"></i> PDF detalle</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div></div></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(() => {
+  const detalleUrl = "{{ url_for('estado_cuentas_cobrar.api_detalle_unificado') }}";
+  const pdfUrl = "{{ url_for('estado_cuentas_cobrar.pdf_general') }}";
+  const pdfDetalleUrl = "{{ url_for('estado_cuentas_cobrar.pdf_detalle_unificado') }}";
+  const paramsActuales = new URLSearchParams(window.location.search);
+  const modalEl = document.getElementById('eccDetalleModal');
+  const modal = new bootstrap.Modal(modalEl);
+  const content = document.getElementById('eccDetalleContent');
+  let detalleActual = null;
+  const htmlEscape = (value) => String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+
+  document.getElementById('eccBtnPdfGeneral').addEventListener('click', () => window.open(`${pdfUrl}?${paramsActuales.toString()}`, '_blank'));
+
+  function detalleParams(clienteKey, moneda) {
+    const params = new URLSearchParams(paramsActuales);
+    params.set('cliente_key', clienteKey);
+    params.set('moneda', moneda);
+    return params;
+  }
+
+  function renderDetalle(data) {
+    const resumen = data.resumen || {};
+    const rows = data.detalle || [];
+    document.getElementById('eccDetalleModalLabel').textContent = resumen.cliente_nombre || 'Detalle';
+    document.getElementById('eccDetallePeriodo').textContent = `${resumen.moneda_label || ''} · ${rows.length} registros`;
+    const resumenHtml = `<div class="ecc-detail-summary"><div class="ecc-detail-kv"><span>Registros</span><strong>${resumen.registros ?? 0}</strong></div><div class="ecc-detail-kv"><span>Total</span><strong>${htmlEscape(resumen.total_label || '0.00')}</strong></div><div class="ecc-detail-kv"><span>Cobrado</span><strong>${htmlEscape(resumen.aplicado_label || '0.00')}</strong></div><div class="ecc-detail-kv"><span>Pendiente</span><strong>${htmlEscape(resumen.saldo_label || '0.00')}</strong></div></div>`;
+    if (!rows.length) { content.innerHTML = `${resumenHtml}<div class="ecc-empty">Sin detalle para los filtros seleccionados.</div>`; return; }
+    const tableRows = rows.map(row => `<tr><td class="text-center">${row.nro}</td><td><span class="badge text-bg-${htmlEscape(row.situacion_badge)}">${htmlEscape(row.situacion_label)}</span></td><td><span class="ecc-main-text">${htmlEscape(row.referencia)}</span><span class="ecc-sub-text">${htmlEscape(row.origen_label)} · ${htmlEscape(row.unidad_label || '')}</span></td><td class="text-center">${htmlEscape(row.fecha_vencimiento_label)}</td><td class="text-center">${htmlEscape(row.cobro_label)}</td><td class="ecc-money">${htmlEscape(row.total_label)}</td><td class="ecc-money">${htmlEscape(row.aplicado_label)}</td><td class="ecc-money is-pending">${htmlEscape(row.saldo_label)}</td></tr>`).join('');
+    content.innerHTML = `${resumenHtml}<div class="table-responsive"><table class="table table-hover align-middle ecc-table"><thead><tr><th>#</th><th>Estado</th><th>Documento</th><th class="text-center">Vencimiento</th><th class="text-center">Cobro</th><th class="text-end">Total</th><th class="text-end">Cobrado</th><th class="text-end">Pendiente</th></tr></thead><tbody>${tableRows}</tbody></table></div>`;
+  }
+
+  document.body.addEventListener('click', async (event) => {
+    const btn = event.target.closest('[data-action="detalle"]');
+    if (!btn) return;
+    detalleActual = {clienteKey: btn.dataset.clienteKey, moneda: btn.dataset.moneda};
+    content.innerHTML = '<div class="ecc-empty"><span class="spinner-border spinner-border-sm me-2"></span>Cargando detalle...</div>';
+    document.getElementById('eccDetalleModalLabel').textContent = btn.dataset.cliente || 'Detalle';
+    modal.show();
+    try {
+      const params = detalleParams(detalleActual.clienteKey, detalleActual.moneda);
+      const response = await fetch(`${detalleUrl}?${params.toString()}`, {headers:{'X-Requested-With':'XMLHttpRequest'}});
+      const data = await response.json();
+      if (!data.ok) throw new Error(data.message || 'No se pudo cargar el detalle.');
+      renderDetalle(data);
+    } catch (error) {
+      content.innerHTML = `<div class="ecc-empty text-danger">${htmlEscape(error.message)}</div>`;
+      if (window.Swal) Swal.fire({icon:'error', title:'Error', text:error.message, timer:2200, showConfirmButton:false});
+    }
+  });
+
+  document.getElementById('eccBtnPdfDetalle').addEventListener('click', () => {
+    if (!detalleActual) return;
+    const params = detalleParams(detalleActual.clienteKey, detalleActual.moneda);
+    window.open(`${pdfDetalleUrl}?${params.toString()}`, '_blank');
+  });
+})();
+</script>
+{% endblock %}

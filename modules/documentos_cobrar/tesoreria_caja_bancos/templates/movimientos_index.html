@@ -1,0 +1,240 @@
+{% extends "layout.html" %}
+{% block title %}Tesorería · Movimientos{% endblock %}
+{% block extra_css %}
+<style>
+  #movimientosPage {
+    --mv-navy:      #0f2340;
+    --mv-blue:      #1a4a7a;
+    --mv-accent:    #2d7dd2;
+    --mv-accent-lt: #e8f1fc;
+    --mv-success:   #1a7a4a;
+    --mv-success-lt:#e6f6ee;
+    --mv-danger:    #b83232;
+    --mv-danger-lt: #fdeaea;
+    --mv-warning:   #c8962a;
+    --mv-warning-lt:#fdf6e3;
+    --mv-surface:   #f5f8fc;
+    --mv-border:    #dde4ed;
+    --mv-text:      #1e2d3d;
+    --mv-muted:     #8898aa;
+    --mv-radius:    14px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  /* Header */
+  #movimientosPage .mv-header {
+    background: linear-gradient(120deg, var(--mv-navy) 0%, var(--mv-blue) 60%, #1f5d9e 100%);
+    border-radius: var(--mv-radius);
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1.1rem;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 1rem; flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15,35,64,.16);
+    position: sticky; top: 64px; z-index: 40; overflow: hidden;
+  }
+  .mv-header::before { content:''; position:absolute; top:-40px; right:-40px; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,.04); pointer-events:none; }
+  .mv-header-left  { display:flex; align-items:center; gap:.85rem; position:relative; }
+  .mv-header-icon  { width:42px; height:42px; border-radius:11px; background:rgba(255,255,255,.14); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+  .mv-header-title { color:#fff; font-size:1.1rem; font-weight:700; margin:0; }
+  .mv-header-sub   { color:rgba(255,255,255,.62); font-size:.8rem; margin-top:2px; }
+  .mv-header-right { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; position:relative; }
+  .mv-header-right .btn-primary           { background:#fff; border-color:#fff; color:#1d4ed8; font-weight:700; font-size:.82rem; }
+  .mv-header-right .btn-primary:hover     { background:#eff6ff; }
+  .mv-header-right .btn-outline-secondary { border-color:rgba(255,255,255,.3); color:rgba(255,255,255,.88); background:transparent; font-size:.82rem; }
+  .mv-header-right .btn-outline-secondary:hover { background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.5); color:#fff; }
+
+  /* Tarjeta */
+  #movimientosPage .mv-card { background:#fff; border:1px solid var(--mv-border); border-radius:var(--mv-radius); box-shadow:0 4px 16px rgba(15,35,64,.06); overflow:hidden; }
+  .mv-card-head { padding:.85rem 1.1rem; border-bottom:1px solid var(--mv-border); background:var(--mv-surface); display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
+  .mv-section-label { font-size:.72rem; font-weight:700; letter-spacing:.65px; text-transform:uppercase; color:var(--mv-muted); display:flex; align-items:center; gap:7px; }
+  .mv-section-label::before { content:''; display:block; width:3px; height:13px; background:var(--mv-accent); border-radius:2px; }
+  .mv-section-sub { font-size:.78rem; color:var(--mv-muted); margin-top:1px; }
+
+  /* Filtros */
+  .mv-filters {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: .8rem;
+    padding: 1rem 1.1rem;
+    border-bottom: 1px solid var(--mv-border);
+    background: var(--mv-surface);
+  }
+  .mv-col-3 { grid-column:span 3; } .mv-col-4 { grid-column:span 4; } .mv-col-2 { grid-column:span 2; }
+  .mv-label { font-size:.71rem; font-weight:700; letter-spacing:.55px; text-transform:uppercase; color:#4a6070; margin-bottom:5px; display:block; }
+  .mv-filters .form-control, .mv-filters .form-select { border:1.5px solid var(--mv-border); border-radius:8px; font-size:.875rem; height:36px; }
+  .mv-filters .form-control:focus, .mv-filters .form-select:focus { border-color:var(--mv-accent); box-shadow:0 0 0 3px rgba(45,125,210,.1); outline:none; }
+  .mv-filters input[type="date"] { font-family:'Consolas',monospace; font-size:.85rem; }
+  .mv-quick { display:flex; gap:.45rem; flex-wrap:wrap; align-items:center; }
+  .mv-quick .btn { font-size:.78rem; padding:4px 10px; border-radius:6px; }
+
+  /* Chips resumen */
+  .mv-summary { display:flex; gap:.65rem; flex-wrap:wrap; padding:.75rem 1.1rem; border-bottom:1px solid var(--mv-border); background:#fff; }
+  .mv-chip { display:inline-flex; align-items:center; gap:.5rem; padding:.4rem .85rem; border-radius:20px; font-size:.82rem; font-weight:700; border:1px solid var(--mv-border); }
+  .mv-chip strong { font-family:'Consolas',monospace; font-variant-numeric:tabular-nums; }
+  .mv-chip.chip-in    { background:var(--mv-success-lt); border-color:#bbf7d0; color:var(--mv-success); }
+  .mv-chip.chip-eg    { background:var(--mv-danger-lt);  border-color:#fca5a5; color:var(--mv-danger); }
+  .mv-chip.chip-tr    { background:var(--mv-accent-lt);  border-color:#bfdbfe; color:var(--mv-accent); }
+  .mv-chip .chip-dot  { width:7px; height:7px; border-radius:50%; background:currentColor; opacity:.8; }
+
+  /* Tabla */
+  .mv-table-wrap { overflow:auto; max-height:58vh; }
+  #movimientosPage .mv-table-wrap { padding:.5rem; }
+  #tablaMovimientos thead th { background:var(--mv-surface); font-size:.7rem; font-weight:700; letter-spacing:.65px; text-transform:uppercase; color:var(--mv-muted); border-bottom:2px solid var(--mv-border); padding:9px 12px; white-space:nowrap; position:sticky; top:0; z-index:2; }
+  #tablaMovimientos tbody td { padding:9px 12px; vertical-align:middle; border-bottom:1px solid #eef1f6; font-size:.875rem; color:var(--mv-text); }
+  #tablaMovimientos tbody tr:nth-child(even) { background:#f9fbfe; }
+  #tablaMovimientos tbody tr { transition:background .12s; }
+  #tablaMovimientos tbody tr:hover td { background:var(--mv-accent-lt) !important; }
+
+  /* Badges */
+  .mv-badge { display:inline-flex; align-items:center; gap:4px; border-radius:6px; padding:2px 8px; font-size:.72rem; font-weight:700; white-space:nowrap; }
+  .mv-badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.8; }
+  .mv-badge-bor { background:#fffbeb; border:1px solid #fde68a; color:var(--mv-warning); }
+  .mv-badge-con { background:var(--mv-success-lt); border:1px solid #bbf7d0; color:var(--mv-success); }
+  .mv-badge-anu { background:var(--mv-danger-lt);  border:1px solid #fca5a5; color:var(--mv-danger); }
+  .mv-tipo-in { color:var(--mv-success); font-weight:700; font-size:.82rem; }
+  .mv-tipo-eg { color:var(--mv-danger);  font-weight:700; font-size:.82rem; }
+  .mv-tipo-tr { color:var(--mv-accent);  font-weight:700; font-size:.82rem; }
+
+  .mv-money { font-family:'Consolas',monospace; font-variant-numeric:tabular-nums; }
+  .mv-code-pill { font-family:'Consolas',monospace; font-size:.78rem; font-weight:700; background:var(--mv-accent-lt); color:var(--mv-accent); border:1px solid #bfdbfe; border-radius:5px; padding:2px 7px; display:inline-block; }
+  .mv-action-cell { white-space: nowrap; }
+  .mv-btn-act { width:28px; height:28px; padding:0; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid var(--mv-border); border-radius:7px; color:var(--mv-muted); background:#fff; transition:all .15s; text-decoration:none; margin-left:4px; }
+  .mv-btn-act:first-child { margin-left:0; }
+  .mv-btn-act:hover { background:var(--mv-accent-lt); border-color:#bfdbfe; color:var(--mv-accent); }
+  .mv-btn-pdf:hover { background:#fef2f2; border-color:#fecaca; color:var(--mv-danger); }
+
+  @media (max-width:1100px) { .mv-col-3,.mv-col-4,.mv-col-2 { grid-column:span 6; } }
+  @media (max-width:768px)  { .mv-col-3,.mv-col-4,.mv-col-2 { grid-column:span 12; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" id="movimientosPage">
+
+  <div class="mv-header">
+    <div class="mv-header-left">
+      <div class="mv-header-icon"><i class="fas fa-right-left"></i></div>
+      <div>
+        <h1 class="mv-header-title">Tesorería · Libro de Movimientos</h1>
+        <div class="mv-header-sub">Consolida cobros, pagos y movimientos propios de tesorería con trazabilidad por unidad de negocio.</div>
+      </div>
+    </div>
+    <div class="mv-header-right">
+      <a href="{{ url_for('tesoreria_caja_bancos.dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Volver al tablero</a>
+      {% if puede_editar %}
+      <a href="{{ url_for('tesoreria_caja_bancos.movimiento_create', unidad_negocio_id=filtros.unidad_negocio_id) if filtros.unidad_negocio_id else url_for('tesoreria_caja_bancos.movimiento_create') }}" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i>Nuevo movimiento</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="mv-card">
+    <div class="mv-card-head">
+      <div>
+        <div class="mv-section-label">Movimientos consolidados</div>
+        <div class="mv-section-sub">Filtra por fechas y usa la búsqueda del grid para llegar rápido al dato exacto.</div>
+      </div>
+      <span style="font-size:.75rem;font-weight:600;color:var(--mv-muted);background:var(--mv-surface);border:1px solid var(--mv-border);border-radius:20px;padding:3px 12px">{{ rows|length }} registros</span>
+    </div>
+
+    <form method="get" class="mv-filters" id="filtroMovimientosForm">
+      <div class="mv-col-3">
+        <label class="mv-label" for="filtroDesde"><i class="far fa-calendar me-1"></i>Desde</label>
+        <input type="date" class="form-control" id="filtroDesde" name="desde" value="{{ filtros.desde }}">
+      </div>
+      <div class="mv-col-3">
+        <label class="mv-label" for="filtroHasta"><i class="far fa-calendar me-1"></i>Hasta</label>
+        <input type="date" class="form-control" id="filtroHasta" name="hasta" value="{{ filtros.hasta }}">
+      </div>
+      <div class="mv-col-3">
+        <label class="mv-label" for="filtroUnidadNegocioMov">Unidad de negocio</label>
+        <select class="form-select" id="filtroUnidadNegocioMov" name="unidad_negocio_id">
+          <option value="">Todas las unidades</option>
+          {% for unidad in catalogs.unidades_negocio %}
+          <option value="{{ unidad.id }}" {% if filtros.unidad_negocio_id and unidad.id == filtros.unidad_negocio_id %}selected{% endif %}>{{ unidad.codigo }} · {{ unidad.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mv-col-3">
+        <label class="mv-label">Acceso rápido</label>
+        <div class="mv-quick">
+          <button type="button" class="btn btn-outline-secondary" data-range="today">Hoy</button>
+          <button type="button" class="btn btn-outline-secondary" data-range="7d">7 días</button>
+          <button type="button" class="btn btn-outline-secondary" data-range="30d">30 días</button>
+          <button type="button" class="btn btn-outline-secondary" data-range="month">Mes</button>
+        </div>
+      </div>
+      <div class="mv-col-2 d-flex align-items-end gap-2">
+        <button type="submit" class="btn btn-primary w-100 btn-sm"><i class="fas fa-filter me-1"></i>Filtrar</button>
+        <a href="{{ url_for('tesoreria_caja_bancos.movimientos_index') }}" class="btn btn-outline-secondary w-100 btn-sm"><i class="fas fa-xmark me-1"></i>Limpiar</a>
+      </div>
+    </form>
+
+    <div class="mv-summary">
+      <span class="mv-chip chip-in"><span class="chip-dot"></span>Ingresos <strong id="sumIngresos">0.00</strong></span>
+      <span class="mv-chip chip-eg"><span class="chip-dot"></span>Egresos <strong id="sumEgresos">0.00</strong></span>
+      <span class="mv-chip chip-tr"><span class="chip-dot"></span>Transferencias <strong id="sumTransferencias">0.00</strong></span>
+    </div>
+
+    <div class="mv-table-wrap">
+      <table class="table table-hover w-100" id="tablaMovimientos">
+        <thead>
+          <tr>
+            <th>Fecha</th><th>Documento</th><th>Tipo</th><th>Unidad</th><th>Origen</th><th>Destino</th>
+            <th>Tercero</th><th>Cuenta</th><th>Moneda</th>
+            <th class="text-end">Monto</th><th>Estado</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr data-tipo="{{ row.tipo_movimiento }}" data-monto="{{ row.monto or 0 }}" data-unidad="{{ row.unidad_negocio_codigo }} · {{ row.unidad_negocio_nombre }}">
+            <td class="mv-money" style="font-size:.8rem">{{ row.fecha.strftime('%d/%m/%Y') if row.fecha else '—' }}</td>
+            <td><strong>{{ row.origen_doc }}</strong>{% if row.id %} <span style="color:var(--mv-muted);font-size:.78rem">#{{ row.id }}</span>{% endif %}</td>
+            <td><span class="{% if row.tipo_movimiento=='INGRESO' %}mv-tipo-in{% elif row.tipo_movimiento=='EGRESO' %}mv-tipo-eg{% else %}mv-tipo-tr{% endif %}">{{ row.tipo_movimiento }}</span></td>
+            <td style="font-size:.8rem">{{ row.unidad_negocio_codigo }} · {{ row.unidad_negocio_nombre }}</td>
+            <td style="font-size:.82rem">{{ row.origen_nombre or '—' }}</td>
+            <td style="font-size:.82rem">{{ row.destino_nombre or '—' }}</td>
+            <td style="font-size:.82rem;color:var(--mv-muted)">{{ row.auxiliar_nombre or '—' }}</td>
+            <td style="font-size:.8rem">{{ row.contra_cuenta_codigo or '—' }}{% if row.contra_cuenta_nombre %} · {{ row.contra_cuenta_nombre }}{% endif %}</td>
+            <td><span class="mv-code-pill">{{ row.moneda_codigo }}</span></td>
+            <td class="mv-money text-end">{{ '%.2f'|format(row.monto or 0) }}</td>
+            <td><span class="mv-badge {% if row.estado=='BORRADOR' %}mv-badge-bor{% elif row.estado=='CONFIRMADO' %}mv-badge-con{% else %}mv-badge-anu{% endif %}">{{ row.estado }}</span></td>
+            <td class="mv-action-cell">
+              <a href="{{ row.detalle_url }}" class="mv-btn-act" title="Ver detalle">
+                <i class="fas fa-arrow-up-right-from-square"></i>
+              </a>
+              {% if row.pdf_url %}
+              <a
+                href="{{ row.pdf_url }}"
+                class="mv-btn-act mv-btn-pdf"
+                target="_blank"
+                rel="noopener"
+                title="Generar PDF"
+              >
+                <i class="fas fa-file-pdf"></i>
+              </a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function(){
+'use strict';
+const page=document.getElementById('movimientosPage');if(!page)return;
+const refs={desde:document.getElementById('filtroDesde'),hasta:document.getElementById('filtroHasta'),sumIngresos:document.getElementById('sumIngresos'),sumEgresos:document.getElementById('sumEgresos'),sumTransferencias:document.getElementById('sumTransferencias')};
+function todayISO(){if(window.DXTBase&&typeof window.DXTBase.todayLocalISO==='function'){return window.DXTBase.todayLocalISO()}const now=new Date();const local=new Date(now.getTime()-now.getTimezoneOffset()*60000);return local.toISOString().slice(0,10)}
+function dateOffsetISO(days){const base=new Date();base.setDate(base.getDate()+days);const local=new Date(base.getTime()-base.getTimezoneOffset()*60000);return local.toISOString().slice(0,10)}
+function firstDayOfMonthISO(){const base=new Date();base.setDate(1);const local=new Date(base.getTime()-base.getTimezoneOffset()*60000);return local.toISOString().slice(0,10)}
+function fmt(n){return Number(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2})}
+document.querySelectorAll('[data-range]').forEach((btn)=>{btn.addEventListener('click',()=>{const range=btn.dataset.range;if(range==='today'){const t=todayISO();refs.desde.value=t;refs.hasta.value=t}else if(range==='7d'){refs.desde.value=dateOffsetISO(-6);refs.hasta.value=todayISO()}else if(range==='30d'){refs.desde.value=dateOffsetISO(-29);refs.hasta.value=todayISO()}else if(range==='month'){refs.desde.value=firstDayOfMonthISO();refs.hasta.value=todayISO()}})});
+function updateVisibleTotals(api){let ingresos=0,egresos=0,transferencias=0;api.rows({filter:'applied'}).every(function(){const node=this.node();const tipo=String(node.dataset.tipo||'').toUpperCase();const monto=Number(node.dataset.monto||0);if(tipo==='INGRESO')ingresos+=monto;else if(tipo==='EGRESO')egresos+=monto;else if(tipo==='TRANSFERENCIA')transferencias+=monto});refs.sumIngresos.textContent=fmt(ingresos);refs.sumEgresos.textContent=fmt(egresos);refs.sumTransferencias.textContent=fmt(transferencias)}
+document.addEventListener('DOMContentLoaded',function(){if(window.jQuery&&window.jQuery.fn&&window.jQuery.fn.DataTable){const lang=window.DXTBase&&typeof window.DXTBase.getDataTableLanguageEs==='function'?window.DXTBase.getDataTableLanguageEs():{};const dt=window.jQuery('#tablaMovimientos').DataTable({language:lang,pageLength:20,order:[[0,'desc']],autoWidth:false,drawCallback:function(){updateVisibleTotals(this.api())}});updateVisibleTotals(dt)}})
+})();
+</script>
+{% endblock %}

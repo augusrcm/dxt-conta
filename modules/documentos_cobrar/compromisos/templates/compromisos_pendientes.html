@@ -1,0 +1,1286 @@
+{% extends "layout.html" %} {# DXT-CONTA :: Compromisos Pendientes :: producción
+#} {% block title %}Compromisos Pendientes{% endblock %} {% block page_help_url
+%}{{ url_for('compromisos.help') }}{% endblock %} {% block extra_css %}
+<style>
+  #compromisosPendientesPage {
+    --cpd-accent: #7c3aed;
+    --cpd-accent-lt: #f3e8ff;
+    --cpd-rojo-bg: #fef2f2;
+    --cpd-rojo-text: #b91c1c;
+    --cpd-amarillo-bg: #fefce8;
+    --cpd-amarillo-text: #a16207;
+    --cpd-naranja-bg: #fff7ed;
+    --cpd-naranja-text: #c2410c;
+    --cpd-verde-bg: #f0fdf4;
+    --cpd-verde-text: #15803d;
+    --cpd-neutro-bg: #eff6ff;
+    --cpd-neutro-text: #1d4ed8;
+  }
+
+  .cpd-shell {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1rem;
+    padding: 0 1.75rem 1.75rem;
+  }
+
+  .cpd-side,
+  .cpd-main {
+    background: var(--dxt-white);
+    border: 1px solid var(--dxt-border);
+    border-radius: 18px;
+    box-shadow: var(--dxt-shadow);
+  }
+
+  .cpd-side {
+    padding: 1rem 1rem 1.1rem;
+    position: sticky;
+    top: 84px;
+    height: fit-content;
+  }
+
+  .cpd-main {
+    padding: 1rem 1rem 1.15rem;
+  }
+
+  .cpd-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .cpd-panel-title h2,
+  .cpd-panel-title h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--dxt-text);
+  }
+
+  .cpd-panel-sub {
+    color: var(--dxt-text-soft);
+    font-size: 0.82rem;
+    margin-top: 0.2rem;
+  }
+
+  .cpd-icon-bubble {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cpd-accent-lt);
+    color: var(--cpd-accent);
+    flex-shrink: 0;
+  }
+
+  .cpd-filters {
+    display: grid;
+    gap: 0.95rem;
+  }
+
+  .cpd-range-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+  }
+
+  .cpd-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.7rem 0.75rem;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid var(--dxt-border);
+    font-size: 0.9rem;
+  }
+
+
+  #compromisosPendientesPage .select2-container {
+    width: 100% !important;
+  }
+
+  #compromisosPendientesPage .select2-container--default .select2-selection--single {
+    min-height: 44px;
+    border-radius: 12px;
+    border: 1px solid var(--dxt-border);
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+  }
+
+  #compromisosPendientesPage .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 1.5;
+    padding-left: 0;
+    color: var(--dxt-text);
+  }
+
+  #compromisosPendientesPage .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 42px;
+    right: 8px;
+  }
+
+  .cpd-actions {
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    margin-top: 0.35rem;
+  }
+
+  .cpd-actions .btn {
+    flex: 1 1 120px;
+  }
+
+  .cpd-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .cpd-summary-card {
+    border: 1px solid var(--dxt-border);
+    border-radius: 16px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    padding: 0.9rem 1rem;
+  }
+
+  .cpd-summary-label {
+    font-size: 0.82rem;
+    color: var(--dxt-text-soft);
+    margin-bottom: 0.4rem;
+  }
+
+  .cpd-summary-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--dxt-text);
+    line-height: 1.1;
+  }
+
+  .cpd-summary-note {
+    font-size: 0.78rem;
+    color: var(--dxt-text-soft);
+    margin-top: 0.35rem;
+  }
+
+  .cpd-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.9rem;
+  }
+
+  .cpd-chip-row {
+    display: flex;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .cpd-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--dxt-border);
+    background: #ffffff;
+    color: var(--dxt-text-soft);
+    font-size: 0.84rem;
+    font-weight: 700;
+  }
+
+  .cpd-chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cpd-accent);
+  }
+
+  .cpd-table-wrap {
+    border: 1px solid var(--dxt-border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .cpd-type {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 86px;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+
+  .cpd-type-pagar {
+    background: var(--dxt-danger-lt);
+    color: var(--dxt-danger);
+  }
+
+  .cpd-type-cobrar {
+    background: var(--dxt-success-lt);
+    color: var(--dxt-success);
+  }
+
+  .cpd-alerta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 150px;
+    padding: 0.42rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  .cpd-alerta-rojo {
+    background: var(--cpd-rojo-bg);
+    color: var(--cpd-rojo-text);
+  }
+
+  .cpd-alerta-amarillo {
+    background: var(--cpd-amarillo-bg);
+    color: var(--cpd-amarillo-text);
+  }
+
+  .cpd-alerta-naranja {
+    background: var(--cpd-naranja-bg);
+    color: var(--cpd-naranja-text);
+  }
+
+  .cpd-alerta-verde {
+    background: var(--cpd-verde-bg);
+    color: var(--cpd-verde-text);
+  }
+
+  .cpd-alerta-neutro {
+    background: var(--cpd-neutro-bg);
+    color: var(--cpd-neutro-text);
+  }
+
+  .cpd-alerta-cumplido {
+    background: #ecfdf5;
+    color: #047857;
+  }
+
+  .cpd-estado {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 96px;
+    padding: 0.38rem 0.68rem;
+    border-radius: 999px;
+    font-size: 0.77rem;
+    font-weight: 800;
+  }
+
+  .cpd-estado-pendiente {
+    background: #eef2ff;
+    color: #4338ca;
+  }
+
+  .cpd-estado-vencido {
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+
+  .cpd-estado-cumplido {
+    background: #ecfdf5;
+    color: #047857;
+  }
+
+  .cpd-name {
+    font-weight: 800;
+    color: var(--dxt-text);
+  }
+
+  .cpd-meta {
+    color: var(--dxt-text-soft);
+    font-size: 0.82rem;
+    margin-top: 0.15rem;
+  }
+
+  .cpd-mono {
+    font-family: var(--dxt-font-mono);
+    font-weight: 700;
+  }
+
+
+  .cpd-unidad-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.36rem 0.7rem;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+
+  .cpd-actions-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+
+  .cpd-btn-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--dxt-border);
+    background: #fff;
+    color: var(--dxt-text-soft);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s ease;
+  }
+
+  .cpd-btn-icon:hover {
+    background: #f8fafc;
+    color: var(--dxt-text);
+    border-color: #d7deea;
+  }
+
+  .cpd-detail-shell {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .cpd-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+
+  .cpd-detail-card {
+    border: 1px solid var(--dxt-border);
+    border-radius: 14px;
+    background: #f8fafc;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .cpd-detail-card-label {
+    font-size: 0.8rem;
+    color: var(--dxt-text-soft);
+    margin-bottom: 0.35rem;
+  }
+
+  .cpd-detail-card-value {
+    font-weight: 800;
+    color: var(--dxt-text);
+  }
+
+  .cpd-subtable-wrap {
+    border: 1px solid var(--dxt-border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .cpd-subtable-head {
+    background: #f8fafc;
+    border-bottom: 1px solid var(--dxt-border);
+    padding: 0.8rem 0.95rem;
+    font-weight: 800;
+    color: var(--dxt-text);
+  }
+
+  .cpd-empty {
+    padding: 1rem;
+    color: var(--dxt-text-soft);
+    text-align: center;
+  }
+
+  .cpd-table-compact th,
+  .cpd-table-compact td {
+    vertical-align: middle;
+  }
+
+  .cpd-modal-headline {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.9rem;
+  }
+
+  @media (max-width: 1300px) {
+    .cpd-shell {
+      grid-template-columns: 1fr;
+    }
+
+    .cpd-side {
+      position: static;
+    }
+
+    .cpd-summary-grid,
+    .cpd-detail-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+
+    .cpd-range-grid,
+    .cpd-summary-grid,
+    .cpd-detail-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .cpd-shell {
+      padding: 0 0.85rem 1rem;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid py-4 dxt-page" id="compromisosPendientesPage">
+  <div class="dxt-card">
+    <div class="dxt-card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="dxt-header-icon">
+          <i class="fas fa-hourglass-half"></i>
+        </div>
+        <div>
+          <h1 class="dxt-header-title">Pendientes</h1>
+          <div class="dxt-header-sub">
+            Seguimiento de compromisos por atender y alertas de vencimiento
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <a class="btn dxt-btn-secondary" href="{{ url_for('compromisos.index') }}">
+          <i class="fas fa-list-check"></i>
+          <span>Programación</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="cpd-shell">
+      <aside class="cpd-side">
+        <div class="cpd-panel-title">
+          <span class="cpd-icon-bubble"><i class="fas fa-filter"></i></span>
+          <div>
+            <h2>Filtros</h2>
+            <div class="cpd-panel-sub">
+              Controla ventana de alerta, tipo y rango de vencimiento.
+            </div>
+          </div>
+        </div>
+
+        <div class="cpd-filters">
+          <div>
+            <label class="form-label" for="filtroTextoPend">Buscar</label>
+            <input type="text" id="filtroTextoPend" class="form-control"
+              placeholder="Código, compromiso, auxiliar o cuenta" />
+          </div>
+
+          <div>
+            <label class="form-label" for="filtroTipoPend">Tipo</label>
+            <select id="filtroTipoPend" class="form-select">
+              <option value="">Todos</option>
+              {% for tipo in tipos_compromiso %}
+              <option value="{{ tipo }}">{{ tipo }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label" for="filtroUnidadNegocioPend">Unidad de Negocio</label>
+            <select id="filtroUnidadNegocioPend" class="form-select">
+              <option value="">Todas</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label" for="filtroEstadoPend">Estado</label>
+            <select id="filtroEstadoPend" class="form-select">
+              <option value="TODOS" selected>Todos</option>
+              <option value="PENDIENTE">Pendientes</option>
+              <option value="CUMPLIDO">Cumplidos</option>
+              <option value="VENCIDO">Vencidos</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-label" for="filtroVentanaPend">Ventana de alerta</label>
+            <select id="filtroVentanaPend" class="form-select">
+              <option value="TODOS" selected>Todas</option>
+              <option value="HOY_VENCIDOS">Hoy y vencidos</option>
+              <option value="1_DIA">1 día</option>
+              <option value="2_3_DIAS">2 a 3 días</option>
+              <option value="4_7_DIAS">4 a 7 días</option>
+              <option value="8_30_DIAS">8 a 30 días</option>
+              <option value="31_MAS">Más de 30 días</option>
+              <option value="RANGO">Rango personalizado</option>
+            </select>
+          </div>
+
+          <div class="cpd-range-grid">
+            <div>
+              <label class="form-label" for="filtroFechaDesdePend">Desde</label>
+              <input type="text" id="filtroFechaDesdePend" class="form-control" placeholder="YYYY-MM-DD" />
+            </div>
+            <div>
+              <label class="form-label" for="filtroFechaHastaPend">Hasta</label>
+              <input type="text" id="filtroFechaHastaPend" class="form-control" placeholder="YYYY-MM-DD" />
+            </div>
+          </div>
+
+          <label class="cpd-switch">
+            <input type="checkbox" id="filtroSoloActivosPend" checked />
+            <span>Solo compromisos activos</span>
+          </label>
+
+          <div class="cpd-actions">
+            <button type="button" class="btn dxt-btn-primary" id="btnAplicarPend">
+              <i class="fas fa-filter"></i>
+              <span>Aplicar</span>
+            </button>
+            <button type="button" class="btn dxt-btn-secondary" id="btnLimpiarPend">
+              <i class="fas fa-eraser"></i>
+              <span>Limpiar</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <section class="cpd-main" id="bloqueResultadosPend">
+        <div class="cpd-summary-grid">
+          <div class="cpd-summary-card">
+            <div class="cpd-summary-label">Pendientes</div>
+            <div class="cpd-summary-value" id="kpiPendientes">0</div>
+            <div class="cpd-summary-note">Compromisos abiertos</div>
+          </div>
+          <div class="cpd-summary-card">
+            <div class="cpd-summary-label">Vencidos / hoy</div>
+            <div class="cpd-summary-value" id="kpiVencidos">0</div>
+            <div class="cpd-summary-note">Alertas rojas</div>
+          </div>
+          <div class="cpd-summary-card">
+            <div class="cpd-summary-label">Hasta 7 días</div>
+            <div class="cpd-summary-value" id="kpiSemana">0</div>
+            <div class="cpd-summary-note">1, 2-3 y 4-7 días</div>
+          </div>
+          <div class="cpd-summary-card">
+            <div class="cpd-summary-label">Hasta 30 días</div>
+            <div class="cpd-summary-value" id="kpiMes">0</div>
+            <div class="cpd-summary-note">Compromisos próximos</div>
+          </div>
+          <div class="cpd-summary-card">
+            <div class="cpd-summary-label">Monto pendiente</div>
+            <div class="cpd-summary-value" id="kpiMontoPendiente">0.00</div>
+            <div class="cpd-summary-note">Saldo total por atender</div>
+          </div>
+        </div>
+
+        <div class="cpd-toolbar">
+          <div class="cpd-chip-row">
+            <span class="cpd-chip"><span class="cpd-chip-dot"></span><span id="chipGestionPend">Gestión {{
+                gestion_actual }}</span></span>
+            <span class="cpd-chip"><span class="cpd-chip-dot"></span><span id="chipVistaPend">Pendientes</span></span>
+            <span class="cpd-chip"><span class="cpd-chip-dot"></span><span id="chipConteoPend">0 registros</span></span>
+          </div>
+        </div>
+
+        <div class="cpd-table-wrap">
+          <table id="tablaCompromisosPendientes" class="table table-hover align-middle mb-0 w-100">
+            <thead>
+              <tr>
+                <th>Alerta</th>
+                <th>Vencimiento</th>
+                <th>Código</th>
+                <th>Tipo</th>
+                <th>Compromiso</th>
+                <th>Unidad de Negocio</th>
+                <th>Auxiliar</th>
+                <th>Programado</th>
+                <th>Atendido</th>
+                <th>Pendiente</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- DataTables llena dinámicamente este cuerpo -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalCompromisoPendienteDetalle" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalle del compromiso</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="cpd-detail-shell">
+          <div class="cpd-modal-headline">
+            <div>
+              <div class="cpd-name" id="detalleTituloPend">Compromiso</div>
+              <div class="cpd-meta" id="detalleSubtituloPend">Sin detalle</div>
+            </div>
+            <a class="btn dxt-btn-secondary" id="detalleBtnAbrirCompromiso" href="#" target="_self">
+              <i class="fas fa-arrow-up-right-from-square"></i>
+              <span>Abrir programación</span>
+            </a>
+          </div>
+
+          <div class="cpd-detail-grid">
+            <div class="cpd-detail-card">
+              <div class="cpd-detail-card-label">Tipo</div>
+              <div class="cpd-detail-card-value" id="detalleTipoPend">—</div>
+            </div>
+            <div class="cpd-detail-card">
+              <div class="cpd-detail-card-label">Auxiliar</div>
+              <div class="cpd-detail-card-value" id="detalleAuxiliarPend">
+                —
+              </div>
+            </div>
+            <div class="cpd-detail-card">
+              <div class="cpd-detail-card-label">Unidad de Negocio</div>
+              <div class="cpd-detail-card-value" id="detalleUnidadNegocioPend">—</div>
+            </div>
+            <div class="cpd-detail-card">
+              <div class="cpd-detail-card-label">Cuenta</div>
+              <div class="cpd-detail-card-value" id="detalleCuentaPend">—</div>
+            </div>
+            <div class="cpd-detail-card">
+              <div class="cpd-detail-card-label">Gestión</div>
+              <div class="cpd-detail-card-value" id="detalleGestionPend">—</div>
+            </div>
+          </div>
+
+          <div class="cpd-subtable-wrap">
+            <div class="cpd-subtable-head">Programación</div>
+            <div class="table-responsive">
+              <table class="table table-sm table-striped align-middle mb-0 cpd-table-compact"
+                id="tablaDetalleCompromisoPend">
+                <thead>
+                  <tr>
+                    <th>Vencimiento</th>
+                    <th>Programado</th>
+                    <th>Registrado</th>
+                    <th>Pendiente</th>
+                    <th>Alerta</th>
+                    <th>Estado</th>
+                    <th>Observación</th>
+                  </tr>
+                </thead>
+                <tbody id="detalleRowsPend"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="cpd-subtable-wrap">
+            <div class="cpd-subtable-head">Movimientos relacionados</div>
+            <div class="table-responsive">
+              <table class="table table-sm table-striped align-middle mb-0 cpd-table-compact" id="tablaMovimientosPend">
+                <thead>
+                  <tr>
+                    <th>Documento</th>
+                    <th>Fecha</th>
+                    <th>Estado</th>
+                    <th>Aplicado</th>
+                    <th>Referencia</th>
+                    <th>Glosa</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody id="movimientosRowsPend"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="compromisosPendientesBootstrap">
+  {{ {
+    "gestionActual": gestion_actual,
+    "urls": {
+      "lista": url_for("compromisos.api_pendientes_lista"),
+      "detalleBase": url_for("compromisos.api_pendientes_detalle", compromiso_id=0),
+      "editarBase": url_for("compromisos.editar", compromiso_id=0),
+      "unidadesNegocio": url_for("compromisos.unidades_negocio")
+    },
+    "defaults": {
+      "tipo": "",
+      "estado": "TODOS",
+      "ventana": "TODOS",
+      "fechaDesde": "",
+      "fechaHasta": "",
+      "soloActivos": true
+    }
+  } | tojson }}
+</script>
+{% endblock %} {% block extra_js %}
+<script>
+  (function () {
+    const bootEl = document.getElementById("compromisosPendientesBootstrap");
+    if (!bootEl) {
+      console.error("No se encontró compromisosPendientesBootstrap");
+      return;
+    }
+    const boot = JSON.parse(bootEl.textContent || "{}");
+
+    const els = {
+      filtroTexto: document.getElementById("filtroTextoPend"),
+      filtroTipo: document.getElementById("filtroTipoPend"),
+      filtroUnidadNegocio: document.getElementById("filtroUnidadNegocioPend"),
+      filtroEstado: document.getElementById("filtroEstadoPend"),
+      filtroVentana: document.getElementById("filtroVentanaPend"),
+      filtroFechaDesde: document.getElementById("filtroFechaDesdePend"),
+      filtroFechaHasta: document.getElementById("filtroFechaHastaPend"),
+      filtroSoloActivos: document.getElementById("filtroSoloActivosPend"),
+      btnAplicar: document.getElementById("btnAplicarPend"),
+      btnLimpiar: document.getElementById("btnLimpiarPend"),
+      bloqueResultados: document.getElementById("bloqueResultadosPend"),
+      kpiPendientes: document.getElementById("kpiPendientes"),
+      kpiVencidos: document.getElementById("kpiVencidos"),
+      kpiSemana: document.getElementById("kpiSemana"),
+      kpiMes: document.getElementById("kpiMes"),
+      kpiMontoPendiente: document.getElementById("kpiMontoPendiente"),
+      chipGestion: document.getElementById("chipGestionPend"),
+      chipVista: document.getElementById("chipVistaPend"),
+      chipConteo: document.getElementById("chipConteoPend"),
+      modal: document.getElementById("modalCompromisoPendienteDetalle"),
+      detalleTitulo: document.getElementById("detalleTituloPend"),
+      detalleSubtitulo: document.getElementById("detalleSubtituloPend"),
+      detalleBtnAbrir: document.getElementById("detalleBtnAbrirCompromiso"),
+      detalleTipo: document.getElementById("detalleTipoPend"),
+      detalleAuxiliar: document.getElementById("detalleAuxiliarPend"),
+      detalleUnidadNegocio: document.getElementById("detalleUnidadNegocioPend"),
+      detalleCuenta: document.getElementById("detalleCuentaPend"),
+      detalleGestion: document.getElementById("detalleGestionPend"),
+      detalleRows: document.getElementById("detalleRowsPend"),
+      movimientosRows: document.getElementById("movimientosRowsPend"),
+    };
+
+    const state = {
+      table: null,
+      modalInstance: null,
+    };
+
+    function escHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function money(value) {
+      const num = Number(value || 0);
+      return num.toLocaleString("es-BO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    function currentFilters() {
+      return {
+        gestion: boot.gestionActual,
+        texto: (els.filtroTexto.value || "").trim(),
+        tipo: els.filtroTipo.value || "",
+        unidad_negocio_id: els.filtroUnidadNegocio ? (els.filtroUnidadNegocio.value || "") : "",
+        estado: els.filtroEstado.value || "PENDIENTE",
+        ventana: els.filtroVentana.value || "TODOS",
+        fecha_desde: (els.filtroFechaDesde.value || "").trim(),
+        fecha_hasta: (els.filtroFechaHasta.value || "").trim(),
+        solo_activos: els.filtroSoloActivos.checked ? "true" : "false",
+      };
+    }
+
+    function buildUrl() {
+      const params = new URLSearchParams();
+      const filters = currentFilters();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== "" && value !== null && value !== undefined) {
+          params.set(key, value);
+        }
+      });
+      const qs = params.toString();
+      return qs ? `${boot.urls.lista}?${qs}` : boot.urls.lista;
+    }
+
+    function buildDetailUrl(compromisoId) {
+      return boot.urls.detalleBase.replace(/0$/, String(compromisoId));
+    }
+
+    function buildEditUrl(compromisoId) {
+      return boot.urls.editarBase.replace(/0$/, String(compromisoId));
+    }
+
+    function alertaBadge(row) {
+      const cls = {
+        rojo: "cpd-alerta-rojo",
+        amarillo: "cpd-alerta-amarillo",
+        naranja: "cpd-alerta-naranja",
+        verde: "cpd-alerta-verde",
+        neutro: "cpd-alerta-neutro",
+        cumplido: "cpd-alerta-cumplido",
+      }[row.color_key || "neutro"];
+      return `<span class="cpd-alerta ${cls}">${escHtml(row.alerta_label || "")}</span>`;
+    }
+
+    function estadoBadge(row) {
+      const cls = {
+        PENDIENTE: "cpd-estado-pendiente",
+        VENCIDO: "cpd-estado-vencido",
+        CUMPLIDO: "cpd-estado-cumplido",
+      }[row.estado_seguimiento || "PENDIENTE"];
+      return `<span class="cpd-estado ${cls}">${escHtml(row.estado_seguimiento || "")}</span>`;
+    }
+
+    function tipoBadge(tipo) {
+      if (tipo === "PAGAR") {
+        return '<span class="cpd-type cpd-type-pagar">PAGAR</span>';
+      }
+      return '<span class="cpd-type cpd-type-cobrar">COBRAR</span>';
+    }
+
+    function unidadBadge(row) {
+      if (!row.unidad_negocio_id) {
+        return '<span class="text-muted">Sin unidad</span>';
+      }
+      return `<span class="cpd-unidad-badge">${escHtml(row.unidad_negocio_codigo || "")}${row.unidad_negocio_nombre ? ` · ${escHtml(row.unidad_negocio_nombre)}` : ""}</span>`;
+    }
+
+    function actionButtons(row) {
+      return `
+        <div class="cpd-actions-cell">
+          <button type="button" class="cpd-btn-icon js-ver-detalle" data-id="${row.compromiso_id}" title="Ver detalle">
+            <i class="fas fa-eye"></i>
+          </button>
+          <a class="cpd-btn-icon" href="${buildEditUrl(row.compromiso_id)}" title="Abrir programación">
+            <i class="fas fa-arrow-up-right-from-square"></i>
+          </a>
+        </div>
+      `;
+    }
+
+    function initFiltroUnidadNegocio() {
+      if (!els.filtroUnidadNegocio || typeof $.fn.select2 !== "function") {
+        return;
+      }
+
+      $(els.filtroUnidadNegocio).select2({
+        width: "100%",
+        placeholder: "Todas",
+        allowClear: true,
+        language: "es",
+        ajax: {
+          url: boot.urls.unidadesNegocio,
+          dataType: "json",
+          delay: 250,
+          data: function (params) {
+            return { q: params.term || "" };
+          },
+          processResults: function (resp) {
+            const data = Array.isArray(resp.data) ? resp.data : [];
+            return {
+              results: data.map(function (row) {
+                return {
+                  id: row.id,
+                  text: row.etiqueta || `${row.codigo} - ${row.nombre}`,
+                };
+              }),
+            };
+          },
+          cache: true,
+        },
+      });
+    }
+
+    function updateSummary(resumen, resumenFiltrado, filters) {
+      els.kpiPendientes.textContent = resumen.pendientes || 0;
+      els.kpiVencidos.textContent = resumen.hoy_vencidos || 0;
+      els.kpiSemana.textContent =
+        (resumen.un_dia || 0) +
+        (resumen.dos_tres || 0) +
+        (resumen.cuatro_siete || 0);
+      els.kpiMes.textContent = resumen.ocho_treinta || 0;
+      els.kpiMontoPendiente.textContent = money(resumen.monto_pendiente || 0);
+      els.chipGestion.textContent = `Gestión ${boot.gestionActual}`;
+      els.chipConteo.textContent = `${(resumenFiltrado && resumenFiltrado.total) || 0} registros`;
+
+      const map = {
+        PENDIENTE: "Pendientes",
+        VENCIDO: "Vencidos",
+        CUMPLIDO: "Cumplidos",
+        TODOS: "Todos",
+      };
+      els.chipVista.textContent = map[filters.estado] || "Pendientes";
+    }
+
+    function reloadTable(scrollToGrid) {
+      if (!state.table) {
+        return;
+      }
+      state.table.ajax.url(buildUrl()).load(function () {
+        if (scrollToGrid && els.bloqueResultados) {
+          els.bloqueResultados.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      }, false);
+    }
+
+    function renderDetailRows(details) {
+      if (!details.length) {
+        els.detalleRows.innerHTML =
+          '<tr><td colspan="7" class="cpd-empty">Sin programación.</td></tr>';
+        return;
+      }
+
+      els.detalleRows.innerHTML = details
+        .map(
+          (row) => `
+            <tr>
+              <td>${escHtml(row.fecha_vencimiento || "")}</td>
+              <td class="text-end cpd-mono">${money(row.monto_programado || 0)}</td>
+              <td class="text-end cpd-mono">${money(row.monto_registrado || 0)}</td>
+              <td class="text-end cpd-mono">${money(row.monto_pendiente || 0)}</td>
+              <td>${alertaBadge(row)}</td>
+              <td>${estadoBadge({ estado_seguimiento: row.estado_seguimiento })}</td>
+              <td>${escHtml(row.observacion || "")}</td>
+            </tr>
+          `,
+        )
+        .join("");
+    }
+
+    function renderMovRows(rows) {
+      if (!rows.length) {
+        els.movimientosRows.innerHTML =
+          '<tr><td colspan="7" class="cpd-empty">Sin movimientos relacionados.</td></tr>';
+        return;
+      }
+
+      els.movimientosRows.innerHTML = rows
+        .map(
+          (row) => `
+            <tr>
+              <td><strong>${escHtml(row.documento_tipo || "")} #${escHtml(row.documento_id || "")}</strong></td>
+              <td>${escHtml(row.fecha || "")}</td>
+              <td>${escHtml(row.estado || "")}</td>
+              <td class="text-end cpd-mono">${money(row.monto_aplicado || 0)}</td>
+              <td>${escHtml(row.referencia || "")}</td>
+              <td>${escHtml(row.glosa || "")}</td>
+              <td>
+                <a class="btn btn-sm btn-outline-secondary" href="${escHtml(row.editar_url || "#")}">
+                  Abrir
+                </a>
+              </td>
+            </tr>
+          `,
+        )
+        .join("");
+    }
+
+    async function openDetail(compromisoId) {
+      try {
+        const response = await fetch(buildDetailUrl(compromisoId), {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.message || "No se pudo obtener el detalle.");
+        }
+
+        const data = payload.data || {};
+        const header = data.header || {};
+
+        els.detalleTitulo.textContent = `${header.codigo || ""} · ${header.nombre || "Compromiso"}`;
+        els.detalleSubtitulo.textContent =
+          header.descripcion || "Seguimiento detallado del compromiso.";
+        els.detalleBtnAbrir.href = buildEditUrl(compromisoId);
+        els.detalleTipo.textContent = header.tipo || "—";
+        els.detalleAuxiliar.textContent =
+          header.auxiliar_nombre || "Sin auxiliar";
+        els.detalleUnidadNegocio.textContent = header.unidad_negocio_id
+          ? `${header.unidad_negocio_codigo || ""}${header.unidad_negocio_nombre ? ` · ${header.unidad_negocio_nombre}` : ""}`
+          : "Sin unidad";
+        els.detalleCuenta.textContent = header.cuenta_contable || "Sin cuenta";
+        els.detalleGestion.textContent = header.gestion || "—";
+
+        renderDetailRows(Array.isArray(data.details) ? data.details : []);
+        renderMovRows(Array.isArray(data.movimientos) ? data.movimientos : []);
+
+        state.modalInstance.show();
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "No se pudo abrir el detalle",
+          text: error.message || "Revise la información e intente nuevamente.",
+          confirmButtonText: "Entendido",
+        });
+      }
+    }
+
+    function wireActionButtons() {
+      document.querySelectorAll(".js-ver-detalle").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          const id = Number(this.dataset.id || 0);
+          if (id > 0) {
+            openDetail(id);
+          }
+        });
+      });
+    }
+
+    function initTable() {
+      state.table = $("#tablaCompromisosPendientes").DataTable({
+        ajax: {
+          url: buildUrl(),
+          dataSrc: function (json) {
+            if (!json || json.success === false) {
+              updateSummary({}, {}, currentFilters());
+              return [];
+            }
+            updateSummary(
+              json.resumen || {},
+              json.resumen_filtrado || {},
+              json.filters || currentFilters(),
+            );
+            return Array.isArray(json.data) ? json.data : [];
+          },
+        },
+        deferRender: true,
+        autoWidth: false,
+        processing: true,
+        serverSide: false,
+        pageLength: 25,
+        searching: false,
+        ordering: false,
+        scrollX: true,
+        language:
+          window.DXTBase &&
+            typeof window.DXTBase.getDataTableLanguageEs === "function"
+            ? window.DXTBase.getDataTableLanguageEs({
+              emptyTable:
+                "No existen compromisos para el seguimiento seleccionado.",
+              zeroRecords:
+                "No se encontraron compromisos con los filtros aplicados.",
+              info: "Mostrando _START_ a _END_ de _TOTAL_ compromisos",
+              infoEmpty: "Mostrando 0 a 0 de 0 compromisos",
+              infoFiltered: "(filtrados de _MAX_ compromisos)",
+            })
+            : {
+              emptyTable:
+                "No existen compromisos para el seguimiento seleccionado.",
+              zeroRecords:
+                "No se encontraron compromisos con los filtros aplicados.",
+              info: "Mostrando _START_ a _END_ de _TOTAL_ compromisos",
+              infoEmpty: "Mostrando 0 a 0 de 0 compromisos",
+              infoFiltered: "(filtrados de _MAX_ compromisos)",
+            },
+        columns: [
+          {
+            data: null,
+            defaultContent: "",
+            render: function (_data, type, row) {
+              if (type !== "display") return row.alerta_label || "";
+              return alertaBadge(row);
+            },
+          },
+          {
+            data: "proximo_vencimiento",
+            defaultContent: "",
+            render: function (data, type) {
+              if (type !== "display") return data || "";
+              return `<span class="cpd-mono">${escHtml(data || "—")}</span>`;
+            },
+          },
+          {
+            data: "codigo",
+            defaultContent: "",
+            render: function (data, type) {
+              if (type !== "display") return data || "";
+              return `<span class="cpd-mono">${escHtml(data || "")}</span>`;
+            },
+          },
+          {
+            data: "tipo",
+            defaultContent: "",
+            render: function (data, type) {
+              if (type !== "display") return data || "";
+              return tipoBadge(data);
+            },
+          },
+          {
+            data: null,
+            defaultContent: "",
+            render: function (_data, type, row) {
+              if (type !== "display") return row.nombre || "";
+              return `
+                <div class="cpd-name">${escHtml(row.nombre || "")}</div>
+                <div class="cpd-meta">${escHtml(row.cuenta_contable || "")}${row.cuenta_nombre ? ` · ${escHtml(row.cuenta_nombre)}` : ""}</div>
+              `;
+            },
+          },
+          {
+            data: null,
+            defaultContent: "",
+            render: function (_data, type, row) {
+              if (type !== "display") return row.unidad_negocio_nombre || "";
+              return unidadBadge(row);
+            },
+          },
+          {
+            data: "auxiliar_nombre",
+            defaultContent: "",
+            render: function (data, type) {
+              if (type !== "display") return data || "";
+              return `
+                <div>${escHtml(data || "Sin auxiliar")}</div>
+              `;
+            },
+          },
+          {
+            data: "total_programado",
+            className: "text-end",
+            defaultContent: "0.00",
+            render: function (data, type) {
+              if (type !== "display") return data || 0;
+              return `<span class="cpd-mono">${money(data || 0)}</span>`;
+            },
+          },
+          {
+            data: "total_registrado",
+            className: "text-end",
+            defaultContent: "0.00",
+            render: function (data, type) {
+              if (type !== "display") return data || 0;
+              return `<span class="cpd-mono">${money(data || 0)}</span>`;
+            },
+          },
+          {
+            data: "total_pendiente",
+            className: "text-end",
+            defaultContent: "0.00",
+            render: function (data, type) {
+              if (type !== "display") return data || 0;
+              return `<span class="cpd-mono">${money(data || 0)}</span>`;
+            },
+          },
+          {
+            data: null,
+            defaultContent: "",
+            render: function (_data, type, row) {
+              if (type !== "display") return row.estado_seguimiento || "";
+              return estadoBadge(row);
+            },
+          },
+          {
+            data: null,
+            orderable: false,
+            searchable: false,
+            defaultContent: "",
+            render: function (_data, type, row) {
+              if (type !== "display") return "";
+              return actionButtons(row);
+            },
+          },
+        ],
+        drawCallback: function () {
+          wireActionButtons();
+        },
+      });
+    }
+
+    function clearFilters() {
+      els.filtroTexto.value = "";
+      els.filtroTipo.value = "";
+      if (els.filtroUnidadNegocio) {
+        $(els.filtroUnidadNegocio).val(null).trigger("change");
+      }
+      els.filtroEstado.value = "PENDIENTE";
+      els.filtroVentana.value = "TODOS";
+      els.filtroFechaDesde.value = "";
+      els.filtroFechaHasta.value = "";
+      els.filtroSoloActivos.checked = true;
+    }
+
+    function bindEvents() {
+      if (typeof flatpickr === "function") {
+        flatpickr(els.filtroFechaDesde, {
+          dateFormat: "Y-m-d",
+          allowInput: true,
+          locale: flatpickr.l10ns.es,
+        });
+        flatpickr(els.filtroFechaHasta, {
+          dateFormat: "Y-m-d",
+          allowInput: true,
+          locale: flatpickr.l10ns.es,
+        });
+      }
+
+      els.btnAplicar.addEventListener("click", function () {
+        reloadTable(true);
+      });
+
+      els.btnLimpiar.addEventListener("click", function () {
+        clearFilters();
+        reloadTable(true);
+      });
+
+      els.filtroTexto.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          reloadTable(true);
+        }
+      });
+
+      [
+        els.filtroTipo,
+        els.filtroUnidadNegocio,
+        els.filtroEstado,
+        els.filtroVentana,
+        els.filtroSoloActivos,
+      ].filter(Boolean).forEach((el) => {
+        el.addEventListener("change", function () {
+          if (el === els.filtroVentana && els.filtroVentana.value !== "RANGO") {
+            els.filtroFechaDesde.value = "";
+            els.filtroFechaHasta.value = "";
+          }
+          reloadTable(false);
+        });
+      });
+    }
+
+    if (els.modal) {
+      state.modalInstance = new bootstrap.Modal(els.modal);
+    }
+
+    initFiltroUnidadNegocio();
+    initTable();
+    bindEvents();
+  })();
+</script>
+{% endblock %}

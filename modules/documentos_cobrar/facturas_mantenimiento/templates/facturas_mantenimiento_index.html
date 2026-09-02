@@ -1,0 +1,1346 @@
+{% extends "layout.html" %}
+{% block title %}Tesorería · Facturas · Auditoría{% endblock title %}
+
+{% block extra_css %}
+<style>
+  #facturasMantPage {
+    --fm-navy: #0f2340;
+    --fm-blue: #1a4a7a;
+    --fm-accent: #2d7dd2;
+    --fm-accent-soft: #e8f1fc;
+    --fm-success: #1c7c54;
+    --fm-success-soft: #eaf8f1;
+    --fm-warning: #c78a12;
+    --fm-warning-soft: #fff7e2;
+    --fm-danger: #c83d3d;
+    --fm-danger-soft: #fdecec;
+    --fm-text: #1f2d3d;
+    --fm-muted: #6e8197;
+    --fm-border: #dde5ee;
+    --fm-surface: #f6f9fc;
+    --fm-radius: 15px;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+
+  #facturasMantPage .fm-header {
+    background: linear-gradient(120deg, var(--fm-navy) 0%, var(--fm-blue) 60%, #1f5d9e 100%);
+    border-radius: var(--fm-radius);
+    padding: 1.05rem 1.35rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 64px;
+    z-index: 40;
+    overflow: hidden;
+    box-shadow: 0 10px 28px rgba(15, 35, 64, 0.15);
+  }
+
+  #facturasMantPage .fm-header::before {
+    content: "";
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+  }
+
+  .fm-header-left,
+  .fm-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    position: relative;
+  }
+
+  .fm-header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+  }
+
+  .fm-header-title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .fm-header-sub {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.82rem;
+    margin-top: 2px;
+  }
+
+  .fm-notice {
+    border: 1px solid #bfdbfe;
+    background: #eef6ff;
+    border-radius: var(--fm-radius);
+    padding: 0.85rem 1rem;
+    color: #214a78;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .fm-notice i {
+    margin-top: 0.2rem;
+  }
+
+  .fm-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .fm-kpi {
+    background: #fff;
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-radius);
+    padding: 0.95rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    box-shadow: 0 4px 16px rgba(15, 35, 64, 0.06);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .fm-kpi::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+  }
+
+  .fm-kpi-open::before {
+    background: var(--fm-accent);
+  }
+
+  .fm-kpi-ledger::before {
+    background: #7552c7;
+  }
+
+  .fm-kpi-done::before {
+    background: var(--fm-success);
+  }
+
+  .fm-kpi-warning::before {
+    background: var(--fm-warning);
+  }
+
+  .fm-kpi-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .fm-kpi-open .fm-kpi-icon {
+    background: var(--fm-accent-soft);
+    color: var(--fm-accent);
+  }
+
+  .fm-kpi-ledger .fm-kpi-icon {
+    background: #f0ebff;
+    color: #7552c7;
+  }
+
+  .fm-kpi-done .fm-kpi-icon {
+    background: var(--fm-success-soft);
+    color: var(--fm-success);
+  }
+
+  .fm-kpi-warning .fm-kpi-icon {
+    background: var(--fm-warning-soft);
+    color: var(--fm-warning);
+  }
+
+  .fm-kpi-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--fm-muted);
+    font-weight: 700;
+    margin-bottom: 0.15rem;
+  }
+
+  .fm-kpi-value {
+    font-size: 1.28rem;
+    color: var(--fm-text);
+    font-weight: 800;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+    font-family: "Consolas", monospace;
+  }
+
+  .fm-card {
+    background: #fff;
+    border: 1px solid var(--fm-border);
+    border-radius: var(--fm-radius);
+    box-shadow: 0 4px 16px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+  }
+
+  .fm-card-head {
+    background: var(--fm-surface);
+    border-bottom: 1px solid var(--fm-border);
+    padding: 0.9rem 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .fm-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.65px;
+    text-transform: uppercase;
+    color: var(--fm-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .fm-section-title::before {
+    content: "";
+    display: block;
+    width: 3px;
+    height: 13px;
+    border-radius: 2px;
+    background: var(--fm-accent);
+  }
+
+  .fm-chip {
+    border: 1px solid var(--fm-border);
+    background: #fff;
+    border-radius: 999px;
+    padding: 0.28rem 0.85rem;
+    font-size: 0.75rem;
+    color: var(--fm-muted);
+    font-weight: 700;
+  }
+
+  .fm-filters {
+    padding: 1rem 1.05rem;
+    background: #fff;
+  }
+
+  .fm-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.55px;
+    text-transform: uppercase;
+    color: #4e657a;
+    margin-bottom: 0.35rem;
+    display: block;
+  }
+
+  #facturasMantPage .form-control,
+  #facturasMantPage .form-select {
+    border: 1.5px solid var(--fm-border);
+    border-radius: 10px;
+    min-height: 38px;
+    transition: border-color 0.16s, box-shadow 0.16s;
+  }
+
+  #facturasMantPage .form-control:focus,
+  #facturasMantPage .form-select:focus {
+    border-color: var(--fm-accent);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+    outline: none;
+  }
+
+  .fm-table-wrap {
+    overflow: auto;
+    max-height: 68vh;
+  }
+
+  #tablaFacturasMant {
+    width: 100%;
+    min-width: 1540px;
+  }
+
+  #tablaFacturasMant thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--fm-surface);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.65px;
+    text-transform: uppercase;
+    color: var(--fm-muted);
+    border-bottom: 2px solid var(--fm-border);
+    padding: 9px 12px;
+    white-space: nowrap;
+  }
+
+  #tablaFacturasMant tbody td {
+    padding: 10px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf1f6;
+    color: var(--fm-text);
+    font-size: 0.88rem;
+  }
+
+  #tablaFacturasMant tbody tr:nth-child(even) {
+    background: #fafcff;
+  }
+
+  #tablaFacturasMant tbody tr:hover td {
+    background: #eef5ff !important;
+  }
+
+  .fm-mono {
+    font-family: "Consolas", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .fm-meta {
+    font-size: 0.78rem;
+    color: var(--fm-muted);
+    margin-top: 2px;
+  }
+
+  .fm-name {
+    font-size: 0.91rem;
+    font-weight: 700;
+    color: var(--fm-text);
+  }
+
+  .fm-line {
+    display: block;
+  }
+
+  .fm-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    justify-content: flex-end;
+    white-space: nowrap;
+  }
+
+  .fm-btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--fm-border);
+    background: #fff;
+    color: var(--fm-muted);
+    transition: all 0.16s ease;
+  }
+
+  .fm-btn-icon:hover:not(:disabled) {
+    transform: translateY(-1px);
+    background: var(--fm-accent-soft);
+    color: var(--fm-accent);
+    border-color: #bfdbfe;
+  }
+
+  .fm-btn-icon:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .fm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.18rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+
+  .fm-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .fm-badge-open {
+    background: var(--fm-accent-soft);
+    color: var(--fm-accent);
+    border-color: #bfdbfe;
+  }
+
+  .fm-badge-ledger {
+    background: #f0ebff;
+    color: #7552c7;
+    border-color: #dacdfb;
+  }
+
+  .fm-badge-manual {
+    background: var(--fm-warning-soft);
+    color: var(--fm-warning);
+    border-color: #f2d58d;
+  }
+
+  .fm-badge-covered {
+    background: var(--fm-success-soft);
+    color: var(--fm-success);
+    border-color: #bfe8d0;
+  }
+
+  .fm-badge-void {
+    background: var(--fm-danger-soft);
+    color: var(--fm-danger);
+    border-color: #f2b3b3;
+  }
+
+  .fm-pill-empty {
+    color: var(--fm-muted);
+    font-size: 0.78rem;
+  }
+
+  .fm-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+
+  .fm-detail-item {
+    border: 1px solid var(--fm-border);
+    border-radius: 12px;
+    padding: 0.75rem 0.85rem;
+    background: #fff;
+  }
+
+  .fm-detail-label {
+    font-size: 0.68rem;
+    color: var(--fm-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.55px;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+  }
+
+  .fm-detail-value {
+    font-weight: 700;
+    color: var(--fm-text);
+    overflow-wrap: anywhere;
+  }
+
+  .fm-modal-table {
+    width: 100%;
+  }
+
+  .fm-modal-table th {
+    background: var(--fm-surface);
+    color: var(--fm-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--fm-border);
+    padding: 0.55rem;
+  }
+
+  .fm-modal-table td {
+    padding: 0.55rem;
+    border-bottom: 1px solid #edf1f6;
+    vertical-align: top;
+  }
+
+  .fm-empty-box {
+    padding: 1.2rem;
+    text-align: center;
+    color: var(--fm-muted);
+    border: 1px dashed var(--fm-border);
+    border-radius: 12px;
+    background: #fcfdff;
+  }
+
+  .fm-col-fecha {
+    width: 105px;
+  }
+
+  .fm-col-factura {
+    width: 150px;
+  }
+
+  .fm-col-cliente {
+    min-width: 260px;
+  }
+
+  .fm-col-unidad {
+    min-width: 220px;
+  }
+
+  .fm-col-importes {
+    min-width: 185px;
+  }
+
+  .fm-col-cuentas {
+    min-width: 280px;
+  }
+
+  .fm-col-estado {
+    width: 150px;
+  }
+
+  .fm-col-asiento {
+    width: 120px;
+  }
+
+  .fm-col-acciones {
+    width: 110px;
+  }
+
+  @media (max-width: 1200px) {
+    .fm-kpis,
+    .fm-detail-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .fm-kpis,
+    .fm-detail-grid {
+      grid-template-columns: 1fr;
+    }
+
+    #facturasMantPage .fm-header::before {
+      display: none;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="container-fluid py-4" id="facturasMantPage">
+  <div class="fm-header">
+    <div class="fm-header-left">
+      <div class="fm-header-icon"><i class="fas fa-shield-alt"></i></div>
+      <div>
+        <h1 class="fm-header-title">Facturas · Auditoría</h1>
+        <div class="fm-header-sub">
+          Consulta de saldos, contabilización, cobros aplicados y cierres de tesorería.
+        </div>
+      </div>
+    </div>
+    <div class="fm-header-actions">
+      <a class="btn btn-outline-light btn-sm" href="{{ facturas_operativas_url }}">
+        <i class="fas fa-file-invoice-dollar me-1"></i> Ir a Facturas Electrónicas
+      </a>
+      <button type="button" class="btn btn-outline-light btn-sm" id="btnReloadPage">
+        <i class="fas fa-rotate-right me-1"></i> Actualizar
+      </button>
+    </div>
+  </div>
+
+  <div class="fm-notice">
+    <i class="fas fa-circle-info"></i>
+    <div>
+      <strong>Módulo de auditoría y diagnóstico.</strong>
+      Esta pantalla ya no modifica facturas. La contabilización, cierre de tesorería y operación diaria se realizan desde
+      <strong> Tesorería → Facturas Electrónicas</strong>. Aquí se revisa qué pasó con cada factura y qué documentos la afectan.
+    </div>
+  </div>
+
+  <div class="fm-kpis">
+    <div class="fm-kpi fm-kpi-open">
+      <div class="fm-kpi-icon"><i class="fas fa-hourglass-half"></i></div>
+      <div>
+        <div class="fm-kpi-label">Pendientes</div>
+        <div class="fm-kpi-value" id="kpiPendientes">0</div>
+      </div>
+    </div>
+    <div class="fm-kpi fm-kpi-ledger">
+      <div class="fm-kpi-icon"><i class="fas fa-book"></i></div>
+      <div>
+        <div class="fm-kpi-label">Contabilizadas</div>
+        <div class="fm-kpi-value" id="kpiContabilizadas">0</div>
+      </div>
+    </div>
+    <div class="fm-kpi fm-kpi-done">
+      <div class="fm-kpi-icon"><i class="fas fa-check-double"></i></div>
+      <div>
+        <div class="fm-kpi-label">Cobradas / cerradas</div>
+        <div class="fm-kpi-value" id="kpiCobradasCerradas">0</div>
+      </div>
+    </div>
+    <div class="fm-kpi fm-kpi-warning">
+      <div class="fm-kpi-icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <div>
+        <div class="fm-kpi-label">Observadas</div>
+        <div class="fm-kpi-value" id="kpiObservadas">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fm-card mb-3">
+    <div class="fm-card-head">
+      <h2 class="fm-section-title mb-0">Filtros</h2>
+      <div class="fm-chip" id="chipTotal">0 registros</div>
+    </div>
+    <div class="fm-filters">
+      <div class="row g-3 align-items-end">
+        <div class="col-lg-5">
+          <label class="fm-label" for="filtroTexto">Buscar</label>
+          <input
+            type="text"
+            class="form-control"
+            id="filtroTexto"
+            placeholder="Factura, cliente, NIT, unidad, auxiliar, cuenta o saldo"
+          />
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <label class="fm-label" for="filtroEstado">Vista</label>
+          <select class="form-select" id="filtroEstado">
+            <option value="PENDIENTES" selected>Pendientes</option>
+            <option value="CONTABILIZADAS">Contabilizadas</option>
+            <option value="COBRADAS">Cobradas</option>
+            <option value="CERRADAS_MANUAL">Cerradas tesorería</option>
+            <option value="ANULADAS">Anuladas</option>
+            <option value="TODAS">Todas</option>
+          </select>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <label class="fm-label" for="filtroUnidadNegocio">Unidad de Negocio</label>
+          <select class="form-select" id="filtroUnidadNegocio">
+            <option value="">Todas</option>
+            {% for unidad in unidades_negocio %}
+              <option value="{{ unidad.id }}">{{ unidad.codigo }} · {{ unidad.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-lg-1 col-md-12">
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary w-100" id="btnAplicarFiltros" title="Filtrar">
+              <i class="fas fa-filter"></i>
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="btnLimpiarFiltros" title="Limpiar filtros">
+              <i class="fas fa-eraser"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fm-card">
+    <div class="fm-card-head">
+      <h2 class="fm-section-title mb-0">Auditoría de facturas</h2>
+      <div class="fm-chip" id="chipVista">Vista pendientes</div>
+    </div>
+    <div class="fm-table-wrap">
+      <table class="table align-middle mb-0" id="tablaFacturasMant">
+        <thead>
+          <tr>
+            <th class="fm-col-fecha">Fecha</th>
+            <th class="fm-col-factura">Factura</th>
+            <th class="fm-col-cliente">Cliente / Auxiliar</th>
+            <th class="fm-col-unidad">Unidad</th>
+            <th class="fm-col-importes">Importes</th>
+            <th class="fm-col-cuentas">Cuentas</th>
+            <th class="fm-col-estado">Estado</th>
+            <th class="fm-col-asiento">Asiento</th>
+            <th class="fm-col-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- DataTables llena dinámicamente este cuerpo -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalDetalleFactura" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="detalleTitulo">Auditoría de factura</h5>
+          <div class="fm-meta" id="detalleSubtitulo">Consulta de trazabilidad</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="fm-detail-grid mb-3" id="detalleResumen"></div>
+
+        <div class="fm-card mb-3">
+          <div class="fm-card-head">
+            <h2 class="fm-section-title mb-0">Cobros / aplicaciones</h2>
+            <div class="fm-chip" id="detalleAplicacionesTotal">0 registros</div>
+          </div>
+          <div class="table-responsive">
+            <table class="fm-modal-table">
+              <thead>
+                <tr>
+                  <th>Origen</th>
+                  <th>Documento</th>
+                  <th>Fecha</th>
+                  <th>Glosa</th>
+                  <th class="text-end">Aplicado</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="detalleAplicacionesBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="fm-card">
+          <div class="fm-card-head">
+            <h2 class="fm-section-title mb-0">Regularizaciones / cierres</h2>
+            <div class="fm-chip" id="detalleRegularizacionesTotal">0 registros</div>
+          </div>
+          <div class="table-responsive">
+            <table class="fm-modal-table">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Motivo</th>
+                  <th>Creación</th>
+                  <th class="text-end">Monto</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="detalleRegularizacionesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-outline-primary" href="{{ facturas_operativas_url }}">
+          <i class="fas fa-file-invoice-dollar me-1"></i> Ir al módulo operativo
+        </a>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalAsientoFactura" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="asientoTitulo">Asiento contable</h5>
+          <div class="fm-meta" id="asientoSubtitulo">Detalle contable asociado</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="fm-detail-grid mb-3" id="asientoResumen"></div>
+        <div class="table-responsive">
+          <table class="fm-modal-table">
+            <thead>
+              <tr>
+                <th>Sec.</th>
+                <th>Cuenta</th>
+                <th>Auxiliar</th>
+                <th>Glosa</th>
+                <th class="text-end">Debe</th>
+                <th class="text-end">Haber</th>
+              </tr>
+            </thead>
+            <tbody id="asientoDetalleBody"></tbody>
+            <tfoot>
+              <tr>
+                <th colspan="4" class="text-end">Totales</th>
+                <th class="text-end fm-mono" id="asientoTotalDebe">0,00</th>
+                <th class="text-end fm-mono" id="asientoTotalHaber">0,00</th>
+              </tr>
+              <tr>
+                <th colspan="4" class="text-end">Diferencia</th>
+                <th colspan="2" class="text-end fm-mono" id="asientoDiferencia">0,00</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a
+          class="btn btn-outline-danger"
+          href="#"
+          id="btnAsientoPdf"
+          rel="noopener"
+          target="_blank"
+        >
+          <i class="fas fa-file-pdf me-1"></i> PDF
+        </a>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="facturasMantenimientoBootstrap">
+  {{ {
+    "urls": {
+      "lista": url_for("facturas_mantenimiento.api_lista"),
+      "detalleTemplate": url_for("facturas_mantenimiento.api_detalle", factura_id=0),
+      "asientoTemplate": url_for("facturas_mantenimiento.api_asiento", factura_id=0),
+      "asientoPdfTemplate": url_for("facturas_electronicas.pdf_factura_asiento", factura_id=0),
+      "operativo": facturas_operativas_url
+    }
+  } | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  // DXT-FM-AUDITORIA
+  (function () {
+    const bootEl = document.getElementById("facturasMantenimientoBootstrap");
+    if (!bootEl) {
+      console.error("No se encontró facturasMantenimientoBootstrap");
+      return;
+    }
+    const boot = JSON.parse(bootEl.textContent || "{}");
+
+    const els = {
+      filtroTexto: document.getElementById("filtroTexto"),
+      filtroEstado: document.getElementById("filtroEstado"),
+      filtroUnidadNegocio: document.getElementById("filtroUnidadNegocio"),
+      btnAplicarFiltros: document.getElementById("btnAplicarFiltros"),
+      btnLimpiarFiltros: document.getElementById("btnLimpiarFiltros"),
+      btnReloadPage: document.getElementById("btnReloadPage"),
+      chipTotal: document.getElementById("chipTotal"),
+      chipVista: document.getElementById("chipVista"),
+      kpiPendientes: document.getElementById("kpiPendientes"),
+      kpiContabilizadas: document.getElementById("kpiContabilizadas"),
+      kpiCobradasCerradas: document.getElementById("kpiCobradasCerradas"),
+      kpiObservadas: document.getElementById("kpiObservadas"),
+      tabla: document.getElementById("tablaFacturasMant"),
+      modalDetalle: document.getElementById("modalDetalleFactura"),
+      detalleTitulo: document.getElementById("detalleTitulo"),
+      detalleSubtitulo: document.getElementById("detalleSubtitulo"),
+      detalleResumen: document.getElementById("detalleResumen"),
+      detalleAplicacionesTotal: document.getElementById("detalleAplicacionesTotal"),
+      detalleAplicacionesBody: document.getElementById("detalleAplicacionesBody"),
+      detalleRegularizacionesTotal: document.getElementById("detalleRegularizacionesTotal"),
+      detalleRegularizacionesBody: document.getElementById("detalleRegularizacionesBody"),
+      modalAsiento: document.getElementById("modalAsientoFactura"),
+      asientoTitulo: document.getElementById("asientoTitulo"),
+      asientoSubtitulo: document.getElementById("asientoSubtitulo"),
+      asientoResumen: document.getElementById("asientoResumen"),
+      asientoDetalleBody: document.getElementById("asientoDetalleBody"),
+      asientoTotalDebe: document.getElementById("asientoTotalDebe"),
+      asientoTotalHaber: document.getElementById("asientoTotalHaber"),
+      asientoDiferencia: document.getElementById("asientoDiferencia"),
+      btnAsientoPdf: document.getElementById("btnAsientoPdf"),
+    };
+
+    const state = {
+      table: null,
+      lastRows: [],
+      detalleModal: null,
+      asientoModal: null,
+    };
+
+    function escHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function money(value) {
+      const number = Number(value || 0);
+      return number.toLocaleString("es-BO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    function makeUrl(template, id) {
+      return String(template || "").replace(/0(?!.*0)/, String(id));
+    }
+
+    function emptyText(text) {
+      return `<span class="fm-pill-empty">${escHtml(text || "—")}</span>`;
+    }
+
+    function badgeProceso(row) {
+      const value = row.proceso_estado || "";
+      if (value === "ANULADA") {
+        return '<span class="fm-badge fm-badge-void">Anulada</span>';
+      }
+      if (value === "CERRADA_MANUAL") {
+        return '<span class="fm-badge fm-badge-manual">Cerrada tesorería</span>';
+      }
+      if (value === "COBRADA_TOTAL") {
+        return '<span class="fm-badge fm-badge-covered">Cobrada total</span>';
+      }
+      if (value === "COBRADA_PARCIAL") {
+        return '<span class="fm-badge fm-badge-covered">Cobrada parcial</span>';
+      }
+      if (value === "CONTABILIZADA") {
+        return '<span class="fm-badge fm-badge-ledger">Contabilizada</span>';
+      }
+      if (value === "DISPONIBLE") {
+        return '<span class="fm-badge fm-badge-open">Disponible</span>';
+      }
+      return '<span class="fm-badge fm-badge-open">Recibida</span>';
+    }
+
+    function currentFilters() {
+      return {
+        q: (els.filtroTexto.value || "").trim(),
+        estado: (els.filtroEstado.value || "PENDIENTES").trim(),
+        unidad_negocio_id: (els.filtroUnidadNegocio.value || "").trim(),
+      };
+    }
+
+    function buildUrl() {
+      const params = new URLSearchParams();
+      const filters = currentFilters();
+      if (filters.q) params.set("q", filters.q);
+      if (filters.estado) params.set("estado", filters.estado);
+      if (filters.unidad_negocio_id) params.set("unidad_negocio_id", filters.unidad_negocio_id);
+      const query = params.toString();
+      return query ? `${boot.urls.lista}?${query}` : boot.urls.lista;
+    }
+
+    function updateSummary(summary, filters) {
+      const activeFilters = filters || currentFilters();
+      els.kpiPendientes.textContent = summary.pendientes || 0;
+      els.kpiContabilizadas.textContent = summary.contabilizadas || 0;
+      els.kpiCobradasCerradas.textContent = summary.cobradas_o_cerradas || 0;
+      els.kpiObservadas.textContent = summary.observadas || 0;
+      els.chipTotal.textContent = `${summary.total || 0} registros`;
+
+      const map = {
+        PENDIENTES: "Vista pendientes",
+        CONTABILIZADAS: "Vista contabilizadas",
+        COBRADAS: "Vista cobradas",
+        CERRADAS_MANUAL: "Vista cierres de tesorería",
+        ANULADAS: "Vista anuladas",
+        TODAS: "Vista completa",
+      };
+      const vistaLabel = map[activeFilters.estado] || "Vista pendientes";
+      if (activeFilters.unidad_negocio_id) {
+        const unidadText = els.filtroUnidadNegocio.options[els.filtroUnidadNegocio.selectedIndex]?.text || "Unidad seleccionada";
+        els.chipVista.textContent = `${vistaLabel} · ${unidadText}`;
+      } else {
+        els.chipVista.textContent = vistaLabel;
+      }
+    }
+
+    async function getJson(url) {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "No se pudo completar la consulta.");
+      }
+      return data;
+    }
+
+    function renderDetailItem(label, value) {
+      return `
+        <div class="fm-detail-item">
+          <div class="fm-detail-label">${escHtml(label)}</div>
+          <div class="fm-detail-value">${value ? escHtml(value) : "—"}</div>
+        </div>
+      `;
+    }
+
+    function renderEmptyRow(colspan, text) {
+      return `
+        <tr>
+          <td colspan="${colspan}">
+            <div class="fm-empty-box">${escHtml(text)}</div>
+          </td>
+        </tr>
+      `;
+    }
+
+    async function openDetalle(facturaId) {
+      try {
+        const data = await getJson(makeUrl(boot.urls.detalleTemplate, facturaId));
+        const detalle = data.data || {};
+        const factura = detalle.factura || {};
+        const aplicaciones = Array.isArray(detalle.aplicaciones) ? detalle.aplicaciones : [];
+        const regularizaciones = Array.isArray(detalle.regularizaciones) ? detalle.regularizaciones : [];
+
+        els.detalleTitulo.textContent = `Factura ${factura.numero_factura || ""}`;
+        els.detalleSubtitulo.textContent = `${factura.nombre_cliente || "Sin cliente"} · NIT ${factura.nit_cliente || "—"}`;
+        const detalleItems = [
+          renderDetailItem("Fecha emisión", factura.fecha_emision),
+          renderDetailItem("Estado", factura.estado_label),
+          renderDetailItem("Unidad", factura.unidad),
+          renderDetailItem("Importe total", `${money(factura.importe_total)} ${factura.moneda_codigo || ""}`),
+          renderDetailItem("Cobrado / aplicado", `${money(factura.total_aplicado)} ${factura.moneda_codigo || ""}`),
+          renderDetailItem("Regularizado", `${money(factura.total_regularizado)} ${factura.moneda_codigo || ""}`),
+          renderDetailItem("Saldo operativo", `${money(factura.saldo_pendiente)} ${factura.moneda_codigo || ""}`),
+          renderDetailItem("Auxiliar", factura.auxiliar),
+          renderDetailItem("Cuenta por cobrar", factura.cuenta_cobrar),
+          renderDetailItem("Contra cuenta", factura.cuenta_contra),
+          renderDetailItem("Asiento", factura.asiento_id ? `#${factura.asiento_id}` : "Sin asiento"),
+          renderDetailItem("NIT emisor", factura.nit_emisor),
+          renderDetailItem("CUF", factura.cuf),
+          renderDetailItem("Saldo inicial", factura.es_saldo_inicial ? "Sí" : "No"),
+        ];
+        if (Math.abs(Number(factura.saldo_registrado || 0) - Number(factura.saldo_pendiente || 0)) > 0.009) {
+          detalleItems.splice(7, 0, renderDetailItem("Saldo registrado BD", `${money(factura.saldo_registrado)} ${factura.moneda_codigo || ""}`));
+        }
+        els.detalleResumen.innerHTML = detalleItems.join("");
+
+        els.detalleAplicacionesTotal.textContent = `${aplicaciones.length} registros`;
+        els.detalleAplicacionesBody.innerHTML = aplicaciones.length
+          ? aplicaciones.map((item) => `
+              <tr>
+                <td>${escHtml(item.origen || "")}</td>
+                <td class="fm-mono">${item.documento_id ? `#${escHtml(item.documento_id)}` : "—"}</td>
+                <td>${escHtml(item.fecha_documento || "")}</td>
+                <td>
+                  <div>${escHtml(item.glosa_documento || "—")}</div>
+                  <div class="fm-meta">${item.referencia_documento ? `Ref.: ${escHtml(item.referencia_documento)}` : ""}</div>
+                </td>
+                <td class="text-end fm-mono">${money(item.monto_aplicado)}</td>
+                <td>${escHtml(item.estado_documento || item.estado_resultante || "")}</td>
+              </tr>
+            `).join("")
+          : renderEmptyRow(6, "No existen cobros o aplicaciones asociadas a esta factura.");
+
+        els.detalleRegularizacionesTotal.textContent = `${regularizaciones.length} registros`;
+        els.detalleRegularizacionesBody.innerHTML = regularizaciones.length
+          ? regularizaciones.map((item) => `
+              <tr>
+                <td>${escHtml(item.tipo_regularizacion || "")}</td>
+                <td>
+                  <div>${escHtml(item.motivo || "—")}</div>
+                  <div class="fm-meta">${escHtml(item.observacion || "")}</div>
+                </td>
+                <td>
+                  <div>${escHtml(item.creado_en || "")}</div>
+                  <div class="fm-meta">${item.creado_por ? `Por: ${escHtml(item.creado_por)}` : ""}</div>
+                </td>
+                <td class="text-end fm-mono">${money(item.monto)}</td>
+                <td>${item.activo ? "Activo" : `Anulado ${item.anulado_en ? escHtml(item.anulado_en) : ""}`}</td>
+              </tr>
+            `).join("")
+          : renderEmptyRow(5, "No existen regularizaciones ni cierres manuales asociados.");
+
+        state.detalleModal.show();
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "No se pudo cargar el detalle",
+          text: error.message,
+          confirmButtonText: "Aceptar",
+        });
+      }
+    }
+
+    async function openAsiento(facturaId) {
+      try {
+        const data = await getJson(makeUrl(boot.urls.asientoTemplate, facturaId));
+        const payload = data.data || {};
+        const asiento = payload.asiento || {};
+        const factura = payload.factura || {};
+        const detalle = Array.isArray(payload.detalle) ? payload.detalle : [];
+        const totales = payload.totales || {};
+
+        els.asientoTitulo.textContent = `Asiento #${asiento.id || ""}`;
+        els.asientoSubtitulo.textContent = `Factura ${factura.numero_factura || ""} · ${factura.nombre_cliente || ""}`;
+        els.asientoResumen.innerHTML = [
+          renderDetailItem("Fecha", asiento.fecha),
+          renderDetailItem("Estado", asiento.estado),
+          renderDetailItem("Unidad", asiento.unidad),
+          renderDetailItem("Moneda", asiento.moneda_codigo),
+          renderDetailItem("Referencia", asiento.referencia),
+          renderDetailItem("Creado", asiento.creado_en),
+          renderDetailItem("Glosa", asiento.glosa),
+          renderDetailItem("Factura", `${factura.numero_factura || ""} · ${factura.fecha_emision || ""}`),
+          renderDetailItem("Saldo factura", money(factura.saldo_pendiente)),
+        ].join("");
+
+        els.asientoDetalleBody.innerHTML = detalle.length
+          ? detalle.map((item) => `
+              <tr>
+                <td class="fm-mono">${escHtml(item.secuencia || "")}</td>
+                <td>
+                  <div class="fm-mono"><strong>${escHtml(item.cuenta_codigo || "")}</strong></div>
+                  <div class="fm-meta">${escHtml(item.cuenta_nombre || "")}</div>
+                </td>
+                <td>
+                  <div>${escHtml(item.auxiliar_nombre || "—")}</div>
+                  <div class="fm-meta">${item.auxiliar_nit_ci ? `NIT/CI: ${escHtml(item.auxiliar_nit_ci)}` : ""}</div>
+                </td>
+                <td>${escHtml(item.glosa || "")}</td>
+                <td class="text-end fm-mono">${money(item.debe)}</td>
+                <td class="text-end fm-mono">${money(item.haber)}</td>
+              </tr>
+            `).join("")
+          : renderEmptyRow(6, "El asiento no tiene detalle contable registrado.");
+
+        els.asientoTotalDebe.textContent = money(totales.debe || 0);
+        els.asientoTotalHaber.textContent = money(totales.haber || 0);
+        els.asientoDiferencia.textContent = money(totales.diferencia || 0);
+        if (els.btnAsientoPdf) {
+          els.btnAsientoPdf.href = makeUrl(boot.urls.asientoPdfTemplate, facturaId);
+        }
+        state.asientoModal.show();
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "No se pudo cargar el asiento",
+          text: error.message,
+          confirmButtonText: "Aceptar",
+        });
+      }
+    }
+
+    function buildActionButtons(row) {
+      const asientoDisabled = row.asiento_id ? "" : "disabled";
+      const asientoTitle = row.asiento_id ? "Ver asiento contable" : "Sin asiento contable asociado";
+      return `
+        <div class="fm-actions">
+          <button type="button" class="fm-btn-icon" data-fm-detail="${row.id}" title="Ver auditoría">
+            <i class="fas fa-eye"></i>
+          </button>
+          <button type="button" class="fm-btn-icon" data-fm-asiento="${row.id}" title="${asientoTitle}" ${asientoDisabled}>
+            <i class="fas fa-book"></i>
+          </button>
+          ${row.asiento_id ? `<a class="fm-btn-icon" href="${makeUrl(boot.urls.asientoPdfTemplate, row.id)}" target="_blank" rel="noopener" title="PDF del asiento contable"><i class="fas fa-file-pdf"></i></a>` : ""}
+        </div>
+      `;
+    }
+
+    function wireActionButtons() {
+      document.querySelectorAll("[data-fm-detail]").forEach((btn) => {
+        btn.addEventListener("click", () => openDetalle(btn.getAttribute("data-fm-detail")));
+      });
+      document.querySelectorAll("[data-fm-asiento]").forEach((btn) => {
+        btn.addEventListener("click", () => openAsiento(btn.getAttribute("data-fm-asiento")));
+      });
+    }
+
+    function initTable() {
+      state.table = $("#tablaFacturasMant").DataTable({
+        ajax: {
+          url: buildUrl(),
+          dataSrc: function (json) {
+            state.lastRows = Array.isArray(json.data) ? json.data : [];
+            updateSummary(json.summary || {}, json.filters || currentFilters());
+            return state.lastRows;
+          },
+        },
+        deferRender: true,
+        autoWidth: false,
+        processing: true,
+        serverSide: false,
+        pageLength: 25,
+        searching: false,
+        ordering: false,
+        scrollX: true,
+        language:
+          window.DXTBase && typeof window.DXTBase.getDataTableLanguageEs === "function"
+            ? window.DXTBase.getDataTableLanguageEs({
+                emptyTable: "No existen facturas para auditar.",
+                zeroRecords: "No se encontraron facturas con los filtros aplicados.",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ facturas",
+                infoEmpty: "Mostrando 0 a 0 de 0 facturas",
+                infoFiltered: "(filtradas de _MAX_ facturas)",
+              })
+            : {
+                emptyTable: "No existen facturas para auditar.",
+                zeroRecords: "No se encontraron facturas con los filtros aplicados.",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ facturas",
+                infoEmpty: "Mostrando 0 a 0 de 0 facturas",
+                infoFiltered: "(filtradas de _MAX_ facturas)",
+              },
+        columns: [
+          { data: "fecha_emision", defaultContent: "" },
+          {
+            data: "numero_factura",
+            defaultContent: "",
+            render: function (data, type, row) {
+              if (type !== "display") return data || "";
+              const inicial = row.es_saldo_inicial ? '<div class="fm-meta">Saldo inicial</div>' : "";
+              return `
+                <div class="fm-mono"><strong>${escHtml(data || "")}</strong></div>
+                <div class="fm-meta">${escHtml(row.moneda_codigo || "")}</div>
+                ${inicial}
+              `;
+            },
+          },
+          {
+            data: null,
+            defaultContent: "",
+            render: function (_data, type, row) {
+              const raw = `${row.nombre_cliente || ""} ${row.nit_cliente || ""} ${row.auxiliar_nombre || ""} ${row.auxiliar_nit_ci || ""}`.trim();
+              if (type !== "display") return raw;
+              const auxiliar = row.auxiliar_nombre
+                ? `<div class="fm-meta">Aux.: ${escHtml(row.auxiliar_nombre)}${row.auxiliar_nit_ci ? ` · ${escHtml(row.auxiliar_nit_ci)}` : ""}</div>`
+                : '<div class="fm-meta">Aux.: pendiente</div>';
+              return `
+                <div class="fm-name">${escHtml(row.nombre_cliente || "Sin cliente")}</div>
+                <div class="fm-meta">NIT: ${escHtml(row.nit_cliente || "—")}</div>
+                ${auxiliar}
+              `;
+            },
+          },
+          {
+            data: null,
+            defaultContent: "",
+            render: function (_data, type, row) {
+              const raw = `${row.unidad_negocio_codigo || ""} ${row.unidad_negocio_nombre || ""} ${row.nit_emisor || ""}`.trim();
+              if (type !== "display") return raw;
+              return `
+                <div class="fm-name">${escHtml(row.unidad_negocio_nombre || "Sin unidad")}</div>
+                <div class="fm-meta">${escHtml(row.unidad_negocio_codigo || "")}${row.nit_emisor ? ` · NIT emisor: ${escHtml(row.nit_emisor)}` : ""}</div>
+              `;
+            },
+          },
+          {
+            data: null,
+            className: "text-end",
+            defaultContent: "",
+            render: function (_data, type, row) {
+              if (type !== "display") return row.saldo_pendiente || 0;
+              const regularizado = Number(row.total_regularizado || 0) > 0
+                ? `<span class="fm-line fm-mono">Regularizado: ${money(row.total_regularizado)}</span>`
+                : "";
+              return `
+                <span class="fm-line fm-mono">Total: ${money(row.importe_total)}</span>
+                <span class="fm-line fm-mono">Cobrado: ${money(row.total_aplicado)}</span>
+                ${regularizado}
+                <span class="fm-line fm-mono"><strong>Saldo operativo: ${money(row.saldo_pendiente)}</strong></span>
+              `;
+            },
+          },
+          {
+            data: null,
+            defaultContent: "",
+            render: function (_data, type, row) {
+              const raw = `${row.cuenta_cobrar_codigo || ""} ${row.cuenta_cobrar_nombre || ""} ${row.cuenta_contra_codigo || ""} ${row.cuenta_contra_nombre || ""}`.trim();
+              if (type !== "display") return raw;
+              const cxc = row.cuenta_cobrar_codigo
+                ? `<div><span class="fm-mono"><strong>${escHtml(row.cuenta_cobrar_codigo)}</strong></span> ${escHtml(row.cuenta_cobrar_nombre || "")}</div>`
+                : emptyText("Cuenta por cobrar pendiente");
+              const contra = row.cuenta_contra_codigo
+                ? `<div class="fm-meta"><span class="fm-mono">${escHtml(row.cuenta_contra_codigo)}</span> ${escHtml(row.cuenta_contra_nombre || "")}</div>`
+                : '<div class="fm-meta">Contra cuenta pendiente</div>';
+              return `${cxc}${contra}`;
+            },
+          },
+          {
+            data: null,
+            defaultContent: "",
+            render: function (_data, type, row) {
+              if (type !== "display") return row.proceso_estado || "";
+              return `
+                ${badgeProceso(row)}
+                <div class="fm-meta">BD: ${escHtml(row.estado_label || row.estado || "")}</div>
+              `;
+            },
+          },
+          {
+            data: null,
+            defaultContent: "",
+            render: function (_data, type, row) {
+              if (type !== "display") return row.asiento_id || "";
+              if (!row.asiento_id) return emptyText("Sin asiento");
+              return `
+                <div class="d-flex flex-wrap gap-1">
+                  <button type="button" class="btn btn-sm btn-outline-primary" data-fm-asiento="${row.id}">
+                    <i class="fas fa-book me-1"></i> #${escHtml(row.asiento_id)}
+                  </button>
+                  <a class="btn btn-sm btn-outline-danger" href="${makeUrl(boot.urls.asientoPdfTemplate, row.id)}" target="_blank" rel="noopener" title="PDF del asiento contable">
+                    <i class="fas fa-file-pdf me-1"></i> PDF
+                  </a>
+                </div>
+                <div class="fm-meta">${escHtml(row.fecha_contabilizacion || "")}</div>
+              `;
+            },
+          },
+          {
+            data: null,
+            orderable: false,
+            searchable: false,
+            defaultContent: "",
+            render: function (_data, type, row) {
+              if (type !== "display") return "";
+              return buildActionButtons(row);
+            },
+          },
+        ],
+        drawCallback: function () {
+          wireActionButtons();
+        },
+      });
+    }
+
+    function reloadTable() {
+      if (!state.table) return;
+      state.table.ajax.url(buildUrl()).load();
+    }
+
+    function bindEvents() {
+      els.btnAplicarFiltros.addEventListener("click", function () {
+        reloadTable();
+      });
+
+      els.btnLimpiarFiltros.addEventListener("click", function () {
+        els.filtroTexto.value = "";
+        els.filtroEstado.value = "PENDIENTES";
+        if (els.filtroUnidadNegocio) els.filtroUnidadNegocio.value = "";
+        reloadTable();
+      });
+
+      els.btnReloadPage.addEventListener("click", function () {
+        reloadTable();
+      });
+
+      els.filtroTexto.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          reloadTable();
+        }
+      });
+    }
+
+    if (els.modalDetalle) {
+      state.detalleModal = new bootstrap.Modal(els.modalDetalle);
+    }
+    if (els.modalAsiento) {
+      state.asientoModal = new bootstrap.Modal(els.modalAsiento);
+    }
+
+    initTable();
+    bindEvents();
+  })();
+</script>
+{% endblock extra_js %}

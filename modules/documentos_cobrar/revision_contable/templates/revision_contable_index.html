@@ -1,0 +1,771 @@
+{% extends "layout.html" %}
+{% block title %}Revisión Contable{% endblock title %}
+{% block page_help_url %}{{ url_for('revision_contable.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .rc-page {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .rc-header {
+    background: linear-gradient(135deg, #0f2340, #173b68);
+    border-radius: 1.15rem;
+    box-shadow: 0 18px 38px rgba(15, 35, 64, 0.18);
+    color: #fff;
+    padding: 1.2rem 1.35rem;
+  }
+
+  .rc-kicker {
+    align-items: center;
+    color: rgba(255, 255, 255, 0.82);
+    display: flex;
+    font-size: 0.78rem;
+    font-weight: 850;
+    gap: 0.45rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .rc-title {
+    font-size: clamp(1.35rem, 2vw, 2rem);
+    font-weight: 900;
+    margin: 0.35rem 0 0.1rem;
+  }
+
+  .rc-subtitle {
+    color: rgba(255, 255, 255, 0.76);
+    margin: 0;
+    max-width: 900px;
+  }
+
+  .rc-card {
+    background: #fff;
+    border: 1px solid #dfe7f1;
+    border-radius: 1.15rem;
+    box-shadow: 0 14px 34px rgba(15, 35, 64, 0.08);
+  }
+
+  .rc-filter-card {
+    padding: 1rem;
+  }
+
+  .rc-filter-grid {
+    align-items: end;
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: 1fr 1.15fr 1.6fr auto auto auto;
+  }
+
+  .rc-field label {
+    color: #334155;
+    font-size: 0.78rem;
+    font-weight: 850;
+    margin-bottom: 0.3rem;
+  }
+
+  .rc-field .form-control,
+  .rc-field .form-select {
+    border-color: #d5deea;
+    border-radius: 0.8rem;
+    min-height: 40px;
+  }
+
+  .rc-action-btn {
+    align-items: center;
+    border-radius: 0.85rem;
+    display: inline-flex;
+    font-weight: 850;
+    gap: 0.45rem;
+    min-height: 40px;
+    padding-inline: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .rc-summary {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .rc-summary-card {
+    border-left: 5px solid #2563eb;
+    padding: 0.95rem 1rem;
+  }
+
+  .rc-summary-card.is-critical {
+    border-left-color: #dc2626;
+  }
+
+  .rc-summary-card.is-high {
+    border-left-color: #f97316;
+  }
+
+  .rc-summary-card.is-medium {
+    border-left-color: #eab308;
+  }
+
+  .rc-summary-card.is-low {
+    border-left-color: #22c55e;
+  }
+
+  .rc-summary-label {
+    color: #64748b;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .rc-summary-value {
+    color: #0f2340;
+    font-size: 1.25rem;
+    font-weight: 900;
+    line-height: 1.15;
+    margin-top: 0.2rem;
+  }
+
+  .rc-summary-note {
+    color: #64748b;
+    font-size: 0.74rem;
+    margin-top: 0.1rem;
+  }
+
+  .rc-results-card {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .rc-results-toolbar {
+    align-items: flex-start;
+    border-bottom: 1px solid #dfe7f1;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 1rem 1.05rem;
+  }
+
+  .rc-results-title {
+    color: #0f2340;
+    font-weight: 900;
+    margin: 0;
+  }
+
+  .rc-results-meta {
+    color: #64748b;
+    font-size: 0.82rem;
+    margin-top: 0.15rem;
+  }
+
+  .rc-grid-tools {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
+
+  .rc-page-size {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.5rem;
+  }
+
+  .rc-page-size label {
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 850;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .rc-page-size .form-select {
+    border-color: #d5deea;
+    border-radius: 0.75rem;
+    font-weight: 850;
+    min-height: 38px;
+    width: 86px;
+  }
+
+  .rc-table-wrap {
+    max-height: 62vh;
+    min-height: 360px;
+    overflow: auto;
+    position: relative;
+  }
+
+  .rc-table {
+    margin: 0;
+    min-width: 1260px;
+  }
+
+  .rc-table thead th {
+    background: #f1f5f9;
+    color: #243447;
+    font-size: 0.74rem;
+    font-weight: 850;
+    letter-spacing: 0.025em;
+    position: sticky;
+    text-transform: uppercase;
+    top: 0;
+    vertical-align: middle;
+    white-space: nowrap;
+    z-index: 3;
+  }
+
+  .rc-table tbody td {
+    color: #263445;
+    font-size: 0.85rem;
+    vertical-align: top;
+  }
+
+  .rc-text-strong {
+    color: #0f2340;
+    font-weight: 850;
+  }
+
+  .rc-text-muted {
+    color: #6b7280;
+    font-size: 0.78rem;
+  }
+
+  .rc-badge {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.71rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    padding: 0.32rem 0.55rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .rc-badge-critical {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .rc-badge-high {
+    background: #ffedd5;
+    color: #9a3412;
+  }
+
+  .rc-badge-medium {
+    background: #fef9c3;
+    color: #854d0e;
+  }
+
+  .rc-badge-low {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .rc-badge-default {
+    background: #e2e8f0;
+    color: #334155;
+  }
+
+  .rc-empty {
+    color: #64748b;
+    display: none;
+    padding: 4rem 1rem;
+    text-align: center;
+  }
+
+  .rc-empty.is-visible {
+    display: block;
+  }
+
+  .rc-empty i {
+    color: #22c55e;
+    font-size: 2.6rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .rc-loader {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(2px);
+    display: none;
+    inset: 0;
+    justify-content: center;
+    position: absolute;
+    z-index: 5;
+  }
+
+  .rc-loader.is-visible {
+    display: flex;
+  }
+
+  .rc-loader-card {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #dfe7f1;
+    border-radius: 999px;
+    box-shadow: 0 12px 30px rgba(15, 35, 64, 0.14);
+    color: #0f2340;
+    display: inline-flex;
+    font-weight: 850;
+    gap: 0.65rem;
+    padding: 0.7rem 1rem;
+  }
+
+  .rc-loader-card i {
+    color: #ea6f1b;
+  }
+
+  .rc-pagination-bar {
+    align-items: center;
+    border-top: 1px solid #dfe7f1;
+    display: flex;
+    gap: 0.85rem;
+    justify-content: space-between;
+    padding: 0.8rem 1.05rem;
+  }
+
+  .rc-pagination-info {
+    color: #64748b;
+    font-size: 0.82rem;
+    font-weight: 750;
+  }
+
+  .rc-pagination-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: flex-end;
+  }
+
+  .rc-page-btn {
+    align-items: center;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    font-weight: 850;
+    justify-content: center;
+    min-height: 36px;
+    min-width: 40px;
+  }
+
+  .rc-page-indicator {
+    color: #0f2340;
+    font-size: 0.82rem;
+    font-weight: 900;
+    padding-inline: 0.35rem;
+    white-space: nowrap;
+  }
+
+  .rc-footer-note {
+    color: #64748b;
+    font-size: 0.78rem;
+    padding: 0.75rem 1.05rem 1rem;
+  }
+
+  @media (max-width: 1180px) {
+    .rc-filter-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rc-summary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    .rc-filter-grid,
+    .rc-summary {
+      grid-template-columns: 1fr;
+    }
+
+    .rc-results-toolbar,
+    .rc-pagination-bar {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .rc-grid-tools,
+    .rc-pagination-actions {
+      justify-content: stretch;
+    }
+
+    .rc-page-size,
+    .rc-page-size .form-select {
+      width: 100%;
+    }
+
+    .rc-action-btn {
+      justify-content: center;
+      width: 100%;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="rc-page">
+  <section class="rc-header">
+    <div class="rc-kicker">
+      <i class="fas fa-stethoscope"></i>
+      <span>Herramientas</span>
+    </div>
+    <h1 class="rc-title">Revisión Contable</h1>
+    <p class="rc-subtitle">Panel de alertas para detectar pendientes e inconsistencias antes de emitir reportes o ejecutar procesos delicados.</p>
+  </section>
+
+  <section class="rc-card rc-filter-card">
+    <div class="rc-filter-grid">
+      <div class="rc-field">
+        <label for="gestion">Gestión</label>
+        <select id="gestion" class="form-select">
+          {% for gestion in gestiones %}
+          <option value="{{ gestion }}" {% if gestion == gestion_preferida %}selected{% endif %}>{{ gestion }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="rc-field">
+        <label for="mes">Periodo</label>
+        <select id="mes" class="form-select">
+          {% for mes in meses %}
+          <option value="{{ mes.value }}">{{ mes.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="rc-field">
+        <label for="unidadNegocio">Unidad de negocio</label>
+        <select id="unidadNegocio" class="form-select">
+          <option value="">Todas</option>
+          {% for unidad in unidades_negocio %}
+          <option value="{{ unidad.id }}">{{ unidad.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button id="btnActualizar" type="button" class="btn btn-primary rc-action-btn">
+        <i class="fas fa-rotate"></i>
+        <span>Actualizar</span>
+      </button>
+
+      <a id="btnExcel" class="btn btn-success rc-action-btn" href="#" role="button">
+        <i class="fas fa-file-excel"></i>
+        <span>Excel</span>
+      </a>
+
+      <a id="btnPdf" class="btn btn-danger rc-action-btn" href="#" role="button" target="_blank" rel="noopener">
+        <i class="fas fa-file-pdf"></i>
+        <span>PDF</span>
+      </a>
+    </div>
+  </section>
+
+  <section id="summaryGrid" class="rc-summary" aria-label="Resumen de revisión contable"></section>
+
+  <section class="rc-card rc-results-card">
+    <div class="rc-loader" id="loaderResultados">
+      <div class="rc-loader-card">
+        <i class="fas fa-circle-notch fa-spin"></i>
+        <span>Revisando información</span>
+      </div>
+    </div>
+
+    <div class="rc-results-toolbar">
+      <div>
+        <h2 class="rc-results-title">Alertas detectadas</h2>
+        <div id="resultadoMeta" class="rc-results-meta">Cargando revision...</div>
+      </div>
+      <div class="rc-grid-tools" aria-label="Controles del listado">
+        <div class="rc-page-size">
+          <label for="pageSize">Filas por pagina</label>
+          <select id="pageSize" class="form-select">
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="rc-table-wrap">
+      <table class="table table-hover rc-table">
+        <thead>
+          <tr id="resultadosHead"></tr>
+        </thead>
+        <tbody id="resultadosBody"></tbody>
+      </table>
+      <div id="emptyState" class="rc-empty">
+        <i id="emptyIcon" class="fas fa-circle-check"></i>
+        <h3 id="emptyTitle">No se detectaron alertas para los filtros seleccionados</h3>
+      </div>
+    </div>
+
+    <div id="paginationBar" class="rc-pagination-bar" aria-label="Paginacion de alertas">
+      <div id="paginationInfo" class="rc-pagination-info">0 registros</div>
+      <div class="rc-pagination-actions">
+        <button id="btnFirstPage" type="button" class="btn btn-outline-secondary btn-sm rc-page-btn" aria-label="Primera pagina">
+          <i class="fas fa-angles-left"></i>
+        </button>
+        <button id="btnPrevPage" type="button" class="btn btn-outline-secondary btn-sm rc-page-btn" aria-label="Pagina anterior">
+          <i class="fas fa-angle-left"></i>
+        </button>
+        <span id="pageIndicator" class="rc-page-indicator">Pagina 1 de 1</span>
+        <button id="btnNextPage" type="button" class="btn btn-outline-secondary btn-sm rc-page-btn" aria-label="Pagina siguiente">
+          <i class="fas fa-angle-right"></i>
+        </button>
+        <button id="btnLastPage" type="button" class="btn btn-outline-secondary btn-sm rc-page-btn" aria-label="Ultima pagina">
+          <i class="fas fa-angles-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="footerNote" class="rc-footer-note"></div>
+  </section>
+</div>
+
+<script type="application/json" id="revisionContableBootstrap">
+  {{ {
+    'urls': {
+      'api': url_for('revision_contable.api_revision'),
+      'excel': url_for('revision_contable.excel_revision'),
+      'pdf': url_for('revision_contable.pdf_revision')
+    }
+  } | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const bootEl = document.getElementById("revisionContableBootstrap");
+    const boot = JSON.parse(bootEl.textContent || "{}");
+
+    const el = {
+      gestion: document.getElementById("gestion"),
+      mes: document.getElementById("mes"),
+      unidadNegocio: document.getElementById("unidadNegocio"),
+      pageSize: document.getElementById("pageSize"),
+      btnActualizar: document.getElementById("btnActualizar"),
+      btnExcel: document.getElementById("btnExcel"),
+      btnPdf: document.getElementById("btnPdf"),
+      btnFirstPage: document.getElementById("btnFirstPage"),
+      btnPrevPage: document.getElementById("btnPrevPage"),
+      btnNextPage: document.getElementById("btnNextPage"),
+      btnLastPage: document.getElementById("btnLastPage"),
+      summaryGrid: document.getElementById("summaryGrid"),
+      resultadosHead: document.getElementById("resultadosHead"),
+      resultadosBody: document.getElementById("resultadosBody"),
+      resultadoMeta: document.getElementById("resultadoMeta"),
+      emptyState: document.getElementById("emptyState"),
+      emptyTitle: document.getElementById("emptyTitle"),
+      emptyIcon: document.getElementById("emptyIcon"),
+      footerNote: document.getElementById("footerNote"),
+      paginationInfo: document.getElementById("paginationInfo"),
+      pageIndicator: document.getElementById("pageIndicator"),
+      paginationBar: document.getElementById("paginationBar"),
+      loader: document.getElementById("loaderResultados"),
+    };
+
+    let currentRows = [];
+    let currentColumns = [];
+    let currentPage = 1;
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function params() {
+      const data = new URLSearchParams();
+      data.set("gestion", el.gestion.value || "");
+      data.set("mes", el.mes.value || "0");
+      data.set("unidad_negocio_id", el.unidadNegocio.value || "");
+      return data;
+    }
+
+    function updateExportLinks() {
+      const query = params().toString();
+      el.btnExcel.href = `${boot.urls.excel}?${query}`;
+      el.btnPdf.href = `${boot.urls.pdf}?${query}`;
+    }
+
+    function badgeClass(code) {
+      const normalized = String(code || "").toUpperCase();
+      if (normalized === "CRITICA") return "rc-badge-critical";
+      if (normalized === "ALTA") return "rc-badge-high";
+      if (normalized === "MEDIA") return "rc-badge-medium";
+      if (normalized === "BAJA") return "rc-badge-low";
+      if (["BORRADOR", "SIN CONTROL"].includes(normalized)) return "rc-badge-high";
+      if (["CONFIRMADO", "ABIERTA"].includes(normalized)) return "rc-badge-low";
+      if (["CERRADA", "PENDIENTE"].includes(normalized)) return "rc-badge-medium";
+      return "rc-badge-default";
+    }
+
+    function renderSummary(cards) {
+      el.summaryGrid.innerHTML = "";
+      (cards || []).forEach((card) => {
+        const item = document.createElement("article");
+        item.className = `rc-card rc-summary-card is-${escapeHtml(card.kind || "group")}`;
+        item.innerHTML = `
+          <div class="rc-summary-label">${escapeHtml(card.label)}</div>
+          <div class="rc-summary-value">${escapeHtml(card.value)}</div>
+          <div class="rc-summary-note">${escapeHtml(card.note || "")}</div>
+        `;
+        el.summaryGrid.appendChild(item);
+      });
+    }
+
+    function renderHead(columns) {
+      el.resultadosHead.innerHTML = "";
+      (columns || []).forEach((column) => {
+        const th = document.createElement("th");
+        th.textContent = column.label || "";
+        if (column.align === "right") th.classList.add("text-end");
+        if (column.align === "center") th.classList.add("text-center");
+        el.resultadosHead.appendChild(th);
+      });
+    }
+
+    function renderCell(row, column) {
+      const td = document.createElement("td");
+      if (column.align === "right") td.classList.add("text-end");
+      if (column.align === "center") td.classList.add("text-center");
+
+      if (column.type === "badge") {
+        const code = row[column.code_key] || row[column.key];
+        td.innerHTML = `<span class="rc-badge ${badgeClass(code)}">${escapeHtml(row[column.key])}</span>`;
+        return td;
+      }
+
+      if (column.type === "money") {
+        td.innerHTML = `<span class="rc-text-strong">${escapeHtml(row.monto_label || "0.00")}</span>`;
+        return td;
+      }
+
+      const text = escapeHtml(row[column.key]);
+      td.innerHTML = column.strong ? `<span class="rc-text-strong">${text}</span>` : text;
+      return td;
+    }
+
+    function pageSizeValue() {
+      const value = Number.parseInt(el.pageSize.value || "10", 10);
+      return [10, 20, 50].includes(value) ? value : 10;
+    }
+
+    function totalPages() {
+      return Math.max(1, Math.ceil(currentRows.length / pageSizeValue()));
+    }
+
+    function clampCurrentPage() {
+      currentPage = Math.min(Math.max(1, currentPage), totalPages());
+    }
+
+    function updatePaginationControls() {
+      const total = currentRows.length;
+      const pages = totalPages();
+      clampCurrentPage();
+
+      const start = total === 0 ? 0 : (currentPage - 1) * pageSizeValue() + 1;
+      const end = Math.min(total, currentPage * pageSizeValue());
+      el.paginationInfo.textContent = total === 0
+        ? "0 registros"
+        : `${start}-${end} de ${total} registros`;
+      el.pageIndicator.textContent = `Pagina ${currentPage} de ${pages}`;
+
+      const disableBack = currentPage <= 1 || total === 0;
+      const disableNext = currentPage >= pages || total === 0;
+      el.btnFirstPage.disabled = disableBack;
+      el.btnPrevPage.disabled = disableBack;
+      el.btnNextPage.disabled = disableNext;
+      el.btnLastPage.disabled = disableNext;
+      el.paginationBar.classList.toggle("d-none", total === 0);
+    }
+
+    function renderRows() {
+      el.resultadosBody.innerHTML = "";
+      clampCurrentPage();
+      const size = pageSizeValue();
+      const start = (currentPage - 1) * size;
+      const rows = currentRows.slice(start, start + size);
+
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+        currentColumns.forEach((column) => {
+          tr.appendChild(renderCell(row, column));
+        });
+        el.resultadosBody.appendChild(tr);
+      });
+
+      updatePaginationControls();
+    }
+
+    function goToPage(page) {
+      currentPage = page;
+      renderRows();
+    }
+
+    function showError(message) {
+      if (window.Swal) {
+        window.Swal.fire({
+          icon: "error",
+          title: "No se pudo completar",
+          text: message,
+          confirmButtonColor: "#0f2340",
+        });
+        return;
+      }
+      alert(message);
+    }
+
+    async function cargarRevision() {
+      updateExportLinks();
+      el.loader.classList.add("is-visible");
+      try {
+        const response = await fetch(`${boot.urls.api}?${params().toString()}`, {
+          headers: { Accept: "application/json" },
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.msg || "No se pudo generar la revisión.");
+        }
+
+        currentRows = Array.isArray(payload.rows) ? payload.rows : [];
+        currentColumns = Array.isArray(payload.columns) ? payload.columns : [];
+        currentPage = 1;
+        renderSummary(payload.summary_cards || []);
+        renderHead(currentColumns);
+        renderRows();
+
+        el.emptyTitle.textContent = payload.empty_title || "No se detectaron alertas";
+        el.emptyIcon.className = payload.empty_icon || "fas fa-circle-check";
+        el.emptyState.classList.toggle("is-visible", currentRows.length === 0);
+        el.resultadoMeta.textContent = `${payload.descripcion_periodo || ""} - Unidad: ${payload.unidad_label || ""} - Emitido: ${payload.emitido_en || ""}`;
+        el.footerNote.textContent = currentRows.length > 0
+          ? "Revise primero las alertas críticas y altas. El Excel contiene el detalle ampliado para seguimiento."
+          : "La revisión no reemplaza el criterio contable; ayuda a encontrar pendientes frecuentes.";
+      } catch (error) {
+        showError(error.message || "Error inesperado al generar la revisión.");
+      } finally {
+        el.loader.classList.remove("is-visible");
+      }
+    }
+
+    [el.gestion, el.mes, el.unidadNegocio].forEach((control) => {
+      control.addEventListener("change", cargarRevision);
+    });
+    el.pageSize.addEventListener("change", () => goToPage(1));
+    el.btnFirstPage.addEventListener("click", () => goToPage(1));
+    el.btnPrevPage.addEventListener("click", () => goToPage(currentPage - 1));
+    el.btnNextPage.addEventListener("click", () => goToPage(currentPage + 1));
+    el.btnLastPage.addEventListener("click", () => goToPage(totalPages()));
+    el.btnActualizar.addEventListener("click", cargarRevision);
+
+    updateExportLinks();
+    cargarRevision();
+  });
+</script>
+{% endblock extra_js %}

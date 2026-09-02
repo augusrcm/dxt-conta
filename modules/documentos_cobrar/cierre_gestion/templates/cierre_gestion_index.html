@@ -1,0 +1,1393 @@
+{% extends "layout.html" %}
+{% block title %}Cierre y Apertura de Gestión{% endblock title %}
+{% block page_help_url %}{{ url_for('cierre_gestion.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    #cierreGestionPage {
+        --cg-primary: #15365f;
+        --cg-primary-2: #1f5f99;
+        --cg-accent: #2563eb;
+        --cg-bg: #f5f7fb;
+        --cg-surface: #ffffff;
+        --cg-soft: #f8fafc;
+        --cg-border: #dfe7f1;
+        --cg-text: #172033;
+        --cg-muted: #6b7788;
+        --cg-success: #16784f;
+        --cg-warning: #b7791f;
+        --cg-danger: #b4232f;
+        --cg-radius: 16px;
+        color: var(--cg-text);
+    }
+
+    #cierreGestionPage .cg-topbar {
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) auto;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding: 1rem 1.15rem;
+        border-radius: var(--cg-radius);
+        background: linear-gradient(120deg, var(--cg-primary) 0%, var(--cg-primary-2) 100%);
+        box-shadow: 0 14px 32px rgba(21, 54, 95, 0.15);
+    }
+
+    #cierreGestionPage .cg-title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        min-width: 0;
+    }
+
+    #cierreGestionPage .cg-title-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.15);
+        flex: 0 0 auto;
+    }
+
+    #cierreGestionPage .cg-title {
+        margin: 0;
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 800;
+        line-height: 1.15;
+    }
+
+    #cierreGestionPage .cg-subtitle {
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 0.78rem;
+        margin-top: 0.2rem;
+    }
+
+    #cierreGestionPage .cg-top-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    #cierreGestionPage .cg-card {
+        background: var(--cg-surface);
+        border: 1px solid var(--cg-border);
+        border-radius: var(--cg-radius);
+        box-shadow: 0 8px 24px rgba(15, 35, 64, 0.06);
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+
+    #cierreGestionPage .cg-card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid var(--cg-border);
+        background: linear-gradient(180deg, #fff 0%, #f9fbfe 100%);
+    }
+
+    #cierreGestionPage .cg-card-title {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        color: var(--cg-primary);
+        font-weight: 800;
+    }
+
+    #cierreGestionPage .cg-card-body {
+        padding: 1rem;
+    }
+
+    #cierreGestionPage .cg-control-grid {
+        display: grid;
+        grid-template-columns: minmax(180px, 240px) minmax(280px, 1fr) minmax(260px, 1fr);
+        gap: 0.9rem;
+        align-items: end;
+    }
+
+    #cierreGestionPage .cg-config-grid {
+        display: grid;
+        grid-template-columns: minmax(280px, 1fr) minmax(160px, 220px);
+        gap: 0.85rem;
+        align-items: end;
+    }
+
+    #cierreGestionPage .cg-status-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
+
+    #cierreGestionPage .cg-status-box {
+        min-height: 86px;
+        padding: 0.85rem 0.95rem;
+        border: 1px solid var(--cg-border);
+        border-radius: 14px;
+        background: linear-gradient(180deg, #fff 0%, var(--cg-soft) 100%);
+    }
+
+    #cierreGestionPage .cg-status-label {
+        margin-bottom: 0.35rem;
+        color: var(--cg-muted);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    #cierreGestionPage .cg-status-value {
+        color: var(--cg-primary);
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.25;
+        word-break: break-word;
+    }
+
+    #cierreGestionPage .cg-chip-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    #cierreGestionPage .cg-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.38rem;
+        min-height: 30px;
+        padding: 0.34rem 0.65rem;
+        border-radius: 999px;
+        background: #eef5ff;
+        color: var(--cg-primary);
+        border: 1px solid #d7e7ff;
+        font-size: 0.78rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    #cierreGestionPage .cg-chip-ok {
+        background: #eefaf4;
+        color: var(--cg-success);
+        border-color: #c8ead8;
+    }
+
+    #cierreGestionPage .cg-chip-warn {
+        background: #fff8e8;
+        color: var(--cg-warning);
+        border-color: #f2ddb0;
+    }
+
+    #cierreGestionPage .cg-chip-danger {
+        background: #fff0f1;
+        color: var(--cg-danger);
+        border-color: #f3c8ce;
+    }
+
+    #cierreGestionPage .cg-process-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    #cierreGestionPage .cg-process-card {
+        border: 1px solid var(--cg-border);
+        border-radius: var(--cg-radius);
+        background: var(--cg-surface);
+        box-shadow: 0 8px 22px rgba(15, 35, 64, 0.05);
+        overflow: hidden;
+    }
+
+    #cierreGestionPage .cg-process-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
+        padding: 0.85rem 0.95rem;
+        border-bottom: 1px solid var(--cg-border);
+        background: var(--cg-soft);
+    }
+
+    #cierreGestionPage .cg-process-title {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-weight: 800;
+        color: var(--cg-primary);
+    }
+
+    #cierreGestionPage .cg-process-body {
+        padding: 0.95rem;
+    }
+
+    #cierreGestionPage .cg-action-stack {
+        display: grid;
+        gap: 0.6rem;
+    }
+
+    #cierreGestionPage .cg-panel-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    #cierreGestionPage .cg-mini-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.65rem;
+        margin-bottom: 0.9rem;
+    }
+
+    #cierreGestionPage .cg-mini-grid.cg-mini-grid-5 {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    #cierreGestionPage .cg-mini-box {
+        padding: 0.72rem 0.78rem;
+        border: 1px solid var(--cg-border);
+        border-radius: 13px;
+        background: var(--cg-soft);
+    }
+
+    #cierreGestionPage .cg-mini-label {
+        color: var(--cg-muted);
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    #cierreGestionPage .cg-mini-value {
+        margin-top: 0.25rem;
+        color: var(--cg-primary);
+        font-size: 0.95rem;
+        font-weight: 800;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    #cierreGestionPage .cg-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid var(--cg-border);
+        border-radius: 14px;
+    }
+
+    #cierreGestionPage .cg-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+    }
+
+    #cierreGestionPage .cg-table thead th {
+        padding: 0.66rem 0.72rem;
+        background: #f3f7fc;
+        color: var(--cg-primary);
+        border-bottom: 1px solid var(--cg-border);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    #cierreGestionPage .cg-table tbody td {
+        padding: 0.64rem 0.72rem;
+        border-bottom: 1px solid #eef2f7;
+        font-size: 0.84rem;
+        vertical-align: middle;
+    }
+
+    #cierreGestionPage .cg-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    #cierreGestionPage .cg-table tbody tr:nth-child(even) {
+        background: #fcfdff;
+    }
+
+    #cierreGestionPage .cg-money {
+        text-align: right;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    #cierreGestionPage .cg-empty {
+        display: none;
+        padding: 1.1rem;
+        color: var(--cg-muted);
+        text-align: center;
+        border: 1px dashed var(--cg-border);
+        border-radius: 14px;
+        background: var(--cg-soft);
+    }
+
+    #cierreGestionPage .cg-empty.cg-empty-visible {
+        display: block;
+    }
+
+    #cierreGestionPage .cg-muted {
+        color: var(--cg-muted);
+    }
+
+    #cierreGestionPage .cg-account-current {
+        margin-top: 0.42rem;
+        color: var(--cg-muted);
+        font-size: 0.78rem;
+        min-height: 1.1rem;
+    }
+
+    #cierreGestionPage .cg-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.34rem;
+        padding: 0.28rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        font-size: 0.72rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    #cierreGestionPage .cg-badge-open {
+        color: var(--cg-success);
+        background: #eefaf4;
+        border-color: #c8ead8;
+    }
+
+    #cierreGestionPage .cg-badge-closed {
+        color: var(--cg-danger);
+        background: #fff0f1;
+        border-color: #f3c8ce;
+    }
+
+    #cierreGestionPage .cg-badge-neutral {
+        color: var(--cg-primary);
+        background: #eef5ff;
+        border-color: #d7e7ff;
+    }
+
+    #cierreGestionPage .cg-select2 .select2-container {
+        width: 100% !important;
+    }
+
+    #cierreGestionPage .select2-container--default .select2-selection--single {
+        min-height: 38px;
+        border: 1px solid #ced4da;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        padding: 0.2rem 0.35rem;
+    }
+
+    #cierreGestionPage .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 1.5rem;
+        padding-left: 0.35rem;
+        padding-right: 1.25rem;
+    }
+
+    #cierreGestionPage .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 100%;
+        right: 0.35rem;
+    }
+
+    @media (max-width: 1250px) {
+
+        #cierreGestionPage .cg-status-grid,
+        #cierreGestionPage .cg-mini-grid.cg-mini-grid-5 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        #cierreGestionPage .cg-control-grid,
+        #cierreGestionPage .cg-process-grid,
+        #cierreGestionPage .cg-panel-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+
+        #cierreGestionPage .cg-topbar,
+        #cierreGestionPage .cg-status-grid,
+        #cierreGestionPage .cg-config-grid,
+        #cierreGestionPage .cg-mini-grid,
+        #cierreGestionPage .cg-mini-grid.cg-mini-grid-5 {
+            grid-template-columns: 1fr;
+        }
+
+        #cierreGestionPage .cg-top-actions {
+            justify-content: stretch;
+        }
+
+        #cierreGestionPage .cg-top-actions .btn,
+        #cierreGestionPage .cg-top-actions .form-select {
+            width: 100%;
+        }
+
+        #cierreGestionPage .cg-card-head,
+        #cierreGestionPage .cg-process-head {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div id="cierreGestionPage">
+    <div class="cg-topbar">
+        <div class="cg-title-wrap">
+            <div class="cg-title-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <div>
+                <h1 class="cg-title">Cierre y Apertura de Gestión</h1>
+                <div class="cg-subtitle">Procesos contables críticos de cierre, apertura y reapertura</div>
+            </div>
+        </div>
+        <div class="cg-top-actions">
+            <button id="btnCargarEstado" type="button" class="btn btn-light btn-sm">
+                <i class="fas fa-rotate me-1"></i>Actualizar
+            </button>
+        </div>
+    </div>
+
+    <div class="cg-card">
+        <div class="cg-card-body">
+            <div class="cg-control-grid">
+                <div>
+                    <label for="gestion" class="form-label">Gestión origen</label>
+                    <select id="gestion" class="form-select">
+                        {% for item in gestiones %}
+                        {% if item == gestion_actual %}
+                        <option value="{{ item }}" selected>{{ item }}</option>
+                        {% else %}
+                        <option value="{{ item }}">{{ item }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="observacionProceso" class="form-label">Observación cierre/apertura</label>
+                    <textarea id="observacionProceso" class="form-control" rows="1"></textarea>
+                </div>
+                <div>
+                    <label for="cuentaResultado" class="form-label">Cuenta resultado del ejercicio</label>
+                    <div class="cg-config-grid">
+                        <div class="cg-select2">
+                            <select id="cuentaResultado" class="form-select">
+                                <option value="">Seleccione cuenta patrimonial</option>
+                            </select>
+
+                        </div>
+                        <button id="btnGuardarCuentaResultado" type="button" class="btn btn-outline-primary">
+                            <i class="fas fa-save me-1"></i>Guardar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cg-card">
+        <div class="cg-card-head">
+            <div class="cg-card-title">
+                <i class="fas fa-gauge-high"></i>
+                <span>Estado de la gestión</span>
+            </div>
+            <div class="cg-chip-row">
+                <span id="chipBalance" class="cg-chip"><i class="fas fa-scale-balanced"></i>Balance</span>
+                <span id="chipBloqueo" class="cg-chip"><i class="fas fa-lock-open"></i>Bloqueo</span>
+            </div>
+        </div>
+        <div class="cg-card-body">
+            <div class="cg-status-grid">
+                <div class="cg-status-box">
+                    <div class="cg-status-label">Origen</div>
+                    <div id="sumGestionOrigen" class="cg-status-value">-</div>
+                </div>
+                <div class="cg-status-box">
+                    <div class="cg-status-label">Destino</div>
+                    <div id="sumGestionDestino" class="cg-status-value">-</div>
+                </div>
+                <div class="cg-status-box">
+                    <div class="cg-status-label">Estado</div>
+                    <div id="sumEstadoOrigen" class="cg-status-value">-</div>
+                </div>
+                <div class="cg-status-box">
+                    <div class="cg-status-label">Comprobante cierre</div>
+                    <div id="sumCierre" class="cg-status-value">-</div>
+                </div>
+                <div class="cg-status-box">
+                    <div class="cg-status-label">Comprobante apertura</div>
+                    <div id="sumApertura" class="cg-status-value">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cg-process-grid">
+        <div class="cg-process-card">
+            <div class="cg-process-head">
+                <div class="cg-process-title">
+                    <i class="fas fa-lock"></i>
+                    <span>Cierre</span>
+                </div>
+                <span id="estadoCierre" class="cg-badge cg-badge-neutral">Pendiente</span>
+            </div>
+            <div class="cg-process-body">
+                <div class="cg-action-stack">
+                    <button id="btnValidarCierre" type="button" class="btn btn-outline-primary">
+                        <i class="fas fa-check-circle me-1"></i>Validar cierre
+                    </button>
+                    <button id="btnEjecutarCierre" type="button" class="btn btn-primary">
+                        <i class="fas fa-lock me-1"></i>Ejecutar cierre
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="cg-process-card">
+            <div class="cg-process-head">
+                <div class="cg-process-title">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Apertura</span>
+                </div>
+                <span id="estadoApertura" class="cg-badge cg-badge-neutral">Pendiente</span>
+            </div>
+            <div class="cg-process-body">
+                <div class="cg-action-stack">
+                    <button id="btnValidarApertura" type="button" class="btn btn-outline-primary">
+                        <i class="fas fa-list-check me-1"></i>Validar apertura
+                    </button>
+                    <button id="btnEjecutarApertura" type="button" class="btn btn-success">
+                        <i class="fas fa-unlock me-1"></i>Ejecutar apertura
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="cg-process-card">
+            <div class="cg-process-head">
+                <div class="cg-process-title">
+                    <i class="fas fa-rotate-left"></i>
+                    <span>Reapertura</span>
+                </div>
+                <span id="estadoReapertura" class="cg-badge cg-badge-neutral">Disponible según estado</span>
+            </div>
+            <div class="cg-process-body">
+                <div class="mb-3">
+                    <label for="observacionReapertura" class="form-label">Motivo de reapertura</label>
+                    <textarea id="observacionReapertura" class="form-control" rows="2"></textarea>
+                </div>
+
+                <button id="btnReabrir" type="button" class="btn btn-outline-danger w-100">
+                    <i class="fas fa-rotate-left me-1"></i>Reabrir gestión
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="cg-panel-grid">
+        <div class="cg-card">
+            <div class="cg-card-head">
+                <div class="cg-card-title">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Resumen de cierre</span>
+                </div>
+                <span id="sumResultado" class="cg-badge cg-badge-neutral">Resultado 0,00</span>
+            </div>
+            <div class="cg-card-body">
+                <div class="cg-mini-grid cg-mini-grid-5">
+                    <div class="cg-mini-box">
+                        <div class="cg-mini-label">Ingresos</div>
+                        <div id="rcIngresos" class="cg-mini-value">0,00</div>
+                    </div>
+                    <div class="cg-mini-box">
+                        <div class="cg-mini-label">Costos</div>
+                        <div id="rcCostos" class="cg-mini-value">0,00</div>
+                    </div>
+                    <div class="cg-mini-box">
+                        <div class="cg-mini-label">Gastos</div>
+                        <div id="rcGastos" class="cg-mini-value">0,00</div>
+                    </div>
+                    <div class="cg-mini-box">
+                        <div class="cg-mini-label">Utilidad bruta</div>
+                        <div id="rcUtilidadBruta" class="cg-mini-value">0,00</div>
+                    </div>
+                    <div class="cg-mini-box">
+                        <div class="cg-mini-label">Resultado neto</div>
+                        <div id="rcUtilidadNeta" class="cg-mini-value">0,00</div>
+                    </div>
+                </div>
+                <div id="wrapResumenCierre" class="cg-table-wrap">
+                    <table class="cg-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Código</th>
+                                <th>Cuenta</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyResumenCierre"></tbody>
+                    </table>
+                </div>
+                <div id="emptyResumenCierre" class="cg-empty">Sin datos</div>
+            </div>
+        </div>
+
+        <div class="cg-card">
+            <div class="cg-card-head">
+                <div class="cg-card-title">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Resumen de apertura</span>
+                </div>
+                <span id="sumLineasApertura" class="cg-badge cg-badge-neutral">Líneas 0</span>
+            </div>
+            <div class="cg-card-body">
+                <div class="cg-mini-grid">
+                    <div class="cg-mini-box">
+                        <div class="cg-mini-label">Activo</div>
+                        <div id="raActivo" class="cg-mini-value">0,00</div>
+                    </div>
+                    <div class="cg-mini-box">
+                        <div class="cg-mini-label">Pasivo</div>
+                        <div id="raPasivo" class="cg-mini-value">0,00</div>
+                    </div>
+                    <div class="cg-mini-box">
+                        <div class="cg-mini-label">Patrimonio</div>
+                        <div id="raPatrimonio" class="cg-mini-value">0,00</div>
+                    </div>
+                </div>
+                <div class="cg-mini-grid">
+                    <div class="cg-mini-box">
+                        <div class="cg-mini-label">Pasivo + patrimonio</div>
+                        <div id="raPasivoPatrimonio" class="cg-mini-value">0,00</div>
+                    </div>
+                    <div class="cg-mini-box">
+                        <div class="cg-mini-label">Líneas</div>
+                        <div id="raLineas" class="cg-mini-value">0</div>
+                    </div>
+                    <div class="cg-mini-box">
+                        <div class="cg-mini-label">Diferencia</div>
+                        <div id="raDiferencia" class="cg-mini-value">0,00</div>
+                    </div>
+                </div>
+                <div id="wrapResumenApertura" class="cg-table-wrap">
+                    <table class="cg-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Código</th>
+                                <th>Cuenta</th>
+                                <th>Lado</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyResumenApertura"></tbody>
+                    </table>
+                </div>
+                <div id="emptyResumenApertura" class="cg-empty">Sin datos</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cg-card">
+        <div class="cg-card-head">
+            <div class="cg-card-title">
+                <i class="fas fa-history"></i>
+                <span>Historial</span>
+            </div>
+        </div>
+        <div class="cg-card-body">
+            <div id="wrapHistorial" class="cg-table-wrap">
+                <table class="cg-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Proceso</th>
+                            <th>Estado</th>
+                            <th>Comprobante</th>
+                            <th>Usuario</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyHistorial"></tbody>
+                </table>
+            </div>
+            <div id="emptyHistorial" class="cg-empty">Sin historial</div>
+        </div>
+    </div>
+</div>
+
+<script id="cierreGestionBootstrap" type="application/json">
+  {{ {
+    "gestion_actual": gestion_actual,
+    "urls": {
+      "estado": url_for('cierre_gestion.estado'),
+      "validar_cierre": url_for('cierre_gestion.validar_cierre'),
+      "ejecutar_cierre": url_for('cierre_gestion.ejecutar_cierre'),
+      "validar_apertura": url_for('cierre_gestion.validar_apertura'),
+      "ejecutar_apertura": url_for('cierre_gestion.ejecutar_apertura'),
+      "reabrir": url_for('cierre_gestion.reabrir'),
+      "configuracion": url_for('cierre_gestion.configuracion'),
+      "cuentas_patrimoniales": url_for('cierre_gestion.cuentas_patrimoniales'),
+      "actualizar_cuenta_resultado": url_for('cierre_gestion.actualizar_cuenta_resultado')
+    }
+  } | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        "use strict";
+
+        const bootEl = document.getElementById("cierreGestionBootstrap");
+        if (!bootEl) {
+            return;
+        }
+
+        const boot = JSON.parse(bootEl.textContent || "{}");
+        const $ = window.jQuery;
+
+        const el = {
+            gestion: document.getElementById("gestion"),
+            observacionProceso: document.getElementById("observacionProceso"),
+            observacionReapertura: document.getElementById("observacionReapertura"),
+            cuentaResultado: document.getElementById("cuentaResultado"),
+            cuentaResultadoMeta: document.getElementById("cuentaResultadoMeta"),
+            btnCargarEstado: document.getElementById("btnCargarEstado"),
+            btnGuardarCuentaResultado: document.getElementById("btnGuardarCuentaResultado"),
+            btnValidarCierre: document.getElementById("btnValidarCierre"),
+            btnEjecutarCierre: document.getElementById("btnEjecutarCierre"),
+            btnValidarApertura: document.getElementById("btnValidarApertura"),
+            btnEjecutarApertura: document.getElementById("btnEjecutarApertura"),
+            btnReabrir: document.getElementById("btnReabrir"),
+            chipBalance: document.getElementById("chipBalance"),
+            chipBloqueo: document.getElementById("chipBloqueo"),
+            sumGestionOrigen: document.getElementById("sumGestionOrigen"),
+            sumGestionDestino: document.getElementById("sumGestionDestino"),
+            sumEstadoOrigen: document.getElementById("sumEstadoOrigen"),
+            sumCierre: document.getElementById("sumCierre"),
+            sumApertura: document.getElementById("sumApertura"),
+            sumResultado: document.getElementById("sumResultado"),
+            sumLineasApertura: document.getElementById("sumLineasApertura"),
+            estadoCierre: document.getElementById("estadoCierre"),
+            estadoApertura: document.getElementById("estadoApertura"),
+            estadoReapertura: document.getElementById("estadoReapertura"),
+            rcIngresos: document.getElementById("rcIngresos"),
+            rcCostos: document.getElementById("rcCostos"),
+            rcGastos: document.getElementById("rcGastos"),
+            rcUtilidadBruta: document.getElementById("rcUtilidadBruta"),
+            rcUtilidadNeta: document.getElementById("rcUtilidadNeta"),
+            raActivo: document.getElementById("raActivo"),
+            raPasivo: document.getElementById("raPasivo"),
+            raPatrimonio: document.getElementById("raPatrimonio"),
+            raPasivoPatrimonio: document.getElementById("raPasivoPatrimonio"),
+            raLineas: document.getElementById("raLineas"),
+            raDiferencia: document.getElementById("raDiferencia"),
+            wrapResumenCierre: document.getElementById("wrapResumenCierre"),
+            tbodyResumenCierre: document.getElementById("tbodyResumenCierre"),
+            emptyResumenCierre: document.getElementById("emptyResumenCierre"),
+            wrapResumenApertura: document.getElementById("wrapResumenApertura"),
+            tbodyResumenApertura: document.getElementById("tbodyResumenApertura"),
+            emptyResumenApertura: document.getElementById("emptyResumenApertura"),
+            wrapHistorial: document.getElementById("wrapHistorial"),
+            tbodyHistorial: document.getElementById("tbodyHistorial"),
+            emptyHistorial: document.getElementById("emptyHistorial"),
+        };
+
+        const criticalButtons = [
+            el.btnValidarCierre,
+            el.btnEjecutarCierre,
+            el.btnValidarApertura,
+            el.btnEjecutarApertura,
+            el.btnReabrir,
+        ];
+
+        let estadoActual = null;
+
+        function currentGestion() {
+            return Number(el.gestion.value || boot.gestion_actual || 0);
+        }
+
+        function formatMoney(value) {
+            return Number(value || 0).toLocaleString("es-BO", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+        }
+
+        function text(node, value) {
+            if (node) {
+                node.textContent = value === null || value === undefined || value === "" ? "-" : String(value);
+            }
+        }
+
+        function setBadge(node, label, type) {
+            if (!node) return;
+            node.className = `cg-badge cg-badge-${type || "neutral"}`;
+            node.textContent = label;
+        }
+
+        function setChip(node, iconClass, label, type) {
+            if (!node) return;
+            node.className = `cg-chip ${type ? `cg-chip-${type}` : ""}`.trim();
+            node.textContent = "";
+            const icon = document.createElement("i");
+            icon.className = iconClass;
+            const span = document.createElement("span");
+            span.textContent = label;
+            node.appendChild(icon);
+            node.appendChild(span);
+        }
+
+        function clearNode(node) {
+            while (node && node.firstChild) {
+                node.removeChild(node.firstChild);
+            }
+        }
+
+        function setTableRows(tbody, emptyEl, wrapEl, rows, emptyText) {
+            clearNode(tbody);
+            if (!rows || !rows.length) {
+                if (wrapEl) wrapEl.classList.add("d-none");
+                if (emptyEl) {
+                    emptyEl.textContent = emptyText || "Sin datos";
+                    emptyEl.classList.add("cg-empty-visible");
+                }
+                return;
+            }
+            if (wrapEl) wrapEl.classList.remove("d-none");
+            if (emptyEl) emptyEl.classList.remove("cg-empty-visible");
+            rows.forEach((row) => tbody.appendChild(row));
+        }
+
+        function td(value, className) {
+            const cell = document.createElement("td");
+            if (className) cell.className = className;
+            cell.textContent = value === null || value === undefined ? "" : String(value);
+            return cell;
+        }
+
+        function resumenRow(tipo, codigo, nombre, monto, lado) {
+            const tr = document.createElement("tr");
+            tr.appendChild(td(tipo));
+            tr.appendChild(td(codigo));
+            tr.appendChild(td(nombre));
+            if (lado !== undefined) {
+                tr.appendChild(td(lado));
+            }
+            tr.appendChild(td(formatMoney(monto), "cg-money"));
+            return tr;
+        }
+
+        function historialRow(item) {
+            const tr = document.createElement("tr");
+            const fecha = item.fecha_hora_inicio ? String(item.fecha_hora_inicio).replace("T", " ") : "";
+            tr.appendChild(td(fecha));
+            tr.appendChild(td(item.tipo_proceso || ""));
+            tr.appendChild(td(item.estado || ""));
+            tr.appendChild(td(item.comprobante_id || ""));
+            tr.appendChild(td(item.usuario_nombre || ""));
+            return tr;
+        }
+
+        function resetVisuals() {
+            estadoActual = null;
+            text(el.sumGestionOrigen, "-");
+            text(el.sumGestionDestino, "-");
+            text(el.sumEstadoOrigen, "-");
+            text(el.sumCierre, "-");
+            text(el.sumApertura, "-");
+            setChip(el.chipBalance, "fas fa-scale-balanced", "Balance", null);
+            setChip(el.chipBloqueo, "fas fa-lock-open", "Bloqueo", null);
+            setBadge(el.estadoCierre, "Pendiente", "neutral");
+            setBadge(el.estadoApertura, "Pendiente", "neutral");
+            setBadge(el.estadoReapertura, "Disponible según estado", "neutral");
+            text(el.rcIngresos, "0,00");
+            text(el.rcCostos, "0,00");
+            text(el.rcGastos, "0,00");
+            text(el.rcUtilidadBruta, "0,00");
+            text(el.rcUtilidadNeta, "0,00");
+            text(el.raActivo, "0,00");
+            text(el.raPasivo, "0,00");
+            text(el.raPatrimonio, "0,00");
+            text(el.raPasivoPatrimonio, "0,00");
+            text(el.raLineas, "0");
+            text(el.raDiferencia, "0,00");
+            setBadge(el.sumResultado, "Resultado 0,00", "neutral");
+            setBadge(el.sumLineasApertura, "Líneas 0", "neutral");
+            setTableRows(el.tbodyResumenCierre, el.emptyResumenCierre, el.wrapResumenCierre, [], "Sin datos");
+            setTableRows(el.tbodyResumenApertura, el.emptyResumenApertura, el.wrapResumenApertura, [], "Sin datos");
+            setTableRows(el.tbodyHistorial, el.emptyHistorial, el.wrapHistorial, [], "Sin historial");
+            updateButtons();
+        }
+
+        function updateButtons() {
+            const data = estadoActual || {};
+            const control = data.control_origen || {};
+            const estado = control.estado || "";
+            const cierre = data.comprobante_cierre || {};
+            const apertura = data.comprobante_apertura || {};
+            const bloqueo = data.bloqueo_origen || data.bloqueo_destino || null;
+            const hasCierre = Boolean(cierre.id);
+            const hasApertura = Boolean(apertura.id);
+            const balanceOk = Boolean(data.balance_cuadrado);
+            const blocked = Boolean(bloqueo);
+            const acciones = data.acciones || {};
+
+            const puedeCerrar = acciones.cerrar ? Boolean(acciones.cerrar.ok) : estado === "ABIERTA" && !hasCierre && balanceOk && !blocked;
+            const puedeAbrir = acciones.abrir ? Boolean(acciones.abrir.ok) : estado === "CERRADA" && hasCierre && !hasApertura && !blocked;
+            const puedeReabrir = acciones.reabrir ? Boolean(acciones.reabrir.ok) : estado === "CERRADA" && hasCierre && !blocked;
+
+            el.btnValidarCierre.disabled = !puedeCerrar;
+            el.btnEjecutarCierre.disabled = !puedeCerrar;
+            el.btnValidarApertura.disabled = !puedeAbrir;
+            el.btnEjecutarApertura.disabled = !puedeAbrir;
+            el.btnReabrir.disabled = !puedeReabrir;
+            el.observacionReapertura.disabled = !puedeReabrir;
+
+            if (!estadoActual) {
+                criticalButtons.forEach((button) => {
+                    button.disabled = true;
+                });
+            }
+        }
+
+        function notify(icon, title, message, confirmColor) {
+            return Swal.fire({
+                icon: icon,
+                title: title || "Cierre y Apertura",
+                text: message,
+                confirmButtonText: "Aceptar",
+                confirmButtonColor: confirmColor || "#1d4ed8",
+            });
+        }
+
+        function showError(message) {
+            return notify("error", "Cierre y Apertura", message || "No se pudo procesar la solicitud.", "#1d4ed8");
+        }
+
+        function showOk(message) {
+            return notify("success", "Cierre y Apertura", message || "Operación realizada correctamente.", "#1d4ed8");
+        }
+
+        async function confirmProcess(title, message, confirmButtonText, color) {
+            const result = await Swal.fire({
+                icon: "warning",
+                title: title,
+                text: message,
+                showCancelButton: true,
+                confirmButtonText: confirmButtonText,
+                cancelButtonText: "Cancelar",
+                confirmButtonColor: color || "#1d4ed8",
+            });
+            return result.isConfirmed;
+        }
+
+        async function apiGet(url, params) {
+            const query = new URLSearchParams(params || {});
+            const resp = await fetch(`${url}?${query.toString()}`, {
+                headers: {
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            });
+            const payload = await resp.json();
+            if (!resp.ok || !payload.ok) {
+                throw new Error(payload.msg || "No se pudo procesar la solicitud.");
+            }
+            return payload;
+        }
+
+        async function apiPost(url, body) {
+            const resp = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                body: JSON.stringify(body || {}),
+            });
+            let payload = {};
+            try {
+                payload = await resp.json();
+            } catch (error) {
+                throw new Error("Respuesta inválida del servidor.");
+            }
+            if (!resp.ok || !payload.ok) {
+                throw new Error(payload.msg || "No se pudo procesar la solicitud.");
+            }
+            return payload;
+        }
+
+        async function withBusy(button, callback) {
+            const original = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Procesando';
+            try {
+                return await callback();
+            } finally {
+                button.innerHTML = original;
+                updateButtons();
+            }
+        }
+
+        function seleccionarGestion(gestionObjetivo) {
+            const valor = String(Number(gestionObjetivo || 0));
+            if (!valor || valor === "0" || valor === "NaN") {
+                return;
+            }
+
+            let existe = false;
+            Array.from(el.gestion.options).forEach((option) => {
+                if (option.value === valor) {
+                    existe = true;
+                }
+            });
+
+            if (!existe) {
+                const option = document.createElement("option");
+                option.value = valor;
+                option.textContent = valor;
+                el.gestion.appendChild(option);
+            }
+
+            const opcionesOrdenadas = Array.from(el.gestion.options).sort(
+                (a, b) => Number(b.value) - Number(a.value)
+            );
+
+            el.gestion.textContent = "";
+            opcionesOrdenadas.forEach((option) => {
+                option.selected = option.value === valor;
+                el.gestion.appendChild(option);
+            });
+            el.gestion.value = valor;
+        }
+
+        function fillResumenCierre(resumen) {
+            const data = resumen || {};
+            const resultado = Number(data.utilidad_neta || 0);
+            text(el.rcIngresos, formatMoney(data.total_ingresos));
+            text(el.rcCostos, formatMoney(data.total_costos));
+            text(el.rcGastos, formatMoney(data.total_gastos));
+            text(el.rcUtilidadBruta, formatMoney(data.utilidad_bruta));
+            text(el.rcUtilidadNeta, formatMoney(resultado));
+            setBadge(el.sumResultado, `Resultado ${formatMoney(resultado)}`, resultado < 0 ? "closed" : "neutral");
+
+            const rows = [];
+            (data.ingresos || []).forEach((item) => {
+                rows.push(resumenRow("INGRESO", item.codigo, item.nombre, item.monto));
+            });
+            (data.costos || []).forEach((item) => {
+                rows.push(resumenRow("COSTO", item.codigo, item.nombre, item.monto));
+            });
+            (data.gastos || []).forEach((item) => {
+                rows.push(resumenRow("GASTO", item.codigo, item.nombre, item.monto));
+            });
+            setTableRows(el.tbodyResumenCierre, el.emptyResumenCierre, el.wrapResumenCierre, rows, "Sin datos");
+        }
+
+        function fillResumenApertura(resumen) {
+            const data = resumen || {};
+            const activo = Number(data.total_activo || 0);
+            const pasivoPatrimonio = Number(data.total_pasivo_patrimonio || 0);
+            const diferencia = activo - pasivoPatrimonio;
+            const lineas = Number(data.cantidad_lineas_apertura || 0);
+
+            text(el.raActivo, formatMoney(activo));
+            text(el.raPasivo, formatMoney(data.total_pasivo));
+            text(el.raPatrimonio, formatMoney(data.total_patrimonio));
+            text(el.raPasivoPatrimonio, formatMoney(pasivoPatrimonio));
+            text(el.raLineas, lineas);
+            text(el.raDiferencia, formatMoney(diferencia));
+            setBadge(el.sumLineasApertura, `Líneas ${lineas}`, "neutral");
+
+            const rows = [];
+            (data.activo || []).forEach((item) => {
+                rows.push(resumenRow("ACTIVO", item.codigo, item.nombre, item.monto, item.lado || ""));
+            });
+            (data.pasivo || []).forEach((item) => {
+                rows.push(resumenRow("PASIVO", item.codigo, item.nombre, item.monto, item.lado || ""));
+            });
+            (data.patrimonio || []).forEach((item) => {
+                rows.push(resumenRow("PATRIMONIO", item.codigo, item.nombre, item.monto, item.lado || ""));
+            });
+            setTableRows(el.tbodyResumenApertura, el.emptyResumenApertura, el.wrapResumenApertura, rows, "Sin datos");
+        }
+
+        function fillHistorial(rows) {
+            const htmlRows = (rows || []).map((item) => historialRow(item));
+            setTableRows(el.tbodyHistorial, el.emptyHistorial, el.wrapHistorial, htmlRows, "Sin historial");
+        }
+
+        function pintarEstado(data) {
+            estadoActual = data || {};
+            const controlOrigen = estadoActual.control_origen || {};
+            const cierre = estadoActual.comprobante_cierre || {};
+            const apertura = estadoActual.comprobante_apertura || {};
+            const bloqueo = estadoActual.bloqueo_origen || estadoActual.bloqueo_destino || null;
+            const estado = controlOrigen.estado || "";
+            const balanceOk = Boolean(estadoActual.balance_cuadrado);
+            const hasCierre = Boolean(cierre.id);
+            const hasApertura = Boolean(apertura.id);
+            const acciones = estadoActual.acciones || {};
+            const puedeCerrar = acciones.cerrar ? Boolean(acciones.cerrar.ok) : estado === "ABIERTA" && !hasCierre && balanceOk && !bloqueo;
+            const puedeAbrir = acciones.abrir ? Boolean(acciones.abrir.ok) : estado === "CERRADA" && hasCierre && !hasApertura && !bloqueo;
+            const puedeReabrir = acciones.reabrir ? Boolean(acciones.reabrir.ok) : estado === "CERRADA" && hasCierre && !bloqueo;
+
+            text(el.sumGestionOrigen, estadoActual.gestion_origen || currentGestion());
+            text(el.sumGestionDestino, estadoActual.gestion_destino || currentGestion() + 1);
+            el.sumEstadoOrigen.textContent = "";
+            const estadoBadge = document.createElement("span");
+            estadoBadge.className = estado === "CERRADA" ? "cg-badge cg-badge-closed" : "cg-badge cg-badge-open";
+            estadoBadge.textContent = estado || "ABIERTA";
+            el.sumEstadoOrigen.appendChild(estadoBadge);
+            text(el.sumCierre, cierre.id || "-");
+            text(el.sumApertura, apertura.id || "-");
+
+            setChip(
+                el.chipBalance,
+                balanceOk ? "fas fa-circle-check" : "fas fa-triangle-exclamation",
+                balanceOk ? "Balance cuadrado" : "Balance no cuadrado",
+                balanceOk ? "ok" : "danger"
+            );
+
+            if (bloqueo) {
+                setChip(el.chipBloqueo, "fas fa-lock", bloqueo.tipo_proceso || "Bloqueado", "warn");
+            } else {
+                setChip(el.chipBloqueo, "fas fa-lock-open", "Sin bloqueo", "ok");
+            }
+
+            if (hasCierre) {
+                setBadge(el.estadoCierre, "Ejecutado", "closed");
+            } else if (puedeCerrar) {
+                setBadge(el.estadoCierre, "Listo", "open");
+            } else {
+                setBadge(el.estadoCierre, "No disponible", "neutral");
+            }
+
+            if (hasApertura) {
+                setBadge(el.estadoApertura, "Ejecutada", "open");
+            } else if (puedeAbrir) {
+                setBadge(el.estadoApertura, "Listo", "open");
+            } else {
+                setBadge(el.estadoApertura, "Pendiente", "neutral");
+            }
+
+            if (puedeReabrir) {
+                setBadge(el.estadoReapertura, "Disponible", "closed");
+            } else {
+                setBadge(el.estadoReapertura, "No disponible", "neutral");
+            }
+
+            fillResumenCierre(estadoActual.resumen_cierre || {});
+            fillResumenApertura(estadoActual.resumen_apertura || {});
+            fillHistorial(estadoActual.historial || []);
+            updateButtons();
+        }
+
+        function inicializarCuentaSelect() {
+            if (!$ || !$.fn || !$.fn.select2 || !el.cuentaResultado) {
+                return;
+            }
+            const $cuenta = $(el.cuentaResultado);
+            if ($cuenta.data("select2")) {
+                return;
+            }
+            $cuenta.select2({
+                width: "100%",
+                allowClear: false,
+                language: "es",
+                ajax: {
+                    url: boot.urls.cuentas_patrimoniales,
+                    dataType: "json",
+                    delay: 220,
+                    data: function (params) {
+                        return { q: params.term || "" };
+                    },
+                    processResults: function (data) {
+                        const rows = (data && data.rows) || [];
+                        return {
+                            results: rows.map(function (row) {
+                                return {
+                                    id: row.codigo,
+                                    text: row.etiqueta || `${row.codigo} - ${row.nombre}`,
+                                };
+                            }),
+                        };
+                    },
+                },
+            });
+        }
+
+        async function cargarConfiguracionCuenta() {
+            inicializarCuentaSelect();
+            try {
+                const payload = await apiGet(boot.urls.configuracion, {});
+                const cuenta = payload.cuenta || {};
+                const codigo = cuenta.codigo || "";
+                const etiqueta = codigo ? `${cuenta.codigo} - ${cuenta.nombre || ""}` : "";
+
+                if (codigo) {
+                    const option = new Option(etiqueta, codigo, true, true);
+                    el.cuentaResultado.textContent = "";
+                    el.cuentaResultado.appendChild(option);
+                    if ($ && $.fn && $.fn.select2) {
+                        $(el.cuentaResultado).trigger("change");
+                    }
+                    text(el.cuentaResultadoMeta, `Actual: ${etiqueta}`);
+                } else {
+                    text(el.cuentaResultadoMeta, "Sin cuenta configurada");
+                }
+            } catch (error) {
+                text(el.cuentaResultadoMeta, error.message || "No se pudo cargar la configuración");
+            }
+        }
+
+        async function cargarEstado() {
+            try {
+                const payload = await apiGet(boot.urls.estado, { gestion: currentGestion() });
+                pintarEstado(payload.data || {});
+            } catch (error) {
+                resetVisuals();
+                showError(error.message || "No se pudo cargar el estado.");
+            }
+        }
+
+        async function guardarCuentaResultado() {
+            const codigo = el.cuentaResultado.value || "";
+            if (!codigo) {
+                showError("Debe seleccionar la cuenta patrimonial del resultado del ejercicio.");
+                return;
+            }
+            await withBusy(el.btnGuardarCuentaResultado, async function () {
+                const payload = await apiPost(boot.urls.actualizar_cuenta_resultado, {
+                    cuenta_codigo: codigo,
+                });
+                const cuenta = payload.cuenta || {};
+                text(el.cuentaResultadoMeta, `Actual: ${cuenta.codigo || codigo} - ${cuenta.nombre || ""}`);
+                await showOk(payload.msg || "La cuenta patrimonial fue actualizada correctamente.");
+                await cargarEstado();
+            });
+        }
+
+        async function validarCierre() {
+            await withBusy(el.btnValidarCierre, async function () {
+                const payload = await apiGet(boot.urls.validar_cierre, { gestion: currentGestion() });
+                fillResumenCierre(payload.resumen || {});
+                showOk("La validación de cierre fue exitosa.");
+            });
+        }
+
+        async function ejecutarCierre() {
+            const confirmado = await confirmProcess(
+                "Ejecutar cierre",
+                `Se cerrará la gestión ${currentGestion()}.`,
+                "Cerrar gestión",
+                "#b7791f"
+            );
+            if (!confirmado) return;
+
+            await withBusy(el.btnEjecutarCierre, async function () {
+                const payload = await apiPost(boot.urls.ejecutar_cierre, {
+                    gestion: currentGestion(),
+                    observacion: el.observacionProceso.value || "",
+                });
+                await showOk(payload.msg || "Cierre ejecutado correctamente.");
+                await cargarEstado();
+            });
+        }
+
+        async function validarApertura() {
+            await withBusy(el.btnValidarApertura, async function () {
+                const payload = await apiGet(boot.urls.validar_apertura, {
+                    gestion_origen: currentGestion(),
+                });
+                fillResumenApertura(payload.resumen || {});
+                showOk("La validación de apertura fue exitosa.");
+            });
+        }
+
+        async function ejecutarApertura() {
+            const gestionDestino = currentGestion() + 1;
+            const confirmado = await confirmProcess(
+                "Ejecutar apertura",
+                `Se abrirá la gestión ${gestionDestino}.`,
+                "Abrir gestión",
+                "#16784f"
+            );
+            if (!confirmado) return;
+
+            await withBusy(el.btnEjecutarApertura, async function () {
+                const payload = await apiPost(boot.urls.ejecutar_apertura, {
+                    gestion_origen: currentGestion(),
+                    observacion: el.observacionProceso.value || "",
+                });
+                seleccionarGestion(payload.gestion_destino || gestionDestino);
+                await showOk(payload.msg || "Apertura ejecutada correctamente.");
+                await cargarEstado();
+            });
+        }
+
+        async function reabrirGestion() {
+            const observacion = (el.observacionReapertura.value || "").trim();
+            if (!observacion) {
+                showError("Debe registrar el motivo de reapertura.");
+                return;
+            }
+
+            const confirmado = await confirmProcess(
+                "Reabrir gestión",
+                `Se reabrirá la gestión ${currentGestion()}.`,
+                "Reabrir",
+                "#b4232f"
+            );
+            if (!confirmado) return;
+
+            await withBusy(el.btnReabrir, async function () {
+                const payload = await apiPost(boot.urls.reabrir, {
+                    gestion_origen: currentGestion(),
+                    observacion: observacion,
+                });
+                el.observacionReapertura.value = "";
+                await showOk(payload.msg || "Reapertura ejecutada correctamente.");
+                await cargarEstado();
+            });
+        }
+
+        el.btnCargarEstado.addEventListener("click", cargarEstado);
+        el.gestion.addEventListener("change", cargarEstado);
+        el.btnGuardarCuentaResultado.addEventListener("click", function () {
+            guardarCuentaResultado().catch((error) => showError(error.message));
+        });
+        el.btnValidarCierre.addEventListener("click", function () {
+            validarCierre().catch((error) => showError(error.message));
+        });
+        el.btnEjecutarCierre.addEventListener("click", function () {
+            ejecutarCierre().catch((error) => showError(error.message));
+        });
+        el.btnValidarApertura.addEventListener("click", function () {
+            validarApertura().catch((error) => showError(error.message));
+        });
+        el.btnEjecutarApertura.addEventListener("click", function () {
+            ejecutarApertura().catch((error) => showError(error.message));
+        });
+        el.btnReabrir.addEventListener("click", function () {
+            reabrirGestion().catch((error) => showError(error.message));
+        });
+
+        resetVisuals();
+        cargarConfiguracionCuenta();
+        cargarEstado();
+    })();
+</script>
+{% endblock extra_js %}

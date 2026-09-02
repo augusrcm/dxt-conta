@@ -1,0 +1,588 @@
+{% extends "layout.html" %}
+{% block title %}Tesorería · Arqueo de Caja{% endblock %}
+
+{% block extra_css %}
+<style>
+  #arqueosIndexPage {
+    --ar-navy: #0f2340;
+    --ar-blue: #1a4a7a;
+    --ar-accent: #2d7dd2;
+    --ar-accent-lt: #e8f1fc;
+    --ar-success: #1a7a4a;
+    --ar-success-lt: #e6f6ee;
+    --ar-danger: #b83232;
+    --ar-danger-lt: #fdeaea;
+    --ar-warning: #c8962a;
+    --ar-warning-lt: #fdf6e3;
+    --ar-surface: #f5f8fc;
+    --ar-border: #dde4ed;
+    --ar-text: #1e2d3d;
+    --ar-muted: #8898aa;
+    --ar-radius: 14px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  #arqueosIndexPage .ar-header {
+    background: linear-gradient(120deg, var(--ar-navy) 0%, var(--ar-blue) 60%, #1f5d9e 100%);
+    border-radius: var(--ar-radius);
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1.1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15, 35, 64, .16);
+    position: sticky;
+    top: 64px;
+    z-index: 40;
+    overflow: hidden;
+  }
+
+  #arqueosIndexPage .ar-header::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .04);
+    pointer-events: none;
+  }
+
+  #arqueosIndexPage .ar-header-left,
+  #arqueosIndexPage .ar-header-right {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    position: relative;
+    flex-wrap: wrap;
+  }
+
+  #arqueosIndexPage .ar-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .14);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  #arqueosIndexPage .ar-header-title {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  #arqueosIndexPage .ar-header-sub {
+    color: rgba(255, 255, 255, .66);
+    font-size: .8rem;
+    margin-top: 2px;
+  }
+
+  #arqueosIndexPage .ar-header-right .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+    font-size: .82rem;
+  }
+
+  #arqueosIndexPage .ar-header-right .btn-primary:hover { background: #eff6ff; }
+
+  #arqueosIndexPage .ar-header-right .btn-outline-secondary {
+    border-color: rgba(255, 255, 255, .3);
+    color: rgba(255, 255, 255, .88);
+    background: transparent;
+    font-size: .82rem;
+  }
+
+  #arqueosIndexPage .ar-header-right .btn-outline-secondary:hover {
+    background: rgba(255, 255, 255, .12);
+    border-color: rgba(255, 255, 255, .5);
+    color: #fff;
+  }
+
+  #arqueosIndexPage .ar-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .85rem;
+    margin-bottom: 1.1rem;
+  }
+
+  #arqueosIndexPage .ar-kpi-card {
+    background: #fff;
+    border: 1px solid var(--ar-border);
+    border-radius: var(--ar-radius);
+    padding: 1rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    box-shadow: 0 4px 16px rgba(15, 35, 64, .06);
+    transition: transform .15s, box-shadow .15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #arqueosIndexPage .ar-kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    border-radius: var(--ar-radius) var(--ar-radius) 0 0;
+  }
+
+  #arqueosIndexPage .ar-kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(15, 35, 64, .1); }
+  #arqueosIndexPage .ar-kpi-card.kpi-total::before { background: var(--ar-accent); }
+  #arqueosIndexPage .ar-kpi-card.kpi-conf::before { background: var(--ar-success); }
+  #arqueosIndexPage .ar-kpi-card.kpi-diff::before { background: var(--ar-danger); }
+  #arqueosIndexPage .ar-kpi-card.kpi-net::before { background: var(--ar-warning); }
+
+  #arqueosIndexPage .ar-kpi-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  #arqueosIndexPage .kpi-total .ar-kpi-icon { background: var(--ar-accent-lt); color: var(--ar-accent); }
+  #arqueosIndexPage .kpi-conf .ar-kpi-icon { background: var(--ar-success-lt); color: var(--ar-success); }
+  #arqueosIndexPage .kpi-diff .ar-kpi-icon { background: var(--ar-danger-lt); color: var(--ar-danger); }
+  #arqueosIndexPage .kpi-net .ar-kpi-icon { background: var(--ar-warning-lt); color: var(--ar-warning); }
+
+  #arqueosIndexPage .ar-kpi-label {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--ar-muted);
+    margin-bottom: .2rem;
+  }
+
+  #arqueosIndexPage .ar-kpi-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--ar-text);
+    font-family: 'Consolas', monospace;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+
+  #arqueosIndexPage .ar-kpi-value.danger { color: var(--ar-danger); }
+  #arqueosIndexPage .ar-kpi-value.success { color: var(--ar-success); }
+  #arqueosIndexPage .ar-kpi-help { font-size: .74rem; color: var(--ar-muted); margin-top: 2px; }
+
+  #arqueosIndexPage .ar-filter-card {
+    background: var(--ar-surface);
+    border: 1px solid var(--ar-border);
+    border-radius: var(--ar-radius);
+    padding: 1rem 1.1rem;
+    margin-bottom: 1.1rem;
+  }
+
+  #arqueosIndexPage .ar-section-label {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .65px;
+    text-transform: uppercase;
+    color: var(--ar-muted);
+    margin-bottom: .85rem;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  #arqueosIndexPage .ar-section-label::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 13px;
+    background: var(--ar-accent);
+    border-radius: 2px;
+  }
+
+  #arqueosIndexPage .ar-label {
+    font-size: .71rem;
+    font-weight: 700;
+    letter-spacing: .55px;
+    text-transform: uppercase;
+    color: #4a6070;
+    margin-bottom: 5px;
+    display: block;
+  }
+
+  #arqueosIndexPage .ar-filter-card .form-control,
+  #arqueosIndexPage .ar-filter-card .form-select {
+    border: 1.5px solid var(--ar-border);
+    border-radius: 9px;
+    font-size: .875rem;
+    height: 36px;
+  }
+
+  #arqueosIndexPage .ar-filter-card .form-control:focus,
+  #arqueosIndexPage .ar-filter-card .form-select:focus {
+    border-color: var(--ar-accent);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, .1);
+    outline: none;
+  }
+
+  #arqueosIndexPage .ar-filter-card input[type="date"] { font-family: 'Consolas', monospace; font-size: .85rem; }
+
+  #arqueosIndexPage .ar-grid-card {
+    background: #fff;
+    border: 1px solid var(--ar-border);
+    border-radius: var(--ar-radius);
+    box-shadow: 0 4px 16px rgba(15, 35, 64, .06);
+    overflow: hidden;
+  }
+
+  #arqueosIndexPage .ar-grid-head {
+    padding: .85rem 1.1rem;
+    border-bottom: 1px solid var(--ar-border);
+    background: var(--ar-surface);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+
+  #arqueosIndexPage .ar-section-sub { font-size: .78rem; color: var(--ar-muted); margin-top: 1px; }
+  #arqueosIndexPage .ar-table-wrap { overflow: auto; max-height: 60vh; }
+  #arqueosIndexPage .ar-table { min-width: 1120px; }
+
+  #arqueosIndexPage #tablaArqueos thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--ar-surface);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .65px;
+    text-transform: uppercase;
+    color: var(--ar-muted);
+    border-bottom: 2px solid var(--ar-border);
+    padding: 9px 12px;
+    white-space: nowrap;
+    box-shadow: 0 1px 0 var(--ar-border);
+  }
+
+  #arqueosIndexPage #tablaArqueos tbody td {
+    padding: 9px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eef1f6;
+    font-size: .875rem;
+    color: var(--ar-text);
+  }
+
+  #arqueosIndexPage #tablaArqueos tbody tr:nth-child(even) { background: #f9fbfe; }
+  #arqueosIndexPage #tablaArqueos tbody tr { transition: background .12s; }
+  #arqueosIndexPage #tablaArqueos tbody tr:hover td { background: var(--ar-accent-lt); }
+  #arqueosIndexPage .ar-empty { padding: 2.5rem 1rem; text-align: center; color: var(--ar-muted); font-style: italic; }
+  #arqueosIndexPage .ar-mono { font-family: 'Consolas', monospace; font-variant-numeric: tabular-nums; }
+  #arqueosIndexPage .ar-small-muted { font-size: .78rem; color: var(--ar-muted); margin-top: 2px; }
+  #arqueosIndexPage .ar-date-cell { font-size: .82rem; }
+  #arqueosIndexPage .ar-text-success { color: var(--ar-success); }
+  #arqueosIndexPage .ar-text-danger { color: var(--ar-danger); }
+  #arqueosIndexPage .ar-user-cell { font-size: .82rem; color: var(--ar-muted); }
+  #arqueosIndexPage .ar-action-col { width: 70px; }
+  #arqueosIndexPage .ar-diff-ok { color: var(--ar-success); font-weight: 700; }
+  #arqueosIndexPage .ar-diff-warn { color: var(--ar-danger); font-weight: 700; }
+
+  #arqueosIndexPage .ar-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: .72rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  #arqueosIndexPage .ar-badge::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: .8;
+  }
+
+  #arqueosIndexPage .ar-badge-bor { background: var(--ar-warning-lt); border: 1px solid #fde68a; color: var(--ar-warning); }
+  #arqueosIndexPage .ar-badge-con { background: var(--ar-success-lt); border: 1px solid #bbf7d0; color: var(--ar-success); }
+  #arqueosIndexPage .ar-badge-anu { background: var(--ar-danger-lt); border: 1px solid #fca5a5; color: var(--ar-danger); }
+
+  #arqueosIndexPage .ar-code-pill {
+    font-family: 'Consolas', monospace;
+    font-size: .78rem;
+    font-weight: 700;
+    background: var(--ar-accent-lt);
+    color: var(--ar-accent);
+    border: 1px solid #bfdbfe;
+    border-radius: 5px;
+    padding: 2px 7px;
+    display: inline-block;
+  }
+
+  #arqueosIndexPage .ar-btn-act {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--ar-border);
+    border-radius: 7px;
+    color: var(--ar-muted);
+    background: #fff;
+    transition: all .15s;
+    text-decoration: none;
+  }
+
+  #arqueosIndexPage .ar-btn-act:hover {
+    background: var(--ar-accent-lt);
+    border-color: #bfdbfe;
+    color: var(--ar-accent);
+  }
+
+  #arqueosIndexPage .ar-btn-icon { font-size: .7rem; }
+
+  @media (max-width: 1100px) {
+    #arqueosIndexPage .ar-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 640px) {
+    #arqueosIndexPage .ar-kpi-grid { grid-template-columns: 1fr; }
+    #arqueosIndexPage .ar-header::before { display: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" id="arqueosIndexPage">
+  <div class="ar-header">
+    <div class="ar-header-left">
+      <div class="ar-header-icon"><i class="fas fa-scale-balanced"></i></div>
+      <div>
+        <h1 class="ar-header-title">Tesorería · Arqueo de Caja</h1>
+        <div class="ar-header-sub">Controla el efectivo físico contra el saldo teórico del sistema.</div>
+      </div>
+    </div>
+    <div class="ar-header-right">
+      <a href="{{ url_for('tesoreria_caja_bancos.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-building-columns me-1"></i>Volver a Tesorería
+      </a>
+      {% if puede_editar %}
+      <a href="{{ url_for('tesoreria_arqueo_caja.nuevo') }}" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus me-1"></i>Nuevo arqueo
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="ar-kpi-grid">
+    <div class="ar-kpi-card kpi-total">
+      <div class="ar-kpi-icon"><i class="fas fa-list-check"></i></div>
+      <div>
+        <div class="ar-kpi-label">Arqueos listados</div>
+        <div class="ar-kpi-value">{{ resumen.total }}</div>
+        <div class="ar-kpi-help">Según filtros aplicados</div>
+      </div>
+    </div>
+    <div class="ar-kpi-card kpi-conf">
+      <div class="ar-kpi-icon"><i class="fas fa-circle-check"></i></div>
+      <div>
+        <div class="ar-kpi-label">Confirmados</div>
+        <div class="ar-kpi-value">{{ resumen.confirmados }}</div>
+        <div class="ar-kpi-help">Cerrados formalmente</div>
+      </div>
+    </div>
+    <div class="ar-kpi-card kpi-diff">
+      <div class="ar-kpi-icon"><i class="fas fa-triangle-exclamation"></i></div>
+      <div>
+        <div class="ar-kpi-label">Con diferencia</div>
+        <div class="ar-kpi-value danger">{{ resumen.con_diferencia }}</div>
+        <div class="ar-kpi-help">Requieren revisión</div>
+      </div>
+    </div>
+    <div class="ar-kpi-card kpi-net">
+      <div class="ar-kpi-icon"><i class="fas fa-equals"></i></div>
+      <div>
+        <div class="ar-kpi-label">Diferencia neta</div>
+        <div class="ar-kpi-value {% if resumen.monto_diferencia != 0 %}danger{% else %}success{% endif %}">
+          {{ '%.2f'|format(resumen.monto_diferencia or 0) }}
+        </div>
+        <div class="ar-kpi-help">Acumulado del rango visible</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ar-filter-card">
+    <div class="ar-section-label">Filtros del historial</div>
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-3">
+        <label class="ar-label" for="fechaDesde"><i class="far fa-calendar me-1"></i>Desde</label>
+        <input
+          type="date"
+          class="form-control"
+          id="fechaDesde"
+          name="fecha_desde"
+          value="{{ filtros.fecha_desde.strftime('%Y-%m-%d') if filtros.fecha_desde else '' }}"
+        />
+      </div>
+      <div class="col-md-3">
+        <label class="ar-label" for="fechaHasta"><i class="far fa-calendar me-1"></i>Hasta</label>
+        <input
+          type="date"
+          class="form-control"
+          id="fechaHasta"
+          name="fecha_hasta"
+          value="{{ filtros.fecha_hasta.strftime('%Y-%m-%d') if filtros.fecha_hasta else '' }}"
+        />
+      </div>
+      <div class="col-md-3">
+        <label class="ar-label" for="cajaId">Caja</label>
+        <select class="form-select" id="cajaId" name="caja_id">
+          <option value="">Todas las cajas</option>
+          {% for caja in cajas %}
+            {% if filtros.caja_id and filtros.caja_id == caja.id %}
+            <option value="{{ caja.id }}" selected>{{ caja.codigo }} · {{ caja.nombre }}</option>
+            {% else %}
+            <option value="{{ caja.id }}">{{ caja.codigo }} · {{ caja.nombre }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="ar-label" for="estado">Estado</label>
+        <select class="form-select" id="estado" name="estado">
+          <option value="">Todos</option>
+          {% for est in ['BORRADOR', 'CONFIRMADO', 'ANULADO'] %}
+            {% if filtros.estado == est %}
+            <option value="{{ est }}" selected>{{ est }}</option>
+            {% else %}
+            <option value="{{ est }}">{{ est }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 d-flex gap-2 justify-content-end">
+        <a href="{{ url_for('tesoreria_arqueo_caja.index') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="fas fa-xmark me-1"></i>Limpiar
+        </a>
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="fas fa-filter me-1"></i>Aplicar filtros
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="ar-grid-card">
+    <div class="ar-grid-head">
+      <div>
+        <div class="ar-section-label">Historial de arqueos</div>
+        <div class="ar-section-sub">Cada fila representa el corte de una caja para una fecha determinada.</div>
+      </div>
+    </div>
+    <div class="ar-table-wrap">
+      <table class="table table-hover w-100 ar-table" id="tablaArqueos">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Caja</th>
+            <th class="text-end">Saldo anterior</th>
+            <th class="text-end">Ingresos día</th>
+            <th class="text-end">Egresos día</th>
+            <th class="text-end">Saldo teórico</th>
+            <th class="text-end">Contado</th>
+            <th class="text-end">Diferencia</th>
+            <th class="text-center">Estado</th>
+            <th>Usuario</th>
+            <th class="text-center ar-action-col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td class="ar-mono ar-date-cell" data-order="{{ row.fecha_arqueo_iso }}">
+              {{ row.fecha_arqueo.strftime('%d/%m/%Y') if row.fecha_arqueo else '—' }}
+            </td>
+            <td>
+              <span class="ar-code-pill">{{ row.caja_codigo }}</span>
+              <div class="ar-small-muted">{{ row.caja_nombre }}</div>
+            </td>
+            <td class="ar-mono text-end">{{ '%.2f'|format(row.saldo_anterior_f or 0) }}</td>
+            <td class="ar-mono text-end ar-text-success">{{ '%.2f'|format(row.ingresos_dia_f or 0) }}</td>
+            <td class="ar-mono text-end ar-text-danger">{{ '%.2f'|format(row.egresos_dia_f or 0) }}</td>
+            <td class="ar-mono text-end"><strong>{{ '%.2f'|format(row.saldo_teorico_f or 0) }}</strong></td>
+            <td class="ar-mono text-end">{{ '%.2f'|format(row.monto_contado_f or 0) if row.monto_contado_f is not none else '—' }}</td>
+            <td class="ar-mono text-end {% if row.diferencia_f is not none and row.diferencia_f != 0 %}ar-diff-warn{% else %}ar-diff-ok{% endif %}">
+              {{ '%.2f'|format(row.diferencia_f or 0) if row.diferencia_f is not none else '—' }}
+            </td>
+            <td class="text-center">
+              <span class="ar-badge {% if row.estado == 'BORRADOR' %}ar-badge-bor{% elif row.estado == 'CONFIRMADO' %}ar-badge-con{% else %}ar-badge-anu{% endif %}">
+                {{ row.estado }}
+              </span>
+            </td>
+            <td class="ar-user-cell">{{ row.usuario_nombre }}</td>
+            <td class="text-center">
+              <a href="{{ url_for('tesoreria_arqueo_caja.editar', arqueo_id=row.id) }}" class="ar-btn-act" title="Abrir arqueo">
+                <i class="fas fa-arrow-up-right-from-square ar-btn-icon"></i>
+              </a>
+              <a
+                href="{{ url_for('tesoreria_arqueo_caja.arqueo_pdf', arqueo_id=row.id) }}"
+                class="ar-btn-act"
+                title="PDF del arqueo"
+                target="_blank"
+                rel="noopener"
+              >
+                <i class="fas fa-file-pdf ar-btn-icon"></i>
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="11" class="ar-empty">No existen arqueos registrados con los filtros actuales.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (window.jQuery && jQuery.fn && jQuery.fn.DataTable) {
+      jQuery('#tablaArqueos').DataTable({
+        order: [[0, 'desc']],
+        pageLength: 25,
+        responsive: false,
+        autoWidth: false,
+        language: window.DXTBase && window.DXTBase.getDataTableLanguageEs
+          ? window.DXTBase.getDataTableLanguageEs({
+              search: '',
+              searchPlaceholder: 'Buscar arqueo…',
+              paginate: { first: '«', last: '»', next: '›', previous: '‹' }
+            })
+          : { search: '', searchPlaceholder: 'Buscar…', paginate: { first: '«', last: '»', next: '›', previous: '‹' } }
+      })
+    }
+  })
+</script>
+{% endblock %}

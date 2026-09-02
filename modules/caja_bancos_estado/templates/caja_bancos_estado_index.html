@@ -1,0 +1,1086 @@
+{% extends "layout.html" %}
+{% block title %}Estado de Caja y Bancos{% endblock %}
+{% block page_help_url %}{{ url_for('caja_bancos_estado.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  #cbePage {
+    --cbe-navy: #0f2340;
+    --cbe-blue: #173f6a;
+    --cbe-accent: #ea6f1b;
+    --cbe-soft: #f4f7fb;
+    --cbe-line: #d9e1ea;
+    --cbe-text: #243447;
+    --cbe-muted: #687789;
+    color: var(--cbe-text);
+  }
+
+  #cbePage .cbe-page-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  #cbePage .cbe-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 850;
+    color: var(--cbe-navy);
+  }
+
+  #cbePage .cbe-subtitle {
+    margin: .25rem 0 0;
+    color: var(--cbe-muted);
+    font-size: .88rem;
+  }
+
+  #cbePage .cbe-card {
+    background: #fff;
+    border: 1px solid var(--cbe-line);
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(15, 35, 64, .06);
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+
+  #cbePage .cbe-card-head {
+    padding: .95rem 1rem;
+    background: linear-gradient(135deg, #f8fbff, #eef4fb);
+    border-bottom: 1px solid var(--cbe-line);
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  #cbePage .cbe-card-title {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    color: var(--cbe-navy);
+    font-weight: 850;
+  }
+
+  #cbePage .cbe-card-title i {
+    color: var(--cbe-accent);
+  }
+
+  #cbePage .cbe-card-title small {
+    display: block;
+    color: var(--cbe-muted);
+    font-weight: 500;
+    font-size: .76rem;
+  }
+
+  #cbePage .cbe-card-body {
+    padding: 1rem;
+  }
+
+  #cbePage .cbe-tabs {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  #cbePage .cbe-tab {
+    border: 1px solid var(--cbe-line);
+    background: #fff;
+    border-radius: 14px;
+    padding: .65rem .85rem;
+    color: var(--cbe-muted);
+    font-weight: 800;
+    cursor: pointer;
+    transition: .15s ease;
+  }
+
+  #cbePage .cbe-tab.active {
+    color: var(--cbe-navy);
+    border-color: var(--cbe-accent);
+    box-shadow: 0 0 0 3px rgba(234, 111, 27, .12);
+  }
+
+  #cbePage .cbe-panel {
+    display: none;
+  }
+
+  #cbePage .cbe-panel.active {
+    display: block;
+  }
+
+  #cbePage .cbe-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(150px, 1fr));
+    gap: .85rem;
+    align-items: end;
+  }
+
+  #cbePage .cbe-filter-grid.cbe-monthly {
+    grid-template-columns: repeat(6, minmax(140px, 1fr));
+  }
+
+  #cbePage .cbe-actions {
+    display: flex;
+    gap: .45rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  #cbePage .cbe-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(130px, 1fr));
+    gap: .75rem;
+    margin-bottom: 1rem;
+  }
+
+  #cbePage .cbe-summary-box {
+    border: 1px solid var(--cbe-line);
+    border-radius: 16px;
+    padding: .85rem;
+    background: var(--cbe-soft);
+    min-height: 80px;
+  }
+
+  #cbePage .cbe-summary-label {
+    color: var(--cbe-muted);
+    font-size: .73rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    font-weight: 750;
+  }
+
+  #cbePage .cbe-summary-value {
+    margin-top: .35rem;
+    font-size: 1.05rem;
+    font-weight: 850;
+    color: var(--cbe-navy);
+  }
+
+  #cbePage .cbe-summary-currency {
+    background: linear-gradient(135deg, #ffffff, #f4f7fb);
+  }
+
+  #cbePage .cbe-currency-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: .55rem;
+  }
+
+  #cbePage .cbe-currency-code {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--cbe-navy);
+    font-weight: 900;
+  }
+
+  #cbePage .cbe-currency-line {
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+    font-size: .82rem;
+    padding: .18rem 0;
+    border-top: 1px dashed #e0e7ef;
+  }
+
+  #cbePage .cbe-currency-line:first-of-type {
+    border-top: 0;
+  }
+
+  #cbePage .cbe-currency-line span:first-child {
+    color: var(--cbe-muted);
+  }
+
+  #cbePage .cbe-currency-line span:last-child {
+    color: var(--cbe-navy);
+    font-weight: 850;
+    white-space: nowrap;
+  }
+
+  #cbePage .cbe-origin-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: .18rem .48rem;
+    background: #eef3f8;
+    color: var(--cbe-navy);
+    font-size: .73rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  #cbePage .cbe-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--cbe-line);
+    border-radius: 16px;
+  }
+
+  #cbePage .cbe-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 980px;
+  }
+
+  #cbePage .cbe-table th {
+    background: var(--cbe-navy);
+    color: #fff;
+    padding: .65rem .6rem;
+    font-size: .74rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    white-space: nowrap;
+  }
+
+  #cbePage .cbe-table td {
+    padding: .66rem .6rem;
+    border-top: 1px solid var(--cbe-line);
+    vertical-align: top;
+    font-size: .84rem;
+  }
+
+  #cbePage .cbe-table tbody tr:nth-child(even) td {
+    background: #fafcff;
+  }
+
+  #cbePage .cbe-table .text-end {
+    white-space: nowrap;
+  }
+
+  #cbePage .cbe-muted {
+    color: var(--cbe-muted);
+    font-size: .78rem;
+  }
+
+  #cbePage .cbe-strong {
+    font-weight: 850;
+    color: var(--cbe-navy);
+  }
+
+  #cbePage .cbe-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    border-radius: 999px;
+    background: #eef3f8;
+    color: var(--cbe-navy);
+    padding: .22rem .55rem;
+    font-size: .74rem;
+    font-weight: 750;
+  }
+
+  #cbePage .cbe-chip.caja {
+    background: #fff5eb;
+    color: #9a4b09;
+  }
+
+  #cbePage .cbe-chip.banco {
+    background: #eaf3ff;
+    color: #0e4c8a;
+  }
+
+  #cbePage .cbe-positive {
+    color: #107c41;
+    font-weight: 800;
+  }
+
+  #cbePage .cbe-negative {
+    color: #b42318;
+    font-weight: 800;
+  }
+
+  #cbePage .cbe-zero {
+    color: var(--cbe-muted);
+    font-weight: 750;
+  }
+
+  #cbePage .cbe-month-source {
+    min-width: 260px;
+  }
+
+  #cbePage .cbe-month-movement {
+    width: 98px;
+    font-weight: 800;
+    color: var(--cbe-navy);
+  }
+
+  #cbePage .cbe-account-start td {
+    border-top: 3px solid #b8c7d8;
+  }
+
+  #cbePage .cbe-account-cell {
+    background: #f8fbff !important;
+    border-right: 1px solid var(--cbe-line);
+  }
+
+  #cbePage .cbe-account-neto td {
+    border-bottom: 2px solid #e3ebf4;
+  }
+
+  #cbePage .cbe-account-neto .cbe-month-movement {
+    color: var(--cbe-blue);
+  }
+
+  #cbePage .cbe-total-row td {
+    background: #eef3f8 !important;
+    font-weight: 850;
+  }
+
+  #cbePage .cbe-hidden {
+    display: none !important;
+  }
+
+  #cbePage .cbe-month-field-wrap {
+    position: relative;
+  }
+
+  #cbePage .cbe-month-popover {
+    position: absolute;
+    z-index: 9999;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 285px;
+    background: #fff;
+    border: 1px solid var(--cbe-line);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(15, 35, 64, .18);
+    padding: .8rem;
+    display: none;
+  }
+
+  #cbePage .cbe-month-popover.active {
+    display: block;
+  }
+
+  #cbePage .cbe-month-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .55rem;
+  }
+
+  #cbePage .cbe-month-year {
+    font-weight: 850;
+    color: var(--cbe-navy);
+  }
+
+  #cbePage .cbe-month-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .35rem;
+  }
+
+  #cbePage .cbe-month-btn {
+    border: 1px solid var(--cbe-line);
+    background: #f8fbff;
+    border-radius: 10px;
+    padding: .45rem .2rem;
+    font-weight: 800;
+    color: var(--cbe-navy);
+    cursor: pointer;
+  }
+
+  #cbePage .cbe-month-btn:hover,
+  #cbePage .cbe-month-btn.active {
+    border-color: var(--cbe-accent);
+    background: #fff5eb;
+  }
+
+  #cbePage .cbe-modal-table {
+    max-height: 60vh;
+    overflow: auto;
+    border: 1px solid var(--cbe-line);
+    border-radius: 14px;
+  }
+
+  @media (max-width: 1200px) {
+    #cbePage .cbe-filter-grid,
+    #cbePage .cbe-filter-grid.cbe-monthly,
+    #cbePage .cbe-summary-grid {
+      grid-template-columns: repeat(2, minmax(150px, 1fr));
+    }
+  }
+
+  @media (max-width: 700px) {
+    #cbePage .cbe-filter-grid,
+    #cbePage .cbe-filter-grid.cbe-monthly,
+    #cbePage .cbe-summary-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="cbePage" class="container-fluid py-3">
+  <div class="cbe-page-head">
+    <div>
+      <h1 class="cbe-title">Estado de Caja y Bancos</h1>
+      <p class="cbe-subtitle">Saldos, extractos y comparativo mensual.</p>
+    </div>
+  </div>
+
+  {% if errors %}
+    <div class="alert alert-warning">
+      {% for error in errors %}
+        <div>{{ error }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="cbe-tabs" role="tablist">
+    <button type="button" class="cbe-tab active" data-target="saldosPanel">
+      <i class="fas fa-wallet me-1"></i> Saldos actuales
+    </button>
+    <button type="button" class="cbe-tab" data-target="mensualPanel">
+      <i class="fas fa-table me-1"></i> Comparativo mensual
+    </button>
+  </div>
+
+  <section id="saldosPanel" class="cbe-panel active">
+    <div class="cbe-card">
+      <div class="cbe-card-head">
+        <div class="cbe-card-title">
+          <i class="fas fa-filter"></i>
+          <div>
+            Filtros
+          </div>
+        </div>
+      </div>
+      <div class="cbe-card-body">
+        <form method="get" class="cbe-filter-grid">
+          <input type="hidden" name="tab" value="saldos" />
+          <div>
+            <label class="form-label">Fecha de corte</label>
+            <input class="form-control" type="date" name="fecha_corte" value="{{ saldo_filters.fecha_corte }}" />
+          </div>
+          <div>
+            <label class="form-label">Tipo</label>
+            <select class="form-select" name="saldo_tipo">
+              <option value="TODOS" {% if saldo_filters.tipo == 'TODOS' %}selected{% endif %}>Cajas y bancos</option>
+              <option value="CAJA" {% if saldo_filters.tipo == 'CAJA' %}selected{% endif %}>Solo cajas</option>
+              <option value="BANCO" {% if saldo_filters.tipo == 'BANCO' %}selected{% endif %}>Solo bancos</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Unidad de negocio</label>
+            <select class="form-select" name="saldo_unidad_id">
+              <option value="">Todas</option>
+              {% for unidad in unidades %}
+                <option value="{{ unidad.id }}" {% if saldo_filters.unidad_id and saldo_filters.unidad_id == unidad.id %}selected{% endif %}>
+                  {{ unidad.codigo }} · {{ unidad.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Moneda</label>
+            <select class="form-select" name="saldo_moneda">
+              <option value="">Todas</option>
+              {% for moneda in monedas %}
+                <option value="{{ moneda.codigo }}" {% if saldo_filters.moneda == moneda.codigo %}selected{% endif %}>
+                  {{ moneda.codigo }} · {{ moneda.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="cbe-actions">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-search me-1"></i> Consultar
+            </button>
+            <a class="btn btn-outline-danger" target="_blank" href="{{ url_for('caja_bancos_estado.pdf_saldos', fecha_corte=saldo_filters.fecha_corte, saldo_tipo=saldo_filters.tipo, saldo_unidad_id=saldo_filters.unidad_id or '', saldo_moneda=saldo_filters.moneda or '') }}">
+              <i class="fas fa-file-pdf me-1"></i> PDF
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="cbe-summary-grid">
+      {% for item in resumen_saldos.por_moneda %}
+        <div class="cbe-summary-box cbe-summary-currency">
+          <div class="cbe-currency-head">
+            <div class="cbe-currency-code"><i class="fas fa-coins"></i> {{ item.moneda_codigo }}</div>
+            <span class="cbe-chip">{{ item.cantidad }} registros</span>
+          </div>
+          <div class="cbe-currency-line"><span>Cajas</span><span class="money-value" data-value="{{ item.total_cajas }}">{{ item.total_cajas }}</span></div>
+          <div class="cbe-currency-line"><span>Bancos</span><span class="money-value" data-value="{{ item.total_bancos }}">{{ item.total_bancos }}</span></div>
+          <div class="cbe-currency-line"><span>Saldo</span><span class="money-value cbe-signed" data-value="{{ item.total_general }}">{{ item.total_general }}</span></div>
+          <div class="cbe-currency-line"><span>Ingresos</span><span class="money-value" data-value="{{ item.ingresos }}">{{ item.ingresos }}</span></div>
+          <div class="cbe-currency-line"><span>Egresos</span><span class="money-value" data-value="{{ item.egresos }}">{{ item.egresos }}</span></div>
+        </div>
+      {% else %}
+        <div class="cbe-summary-box">
+          <div class="cbe-summary-label">Sin saldos</div>
+          <div class="cbe-summary-value">0.00</div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="cbe-card">
+      <div class="cbe-card-head">
+        <div class="cbe-card-title">
+          <i class="fas fa-list"></i>
+          <div>
+            Saldos por caja y banco
+          </div>
+        </div>
+      </div>
+      <div class="cbe-card-body">
+        <div class="cbe-table-wrap">
+          <table class="cbe-table">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Caja / Banco</th>
+                <th>Cuenta contable</th>
+                <th>Unidad</th>
+                <th class="text-end">Ingresos</th>
+                <th class="text-end">Egresos</th>
+                <th class="text-end">Saldo</th>
+                <th class="text-center">Detalle</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in saldos %}
+                <tr>
+                  <td>
+                    <span class="cbe-chip {% if row.tipo_objeto == 'CAJA' %}caja{% else %}banco{% endif %}">{{ row.tipo_objeto }}</span>
+                  </td>
+                  <td>
+                    <div class="cbe-strong">{{ row.codigo }} · {{ row.nombre }}</div>
+                    <div class="cbe-muted">Moneda: {{ row.moneda_codigo }} · Movimientos: {{ row.movimientos }}</div>
+                  </td>
+                  <td>
+                    <div class="cbe-strong">{{ row.cuenta_codigo }}</div>
+                    <div class="cbe-muted">{{ row.cuenta_nombre or 'Sin nombre de cuenta' }}</div>
+                  </td>
+                  <td>{{ row.unidad }}</td>
+                  <td class="text-end money-value" data-value="{{ row.ingresos }}">{{ row.ingresos }}</td>
+                  <td class="text-end money-value" data-value="{{ row.egresos }}">{{ row.egresos }}</td>
+                  <td class="text-end money-value cbe-signed" data-value="{{ row.saldo }}">{{ row.saldo }}</td>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary js-detail"
+                      data-tipo="{{ row.tipo_objeto }}"
+                      data-id="{{ row.objeto_id }}"
+                      data-fecha-corte="{{ saldo_filters.fecha_corte }}"
+                      data-unidad-id="{{ saldo_filters.unidad_id or '' }}"
+                      data-moneda="{{ saldo_filters.moneda or row.moneda_codigo }}">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="8" class="text-center text-muted py-4">No existen cajas o bancos para los filtros seleccionados.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="mensualPanel" class="cbe-panel">
+    <div class="cbe-card">
+      <div class="cbe-card-head">
+        <div class="cbe-card-title">
+          <i class="fas fa-calendar-alt"></i>
+          <div>
+            Filtros
+          </div>
+        </div>
+      </div>
+      <div class="cbe-card-body">
+        <form method="get" class="cbe-filter-grid cbe-monthly" id="monthlyForm">
+          <input type="hidden" name="tab" value="mensual" />
+          <div>
+            <label class="form-label">Período</label>
+            <select class="form-select" name="mensual_periodo" id="periodMode">
+              <option value="gestion" {% if mensual_filters.periodo == 'gestion' %}selected{% endif %}>Toda la gestión</option>
+              <option value="rango" {% if mensual_filters.periodo == 'rango' %}selected{% endif %}>Rango de meses</option>
+            </select>
+          </div>
+          <div id="yearGroup">
+            <label class="form-label">Gestión</label>
+            <input class="form-control" type="number" min="2000" max="2100" name="mensual_gestion" value="{{ mensual_filters.gestion }}" />
+          </div>
+          <div class="cbe-month-field-wrap js-range-month">
+            <label class="form-label">Mes desde</label>
+            <input class="form-control js-month-input" type="text" name="mes_desde" value="{{ mensual_filters.mes_desde }}" readonly />
+          </div>
+          <div class="cbe-month-field-wrap js-range-month">
+            <label class="form-label">Mes hasta</label>
+            <input class="form-control js-month-input" type="text" name="mes_hasta" value="{{ mensual_filters.mes_hasta }}" readonly />
+          </div>
+          <div>
+            <label class="form-label">Tipo</label>
+            <select class="form-select" name="mensual_tipo">
+              <option value="TODOS" {% if mensual_filters.tipo == 'TODOS' %}selected{% endif %}>Cajas y bancos</option>
+              <option value="CAJA" {% if mensual_filters.tipo == 'CAJA' %}selected{% endif %}>Solo cajas</option>
+              <option value="BANCO" {% if mensual_filters.tipo == 'BANCO' %}selected{% endif %}>Solo bancos</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Unidad de negocio</label>
+            <select class="form-select" name="mensual_unidad_id">
+              <option value="">Todas</option>
+              {% for unidad in unidades %}
+                <option value="{{ unidad.id }}" {% if mensual_filters.unidad_id and mensual_filters.unidad_id == unidad.id %}selected{% endif %}>
+                  {{ unidad.codigo }} · {{ unidad.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Moneda</label>
+            <select class="form-select" name="mensual_moneda">
+              <option value="">Todas</option>
+              {% for moneda in monedas %}
+                <option value="{{ moneda.codigo }}" {% if mensual_filters.moneda == moneda.codigo %}selected{% endif %}>
+                  {{ moneda.codigo }} · {{ moneda.nombre }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="cbe-actions">
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-search me-1"></i> Consultar
+            </button>
+            <a class="btn btn-outline-danger" target="_blank" href="{{ url_for('caja_bancos_estado.pdf_mensual', mensual_periodo=mensual_filters.periodo, mensual_gestion=mensual_filters.gestion, mes_desde=mensual_filters.mes_desde, mes_hasta=mensual_filters.mes_hasta, mensual_tipo=mensual_filters.tipo, mensual_unidad_id=mensual_filters.unidad_id or '', mensual_moneda=mensual_filters.moneda or '') }}">
+              <i class="fas fa-file-pdf me-1"></i> PDF
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="cbe-summary-grid">
+      {% for item in mensual.totals_by_currency_list %}
+        <div class="cbe-summary-box cbe-summary-currency">
+          <div class="cbe-currency-head">
+            <div class="cbe-currency-code"><i class="fas fa-chart-line"></i> {{ item.moneda_codigo }}</div>
+            <span class="cbe-chip">{{ item.cuentas }} cuentas</span>
+          </div>
+          <div class="cbe-currency-line"><span>Ingresos</span><span class="money-value" data-value="{{ item.ingresos }}">{{ item.ingresos }}</span></div>
+          <div class="cbe-currency-line"><span>Egresos</span><span class="money-value" data-value="{{ item.egresos }}">{{ item.egresos }}</span></div>
+          <div class="cbe-currency-line"><span>Neto</span><span class="money-value cbe-signed" data-value="{{ item.neto }}">{{ item.neto }}</span></div>
+          <div class="cbe-currency-line"><span>Meses</span><span>{{ mensual.months|length }}</span></div>
+        </div>
+      {% else %}
+        <div class="cbe-summary-box">
+          <div class="cbe-summary-label">Sin movimientos</div>
+          <div class="cbe-summary-value">0</div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="cbe-card">
+      <div class="cbe-card-head">
+        <div class="cbe-card-title">
+          <i class="fas fa-table"></i>
+          <div>
+            Comparativo mensual
+          </div>
+        </div>
+      </div>
+      <div class="cbe-card-body">
+        <div class="cbe-table-wrap">
+          <table class="cbe-table">
+            <thead>
+              <tr>
+                <th class="cbe-month-source">Caja / Banco</th>
+                <th>Movimiento</th>
+                {% for month in mensual.months %}
+                  <th class="text-end">{{ month.short }}</th>
+                {% endfor %}
+                <th class="text-end">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for account in mensual.accounts %}
+                {% for movement in ['ingresos', 'egresos', 'neto'] %}
+                  <tr class="{% if loop.first %}cbe-account-start{% endif %} {% if movement == 'neto' %}cbe-account-neto{% endif %}">
+                    {% if loop.first %}
+                      <td class="cbe-account-cell" rowspan="3">
+                        <div>
+                          <span class="cbe-chip {% if account.tipo_objeto == 'CAJA' %}caja{% else %}banco{% endif %}">{{ account.tipo_objeto }}</span>
+                        </div>
+                        <div class="cbe-strong mt-1">{{ account.codigo }} · {{ account.nombre }}</div>
+                        <div class="cbe-muted">{{ account.cuenta_codigo }} · {{ account.cuenta_nombre }}</div>
+                        <div class="cbe-muted">{{ account.unidad }} · {{ account.moneda_codigo }}</div>
+                      </td>
+                    {% endif %}
+                    <td class="cbe-month-movement">
+                      {% if movement == 'ingresos' %}Ingresos{% elif movement == 'egresos' %}Egresos{% else %}Neto{% endif %}
+                    </td>
+                    {% for month in mensual.months %}
+                      <td class="text-end money-value {% if movement == 'neto' %}cbe-signed{% endif %}" data-value="{{ account.months[month.key][movement] }}">
+                        {{ account.months[month.key][movement] }}
+                      </td>
+                    {% endfor %}
+                    <td class="text-end money-value {% if movement == 'neto' %}cbe-signed{% endif %}" data-value="{% if movement == 'ingresos' %}{{ account.total_ingresos }}{% elif movement == 'egresos' %}{{ account.total_egresos }}{% else %}{{ account.total_neto }}{% endif %}">
+                      {% if movement == 'ingresos' %}{{ account.total_ingresos }}{% elif movement == 'egresos' %}{{ account.total_egresos }}{% else %}{{ account.total_neto }}{% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="{{ mensual.months|length + 3 }}" class="text-center text-muted py-4">No existen movimientos para los filtros seleccionados.</td>
+                </tr>
+              {% endfor %}
+
+              {% if mensual.accounts %}
+                {% for currency in mensual.totals_by_currency_list %}
+                  {% for movement in ['ingresos', 'egresos', 'neto'] %}
+                    <tr class="cbe-total-row">
+                      {% if loop.first %}
+                        <td rowspan="3">Total {{ currency.moneda_codigo }}</td>
+                      {% endif %}
+                      <td>{% if movement == 'ingresos' %}Ingresos{% elif movement == 'egresos' %}Egresos{% else %}Neto{% endif %}</td>
+                      {% for month in mensual.months %}
+                        <td class="text-end money-value {% if movement == 'neto' %}cbe-signed{% endif %}" data-value="{{ currency.months[month.key][movement] }}">
+                          {{ currency.months[month.key][movement] }}
+                        </td>
+                      {% endfor %}
+                      <td class="text-end money-value {% if movement == 'neto' %}cbe-signed{% endif %}" data-value="{{ currency[movement] }}">{{ currency[movement] }}</td>
+                    </tr>
+                  {% endfor %}
+                {% endfor %}
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="modal fade" id="detalleModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title">Detalle de movimientos</h5>
+          <div class="text-muted small" id="detalleSubtitle">Extracto de caja o banco</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2 mb-3">
+          <div class="col-md-3">
+            <label class="form-label">Desde</label>
+            <input type="date" class="form-control" id="detalleDesde" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Hasta</label>
+            <input type="date" class="form-control" id="detalleHasta" />
+          </div>
+          <div class="col-md-6 d-flex align-items-end gap-2 flex-wrap">
+            <button type="button" class="btn btn-primary" id="detalleReloadBtn">
+              <i class="fas fa-search me-1"></i> Actualizar detalle
+            </button>
+            <a class="btn btn-outline-danger" target="_blank" id="detallePdfBtn" href="#">
+              <i class="fas fa-file-pdf me-1"></i> PDF detalle
+            </a>
+          </div>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-md-3">
+            <div class="border rounded p-2">
+              <div class="text-muted small">Saldo anterior</div>
+              <div class="fw-bold money-value" id="detalleSaldoAnterior" data-value="0">0</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="border rounded p-2">
+              <div class="text-muted small">Ingresos</div>
+              <div class="fw-bold money-value" id="detalleIngresos" data-value="0">0</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="border rounded p-2">
+              <div class="text-muted small">Egresos</div>
+              <div class="fw-bold money-value" id="detalleEgresos" data-value="0">0</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="border rounded p-2">
+              <div class="text-muted small">Saldo final</div>
+              <div class="fw-bold money-value cbe-signed" id="detalleSaldoFinal" data-value="0">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="cbe-modal-table">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Fecha</th>
+                <th>Origen</th>
+                <th>Documento</th>
+                <th>Glosa</th>
+                <th class="text-end">Ingreso</th>
+                <th class="text-end">Egreso</th>
+                <th class="text-end">Saldo</th>
+              </tr>
+            </thead>
+            <tbody id="detalleBody">
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">Seleccione una caja o banco.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const page = document.getElementById('cbePage');
+    if (!page) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab') === 'mensual' ? 'mensualPanel' : 'saldosPanel';
+
+    function money(value) {
+      const number = Number(value || 0);
+      return new Intl.NumberFormat('es-BO', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(number);
+    }
+
+    function paintMoney(root) {
+      (root || document).querySelectorAll('.money-value').forEach((el) => {
+        const value = Number(el.dataset.value || el.textContent || 0);
+        el.textContent = money(value);
+        if (el.classList.contains('cbe-signed')) {
+          el.classList.remove('cbe-positive', 'cbe-negative', 'cbe-zero');
+          if (value > 0) el.classList.add('cbe-positive');
+          else if (value < 0) el.classList.add('cbe-negative');
+          else el.classList.add('cbe-zero');
+        }
+      });
+    }
+
+    function activateTab(targetId) {
+      document.querySelectorAll('.cbe-tab').forEach((tab) => {
+        tab.classList.toggle('active', tab.dataset.target === targetId);
+      });
+      document.querySelectorAll('.cbe-panel').forEach((panel) => {
+        panel.classList.toggle('active', panel.id === targetId);
+      });
+    }
+
+    document.querySelectorAll('.cbe-tab').forEach((tab) => {
+      tab.addEventListener('click', () => activateTab(tab.dataset.target));
+    });
+    activateTab(activeTab);
+    paintMoney(document);
+
+    const periodMode = document.getElementById('periodMode');
+    const yearGroup = document.getElementById('yearGroup');
+    const rangeGroups = document.querySelectorAll('.js-range-month');
+
+    function syncPeriodMode() {
+      const isRange = periodMode && periodMode.value === 'rango';
+      if (yearGroup) yearGroup.classList.toggle('cbe-hidden', isRange);
+      rangeGroups.forEach((group) => group.classList.toggle('cbe-hidden', !isRange));
+    }
+    if (periodMode) {
+      periodMode.addEventListener('change', syncPeriodMode);
+      syncPeriodMode();
+    }
+
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    let activePopover = null;
+
+    function buildMonthPicker(input) {
+      const wrap = input.closest('.cbe-month-field-wrap');
+      const pop = document.createElement('div');
+      pop.className = 'cbe-month-popover';
+      const initial = /^\d{4}-\d{2}$/.test(input.value) ? input.value : `${new Date().getFullYear()}-01`;
+      let year = Number(initial.slice(0, 4));
+
+      function render() {
+        pop.innerHTML = '';
+        const head = document.createElement('div');
+        head.className = 'cbe-month-head';
+        const prev = document.createElement('button');
+        prev.type = 'button';
+        prev.className = 'btn btn-sm btn-outline-secondary';
+        prev.innerHTML = '<i class="fas fa-chevron-left"></i>';
+        const label = document.createElement('div');
+        label.className = 'cbe-month-year';
+        label.textContent = year;
+        const next = document.createElement('button');
+        next.type = 'button';
+        next.className = 'btn btn-sm btn-outline-secondary';
+        next.innerHTML = '<i class="fas fa-chevron-right"></i>';
+        prev.addEventListener('click', () => { year -= 1; render(); });
+        next.addEventListener('click', () => { year += 1; render(); });
+        head.append(prev, label, next);
+        pop.appendChild(head);
+
+        const grid = document.createElement('div');
+        grid.className = 'cbe-month-grid';
+        monthNames.forEach((name, idx) => {
+          const month = String(idx + 1).padStart(2, '0');
+          const value = `${year}-${month}`;
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'cbe-month-btn';
+          if (input.value === value) btn.classList.add('active');
+          btn.textContent = name.slice(0, 3);
+          btn.addEventListener('click', () => {
+            input.value = value;
+            pop.classList.remove('active');
+          });
+          grid.appendChild(btn);
+        });
+        pop.appendChild(grid);
+      }
+
+      input.addEventListener('click', () => {
+        if (activePopover && activePopover !== pop) activePopover.classList.remove('active');
+        activePopover = pop;
+        pop.classList.toggle('active');
+      });
+      wrap.appendChild(pop);
+      render();
+    }
+
+    document.querySelectorAll('.js-month-input').forEach(buildMonthPicker);
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.cbe-month-field-wrap') && activePopover) {
+        activePopover.classList.remove('active');
+      }
+    });
+
+    const detailModalEl = document.getElementById('detalleModal');
+    const detailModal = detailModalEl ? new bootstrap.Modal(detailModalEl) : null;
+    const detailState = { tipo: '', id: '', fechaCorte: '', unidadId: '', moneda: '' };
+
+    function buildDetailUrl(baseUrl, includePdf) {
+      const params = new URLSearchParams();
+      params.set('tipo', detailState.tipo);
+      params.set('id', detailState.id);
+      params.set('fecha_corte', document.getElementById('detalleHasta').value || detailState.fechaCorte);
+      const desde = document.getElementById('detalleDesde').value || '';
+      if (desde) params.set('fecha_desde', desde);
+      if (detailState.unidadId) params.set('unidad_id', detailState.unidadId);
+      if (detailState.moneda) params.set('moneda', detailState.moneda);
+      return `${baseUrl}?${params.toString()}`;
+    }
+
+    function paintDetail(payload) {
+      const objeto = payload.objeto || {};
+      const detalle = payload.detalle || {};
+      document.getElementById('detalleSubtitle').textContent = `${detailState.tipo} · ${objeto.codigo || ''} · ${objeto.nombre || ''}`;
+      const summaryMap = [
+        ['detalleSaldoAnterior', detalle.saldo_anterior || 0],
+        ['detalleIngresos', detalle.ingresos || 0],
+        ['detalleEgresos', detalle.egresos || 0],
+        ['detalleSaldoFinal', detalle.saldo_final || 0],
+      ];
+      summaryMap.forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        el.dataset.value = value;
+        el.textContent = value;
+      });
+
+      const body = document.getElementById('detalleBody');
+      body.innerHTML = '';
+      const rows = detalle.movimientos || [];
+      if (!rows.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 7;
+        td.className = 'text-center text-muted py-4';
+        td.textContent = 'No existen movimientos para los filtros seleccionados.';
+        tr.appendChild(td);
+        body.appendChild(tr);
+      } else {
+        rows.forEach((row) => {
+          const tr = document.createElement('tr');
+          const cells = [row.fecha, row.origen, row.documento, row.glosa];
+          cells.forEach((text, idx) => {
+            const td = document.createElement('td');
+            if (idx === 1) {
+              const badge = document.createElement('span');
+              badge.className = 'cbe-origin-badge';
+              badge.textContent = text || '';
+              td.appendChild(badge);
+            } else {
+              td.textContent = text || '';
+            }
+            tr.appendChild(td);
+          });
+          ['ingreso', 'egreso', 'saldo'].forEach((key) => {
+            const td = document.createElement('td');
+            td.className = 'text-end money-value';
+            if (key === 'saldo') td.classList.add('cbe-signed');
+            td.dataset.value = row[key] || 0;
+            td.textContent = row[key] || 0;
+            tr.appendChild(td);
+          });
+          body.appendChild(tr);
+        });
+      }
+      document.getElementById('detallePdfBtn').href = buildDetailUrl("{{ url_for('caja_bancos_estado.pdf_detalle') }}", true);
+      paintMoney(detailModalEl);
+    }
+
+    async function loadDetail() {
+      const url = buildDetailUrl("{{ url_for('caja_bancos_estado.api_detalle') }}", false);
+      const response = await fetch(url, { headers: { Accept: 'application/json' } });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message || 'No se pudo cargar el detalle.');
+      }
+      paintDetail(payload);
+    }
+
+    document.querySelectorAll('.js-detail').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        detailState.tipo = btn.dataset.tipo;
+        detailState.id = btn.dataset.id;
+        detailState.fechaCorte = btn.dataset.fechaCorte;
+        detailState.unidadId = btn.dataset.unidadId || '';
+        detailState.moneda = btn.dataset.moneda || '';
+        document.getElementById('detalleDesde').value = '';
+        document.getElementById('detalleHasta').value = detailState.fechaCorte;
+        if (detailModal) detailModal.show();
+        try {
+          await loadDetail();
+        } catch (error) {
+          alert(error.message);
+        }
+      });
+    });
+
+    const reloadBtn = document.getElementById('detalleReloadBtn');
+    if (reloadBtn) {
+      reloadBtn.addEventListener('click', async () => {
+        try {
+          await loadDetail();
+        } catch (error) {
+          alert(error.message);
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}

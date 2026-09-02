@@ -1,0 +1,779 @@
+{% extends "layout.html" %}
+{% block title %}Tesorería · Movimiento{% endblock %}
+{% block extra_css %}
+<style>
+  #movimientoFormPage {
+    --mf-navy: #0f2340;
+    --mf-blue: #1a4a7a;
+    --mf-accent: #2d7dd2;
+    --mf-accent-lt: #e8f1fc;
+    --mf-success: #1a7a4a;
+    --mf-success-lt: #e6f6ee;
+    --mf-danger: #b83232;
+    --mf-danger-lt: #fdeaea;
+    --mf-surface: #f5f8fc;
+    --mf-border: #dde4ed;
+    --mf-text: #1e2d3d;
+    --mf-muted: #8898aa;
+    --mf-radius: 14px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .mf-head {
+    background: linear-gradient(120deg, var(--mf-navy) 0%, var(--mf-blue) 60%, #1f5d9e 100%);
+    border-radius: var(--mf-radius);
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1.1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15, 35, 64, .16);
+    position: sticky;
+    top: 64px;
+    z-index: 40;
+    overflow: hidden
+  }
+
+  .mf-head::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .04);
+    pointer-events: none
+  }
+
+  .mf-title-wrap {
+    display: flex;
+    gap: .85rem;
+    align-items: center;
+    position: relative
+  }
+
+  .mf-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .14);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0
+  }
+
+  .mf-title {
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0
+  }
+
+  .mf-subtitle {
+    color: rgba(255, 255, 255, .62);
+    font-size: .8rem;
+    margin-top: 2px
+  }
+
+  .mf-actions {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    position: relative
+  }
+
+  .mf-actions .btn-outline-light,
+  .mf-actions .btn-outline-secondary {
+    border-color: rgba(255, 255, 255, .3);
+    color: rgba(255, 255, 255, .88);
+    background: transparent;
+    font-size: .82rem
+  }
+
+  .mf-actions .btn-outline-light:hover,
+  .mf-actions .btn-outline-secondary:hover {
+    background: rgba(255, 255, 255, .12);
+    border-color: rgba(255, 255, 255, .5);
+    color: #fff
+  }
+
+  .mf-actions .btn-light {
+    background: #fff;
+    border-color: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+    font-size: .82rem
+  }
+
+  .mf-actions .btn-light:hover {
+    background: #eff6ff
+  }
+
+  .mf-actions .btn-outline-danger {
+    border-color: #fca5a5;
+    color: #fca5a5;
+    background: transparent;
+    font-size: .82rem
+  }
+
+  .mf-actions .btn-outline-danger:hover {
+    background: rgba(252, 165, 165, .15);
+    color: #fff
+  }
+
+  .mf-state {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .35rem .8rem;
+    border-radius: 999px;
+    font-size: .76rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .24);
+    color: #fff
+  }
+
+  .mf-state .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #94a3b8
+  }
+
+  .mf-state[data-state="BORRADOR"] .dot {
+    background: #fbbf24
+  }
+
+  .mf-state[data-state="CONFIRMADO"] .dot {
+    background: #34d399;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, .25)
+  }
+
+  .mf-state[data-state="ANULADO"] .dot {
+    background: #f87171
+  }
+
+  .mf-readonly {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    margin-bottom: 1rem;
+    padding: .85rem 1.1rem;
+    border-radius: 12px;
+    background: #eff6ff;
+    border-left: 4px solid var(--mf-accent);
+    color: #1e40af;
+    font-size: .88rem;
+    font-weight: 600
+  }
+
+  .mf-shell {
+    display: grid;
+    grid-template-columns: 380px minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start
+  }
+
+  .mf-card {
+    background: #fff;
+    border: 1px solid var(--mf-border);
+    border-radius: var(--mf-radius);
+    box-shadow: 0 4px 16px rgba(15, 35, 64, .06);
+    overflow: hidden
+  }
+
+  .mf-sidebar {
+    position: sticky;
+    top: 148px;
+    align-self: start;
+    padding: 1.1rem;
+    border-top: 3px solid var(--mf-accent)
+  }
+
+  .mf-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem
+  }
+
+  .mf-block-title {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .65px;
+    color: var(--mf-muted);
+    margin-bottom: .85rem;
+    display: flex;
+    align-items: center;
+    gap: 7px
+  }
+
+  .mf-block-title::before {
+    content: '';
+    width: 3px;
+    height: 13px;
+    border-radius: 2px;
+    background: var(--mf-accent);
+    display: block
+  }
+
+  .mf-group {
+    margin-bottom: 1.1rem;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px dashed #e9eef5
+  }
+
+  .mf-group:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none
+  }
+
+  .mf-label {
+    font-size: .71rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .55px;
+    color: #4a6070;
+    margin-bottom: 5px;
+    display: block
+  }
+
+  .mf-help {
+    font-size: .75rem;
+    color: var(--mf-muted);
+    margin-top: .25rem
+  }
+
+  .mf-sidebar .form-control,
+  .mf-sidebar .form-select {
+    border: 1.5px solid var(--mf-border);
+    border-radius: 9px;
+    font-size: .875rem;
+    color: var(--mf-text);
+    transition: border-color .16s, box-shadow .16s
+  }
+
+  .mf-sidebar .form-control:focus,
+  .mf-sidebar .form-select:focus {
+    border-color: var(--mf-accent);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, .1);
+    outline: none
+  }
+
+  #movTipoCambio,
+  #movTcUsd,
+  #movTcUfv {
+    font-family: 'Consolas', monospace;
+    font-size: .85rem;
+    background: var(--mf-surface);
+    color: #1a4070;
+    font-weight: 600
+  }
+
+  .mf-type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .6rem
+  }
+
+  .mf-type-btn {
+    border: 1.5px solid var(--mf-border);
+    border-radius: 12px;
+    padding: .8rem .75rem;
+    background: var(--mf-surface);
+    text-align: left;
+    transition: all .18s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden
+  }
+
+  .mf-type-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: transparent;
+    transition: background .18s;
+    border-radius: 12px 12px 0 0
+  }
+
+  .mf-type-btn:hover:not(.disabled) {
+    border-color: #a8c0e8;
+    background: #eef6ff;
+    transform: translateY(-1px)
+  }
+
+  .mf-type-btn.active {
+    border-color: var(--mf-accent);
+    background: linear-gradient(160deg, #fff 0%, var(--mf-accent-lt) 100%);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, .1)
+  }
+
+  .mf-type-btn.active::before {
+    background: var(--mf-accent)
+  }
+
+  .mf-type-btn.disabled {
+    opacity: .55;
+    cursor: not-allowed
+  }
+
+  .mf-type-icon {
+    display: block;
+    margin-bottom: .35rem;
+    color: var(--mf-muted);
+    font-size: 1rem;
+    transition: color .18s
+  }
+
+  .mf-type-btn.active .mf-type-icon {
+    color: var(--mf-accent)
+  }
+
+  .mf-type-title {
+    display: block;
+    font-weight: 700;
+    font-size: .85rem;
+    color: var(--mf-text);
+    margin-bottom: .15rem
+  }
+
+  .mf-type-text {
+    display: block;
+    color: var(--mf-muted);
+    font-size: .76rem;
+    line-height: 1.35
+  }
+
+  .mf-note {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem;
+    border-radius: 10px;
+    padding: .7rem .85rem;
+    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+    border: 1px solid #bbf7d0;
+    transition: background .25s, border-color .25s
+  }
+
+  .mf-note strong {
+    display: block;
+    font-size: .82rem;
+    font-weight: 700;
+    color: #14532d
+  }
+
+  .mf-note span {
+    font-size: .78rem;
+    color: var(--mf-muted)
+  }
+
+  .mf-tc-missing {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5) !important;
+    border-color: #fb923c !important;
+    animation: mfTcPulse 2s ease-in-out infinite
+  }
+
+  .mf-tc-missing strong {
+    color: #7c2d12 !important
+  }
+
+  .mf-tc-missing span {
+    color: #92400e !important
+  }
+
+  @keyframes mfTcPulse {
+
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(251, 146, 60, 0)
+    }
+
+    50% {
+      box-shadow: 0 0 0 5px rgba(251, 146, 60, .18)
+    }
+  }
+
+  .mf-input-alert {
+    border-color: #fb923c !important;
+    background: #fff7ed !important;
+    color: #7c2d12 !important;
+    box-shadow: 0 0 0 3px rgba(251, 146, 60, .15) !important;
+    font-weight: 700 !important
+  }
+
+  .mf-panel-head {
+    padding: .9rem 1rem;
+    border-bottom: 1px solid var(--mf-border);
+    background: var(--mf-surface);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .8rem;
+    flex-wrap: wrap
+  }
+
+  .mf-panel-title {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .65px;
+    text-transform: uppercase;
+    color: var(--mf-muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0
+  }
+
+  .mf-panel-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 13px;
+    background: var(--mf-accent);
+    border-radius: 2px
+  }
+
+  .mf-panel-subtitle {
+    font-size: .8rem;
+    color: var(--mf-muted);
+    margin-top: .1rem
+  }
+
+  .mf-panel-body {
+    padding: 1rem
+  }
+
+  .mf-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .75rem
+  }
+
+  .mf-summary-item {
+    border: 1px solid var(--mf-border);
+    border-radius: 12px;
+    background: var(--mf-surface);
+    padding: .85rem 1rem;
+    transition: transform .15s, box-shadow .15s
+  }
+
+  .mf-summary-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(15, 35, 64, .08)
+  }
+
+  .mf-summary-label {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--mf-muted);
+    margin-bottom: .3rem
+  }
+
+  .mf-summary-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--mf-text);
+    font-variant-numeric: tabular-nums
+  }
+
+  .mf-summary-small {
+    font-size: .8rem;
+    color: var(--mf-muted);
+    margin-top: .15rem
+  }
+
+  .mf-money {
+    font-family: 'Consolas', monospace;
+    font-variant-numeric: tabular-nums
+  }
+
+  .select2-container--default .select2-selection--single {
+    height: 38px;
+    border-radius: 9px;
+    border: 1.5px solid var(--mf-border);
+    display: flex;
+    align-items: center
+  }
+
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+    padding-left: .65rem;
+    padding-right: 2rem;
+    font-size: .875rem
+  }
+
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+    right: 8px
+  }
+
+  .mf-hidden {
+    display: none !important
+  }
+
+  @media (max-width:1180px) {
+    .mf-shell {
+      grid-template-columns: 1fr
+    }
+
+    .mf-sidebar {
+      position: static
+    }
+  }
+
+  @media (max-width:768px) {
+
+    .mf-type-grid,
+    .mf-summary-grid {
+      grid-template-columns: 1fr
+    }
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 dxt-page" id="movimientoFormPage">
+  <div class="mf-head">
+    <div class="mf-title-wrap">
+      <div class="mf-icon"><i class="fas fa-right-left"></i></div>
+      <div>
+        <h1 class="mf-title">{% if mode == 'create' %}Nuevo movimiento de tesorería{% else %}Movimiento #{{
+          movimiento_data.id }}{% endif %}</h1>
+        <div class="mf-subtitle">Transferencias, ingresos y egresos internos con contabilización automática.</div>
+      </div>
+    </div>
+    <div class="mf-actions">
+      {% if movimiento_data %}<span class="mf-state" data-state="{{ movimiento_data.estado }}"><span
+          class="dot"></span>{{ movimiento_data.estado }}</span>{% endif %}
+      <a href="{{ url_for('tesoreria_caja_bancos.movimientos_index') }}" class="btn btn-outline-light"><i
+          class="fas fa-arrow-left me-1"></i> Volver</a>
+      {% if movimiento_data %}
+      <a
+        href="{{ url_for('tesoreria_caja_bancos.movimiento_pdf', movimiento_id=movimiento_data.id) }}"
+        class="btn btn-outline-light"
+        target="_blank"
+        rel="noopener"
+      >
+        <i class="fas fa-file-pdf me-1"></i> PDF
+      </a>
+      {% endif %}
+      {% if puede_editar and (not movimiento_data or movimiento_data.estado == 'BORRADOR') %}
+      <button type="button" class="btn btn-outline-light" id="btnGuardarMovimientoTop"><i
+          class="fas fa-floppy-disk me-1"></i> Guardar borrador</button>
+      <button type="button" class="btn btn-light" id="btnConfirmarMovimientoTop"><i class="fas fa-check me-1"></i>
+        Confirmar</button>
+      {% endif %}
+      {% if puede_editar and movimiento_data and movimiento_data.estado == 'CONFIRMADO' %}
+      <button type="button" class="btn btn-outline-danger" id="btnAnularMovimientoTop"><i class="fas fa-ban me-1"></i>
+        Anular</button>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if movimiento_data and movimiento_data.estado != 'BORRADOR' %}
+  <div class="mf-readonly"><i class="fas fa-lock"></i> Este movimiento está en estado <strong>{{ movimiento_data.estado
+      }}</strong> — solo lectura, no se puede editar.</div>
+  {% endif %}
+
+  <div class="mf-shell">
+    <aside class="mf-card mf-sidebar">
+      <div class="mf-group">
+        <div class="mf-block-title">Tipo de movimiento</div>
+        <div class="mf-type-grid">
+          <button type="button" class="mf-type-btn" id="btnTipoIngreso"><span class="mf-type-icon"><i
+                class="fas fa-arrow-down"></i></span><span class="mf-type-title">Ingreso</span></button>
+          <button type="button" class="mf-type-btn" id="btnTipoEgreso"><span class="mf-type-icon"><i
+                class="fas fa-arrow-up"></i></span><span class="mf-type-title">Egreso</span></button>
+          <button type="button" class="mf-type-btn" id="btnTipoTransferencia"><span class="mf-type-icon"><i
+                class="fas fa-right-left"></i></span><span class="mf-type-title">Transferencia</span></button>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-12"><label class="mf-label" for="movUnidadNegocio">Unidad de negocio</label><select id="movUnidadNegocio" class="form-select">
+            <option value=""></option>{% for row in catalogs.unidades_negocio %}<option value="{{ row.id }}">{{ row.codigo }} · {{ row.nombre }}</option>{% endfor %}</select><div class="mf-help">Obligatoria. Origen, destino y asiento contable se registrarán bajo esta unidad.</div></div>
+        <div class="col-12"><label class="mf-label" for="movFecha">Fecha de operación</label><input type="date"
+            id="movFecha" class="form-control"></div>
+        <div class="col-7"><label class="mf-label" for="movMoneda">Moneda</label><select id="movMoneda"
+            class="form-select">{% for row in catalogs.monedas %}<option value="{{ row.codigo }}">{{ row.codigo }} · {{
+              row.nombre }}</option>{% endfor %}</select></div>
+        <div class="col-5"><label class="mf-label" for="movTipoCambio">T/C aplicado</label><input type="number"
+            id="movTipoCambio" class="form-control" step="0.000001" min="0.000001"></div>
+        <div class="col-6"><label class="mf-label" for="movTcUsd">USD</label><input type="number" id="movTcUsd"
+            class="form-control" step="0.000001" readonly></div>
+        <div class="col-6"><label class="mf-label" for="movTcUfv">UFV</label><input type="number" id="movTcUfv"
+            class="form-control" step="0.000001" readonly></div>
+        <div class="col-12">
+          <div class="mf-note" id="tcInlineNoteMov">
+            <div><strong id="tcInlineTitleMov">Tipo de cambio listo</strong><span id="tcInlineTextMov">Se recalcula
+                automáticamente al cambiar fecha o moneda.</span></div><button type="button"
+              class="btn btn-outline-primary btn-sm" id="btnAbrirTipoCambioMov" title="Completar tipo de cambio"><i
+                class="fas fa-arrow-up-right-from-square"></i></button>
+          </div>
+        </div>
+        <div class="col-12"><label class="mf-label" for="movMonto">Monto</label><input type="number" id="movMonto"
+            class="form-control" min="0" step="0.01"></div>
+        <div class="col-12"><label class="mf-label" for="movAuxiliar">Auxiliar</label><select id="movAuxiliar"
+            class="form-select" data-placeholder="Buscar auxiliar...">
+            <option value=""></option>
+          </select>
+          <div class="mf-help">Opcional. Úsalo cuando el movimiento tenga tercero asociado.</div>
+        </div>
+        <div class="col-12" id="wrapContraCuenta"><label class="mf-label" for="movContraCuenta">Contra
+            cuenta</label><select id="movContraCuenta" class="form-select"
+            data-placeholder="Buscar por código o nombre...">
+            <option value=""></option>
+          </select></div>
+        <div class="col-12"><label class="mf-label" for="movReferencia">Referencia</label><input type="text"
+            id="movReferencia" class="form-control" maxlength="150"
+            placeholder="Comprobante, referencia bancaria o nota interna"></div>
+        <div class="col-12"><label class="mf-label" for="movGlosa">Glosa</label><textarea id="movGlosa"
+            class="form-control" rows="4" maxlength="500"
+            placeholder="Describe claramente el motivo del movimiento."></textarea></div>
+      </div>
+    </aside>
+
+    <section class="mf-main">
+      <div class="mf-card">
+        <div class="mf-panel-head">
+          <div>
+            <h2 class="mf-panel-title">Origen y destino</h2>
+            <div class="mf-panel-subtitle" id="panelResumenTipo">Selecciona el flujo del movimiento según su tipo.</div>
+          </div>
+        </div>
+        <div class="mf-panel-body">
+          <div class="row g-3" id="panelOrigen">
+            <div class="col-md-4"><label class="mf-label" for="movMedioOrigen">Medio origen</label><select
+                id="movMedioOrigen" class="form-select">
+                <option value=""></option>{% for medio in catalogs.medios %}<option value="{{ medio }}">{{ medio }}
+                </option>{% endfor %}
+              </select></div>
+            <div class="col-md-4" id="wrapCajaOrigen"><label class="mf-label" for="movCajaOrigen">Caja
+                origen</label><select id="movCajaOrigen" class="form-select">
+                <option value=""></option>{% for row in catalogs.cajas %}<option value="{{ row.id }}" data-unidad="" data-global="1">{{ row.codigo }} · {{ row.nombre }}</option>{% endfor %}
+              </select></div>
+            <div class="col-md-4" id="wrapBancoOrigen"><label class="mf-label" for="movBancoOrigen">Banco
+                origen</label><select id="movBancoOrigen" class="form-select">
+                <option value=""></option>{% for row in catalogs.bancos %}<option value="{{ row.id }}" data-unidad="{{ row.unidad_negocio_id }}">{{ row.nombre_banco }} · {{ row.numero_cuenta }}</option>{% endfor %}
+              </select></div>
+          </div>
+          <div class="row g-3 mt-1" id="panelDestino">
+            <div class="col-md-4"><label class="mf-label" for="movMedioDestino">Medio destino</label><select
+                id="movMedioDestino" class="form-select">
+                <option value=""></option>{% for medio in catalogs.medios %}<option value="{{ medio }}">{{ medio }}
+                </option>{% endfor %}
+              </select></div>
+            <div class="col-md-4" id="wrapCajaDestino"><label class="mf-label" for="movCajaDestino">Caja
+                destino</label><select id="movCajaDestino" class="form-select">
+                <option value=""></option>{% for row in catalogs.cajas %}<option value="{{ row.id }}" data-unidad="" data-global="1">{{ row.codigo }} · {{ row.nombre }}</option>{% endfor %}
+              </select></div>
+            <div class="col-md-4" id="wrapBancoDestino"><label class="mf-label" for="movBancoDestino">Banco
+                destino</label><select id="movBancoDestino" class="form-select">
+                <option value=""></option>{% for row in catalogs.bancos %}<option value="{{ row.id }}" data-unidad="{{ row.unidad_negocio_id }}">{{ row.nombre_banco }} · {{ row.numero_cuenta }}</option>{% endfor %}
+              </select></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-card">
+        <div class="mf-panel-head">
+          <div>
+            <h2 class="mf-panel-title">Resumen del movimiento</h2>
+            <div class="mf-panel-subtitle">Verifica el flujo y el monto antes de confirmar.</div>
+          </div>
+        </div>
+        <div class="mf-panel-body">
+          <div class="mf-summary-grid">
+            <div class="mf-summary-item">
+              <div class="mf-summary-label">Tipo</div>
+              <div class="mf-summary-value" id="sumTipo">Ingreso</div>
+              <div class="mf-summary-small" id="sumTipoText">Entrada directa a tesorería.</div>
+            </div>
+            <div class="mf-summary-item">
+              <div class="mf-summary-label">Unidad</div>
+              <div class="mf-summary-value" id="sumUnidadNegocio">—</div>
+              <div class="mf-summary-small">Unidad de negocio del documento.</div>
+            </div>
+            <div class="mf-summary-item">
+              <div class="mf-summary-label">Flujo</div>
+              <div class="mf-summary-value" id="sumFlujo">—</div>
+              <div class="mf-summary-small">Origen y destino resumidos.</div>
+            </div>
+            <div class="mf-summary-item">
+              <div class="mf-summary-label">Monto</div>
+              <div class="mf-summary-value mf-money" id="sumMonto">0.00</div>
+              <div class="mf-summary-small" id="sumMoneda">BOB</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script id="movimientoBootstrap" type="application/json">
+{{ {
+  'mode': mode,
+  'movimientoId': (movimiento_data.id if movimiento_data else None),
+  'puedeEditar': puede_editar,
+  'movimiento': movimiento_data,
+  'tipoCambio': tipo_cambio_data,
+  'tipoCambioUrlBase': catalogs.tipo_cambio_url_base,
+  'unidadNegocioId': unidad_negocio_id
+} | tojson }}
+</script>
+{% endblock %}
+{% block extra_js %}
+<script>
+  (function () {
+    'use strict';
+    const bootEl = document.getElementById('movimientoBootstrap'); const page = document.getElementById('movimientoFormPage'); if (!bootEl || !page) return;
+    const boot = JSON.parse(bootEl.textContent || '{}'); const movimientoId = boot.movimientoId || null; const puedeEditar = Boolean(boot.puedeEditar); const movimientoData = boot.movimiento || null; const tcBaseUrl = boot.tipoCambioUrlBase || '/tipo-cambio/gestion'; const listUrl = `{{ url_for('tesoreria_caja_bancos.movimientos_index') }}`.replace(/\/$/, '');
+    const state = { tipo: (movimientoData && movimientoData.tipo_movimiento) || 'INGRESO', tc: { existe: Boolean(boot.tipoCambio && boot.tipoCambio.existe), usd: Number((boot.tipoCambio && boot.tipoCambio.usd_paralelo) || 1), ufv: Number((boot.tipoCambio && boot.tipoCambio.ufv) || 1) } };
+    const refs = { unidadNegocio: document.getElementById('movUnidadNegocio'), fecha: document.getElementById('movFecha'), moneda: document.getElementById('movMoneda'), tipoCambio: document.getElementById('movTipoCambio'), tcUsd: document.getElementById('movTcUsd'), tcUfv: document.getElementById('movTcUfv'), tcInline: document.getElementById('tcInlineNoteMov'), tcInlineTitle: document.getElementById('tcInlineTitleMov'), tcInlineText: document.getElementById('tcInlineTextMov'), btnAbrirTc: document.getElementById('btnAbrirTipoCambioMov'), monto: document.getElementById('movMonto'), referencia: document.getElementById('movReferencia'), glosa: document.getElementById('movGlosa'), auxiliar: document.getElementById('movAuxiliar'), contraCuenta: document.getElementById('movContraCuenta'), medioOrigen: document.getElementById('movMedioOrigen'), cajaOrigen: document.getElementById('movCajaOrigen'), bancoOrigen: document.getElementById('movBancoOrigen'), medioDestino: document.getElementById('movMedioDestino'), cajaDestino: document.getElementById('movCajaDestino'), bancoDestino: document.getElementById('movBancoDestino'), wrapContra: document.getElementById('wrapContraCuenta'), wrapCajaOrigen: document.getElementById('wrapCajaOrigen'), wrapBancoOrigen: document.getElementById('wrapBancoOrigen'), wrapCajaDestino: document.getElementById('wrapCajaDestino'), wrapBancoDestino: document.getElementById('wrapBancoDestino'), panelOrigen: document.getElementById('panelOrigen'), panelDestino: document.getElementById('panelDestino'), panelResumenTipo: document.getElementById('panelResumenTipo'), btnTipoIngreso: document.getElementById('btnTipoIngreso'), btnTipoEgreso: document.getElementById('btnTipoEgreso'), btnTipoTransferencia: document.getElementById('btnTipoTransferencia'), btnGuardarTop: document.getElementById('btnGuardarMovimientoTop'), btnConfirmarTop: document.getElementById('btnConfirmarMovimientoTop'), btnAnularTop: document.getElementById('btnAnularMovimientoTop'), sumTipo: document.getElementById('sumTipo'), sumTipoText: document.getElementById('sumTipoText'), sumUnidadNegocio: document.getElementById('sumUnidadNegocio'), sumFlujo: document.getElementById('sumFlujo'), sumMonto: document.getElementById('sumMonto'), sumMoneda: document.getElementById('sumMoneda') };
+    const $auxiliar = window.jQuery ? window.jQuery(refs.auxiliar) : null; const $contraCuenta = window.jQuery ? window.jQuery(refs.contraCuenta) : null;
+    function money(v) { return Number(v || 0).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
+    function num6(v) { return Number(v || 0).toFixed(6) }
+    function todayISO() { if (window.DXTBase && typeof window.DXTBase.todayLocalISO === 'function') { return window.DXTBase.todayLocalISO() } const now = new Date(); const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000); return local.toISOString().slice(0, 10) }
+    function isReadonly() { return !puedeEditar || (movimientoData && movimientoData.estado !== 'BORRADOR') }
+    function selectedSelect2Id($el) { if (!$el || !$el.length) return null; const option = $el.find('option:selected'); if (!option.length || !option.val()) return null; return option.val() }
+    function setSelect2Option($el, value, text) { if (!$el || !$el.length) return; if (!value) { $el.val(null).trigger('change.select2'); return } const option = new Option(text || value, value, true, true); $el.find('option').remove(); $el.append(option).trigger('change.select2') }
+    function fillInitial() { if (movimientoData) { refs.unidadNegocio.value = movimientoData.unidad_negocio_id || ''; refs.fecha.value = movimientoData.fecha || ''; refs.moneda.value = movimientoData.moneda_codigo || 'BOB'; refs.tipoCambio.value = Number(movimientoData.tipo_cambio || 1).toFixed(6); refs.tipoCambio.dataset.manual = '1'; refs.monto.value = Number(movimientoData.monto || 0).toFixed(2); refs.referencia.value = movimientoData.referencia || ''; refs.glosa.value = movimientoData.glosa || ''; refs.medioOrigen.value = movimientoData.medio_origen || ''; refs.cajaOrigen.value = movimientoData.caja_origen_id || ''; refs.bancoOrigen.value = movimientoData.banco_origen_id || ''; refs.medioDestino.value = movimientoData.medio_destino || ''; refs.cajaDestino.value = movimientoData.caja_destino_id || ''; refs.bancoDestino.value = movimientoData.banco_destino_id || ''; setSelect2Option($auxiliar, movimientoData.auxiliar_id || '', movimientoData.auxiliar_nombre || ''); setSelect2Option($contraCuenta, movimientoData.contra_cuenta_codigo || '', movimientoData.contra_cuenta_codigo ? (movimientoData.contra_cuenta_codigo + (movimientoData.contra_cuenta_nombre ? ' · ' + movimientoData.contra_cuenta_nombre : '')) : '') } else { refs.unidadNegocio.value = boot.unidadNegocioId || ''; refs.fecha.value = todayISO(); refs.moneda.value = 'BOB'; refs.tipoCambio.value = '1.000000'; refs.monto.value = '0.00' } }
+    function rebuildSelectByUnidad(selectEl, selectedValue) { if (!selectEl || !selectEl.dataset.sourceOptions) return; const unidad = String(refs.unidadNegocio.value || ''); const items = JSON.parse(selectEl.dataset.sourceOptions || '[]'); let html = '<option value=""></option>'; items.forEach(function(item){ if (!unidad || item.global || String(item.unidad || '') === unidad) { const selected = selectedValue && String(selectedValue) === String(item.value) ? ' selected' : ''; html += '<option value="' + item.value + '" data-unidad="' + (item.unidad || '') + '"' + (item.global ? ' data-global="1"' : '') + selected + '>' + item.text + '</option>'; } }); selectEl.innerHTML = html; }
+    function cacheSourceOptions(selectEl) { if (!selectEl || selectEl.dataset.sourceOptions) return; const items = Array.from(selectEl.options).filter(function(opt){ return opt.value; }).map(function(opt){ return { value: opt.value, text: opt.textContent, unidad: opt.dataset.unidad || '', global: opt.dataset.global === '1' }; }); selectEl.dataset.sourceOptions = JSON.stringify(items); }
+    function syncUnidadOptions() { cacheSourceOptions(refs.cajaOrigen); cacheSourceOptions(refs.cajaDestino); cacheSourceOptions(refs.bancoOrigen); cacheSourceOptions(refs.bancoDestino); const currentCajaOrigen = refs.cajaOrigen.value; const currentCajaDestino = refs.cajaDestino.value; const currentBancoOrigen = refs.bancoOrigen.value; const currentBancoDestino = refs.bancoDestino.value; rebuildSelectByUnidad(refs.cajaOrigen, currentCajaOrigen); rebuildSelectByUnidad(refs.cajaDestino, currentCajaDestino); rebuildSelectByUnidad(refs.bancoOrigen, currentBancoOrigen); rebuildSelectByUnidad(refs.bancoDestino, currentBancoDestino); }
+
+    function syncTcApplied() { const moneda = (refs.moneda.value || 'BOB').toUpperCase(); let tc = 1; if (moneda === 'USD') tc = Number(state.tc.usd || 1); else if (moneda === 'UFV') tc = Number(state.tc.ufv || 1); if (!refs.tipoCambio.dataset.manual) { refs.tipoCambio.value = num6(tc) } refs.sumMoneda.textContent = moneda }
+    function updateTcVisual(showAlert) { refs.tcUsd.value = num6(state.tc.usd); refs.tcUfv.value = num6(state.tc.ufv); syncTcApplied();[refs.tipoCambio, refs.tcUsd, refs.tcUfv].forEach((input) => { if (input) input.classList.toggle('mf-input-alert', !state.tc.existe) }); refs.tcInline.classList.toggle('mf-tc-missing', !state.tc.existe); refs.tcInlineTitle.textContent = state.tc.existe ? 'Tipo de cambio listo' : 'Falta tipo de cambio para la fecha'; refs.tcInlineText.textContent = state.tc.existe ? 'Se recalcula automáticamente al cambiar fecha o moneda.' : 'Se aplicó 1.000000 de forma provisional. Completa el tipo de cambio desde este bloque.'; if (!state.tc.existe && showAlert) { Swal.fire({ icon: 'warning', title: 'Tipo de cambio pendiente', text: 'No existe tipo de cambio para la fecha seleccionada. Se aplicó valor 1 mientras lo completas.' }) } }
+    async function refreshTipoCambio(showAlert) { const fecha = refs.fecha.value; if (!fecha) return; try { const response = await fetch(`{{ url_for('tesoreria_caja_bancos.api_tipo_cambio_fecha', fecha='__FECHA__') }}`.replace('__FECHA__', fecha) + `?moneda=${encodeURIComponent(refs.moneda.value || 'BOB')}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } }); const data = await response.json(); if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo consultar el tipo de cambio.'); state.tc = { existe: Boolean(data.existe), usd: Number(data.usd_paralelo || 1), ufv: Number(data.ufv || 1) }; if (!refs.tipoCambio.dataset.manual) updateTcVisual(showAlert); else { refs.tcUsd.value = num6(state.tc.usd); refs.tcUfv.value = num6(state.tc.ufv) } } catch (error) { state.tc = { existe: false, usd: 1, ufv: 1 }; if (!refs.tipoCambio.dataset.manual) updateTcVisual(false); if (showAlert) { Swal.fire({ icon: 'error', title: 'No se pudo consultar el tipo de cambio', text: error.message || 'Ocurrió un problema al consultar el tipo de cambio.' }) } } }
+    function syncMedioPanels() { const mo = (refs.medioOrigen.value || '').toUpperCase(); const md = (refs.medioDestino.value || '').toUpperCase(); refs.wrapCajaOrigen.classList.toggle('mf-hidden', mo !== 'CAJA'); refs.wrapBancoOrigen.classList.toggle('mf-hidden', mo !== 'BANCO'); refs.wrapCajaDestino.classList.toggle('mf-hidden', md !== 'CAJA'); refs.wrapBancoDestino.classList.toggle('mf-hidden', md !== 'BANCO'); if (mo === 'CAJA') refs.bancoOrigen.value = ''; if (mo === 'BANCO') refs.cajaOrigen.value = ''; if (md === 'CAJA') refs.bancoDestino.value = ''; if (md === 'BANCO') refs.cajaDestino.value = '' }
+    function applyTypeVisual() { const ingreso = state.tipo === 'INGRESO'; const egreso = state.tipo === 'EGRESO'; const transferencia = state.tipo === 'TRANSFERENCIA'; refs.btnTipoIngreso.classList.toggle('active', ingreso); refs.btnTipoEgreso.classList.toggle('active', egreso); refs.btnTipoTransferencia.classList.toggle('active', transferencia); refs.panelOrigen.classList.toggle('mf-hidden', ingreso); refs.panelDestino.classList.toggle('mf-hidden', egreso); refs.wrapContra.classList.toggle('mf-hidden', transferencia); if (ingreso) { refs.panelResumenTipo.textContent = 'Define únicamente el destino del ingreso y su contra cuenta contable.'; refs.sumTipo.textContent = 'Ingreso'; refs.sumTipoText.textContent = 'Entrada directa a tesorería.'; refs.medioOrigen.value = ''; refs.cajaOrigen.value = ''; refs.bancoOrigen.value = '' } else if (egreso) { refs.panelResumenTipo.textContent = 'Define únicamente el origen del egreso y su contra cuenta contable.'; refs.sumTipo.textContent = 'Egreso'; refs.sumTipoText.textContent = 'Salida directa desde tesorería.'; refs.medioDestino.value = ''; refs.cajaDestino.value = ''; refs.bancoDestino.value = '' } else { refs.panelResumenTipo.textContent = 'Define origen y destino internos. La contra cuenta no aplica en transferencias.'; refs.sumTipo.textContent = 'Transferencia'; refs.sumTipoText.textContent = 'Movimiento interno entre cajas y bancos.'; setSelect2Option($contraCuenta, '', '') } syncMedioPanels(); syncSummary() }
+    function describeFlow() { if (state.tipo === 'INGRESO') { return '→ ' + ((refs.medioDestino.value === 'CAJA') ? (refs.cajaDestino.options[refs.cajaDestino.selectedIndex]?.text || 'Caja') : (refs.bancoDestino.options[refs.bancoDestino.selectedIndex]?.text || 'Banco')) } if (state.tipo === 'EGRESO') { return ((refs.medioOrigen.value === 'CAJA') ? (refs.cajaOrigen.options[refs.cajaOrigen.selectedIndex]?.text || 'Caja') : (refs.bancoOrigen.options[refs.bancoOrigen.selectedIndex]?.text || 'Banco')) + ' →' } const origen = (refs.medioOrigen.value === 'CAJA') ? (refs.cajaOrigen.options[refs.cajaOrigen.selectedIndex]?.text || 'Caja') : (refs.bancoOrigen.options[refs.bancoOrigen.selectedIndex]?.text || 'Banco'); const destino = (refs.medioDestino.value === 'CAJA') ? (refs.cajaDestino.options[refs.cajaDestino.selectedIndex]?.text || 'Caja') : (refs.bancoDestino.options[refs.bancoDestino.selectedIndex]?.text || 'Banco'); return origen + ' → ' + destino }
+    function syncSummary() { refs.sumMonto.textContent = money(refs.monto.value || 0); refs.sumFlujo.textContent = describeFlow(); refs.sumMoneda.textContent = (refs.moneda.value || 'BOB').toUpperCase(); refs.sumUnidadNegocio.textContent = refs.unidadNegocio.options[refs.unidadNegocio.selectedIndex] ? (refs.unidadNegocio.options[refs.unidadNegocio.selectedIndex].text || '—') : '—'; }
+    function collectPayload() { return { id: movimientoId, unidad_negocio_id: refs.unidadNegocio.value || null, tipo_movimiento: state.tipo, fecha: refs.fecha.value, medio_origen: refs.medioOrigen.value || null, caja_origen_id: refs.cajaOrigen.value || null, banco_origen_id: refs.bancoOrigen.value || null, medio_destino: refs.medioDestino.value || null, caja_destino_id: refs.cajaDestino.value || null, banco_destino_id: refs.bancoDestino.value || null, auxiliar_id: selectedSelect2Id($auxiliar), contra_cuenta_codigo: selectedSelect2Id($contraCuenta), moneda_codigo: refs.moneda.value, tipo_cambio: refs.tipoCambio.value || null, monto: refs.monto.value || null, referencia: (refs.referencia.value || '').trim(), glosa: (refs.glosa.value || '').trim() } }
+    function frontendValidate(p, strictConfirm) { if (!p.unidad_negocio_id) throw new Error('Debes seleccionar la unidad de negocio.'); if (!p.fecha) throw new Error('Debes seleccionar la fecha del movimiento.'); if (!p.glosa) throw new Error('Debes ingresar la glosa del movimiento.'); if (!p.monto || Number(p.monto) <= 0) throw new Error('Debes indicar un monto válido.'); if (p.tipo_movimiento === 'INGRESO') { if (!p.medio_destino) throw new Error('Debes seleccionar el destino del ingreso.'); if (p.medio_destino === 'CAJA' && !p.caja_destino_id) throw new Error('Debes seleccionar la caja destino.'); if (p.medio_destino === 'BANCO' && !p.banco_destino_id) throw new Error('Debes seleccionar la cuenta bancaria destino.'); if (!p.contra_cuenta_codigo) throw new Error('Debes seleccionar la contra cuenta del ingreso.') } else if (p.tipo_movimiento === 'EGRESO') { if (!p.medio_origen) throw new Error('Debes seleccionar el origen del egreso.'); if (p.medio_origen === 'CAJA' && !p.caja_origen_id) throw new Error('Debes seleccionar la caja origen.'); if (p.medio_origen === 'BANCO' && !p.banco_origen_id) throw new Error('Debes seleccionar la cuenta bancaria origen.'); if (!p.contra_cuenta_codigo) throw new Error('Debes seleccionar la contra cuenta del egreso.') } else { if (!p.medio_origen) throw new Error('Debes seleccionar el origen de la transferencia.'); if (!p.medio_destino) throw new Error('Debes seleccionar el destino de la transferencia.'); if (p.medio_origen === 'CAJA' && !p.caja_origen_id) throw new Error('Debes seleccionar la caja origen.'); if (p.medio_origen === 'BANCO' && !p.banco_origen_id) throw new Error('Debes seleccionar la cuenta bancaria origen.'); if (p.medio_destino === 'CAJA' && !p.caja_destino_id) throw new Error('Debes seleccionar la caja destino.'); if (p.medio_destino === 'BANCO' && !p.banco_destino_id) throw new Error('Debes seleccionar la cuenta bancaria destino.') } if (strictConfirm && Number(p.tipo_cambio || 0) <= 0) throw new Error('Debes indicar un tipo de cambio válido.') }
+    async function saveDraft(opts) { const settings = Object.assign({ showSuccess: false, redirectOnCreate: true, strictConfirm: false }, opts || {}); const payload = collectPayload(); frontendValidate(payload, settings.strictConfirm); const response = await fetch(`{{ url_for('tesoreria_caja_bancos.api_movimientos_guardar') }}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, body: JSON.stringify(payload) }); const data = await response.json(); if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo guardar el movimiento.'); if (settings.showSuccess) { await Swal.fire({ icon: 'success', title: 'Borrador guardado', text: data.message || 'El movimiento fue guardado correctamente.' }) } const targetId = data.movimiento_id || movimientoId; if (settings.redirectOnCreate && targetId && Number(targetId) !== Number(movimientoId || 0)) { window.location.href = `${listUrl}/${targetId}/editar`; return null } return data }
+    async function confirmDocument() { try { const saved = await saveDraft({ showSuccess: false, redirectOnCreate: false, strictConfirm: true }); const finalId = saved && saved.movimiento_id ? saved.movimiento_id : movimientoId; const response = await fetch(`{{ url_for('tesoreria_caja_bancos.api_movimientos_confirmar', movimiento_id=0) }}`.replace('/0/confirmar', `/${finalId}/confirmar`), { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } }); const data = await response.json(); if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo confirmar el movimiento.'); await Swal.fire({ icon: 'success', title: 'Movimiento confirmado', text: data.message || 'El movimiento fue confirmado correctamente.' }); window.location.href = `${listUrl}/${finalId}/editar` } catch (error) { Swal.fire({ icon: 'error', title: 'No se pudo confirmar', text: error.message || 'Ocurrió un error al confirmar.' }) } }
+    async function cancelDocument() { if (!movimientoId) return; const result = await Swal.fire({ icon: 'warning', title: '¿Anular movimiento?', text: 'El movimiento quedará anulado y su asiento contable será revertido.', showCancelButton: true, confirmButtonText: 'Sí, anular', cancelButtonText: 'Cancelar' }); if (!result.isConfirmed) return; try { const response = await fetch(`{{ url_for('tesoreria_caja_bancos.api_movimientos_anular', movimiento_id=0) }}`.replace('/0/anular', `/${movimientoId}/anular`), { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } }); const data = await response.json(); if (!response.ok || !data.success) throw new Error(data.message || 'No se pudo anular el movimiento.'); await Swal.fire({ icon: 'success', title: 'Movimiento anulado', text: data.message || 'El movimiento fue anulado correctamente.' }); window.location.reload() } catch (error) { Swal.fire({ icon: 'error', title: 'No se pudo anular', text: error.message || 'Ocurrió un error al anular.' }) } }
+    function initSelect2() { if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.select2) return; $auxiliar.select2({ width: '100%', allowClear: true, placeholder: refs.auxiliar.dataset.placeholder || 'Buscar auxiliar...', language: 'es', ajax: { url: `{{ url_for('tesoreria_caja_bancos.api_auxiliares') }}`, dataType: 'json', delay: 220, data: function (params) { return { q: params.term || '' } }, processResults: function (data) { const rows = (data && data.data) || []; return { results: rows.map((row) => ({ id: row.id, text: row.nit_ci ? `${row.nombre} · ${row.nit_ci}` : row.nombre })) } } } }); $contraCuenta.select2({ width: '100%', allowClear: true, placeholder: refs.contraCuenta.dataset.placeholder || 'Buscar cuenta...', language: 'es', ajax: { url: `{{ url_for('tesoreria_caja_bancos.api_cuentas') }}`, dataType: 'json', delay: 220, data: function (params) { return { q: params.term || '' } }, processResults: function (data) { const rows = (data && data.data) || []; return { results: rows.map((row) => ({ id: row.codigo, text: row.etiqueta || `${row.codigo} - ${row.nombre}` })) } } } }) }
+    function bindEvents() { refs.btnTipoIngreso.addEventListener('click', () => { if (!isReadonly()) { state.tipo = 'INGRESO'; applyTypeVisual() } }); refs.btnTipoEgreso.addEventListener('click', () => { if (!isReadonly()) { state.tipo = 'EGRESO'; applyTypeVisual() } }); refs.btnTipoTransferencia.addEventListener('click', () => { if (!isReadonly()) { state.tipo = 'TRANSFERENCIA'; applyTypeVisual() } }); refs.unidadNegocio.addEventListener('change', () => { syncUnidadOptions(); syncSummary(); }); refs.medioOrigen.addEventListener('change', () => { syncMedioPanels(); syncSummary() }); refs.medioDestino.addEventListener('change', () => { syncMedioPanels(); syncSummary() }); refs.cajaOrigen.addEventListener('change', syncSummary); refs.bancoOrigen.addEventListener('change', syncSummary); refs.cajaDestino.addEventListener('change', syncSummary); refs.bancoDestino.addEventListener('change', syncSummary); refs.moneda.addEventListener('change', () => { refs.tipoCambio.dataset.manual = ''; refreshTipoCambio(false); syncSummary() }); refs.fecha.addEventListener('change', () => refreshTipoCambio(true)); refs.monto.addEventListener('input', syncSummary); refs.tipoCambio.addEventListener('input', () => { refs.tipoCambio.dataset.manual = '1' }); refs.btnAbrirTc.addEventListener('click', () => { const fecha = refs.fecha.value || todayISO(); window.open(`${tcBaseUrl}?fecha=${fecha}`, '_blank') }); if (refs.btnGuardarTop) { refs.btnGuardarTop.addEventListener('click', async () => { try { await saveDraft({ showSuccess: true, redirectOnCreate: true, strictConfirm: false }) } catch (error) { Swal.fire({ icon: 'error', title: 'No se pudo guardar', text: error.message || 'Ocurrió un error al guardar.' }) } }) } if (refs.btnConfirmarTop) { refs.btnConfirmarTop.addEventListener('click', async () => { const result = await Swal.fire({ icon: 'question', title: '¿Confirmar movimiento?', text: 'El movimiento quedará contabilizado y dejará de ser editable.', showCancelButton: true, confirmButtonText: 'Sí, confirmar', cancelButtonText: 'Cancelar' }); if (result.isConfirmed) confirmDocument() }) } if (refs.btnAnularTop) { refs.btnAnularTop.addEventListener('click', cancelDocument) } }
+    function lockReadOnlyUi() { if (!isReadonly()) return; page.querySelectorAll('input,select,textarea,button').forEach((el) => { if (el.id === 'btnAnularMovimientoTop' && puedeEditar && movimientoData && movimientoData.estado === 'CONFIRMADO') return; if (el.closest('.mf-actions') && el.tagName === 'A') return; if (el.tagName !== 'A') el.disabled = true }) }
+    document.addEventListener('DOMContentLoaded', function () { fillInitial(); syncUnidadOptions(); initSelect2(); updateTcVisual(false); applyTypeVisual(); syncSummary(); bindEvents(); lockReadOnlyUi(); refreshTipoCambio(false) });
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,276 @@
+{% extends "layouthelp.html" %} {% block title %}Ayuda · Compromisos{% endblock
+%} {% block help_title %}Ayuda rápida · Compromisos{% endblock %} {% block
+help_subtitle %}Resumen práctico de las tres pantallas del módulo: listado
+principal, editor de programación y vista de pendientes.{% endblock %} {% block
+help_summary %}
+<li>Qué hace la pantalla principal de compromisos.</li>
+<li>Cómo registrar o editar la programación de un compromiso con su unidad de negocio.</li>
+<li>Cómo interpretar la vista de compromisos pendientes.</li>
+<li>Qué revisar antes de guardar o dar seguimiento.</li>
+{% endblock %} {% block help_content %}
+<section class="help-section">
+  <h2>1. Pantalla principal · Listado de compromisos</h2>
+  <div class="help-callout">
+    Esta pantalla permite consultar los compromisos registrados en el sistema,
+    aplicar filtros y acceder a las acciones principales del módulo.
+  </div>
+
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Gestión</h3>
+      <p>
+        Filtra los compromisos según la gestión de trabajo activa o la gestión
+        que deseas revisar.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Tipo</h3>
+      <p>
+        Permite distinguir compromisos por <strong>PAGAR</strong> o
+        <strong>COBRAR</strong>.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Estado</h3>
+      <p>
+        Permite revisar compromisos según su situación actual, por ejemplo
+        <strong>PENDIENTE</strong>.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Unidad de Negocio</h3>
+      <p>
+        Permite filtrar el listado por la unidad operativa a la que pertenece
+        cada compromiso.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Buscar</h3>
+      <p>
+        Realiza búsquedas por código, nombre u otros datos visibles del
+        compromiso.
+      </p>
+    </div>
+  </div>
+
+  <p>
+    Desde esta pantalla también puedes crear un nuevo compromiso, editar uno
+    existente o eliminarlo, siempre que tu perfil tenga permisos de edición.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>2. Pantalla de formulario · Nuevo / Editar compromiso</h2>
+  <div class="help-callout">
+    Esta interfaz sirve para registrar la cabecera del compromiso y construir su
+    programación de vencimientos e importes.
+  </div>
+
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Código</h3>
+      <p>Identificador interno del compromiso dentro del módulo.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Gestión</h3>
+      <p>Determina el año o periodo al que pertenecerá la programación.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Tipo</h3>
+      <p>Define si el compromiso es de pago o de cobro.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Unidad de Negocio</h3>
+      <p>
+        Determina a qué unidad operativa pertenece el compromiso y desde qué
+        dimensión se hará su seguimiento posterior.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Nombre</h3>
+      <p>
+        Describe de forma breve el compromiso para identificarlo fácilmente.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Auxiliar</h3>
+      <p>
+        Asocia el compromiso con el tercero, proveedor, cliente o referencia
+        auxiliar correspondiente.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Cuenta contable</h3>
+      <p>
+        Relaciona el compromiso con la cuenta que servirá de base para su
+        tratamiento contable.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Descripción</h3>
+      <p>
+        Amplía el contexto del compromiso cuando el nombre no es suficiente.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Activo</h3>
+      <p>
+        Indica si el compromiso sigue vigente para uso operativo dentro del
+        sistema.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>3. Programación de períodos</h2>
+  <div class="help-callout">
+    La tabla de detalle contiene la programación del compromiso: fechas de
+    vencimiento e importes programados.
+  </div>
+
+  <ol class="help-steps">
+    <li>Selecciona primero la <strong>unidad de negocio</strong> correcta.</li>
+    <li>Define una <strong>fecha base</strong>.</li>
+    <li>Ingresa el <strong>monto base</strong>.</li>
+    <li>Selecciona el tipo de repetición para generar los períodos.</li>
+    <li>
+      Usa <strong>Generar períodos</strong> para crear la programación
+      automática.
+    </li>
+    <li>Revisa la tabla y ajusta manualmente si es necesario.</li>
+    <li>Guarda el compromiso cuando la información esté correcta.</li>
+  </ol>
+
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Fecha vencimiento</h3>
+      <p>Corresponde al día en que se espera el pago o cobro programado.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Importe programado</h3>
+      <p>Monto previsto para ese vencimiento dentro del compromiso.</p>
+    </div>
+  </div>
+
+  <p>
+    El generador reemplaza la programación no registrada a partir de la fecha y
+    monto base, por lo que conviene revisar cuidadosamente los datos antes de
+    ejecutarlo.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>4. Ejemplo práctico de programación</h2>
+  <div class="help-callout">
+    <strong>Ejemplo:</strong> un compromiso de pago por servicio anual puede
+    programarse en 12 cuotas mensuales, cada una con su fecha de vencimiento e
+    importe correspondiente.
+  </div>
+  <p>
+    Esto permite controlar cuánto estaba previsto pagar o cobrar en cada período
+    y cuánto se fue registrando posteriormente.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>5. Pantalla de pendientes · Seguimiento de compromisos</h2>
+  <div class="help-callout">
+    Esta pantalla está orientada al control. Permite identificar compromisos
+    pendientes, próximos a vencer o vencidos, así como revisar el detalle de su
+    programación y los movimientos relacionados.
+  </div>
+
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Buscar</h3>
+      <p>
+        Permite localizar compromisos por código, nombre, auxiliar o cuenta.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Tipo</h3>
+      <p>Filtra compromisos por pagar o por cobrar.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Unidad de Negocio</h3>
+      <p>Permite concentrar el seguimiento en una unidad operativa específica.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Estado</h3>
+      <p>
+        Permite concentrarse en compromisos pendientes o en otra vista
+        disponible.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Ventana de alerta</h3>
+      <p>
+        Clasifica compromisos según cercanía o vencimiento para facilitar el
+        seguimiento.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Desde / Hasta</h3>
+      <p>Acota la revisión a un rango específico de fechas de vencimiento.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Solo con saldo pendiente</h3>
+      <p>Muestra únicamente compromisos con importe todavía no cubierto.</p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>6. Indicadores y detalle</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Pendientes</h3>
+      <p>Cantidad de compromisos actualmente abiertos.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Vencidos / hoy</h3>
+      <p>Compromisos que requieren atención inmediata.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Hasta 7 días / 30 días</h3>
+      <p>Compromisos próximos a vencer en ventanas de seguimiento rápido.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Monto pendiente</h3>
+      <p>
+        Total monetario aún no cubierto según la programación y lo ya
+        registrado.
+      </p>
+    </div>
+  </div>
+
+  <p>
+    Al abrir el detalle de un compromiso, podrás ver su programación completa y
+    los movimientos relacionados que explican cuánto ya fue aplicado o
+    registrado.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>7. Recomendaciones de uso</h2>
+  <ul class="help-summary-list">
+    <li>Usa el listado principal para localizar y mantener los compromisos por unidad de negocio cuando corresponda.</li>
+    <li>
+      Usa el formulario para construir correctamente la programación desde el
+      inicio.
+    </li>
+    <li>
+      Usa la vista de pendientes para seguimiento operativo y control de
+      vencimientos.
+    </li>
+    <li>
+      Antes de guardar, revisa gestión, unidad de negocio, tipo, fechas e importes programados.
+    </li>
+    <li>
+      Antes de tomar decisiones de cobro o pago, valida el saldo pendiente y los
+      movimientos relacionados.
+    </li>
+  </ul>
+</section>
+{% endblock %}

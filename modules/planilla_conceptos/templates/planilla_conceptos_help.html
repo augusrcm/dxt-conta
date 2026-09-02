@@ -1,0 +1,27 @@
+{% extends "layouthelp.html" %}
+{% block title %}Ayuda - Conceptos de Planilla{% endblock %}
+{% block help_content %}
+<h4>Conceptos de Planilla</h4>
+<p>Administra el catálogo base de conceptos que podrá usarse al generar planillas mensuales de planta o colaboradores.</p>
+
+<h5>Uso recomendado</h5>
+<ul>
+  <li>Use <strong>Cargar base</strong> para crear conceptos iniciales sugeridos.</li>
+  <li>Use <strong>Nuevo concepto</strong> para agregar conceptos propios de la empresa.</li>
+  <li>Complete cuentas contables sugeridas cuando corresponda.</li>
+  <li>Los importes, porcentajes, justificativos y orden de columnas se definen al elaborar la planilla mensual.</li>
+  <li>Los conceptos inactivos no se proponen para nuevas planillas.</li>
+</ul>
+
+<h5>Eliminar o inactivar</h5>
+<ul>
+  <li><strong>Inactivar</strong> evita que el concepto se use en nuevas planillas.</li>
+  <li><strong>Eliminar</strong> borra el concepto base, pero no modifica planillas ya generadas.</li>
+  <li>Al eliminar, el sistema solicita un motivo y conserva la copia histórica dentro de cada planilla generada.</li>
+</ul>
+
+<h5>Planillas generadas</h5>
+<p>Los conceptos base son independientes de las planillas ya generadas. Cada planilla conserva sus propios conceptos, importes, cuentas y justificativos como snapshot histórico.</p>
+{% endblock %}
+
+<!-- Nota: no se configuran aquí Haber básico, bono de antigüedad, AFP/Gestora, anticipos/préstamos, total ganado, total descuentos ni líquido pagable; son estructurales de la planilla mensual. -->

@@ -1,0 +1,747 @@
+{% extends "layout.html" %}
+{% block title %}Estado de Auxiliares{% endblock title %}
+{% block page_help_url %}{{ url_for('auxiliar_estado.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  #auxEstadoPage {
+    --aux-navy: #0c1e35;
+    --aux-blue: #1f6fcb;
+    --aux-blue-soft: #eaf3ff;
+    --aux-border: #d9e4ef;
+    --aux-muted: #70849a;
+    --aux-bg: #f7fafd;
+    --aux-green: #0f8a5f;
+    --aux-red: #b42318;
+    --aux-radius: 16px;
+    color: #102338;
+    font-size: 0.9rem;
+  }
+
+  #auxEstadoPage .aux-hero {
+    background: linear-gradient(130deg, #102947 0%, #1a4f87 60%, #246bb5 100%);
+    border-radius: var(--aux-radius);
+    padding: 1.15rem 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    box-shadow: 0 14px 34px rgba(16, 41, 71, 0.18);
+  }
+
+  #auxEstadoPage .aux-hero-main {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  #auxEstadoPage .aux-hero-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.05rem;
+  }
+
+  #auxEstadoPage .aux-hero h1 {
+    color: #fff;
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+
+  #auxEstadoPage .aux-hero p {
+    color: rgba(255, 255, 255, 0.78);
+    margin: 0.15rem 0 0;
+    font-size: 0.82rem;
+  }
+
+  #auxEstadoPage .aux-card {
+    background: #fff;
+    border: 1px solid var(--aux-border);
+    border-radius: var(--aux-radius);
+    box-shadow: 0 7px 24px rgba(16, 41, 71, 0.06);
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  #auxEstadoPage .aux-card-head {
+    background: linear-gradient(180deg, #fbfdff 0%, #f2f7fc 100%);
+    border-bottom: 1px solid var(--aux-border);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  #auxEstadoPage .aux-card-title {
+    color: var(--aux-navy);
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    gap: 0.45rem;
+    align-items: center;
+  }
+
+  #auxEstadoPage .aux-card-body {
+    padding: 1rem;
+  }
+
+  #auxEstadoPage .aux-filter-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+
+  #auxEstadoPage .aux-field {
+    grid-column: span 3;
+  }
+
+  #auxEstadoPage .aux-field-wide {
+    grid-column: span 5;
+  }
+
+  #auxEstadoPage .aux-field-actions {
+    grid-column: span 12;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    padding-top: 0.45rem;
+    border-top: 1px dashed var(--aux-border);
+  }
+
+  #auxEstadoPage label {
+    color: var(--aux-navy);
+    font-weight: 800;
+    font-size: 0.78rem;
+    margin-bottom: 0.3rem;
+  }
+
+  #auxEstadoPage .form-control,
+  #auxEstadoPage .form-select {
+    border-radius: 10px;
+    min-height: 38px;
+    border-color: #ccd8e5;
+    font-size: 0.86rem;
+  }
+
+  #auxEstadoPage .aux-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  #auxEstadoPage .aux-summary-card {
+    border: 1px solid var(--aux-border);
+    background: var(--aux-bg);
+    border-radius: 13px;
+    padding: 0.85rem;
+  }
+
+  #auxEstadoPage .aux-summary-label {
+    color: var(--aux-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  #auxEstadoPage .aux-summary-value {
+    color: var(--aux-navy);
+    font-size: 1rem;
+    font-weight: 900;
+    margin-top: 0.3rem;
+  }
+
+  #auxEstadoPage .aux-table-wrap {
+    overflow-x: auto;
+  }
+
+  #auxEstadoPage table.dataTable thead th,
+  #auxEstadoPage .aux-simple-table thead th {
+    background: #f0f5fb;
+    color: #40566f;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--aux-border);
+  }
+
+  #auxEstadoPage .aux-simple-table td,
+  #auxEstadoPage .aux-simple-table th {
+    vertical-align: middle;
+    font-size: 0.82rem;
+  }
+
+  #auxEstadoPage .aux-money {
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+    font-weight: 800;
+  }
+
+  #auxEstadoPage .aux-money-pos {
+    color: var(--aux-green);
+  }
+
+  #auxEstadoPage .aux-money-neg {
+    color: var(--aux-red);
+  }
+
+  #auxEstadoPage .aux-detail-btn {
+    width: 34px;
+    height: 32px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #auxEstadoPage .aux-modal-summary {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+  }
+
+  #auxEstadoPage .aux-modal-summary .aux-summary-card {
+    padding: 0.7rem;
+  }
+
+  #auxEstadoPage .aux-range-fields.is-hidden {
+    display: none;
+  }
+
+  #auxEstadoPage .aux-muted-text {
+    color: var(--aux-muted);
+    font-size: 0.76rem;
+  }
+
+  @media (max-width: 1100px) {
+    #auxEstadoPage .aux-field,
+    #auxEstadoPage .aux-field-wide {
+      grid-column: span 6;
+    }
+
+    #auxEstadoPage .aux-summary-grid,
+    #auxEstadoPage .aux-modal-summary {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 720px) {
+    #auxEstadoPage .aux-hero {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    #auxEstadoPage .aux-field,
+    #auxEstadoPage .aux-field-wide {
+      grid-column: span 12;
+    }
+
+    #auxEstadoPage .aux-summary-grid,
+    #auxEstadoPage .aux-modal-summary {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div id="auxEstadoPage">
+  <section class="aux-hero">
+    <div class="aux-hero-main">
+      <div class="aux-hero-icon">
+        <i class="fas fa-address-book"></i>
+      </div>
+      <div>
+        <h1>Estado de Auxiliares</h1>
+      </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <button type="button" class="btn btn-light btn-sm fw-bold" id="btnPdfListado">
+        <i class="fas fa-file-pdf me-1"></i> PDF
+      </button>
+    </div>
+  </section>
+
+  <section class="aux-card">
+    <div class="aux-card-head">
+      <div class="aux-card-title">
+        <i class="fas fa-filter"></i>
+        <span>Filtros</span>
+      </div>
+    </div>
+    <div class="aux-card-body">
+      <form id="filtrosListadoForm" class="aux-filter-grid" autocomplete="off">
+        <div class="aux-field">
+          <label for="gestionListado">Gestión</label>
+          <select class="form-select" id="gestionListado" name="gestion">
+            {% for gestion in gestiones %}
+              <option value="{{ gestion }}" {% if gestion == gestion_preferida %}selected{% endif %}>{{ gestion }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="aux-field">
+          <label for="unidadListado">Unidad de negocio</label>
+          <select class="form-select" id="unidadListado" name="unidad_negocio_id">
+            <option value="">Todas</option>
+            {% for unidad in unidades_negocio %}
+              <option value="{{ unidad.id }}">{{ unidad.codigo }} · {{ unidad.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="aux-field-wide">
+          <label for="qListado">Buscar auxiliar</label>
+          <input class="form-control" id="qListado" name="q" type="search" placeholder="Nombre, razón social, NIT/CI, código o tipo..." />
+        </div>
+        <div class="aux-field-actions">
+          <button class="btn btn-outline-secondary btn-sm" type="button" id="btnLimpiarListado">
+            <i class="fas fa-eraser me-1"></i> Limpiar
+          </button>
+          <button class="btn btn-primary btn-sm" type="submit">
+            <i class="fas fa-filter me-1"></i> Filtrar
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section class="aux-summary-grid mb-3" id="resumenListado">
+    <div class="aux-summary-card">
+      <div class="aux-summary-label">Auxiliares</div>
+      <div class="aux-summary-value" data-summary="total_auxiliares">0</div>
+    </div>
+    <div class="aux-summary-card">
+      <div class="aux-summary-label">Con movimiento</div>
+      <div class="aux-summary-value" data-summary="auxiliares_con_movimiento">0</div>
+    </div>
+    <div class="aux-summary-card">
+      <div class="aux-summary-label">Debe</div>
+      <div class="aux-summary-value" data-summary="total_debe_label">Bs 0.00</div>
+    </div>
+    <div class="aux-summary-card">
+      <div class="aux-summary-label">Haber</div>
+      <div class="aux-summary-value" data-summary="total_haber_label">Bs 0.00</div>
+    </div>
+    <div class="aux-summary-card">
+      <div class="aux-summary-label">Saldo</div>
+      <div class="aux-summary-value" data-summary="total_saldo_label">Bs 0.00</div>
+    </div>
+  </section>
+
+  <section class="aux-card">
+    <div class="aux-card-head">
+      <div class="aux-card-title">
+        <i class="fas fa-table"></i>
+        <span>Listado de auxiliares</span>
+      </div>
+      <span class="aux-muted-text" id="criterioListado"></span>
+    </div>
+    <div class="aux-card-body">
+      <div class="aux-table-wrap">
+        <table class="table table-hover table-sm align-middle w-100" id="tablaAuxiliares">
+          <thead>
+            <tr>
+              <th>Auxiliar</th>
+              <th>Tipo</th>
+              <th>NIT/CI</th>
+              <th>Movs.</th>
+              <th>Debe</th>
+              <th>Haber</th>
+              <th>Saldo</th>
+              <th>Últ. fecha</th>
+              <th class="text-center">Detalle</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal fade" id="detalleAuxiliarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-1">Detalle del auxiliar</h5>
+            <div class="aux-muted-text" id="detalleAuxiliarTitulo">Seleccione un auxiliar.</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form id="filtrosDetalleForm" class="aux-filter-grid mb-3" autocomplete="off">
+            <input type="hidden" id="detalleAuxiliarId" name="auxiliar_id" />
+            <div class="aux-field">
+              <label for="detalleGestion">Gestión</label>
+              <select class="form-select" id="detalleGestion" name="gestion">
+                {% for gestion in gestiones %}
+                  <option value="{{ gestion }}" {% if gestion == gestion_preferida %}selected{% endif %}>{{ gestion }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="aux-field">
+              <label for="detalleFechaModo">Alcance de fechas</label>
+              <select class="form-select" id="detalleFechaModo" name="fecha_modo">
+                <option value="GESTION" selected>Gestión completa</option>
+                <option value="RANGO">Rango de fechas</option>
+              </select>
+            </div>
+            <div class="aux-field aux-range-fields is-hidden">
+              <label for="detalleFechaDesde">Fecha desde</label>
+              <input class="form-control" id="detalleFechaDesde" name="fecha_desde" type="text" value="{{ fecha_desde }}" />
+            </div>
+            <div class="aux-field aux-range-fields is-hidden">
+              <label for="detalleFechaHasta">Fecha hasta</label>
+              <input class="form-control" id="detalleFechaHasta" name="fecha_hasta" type="text" value="{{ fecha_hasta }}" />
+            </div>
+            <div class="aux-field">
+              <label for="detalleUnidad">Unidad de negocio</label>
+              <select class="form-select" id="detalleUnidad" name="unidad_negocio_id">
+                <option value="">Todas</option>
+                {% for unidad in unidades_negocio %}
+                  <option value="{{ unidad.id }}">{{ unidad.codigo }} · {{ unidad.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="aux-field-actions">
+              <button type="button" class="btn btn-outline-danger btn-sm" id="btnPdfDetalle">
+                <i class="fas fa-file-pdf me-1"></i> PDF
+              </button>
+              <button class="btn btn-primary btn-sm" type="submit">
+                <i class="fas fa-search me-1"></i> Consultar
+              </button>
+            </div>
+          </form>
+
+          <section class="aux-modal-summary" id="resumenDetalle">
+            <div class="aux-summary-card">
+              <div class="aux-summary-label">Saldo anterior</div>
+              <div class="aux-summary-value" data-detail-summary="saldo_anterior_label">Bs 0.00</div>
+            </div>
+            <div class="aux-summary-card">
+              <div class="aux-summary-label">Debe período</div>
+              <div class="aux-summary-value" data-detail-summary="debe_periodo_label">Bs 0.00</div>
+            </div>
+            <div class="aux-summary-card">
+              <div class="aux-summary-label">Haber período</div>
+              <div class="aux-summary-value" data-detail-summary="haber_periodo_label">Bs 0.00</div>
+            </div>
+            <div class="aux-summary-card">
+              <div class="aux-summary-label">Saldo período</div>
+              <div class="aux-summary-value" data-detail-summary="saldo_periodo_label">Bs 0.00</div>
+            </div>
+            <div class="aux-summary-card">
+              <div class="aux-summary-label">Saldo final</div>
+              <div class="aux-summary-value" data-detail-summary="saldo_final_label">Bs 0.00</div>
+            </div>
+          </section>
+
+          <div class="aux-table-wrap">
+            <table class="table table-bordered table-sm aux-simple-table" id="tablaDetalleAuxiliar">
+              <thead>
+                <tr>
+                  <th>Origen</th>
+                  <th>Fecha</th>
+                  <th>Comp.</th>
+                  <th>Cuenta</th>
+                  <th>Unidad</th>
+                  <th>Glosa</th>
+                  <th>Debe</th>
+                  <th>Haber</th>
+                  <th>Saldo</th>
+                  <th>Ver</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="auxEstadoBootstrap">
+    {{ bootstrap | tojson }}
+  </script>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  (() => {
+    const page = document.getElementById('auxEstadoPage');
+    const bootEl = document.getElementById('auxEstadoBootstrap');
+    if (!page || !bootEl) return;
+
+    const boot = JSON.parse(bootEl.textContent || '{}');
+    const urls = boot.urls || {};
+    const state = {
+      auxiliares: [],
+      selectedAuxiliar: null,
+      detalleModal: null,
+      table: null,
+    };
+
+    const refs = {
+      listadoForm: document.getElementById('filtrosListadoForm'),
+      gestionListado: document.getElementById('gestionListado'),
+      unidadListado: document.getElementById('unidadListado'),
+      qListado: document.getElementById('qListado'),
+      btnLimpiarListado: document.getElementById('btnLimpiarListado'),
+      btnPdfListado: document.getElementById('btnPdfListado'),
+      criterioListado: document.getElementById('criterioListado'),
+      tablaAuxiliares: document.getElementById('tablaAuxiliares'),
+      detalleModalEl: document.getElementById('detalleAuxiliarModal'),
+      detalleTitulo: document.getElementById('detalleAuxiliarTitulo'),
+      detalleForm: document.getElementById('filtrosDetalleForm'),
+      detalleAuxiliarId: document.getElementById('detalleAuxiliarId'),
+      detalleGestion: document.getElementById('detalleGestion'),
+      detalleFechaModo: document.getElementById('detalleFechaModo'),
+      detalleFechaDesde: document.getElementById('detalleFechaDesde'),
+      detalleFechaHasta: document.getElementById('detalleFechaHasta'),
+      detalleUnidad: document.getElementById('detalleUnidad'),
+      btnPdfDetalle: document.getElementById('btnPdfDetalle'),
+      tablaDetalleBody: document.querySelector('#tablaDetalleAuxiliar tbody'),
+    };
+
+    const escapeHtml = (value) => String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#039;');
+
+    const moneyClass = (label) => {
+      const text = String(label || '');
+      if (text.includes('-')) return 'aux-money aux-money-neg';
+      return 'aux-money aux-money-pos';
+    };
+
+    const showError = (msg) => {
+      if (window.Swal) {
+        Swal.fire({ icon: 'error', title: 'No se pudo completar', text: msg });
+        return;
+      }
+      alert(msg);
+    };
+
+    const paramsFromForm = (form) => new URLSearchParams(new FormData(form));
+
+    const buildListadoParams = () => paramsFromForm(refs.listadoForm);
+
+    const buildDetalleParams = () => paramsFromForm(refs.detalleForm);
+
+    const setSummary = (summary) => {
+      document.querySelectorAll('[data-summary]').forEach((el) => {
+        const key = el.getAttribute('data-summary');
+        el.textContent = summary?.[key] ?? '0';
+      });
+      refs.criterioListado.textContent = `${summary?.periodo || ''} · ${summary?.unidad_label || ''}`;
+    };
+
+    const setDetailSummary = (summary) => {
+      document.querySelectorAll('[data-detail-summary]').forEach((el) => {
+        const key = el.getAttribute('data-detail-summary');
+        el.textContent = summary?.[key] ?? 'Bs 0.00';
+      });
+    };
+
+    const renderAuxiliares = (rows) => {
+      state.auxiliares = rows || [];
+      if (state.table) {
+        state.table.destroy();
+        state.table = null;
+      }
+      const tbody = refs.tablaAuxiliares.querySelector('tbody');
+      tbody.innerHTML = state.auxiliares.map((item) => `
+        <tr>
+          <td>
+            <div class="fw-bold">${escapeHtml(item.nombre)}</div>
+            <div class="aux-muted-text">${escapeHtml(item.razon_social || item.codigo_externo || '')}</div>
+          </td>
+          <td>${escapeHtml(item.tipo)}</td>
+          <td>${escapeHtml(item.nit_ci)}</td>
+          <td class="text-center fw-bold">${escapeHtml(item.movimientos)}</td>
+          <td class="${moneyClass(item.debe_label)}">${escapeHtml(item.debe_label)}</td>
+          <td class="${moneyClass(item.haber_label)}">${escapeHtml(item.haber_label)}</td>
+          <td class="${moneyClass(item.saldo_label)}">${escapeHtml(item.saldo_label)}</td>
+          <td class="text-center">${escapeHtml(item.ultima_fecha)}</td>
+          <td class="text-center">
+            <button type="button" class="btn btn-outline-primary btn-sm aux-detail-btn" data-aux-id="${item.id}" title="Ver detalle">
+              <i class="fas fa-eye"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      if (window.jQuery && $.fn.DataTable) {
+        state.table = $(refs.tablaAuxiliares).DataTable({
+          pageLength: 25,
+          ordering: true,
+          order: [[3, 'desc'], [0, 'asc']],
+          language: {
+            decimal: ',',
+            thousands: '.',
+            search: 'Buscar:',
+            lengthMenu: 'Mostrar _MENU_ registros',
+            info: 'Mostrando _START_ a _END_ de _TOTAL_ auxiliares',
+            infoEmpty: 'Sin auxiliares para mostrar',
+            zeroRecords: 'No se encontraron auxiliares',
+            paginate: { first: 'Primero', last: 'Último', next: 'Siguiente', previous: 'Anterior' },
+          },
+        });
+      }
+    };
+
+    const renderDetalle = (payload) => {
+      setDetailSummary(payload.summary || {});
+      const rows = payload.rows || [];
+      refs.tablaDetalleBody.innerHTML = rows.map((item) => {
+        const link = item.url_comprobante
+          ? `<a class="btn btn-outline-secondary btn-sm" href="${escapeHtml(item.url_comprobante)}" target="_blank" rel="noopener" title="Abrir comprobante"><i class="fas fa-up-right-from-square"></i></a>`
+          : '';
+        const rowClass = item.tipo_linea === 'MOVIMIENTO' ? '' : 'table-light fw-bold';
+        return `
+          <tr class="${rowClass}">
+            <td>${escapeHtml(item.bloque)}</td>
+            <td class="text-center">${escapeHtml(item.fecha)}</td>
+            <td class="text-center">${escapeHtml(item.asiento_id)}</td>
+            <td>${escapeHtml(item.cuenta)}</td>
+            <td>${escapeHtml(item.unidad)}</td>
+            <td>${escapeHtml(item.glosa)}</td>
+            <td class="aux-money">${escapeHtml(item.debe_label)}</td>
+            <td class="aux-money">${escapeHtml(item.haber_label)}</td>
+            <td class="${moneyClass(item.saldo_label)}">${escapeHtml(item.saldo_label)}</td>
+            <td class="text-center">${link}</td>
+          </tr>
+        `;
+      }).join('');
+    };
+
+    const loadListado = async () => {
+      const params = buildListadoParams();
+      const response = await fetch(`${urls.apiAuxiliares}?${params.toString()}`, {
+        headers: { Accept: 'application/json' },
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.msg || 'No se pudo consultar el listado.');
+      renderAuxiliares(data.rows || []);
+      setSummary(data.summary || {});
+    };
+
+    const loadDetalle = async () => {
+      const params = buildDetalleParams();
+      const response = await fetch(`${urls.apiDetalle}?${params.toString()}`, {
+        headers: { Accept: 'application/json' },
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.msg || 'No se pudo consultar el detalle.');
+      refs.detalleTitulo.textContent = data.auxiliar_label || 'Detalle del auxiliar';
+      renderDetalle(data);
+    };
+
+    const openDetalle = async (auxiliarId) => {
+      const item = state.auxiliares.find((row) => String(row.id) === String(auxiliarId));
+      if (!item) return;
+      state.selectedAuxiliar = item;
+      refs.detalleAuxiliarId.value = item.id;
+      refs.detalleTitulo.textContent = item.auxiliar_label || item.nombre;
+      refs.detalleGestion.value = refs.gestionListado.value;
+      refs.detalleUnidad.value = refs.unidadListado.value;
+      state.detalleModal.show();
+      try {
+        await loadDetalle();
+      } catch (error) {
+        showError(error.message);
+      }
+    };
+
+    const toggleRangeFields = () => {
+      const show = refs.detalleFechaModo.value === 'RANGO';
+      document.querySelectorAll('.aux-range-fields').forEach((el) => {
+        el.classList.toggle('is-hidden', !show);
+      });
+    };
+
+    const openPdf = (baseUrl, params) => {
+      window.open(`${baseUrl}?${params.toString()}`, '_blank', 'noopener');
+    };
+
+    refs.listadoForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        await loadListado();
+      } catch (error) {
+        showError(error.message);
+      }
+    });
+
+    refs.btnLimpiarListado.addEventListener('click', async () => {
+      refs.unidadListado.value = '';
+      refs.qListado.value = '';
+      try {
+        await loadListado();
+      } catch (error) {
+        showError(error.message);
+      }
+    });
+
+    refs.tablaAuxiliares.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-aux-id]');
+      if (!button) return;
+      openDetalle(button.getAttribute('data-aux-id'));
+    });
+
+    refs.detalleForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      try {
+        await loadDetalle();
+      } catch (error) {
+        showError(error.message);
+      }
+    });
+
+    refs.detalleFechaModo.addEventListener('change', toggleRangeFields);
+
+    refs.btnPdfListado.addEventListener('click', () => {
+      openPdf(urls.pdfAuxiliares, buildListadoParams());
+    });
+
+    refs.btnPdfDetalle.addEventListener('click', () => {
+      if (!refs.detalleAuxiliarId.value) {
+        showError('Primero selecciona un auxiliar.');
+        return;
+      }
+      openPdf(urls.pdfDetalle, buildDetalleParams());
+    });
+
+    if (window.bootstrap) {
+      state.detalleModal = new bootstrap.Modal(refs.detalleModalEl);
+    }
+
+    if (window.flatpickr) {
+      flatpickr(refs.detalleFechaDesde, { dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y', allowInput: true });
+      flatpickr(refs.detalleFechaHasta, { dateFormat: 'Y-m-d', altInput: true, altFormat: 'd/m/Y', allowInput: true });
+    }
+
+    toggleRangeFields();
+    loadListado().catch((error) => showError(error.message));
+  })();
+</script>
+{% endblock extra_js %}

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>403 - Acceso denegado</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f8fafc;
+        color: #334155;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .error-box {
+        width: 100%;
+        max-width: 520px;
+        margin: 24px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 32px 28px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        text-align: center;
+      }
+
+      .error-code {
+        font-size: 64px;
+        line-height: 1;
+        font-weight: 800;
+        color: #dc2626;
+        margin-bottom: 12px;
+      }
+
+      .error-title {
+        font-size: 22px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #0f172a;
+      }
+
+      .error-text {
+        font-size: 15px;
+        line-height: 1.6;
+        color: #475569;
+        margin-bottom: 24px;
+      }
+
+      .error-actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        display: inline-block;
+        text-decoration: none;
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        border: 1px solid transparent;
+        transition: 0.15s ease;
+      }
+
+      .btn-primary {
+        background: #2563eb;
+        color: #fff;
+      }
+
+      .btn-primary:hover {
+        background: #1d4ed8;
+      }
+
+      .btn-secondary {
+        background: #fff;
+        color: #334155;
+        border-color: #cbd5e1;
+      }
+
+      .btn-secondary:hover {
+        background: #f8fafc;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="error-box">
+      <div class="error-code">403</div>
+      <div class="error-title">Acceso denegado</div>
+      <div class="error-text">
+        No tienes permisos para acceder a este recurso o realizar esta acción.
+      </div>
+      <div class="error-actions">
+        <a href="javascript:history.back()" class="btn btn-secondary">Volver</a>
+        <a href="/" class="btn btn-primary">Ir al inicio</a>
+      </div>
+    </div>
+  </body>
+</html>

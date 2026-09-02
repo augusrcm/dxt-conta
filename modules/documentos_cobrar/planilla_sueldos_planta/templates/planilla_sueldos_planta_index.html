@@ -1,0 +1,223 @@
+{% extends "layout.html" %}
+{% block title %}Planilla de Sueldos - Planta{% endblock title %}
+{% block page_help_url %}{{ url_for('planilla_sueldos_planta.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root{--ps-navy:#0f2340;--ps-blue:#17406f;--ps-border:#dfe7f1;--ps-muted:#64748b;--ps-radius:1rem;--ps-green:#0f766e;--ps-orange:#f97316;--ps-red:#dc2626}
+  #psPage{display:grid;gap:1rem}.ps-header{align-items:center;background:linear-gradient(135deg,var(--ps-navy),var(--ps-blue));border-radius:var(--ps-radius);box-shadow:0 18px 38px rgba(15,35,64,.18);color:#fff;display:flex;gap:1rem;justify-content:space-between;padding:1.1rem 1.25rem}.ps-header-left{align-items:center;display:flex;gap:.85rem}.ps-header-icon{align-items:center;background:rgba(255,255,255,.14);border-radius:.9rem;display:flex;height:46px;justify-content:center;width:46px}.ps-kicker{color:rgba(255,255,255,.72);font-size:.73rem;font-weight:800;text-transform:uppercase}.ps-title{font-size:1.55rem;font-weight:900;line-height:1;margin:0}.ps-subtitle{color:rgba(255,255,255,.82);font-size:.84rem;font-weight:700;margin-top:.25rem}.ps-toolbar{display:flex;gap:.5rem;flex-wrap:wrap}.ps-btn{align-items:center;border:1px solid transparent;border-radius:.7rem;display:inline-flex;font-weight:800;gap:.45rem;padding:.58rem .85rem;text-decoration:none}.ps-btn-primary{background:#fff;color:#0d47a1}.ps-btn-outline{background:#fff;border-color:var(--ps-border);color:#17406f}.ps-btn-danger{background:#dc2626;color:#fff}.ps-card{background:#fff;border:1px solid var(--ps-border);border-radius:var(--ps-radius);box-shadow:0 12px 28px rgba(15,35,64,.08);padding:1rem}.ps-metrics{display:grid;gap:.9rem;grid-template-columns:repeat(5,minmax(0,1fr))}.ps-metric{background:#fff;border:1px solid var(--ps-border);border-left:5px solid #2563eb;border-radius:.85rem;padding:.85rem}.ps-metric:nth-child(2){border-left-color:#0f766e}.ps-metric:nth-child(3){border-left-color:#f97316}.ps-metric:nth-child(4){border-left-color:#7c3aed}.ps-metric:nth-child(5){border-left-color:#dc2626}.ps-metric-label{color:#64748b;font-size:.72rem;font-weight:900;text-transform:uppercase}.ps-metric-value{color:#0f2340;font-size:1.18rem;font-weight:900}.ps-filters{display:grid;gap:.8rem;grid-template-columns:1fr 1fr 1fr 2fr auto}.ps-field label{color:#334155;font-size:.74rem;font-weight:900;margin-bottom:.25rem;text-transform:uppercase}.ps-field input,.ps-field select,.ps-field textarea{border:1px solid #d7e0ec;border-radius:.65rem;font-weight:700}.ps-table-wrap{overflow:auto}.ps-table{margin:0;min-width:1050px;width:100%}.ps-table th{background:#f7fafc;color:#334155;font-size:.74rem;font-weight:900;text-transform:uppercase;white-space:nowrap}.ps-table td{font-size:.84rem;vertical-align:middle}.ps-badge{border-radius:999px;display:inline-flex;font-size:.69rem;font-weight:900;padding:.28rem .55rem;text-transform:uppercase}.ps-badge-borrador{background:#eff6ff;color:#1d4ed8}.ps-badge-consolidada{background:#ecfdf5;color:#047857}.ps-badge-pagada{background:#f0fdfa;color:#0f766e}.ps-badge-anulada{background:#fef2f2;color:#b91c1c}.ps-actions{display:flex;gap:.25rem}.ps-icon-btn{align-items:center;background:#fff;border:1px solid #d7e0ec;border-radius:.55rem;color:#17406f;display:inline-flex;height:32px;justify-content:center;text-decoration:none;width:32px}.ps-icon-btn:hover{background:#eef6ff}.ps-empty{color:#64748b;font-weight:800;padding:1rem;text-align:center}.modal-header.ps-modal-head{background:linear-gradient(135deg,var(--ps-navy),var(--ps-blue));color:#fff}.ps-section{border:1px solid #e3eaf4;border-radius:.9rem;margin-bottom:1rem;padding:1rem}.ps-section-title{align-items:center;color:#0f2340;display:flex;font-weight:900;gap:.45rem;margin-bottom:.8rem}.ps-grid-2{display:grid;gap:.85rem;grid-template-columns:1fr 1fr}.ps-grid-3{display:grid;gap:.85rem;grid-template-columns:repeat(3,1fr)}.ps-grid-4{display:grid;gap:.85rem;grid-template-columns:repeat(4,1fr)}.ps-concepts{display:grid;gap:1rem;grid-template-columns:1fr 1fr}.ps-concept-box{border:1px solid #dfe7f1;border-radius:.8rem;min-height:260px;padding:.75rem}.ps-concept-head{align-items:center;display:flex;justify-content:space-between;margin-bottom:.55rem}.ps-concept-title{color:#0f2340;font-size:.78rem;font-weight:900;text-transform:uppercase}.ps-concept-list{display:grid;gap:.45rem;max-height:310px;overflow:auto}.ps-concept-item{align-items:center;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.65rem;display:grid;gap:.55rem;grid-template-columns:auto 1fr auto;padding:.48rem}.ps-concept-name{font-weight:900;color:#0f2340}.ps-concept-meta{color:#64748b;font-size:.72rem;font-weight:700}.ps-order-btns{display:flex;gap:.25rem}.ps-mini{border:1px solid #d7e0ec;border-radius:.5rem;background:#fff;color:#17406f;font-weight:900;height:28px;width:28px}.ps-hide{display:none!important}@media(max-width:992px){.ps-filters,.ps-metrics,.ps-grid-2,.ps-grid-3,.ps-grid-4,.ps-concepts{grid-template-columns:1fr}.ps-header{align-items:flex-start;flex-direction:column}}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div id="psPage">
+  <section class="ps-header">
+    <div class="ps-header-left">
+      <div class="ps-header-icon"><i class="fas fa-users fa-lg"></i></div>
+      <div>
+        <div class="ps-kicker">Planillas</div>
+        <h1 class="ps-title">Planilla de Sueldos - Planta</h1>
+        <div class="ps-subtitle">Generación mensual, edición por funcionario y consolidación</div>
+      </div>
+    </div>
+    <div class="ps-toolbar">
+      {% if puede_editar %}<button type="button" class="ps-btn ps-btn-primary" id="btnNueva"><i class="fas fa-plus"></i> Nueva planilla</button>{% endif %}
+    </div>
+  </section>
+
+  {% if error %}<div class="alert alert-danger fw-bold mb-0"><i class="fas fa-triangle-exclamation me-2"></i>{{ error }}</div>{% endif %}
+
+  <section class="ps-metrics">
+    <div class="ps-metric"><div class="ps-metric-label">Planillas</div><div class="ps-metric-value">{{ stats.total }}</div></div>
+    <div class="ps-metric"><div class="ps-metric-label">Borradores</div><div class="ps-metric-value">{{ stats.borradores }}</div></div>
+    <div class="ps-metric"><div class="ps-metric-label">Consolidadas</div><div class="ps-metric-value">{{ stats.consolidadas }}</div></div>
+    <div class="ps-metric"><div class="ps-metric-label">Líquido total</div><div class="ps-metric-value">{{ '%.2f'|format(stats.liquido|float) }}</div></div>
+    <div class="ps-metric"><div class="ps-metric-label">Saldo pendiente</div><div class="ps-metric-value">{{ '%.2f'|format(stats.pendiente|float) }}</div></div>
+  </section>
+
+  <section class="ps-card">
+    <div class="ps-filters">
+      <div class="ps-field"><label>Estado</label><select class="form-select" id="fEstado"><option value="">Todos</option><option>BORRADOR</option><option>CONSOLIDADA</option><option>PAGADA</option></select></div>
+      <div class="ps-field"><label>Gestión</label><input class="form-control" id="fGestion" type="number" min="2000" placeholder="Todas"></div>
+      <div class="ps-field"><label>Mes</label><select class="form-select" id="fMes"><option value="">Todos</option>{% for m,n in meses %}<option value="{{ m }}">{{ n }}</option>{% endfor %}</select></div>
+      <div class="ps-field"><label>Buscar</label><input class="form-control" id="fBuscar" placeholder="Código, unidad o glosa"></div>
+      <div class="d-flex align-items-end"><button type="button" class="ps-btn ps-btn-outline" id="btnLimpiar"><i class="fas fa-eraser"></i></button></div>
+    </div>
+  </section>
+
+  <section class="ps-card">
+    <div class="ps-table-wrap">
+      <table class="table table-hover ps-table">
+        <thead><tr><th>Código</th><th>Periodo</th><th>Unidades</th><th>Fecha</th><th class="text-end">Personas</th><th class="text-end">Ganado</th><th class="text-end">Descuentos</th><th class="text-end">Retenciones</th><th class="text-end">Líquido</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="tablaPlanillas"><tr><td colspan="11" class="ps-empty">Cargando...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div class="modal fade" id="modalNueva" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header ps-modal-head">
+        <div><h5 class="modal-title fw-black mb-0">Nueva planilla de sueldos</h5><small>Seleccione periodo y conceptos. La planilla se agrupará por unidad de negocio de cada persona.</small></div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="ps-section">
+          <div class="ps-section-title"><i class="fas fa-calendar-days"></i> Datos de la planilla</div>
+          <div class="ps-grid-3">
+            <div class="ps-field"><label>Gestión</label><input type="number" class="form-control" id="nGestion" min="2000"></div>
+            <div class="ps-field"><label>Mes</label><select class="form-select" id="nMes"></select></div>
+            <div class="ps-field"><label>Fecha</label><input type="date" class="form-control" id="nFecha"></div>
+          </div>
+          <div class="ps-grid-2 mt-3">
+            <div class="ps-field"><label>Moneda</label><select class="form-select" id="nMoneda"></select></div>
+            <div class="ps-field"><label>Tipo de cambio</label><input type="number" step="0.000001" min="0" class="form-control" id="nTipoCambio" value="1"></div>
+          </div>
+          <div class="ps-field mt-3"><label>Glosa</label><textarea class="form-control" id="nGlosa" rows="2"></textarea></div>
+        </div>
+
+        <div class="ps-section">
+          <div class="ps-section-title"><i class="fas fa-table-columns"></i> Conceptos adicionales de la planilla</div>
+          <div class="ps-concepts">
+            <div class="ps-concept-box">
+              <div class="ps-concept-head"><div class="ps-concept-title">Disponibles</div><button class="ps-mini" id="btnAddAll" type="button" title="Agregar todos"><i class="fas fa-angles-right"></i></button></div>
+              <div class="ps-concept-list" id="conceptosDisponibles"></div>
+            </div>
+            <div class="ps-concept-box">
+              <div class="ps-concept-head"><div class="ps-concept-title">Seleccionados / orden de conceptos adicionales</div><button class="ps-mini" id="btnClearConcepts" type="button" title="Limpiar"><i class="fas fa-trash"></i></button></div>
+              <div class="ps-concept-list" id="conceptosSeleccionados"></div>
+            </div>
+          </div>
+        </div>
+        <div class="alert alert-info fw-bold mb-0"><i class="fas fa-circle-info me-2"></i>El haber básico, días, horas, total ganado, total descuentos y líquido pagable son columnas obligatorias tomadas desde Personas de Planilla. Aquí solo se seleccionan ingresos/descuentos adicionales.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary fw-bold" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary fw-bold" id="btnGenerar"><i class="fas fa-wand-magic-sparkles me-1"></i> Generar borrador</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+(() => {
+  const urls = {
+    opciones: {{ url_for('planilla_sueldos_planta.opciones')|tojson }},
+    listar: {{ url_for('planilla_sueldos_planta.listar')|tojson }},
+    generar: {{ url_for('planilla_sueldos_planta.generar')|tojson }},
+    base: {{ url_for('planilla_sueldos_planta.index')|tojson }}
+  };
+  const meses = {{ dict(meses)|tojson }};
+  let catalogos = {conceptos: [], conceptos_predefinidos: []};
+  let seleccionados = [];
+  const modalNueva = new bootstrap.Modal(document.getElementById('modalNueva'));
+  const $ = (id) => document.getElementById(id);
+  const money = (v) => Number(v || 0).toLocaleString('es-BO', {minimumFractionDigits:2, maximumFractionDigits:2});
+  const toastError = (msg) => window.Swal ? Swal.fire('No se pudo completar', msg, 'error') : console.error(msg);
+  const toastOk = (msg) => window.Swal ? Swal.fire('Correcto', msg, 'success') : console.log(msg);
+  function csrfToken(){
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+  }
+  async function api(url, options={}){
+    const method = String(options.method || 'GET').toUpperCase();
+    const headers = Object.assign({}, options.headers || {});
+    if(!headers['Content-Type'] && !headers['content-type']){
+      headers['Content-Type'] = 'application/json';
+    }
+    if(!['GET','HEAD','OPTIONS','TRACE'].includes(method)){
+      headers['X-CSRFToken'] = csrfToken();
+    }
+    const res = await fetch(url, Object.assign({}, options, {headers}));
+    const text = await res.text();
+    let data;
+    try{ data = JSON.parse(text); }catch(e){ throw new Error('Respuesta inválida del servidor.'); }
+    if(!res.ok || data.success === false) throw new Error(data.message || 'Operación no completada.');
+    return data;
+  }
+  function badge(estado){ return `<span class="ps-badge ps-badge-${String(estado).toLowerCase()}">${estado}</span>`; }
+  function paramsFiltros(){
+    const p = new URLSearchParams();
+    if($('fEstado').value) p.set('estado', $('fEstado').value);
+    if($('fGestion').value) p.set('gestion', $('fGestion').value);
+    if($('fMes').value) p.set('mes', $('fMes').value);
+    if($('fBuscar').value.trim()) p.set('q', $('fBuscar').value.trim());
+    return p;
+  }
+  async function cargarLista(){
+    $('tablaPlanillas').innerHTML = '<tr><td colspan="11" class="ps-empty">Cargando...</td></tr>';
+    try{
+      const data = await api(`${urls.listar}?${paramsFiltros().toString()}`);
+      const rows = data.planillas || [];
+      if(!rows.length){ $('tablaPlanillas').innerHTML = '<tr><td colspan="11" class="ps-empty">Sin registros</td></tr>'; return; }
+      $('tablaPlanillas').innerHTML = rows.map(r => `
+        <tr>
+          <td><strong>${r.codigo}</strong></td>
+          <td>${meses[r.mes] || r.mes} ${r.gestion}</td>
+          <td><strong>${r.unidades_count || 0}</strong><div class="text-muted small">${r.unidades_resumen || 'Sin detalle'}</div></td>
+          <td>${r.fecha_planilla || ''}</td>
+          <td class="text-end">${r.personas || 0}</td>
+          <td class="text-end">${money(r.total_ingresos)}</td>
+          <td class="text-end">${money(r.total_descuentos)}</td>
+          <td class="text-end">${money(r.total_retenciones)}</td>
+          <td class="text-end fw-bold">${money(r.total_liquido)}</td>
+          <td>${badge(r.estado)}</td>
+          <td><div class="ps-actions"><a class="ps-icon-btn" title="Trabajar" href="${urls.base}${r.id}"><i class="fas fa-table"></i></a><a class="ps-icon-btn" title="PDF" target="_blank" href="${urls.base}${r.id}/pdf"><i class="fas fa-file-pdf"></i></a></div></td>
+        </tr>`).join('');
+    }catch(err){ $('tablaPlanillas').innerHTML = `<tr><td colspan="11" class="ps-empty text-danger">${err.message}</td></tr>`; }
+  }
+  async function cargarOpciones(){
+    const data = await api(urls.opciones);
+    catalogos = data;
+    $('nMes').innerHTML = data.meses.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+    $('nMoneda').innerHTML = data.monedas.map(m => `<option value="${m.codigo}">${m.codigo} - ${m.nombre}</option>`).join('');
+    const now = new Date();
+    $('nGestion').value = now.getFullYear(); $('nMes').value = now.getMonth()+1; $('nFecha').value = now.toISOString().slice(0,10);
+    seleccionados = [...(data.conceptos_predefinidos || [])];
+    renderConceptos();
+  }
+  function renderConceptos(){
+    const selSet = new Set(seleccionados.map(Number));
+    const disponibles = (catalogos.conceptos || []).filter(c => !selSet.has(Number(c.id)));
+    $('conceptosDisponibles').innerHTML = disponibles.map(c => itemConcepto(c, false)).join('') || '<div class="ps-empty">Sin conceptos disponibles</div>';
+    $('conceptosSeleccionados').innerHTML = seleccionados.map((id, idx) => {
+      const c = (catalogos.conceptos || []).find(x => Number(x.id) === Number(id));
+      return c ? itemConcepto(c, true, idx) : '';
+    }).join('') || '<div class="ps-empty">Seleccione conceptos para la planilla</div>';
+  }
+  function itemConcepto(c, selected, idx=0){
+    return `<div class="ps-concept-item" data-id="${c.id}">
+      <div><button type="button" class="ps-mini" data-action="${selected ? 'remove' : 'add'}" data-id="${c.id}"><i class="fas fa-${selected ? 'minus' : 'plus'}"></i></button></div>
+      <div><div class="ps-concept-name">${c.nombre}</div><div class="ps-concept-meta">${c.codigo} · ${c.tipo_concepto} · ${c.impacto_liquido}</div></div>
+      <div class="ps-order-btns ${selected ? '' : 'ps-hide'}"><button type="button" class="ps-mini" data-action="up" data-id="${c.id}" ${idx===0?'disabled':''}><i class="fas fa-arrow-up"></i></button><button type="button" class="ps-mini" data-action="down" data-id="${c.id}" ${idx===seleccionados.length-1?'disabled':''}><i class="fas fa-arrow-down"></i></button></div>
+    </div>`;
+  }
+  document.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-action]'); if(!btn) return;
+    const id = Number(btn.dataset.id); const action = btn.dataset.action;
+    if(action === 'add' && !seleccionados.includes(id)) seleccionados.push(id);
+    if(action === 'remove') seleccionados = seleccionados.filter(x => Number(x) !== id);
+    if(action === 'up'){ const i = seleccionados.indexOf(id); if(i>0){ [seleccionados[i-1], seleccionados[i]] = [seleccionados[i], seleccionados[i-1]]; } }
+    if(action === 'down'){ const i = seleccionados.indexOf(id); if(i>=0 && i<seleccionados.length-1){ [seleccionados[i+1], seleccionados[i]] = [seleccionados[i], seleccionados[i+1]]; } }
+    renderConceptos();
+  });
+  $('btnAddAll').addEventListener('click', () => { (catalogos.conceptos||[]).forEach(c => { if(!seleccionados.includes(Number(c.id))) seleccionados.push(Number(c.id)); }); renderConceptos(); });
+  $('btnClearConcepts').addEventListener('click', () => { seleccionados = []; renderConceptos(); });
+  $('btnNueva')?.addEventListener('click', async () => { try{ await cargarOpciones(); modalNueva.show(); }catch(err){ toastError(err.message); } });
+  $('btnGenerar').addEventListener('click', async () => {
+    try{
+      const payload = {gestion:$('nGestion').value, mes:$('nMes').value, moneda_codigo:$('nMoneda').value, tipo_cambio:$('nTipoCambio').value, fecha_planilla:$('nFecha').value, glosa:$('nGlosa').value, conceptos:seleccionados};
+      const data = await api(urls.generar, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+      await toastOk(data.message || 'Planilla generada.');
+      window.location.href = data.redirect;
+    }catch(err){ toastError(err.message); }
+  });
+  ['fEstado','fGestion','fMes'].forEach(id => $(id).addEventListener('change', cargarLista));
+  let t; $('fBuscar').addEventListener('input', () => { clearTimeout(t); t=setTimeout(cargarLista, 350); });
+  $('btnLimpiar').addEventListener('click', () => { $('fEstado').value=''; $('fGestion').value=''; $('fMes').value=''; $('fBuscar').value=''; cargarLista(); });
+  cargarLista();
+})();
+</script>
+{% endblock extra_js %}

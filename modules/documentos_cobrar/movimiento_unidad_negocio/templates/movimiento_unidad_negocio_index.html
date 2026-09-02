@@ -1,0 +1,133 @@
+{% extends "layout.html" %}
+{% block title %}Movimiento por Unidad{% endblock %}
+{% block page_help_url %}{{ url_for('movimiento_unidad_negocio.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  #munPage{--mun-navy:#0f2340;--mun-blue:#17406f;--mun-accent:#ea6f1b;--mun-soft:#f4f7fb;--mun-line:#d9e1ea;--mun-text:#243447;--mun-muted:#687789;--mun-green:#107c41;--mun-red:#b42318;color:var(--mun-text);display:grid;gap:1rem}
+  #munPage .mun-header{background:linear-gradient(135deg,#0f2340,#17406f);border-radius:1.15rem;box-shadow:0 18px 38px rgba(15,35,64,.18);color:#fff;padding:1.15rem 1.3rem}
+  #munPage .mun-header-kicker{align-items:center;color:rgba(255,255,255,.82);display:flex;font-size:.78rem;font-weight:800;gap:.45rem;letter-spacing:.06em;text-transform:uppercase}
+  #munPage .mun-header-title{font-size:clamp(1.35rem,2vw,2rem);font-weight:850;margin:.35rem 0 0}
+  #munPage .mun-card{background:#fff;border:1px solid var(--mun-line);border-radius:1rem;box-shadow:0 10px 24px rgba(15,35,64,.06);overflow:hidden}
+  #munPage .mun-filter-card{padding:.85rem}
+  #munPage .mun-filter-grid{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:.75rem;align-items:end}
+  #munPage .mun-field label{color:var(--mun-navy);font-size:.75rem;font-weight:800;margin-bottom:.25rem}
+  #munPage .form-control,#munPage .form-select{border-color:#cfd9e5;border-radius:.75rem;font-size:.88rem;min-height:2.35rem}
+  #munPage .mun-actions{align-items:end;display:flex;gap:.45rem}
+  #munPage .mun-action-btn{align-items:center;border-radius:.75rem;display:inline-flex;font-weight:800;gap:.4rem;justify-content:center;min-height:2.35rem;padding:.45rem .8rem;white-space:nowrap}
+  #munPage .mun-summary{display:grid;grid-template-columns:repeat(5,minmax(140px,1fr));gap:.75rem}
+  #munPage .mun-summary-card{border-left:4px solid #8ba8c8;min-height:5rem;padding:.85rem}
+  #munPage .mun-summary-card.is-primary{border-left-color:#2563eb}.mun-summary-card.is-success{border-left-color:#0f766e}.mun-summary-card.is-warning{border-left-color:#f97316}.mun-summary-card.is-danger{border-left-color:#ef4444}
+  #munPage .mun-summary-label{color:#58708b;font-size:.72rem;font-weight:850;letter-spacing:.04em;text-transform:uppercase}
+  #munPage .mun-summary-value{color:var(--mun-navy);font-size:1.05rem;font-weight:900;margin-top:.25rem;line-height:1.15}
+  #munPage .mun-summary-note{color:var(--mun-muted);font-size:.72rem;margin-top:.18rem;word-break:break-word}
+  #munPage .mun-summary-card.is-success .mun-summary-value{color:var(--mun-green)}#munPage .mun-summary-card.is-danger .mun-summary-value{color:var(--mun-red)}
+  #munPage .mun-table-card{overflow:hidden}
+  #munPage .mun-table-toolbar{align-items:center;border-bottom:1px solid var(--mun-line);display:flex;gap:.75rem;justify-content:space-between;padding:.85rem 1rem}
+  #munPage .mun-table-title{color:var(--mun-navy);font-weight:850}.mun-table-note{color:var(--mun-muted);font-size:.78rem;margin:.12rem 0 0}
+  #munPage .mun-table-wrap{overflow-x:auto}
+  #munPage .mun-table{font-size:.82rem;margin:0;width:100%}
+  #munPage .mun-table thead th{background:#edf3f9;border-bottom:1px solid var(--mun-line);color:var(--mun-navy);font-size:.72rem;font-weight:850;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+  #munPage .mun-table td{border-bottom:1px solid #edf1f6;vertical-align:middle}
+  #munPage .mun-table tbody tr:hover{background:#f8fbff}
+  #munPage .mun-main-text{color:#001b3d;display:block;font-weight:850}.mun-sub-text{color:#60748a;display:block;font-size:.74rem}.mun-money{font-family:Consolas,Monaco,monospace;font-weight:850;text-align:right;white-space:nowrap}.mun-money.is-positive{color:var(--mun-green)}.mun-money.is-negative{color:var(--mun-red)}
+  #munPage .mun-empty{color:var(--mun-muted);padding:1.6rem;text-align:center}.mun-detail-button{border-radius:.6rem;font-weight:850;min-width:2rem}.mun-month-table th,.mun-month-table td{font-size:.76rem;padding:.45rem .55rem}
+  @media(max-width:1200px){ #munPage .mun-filter-grid{grid-template-columns:repeat(2,minmax(150px,1fr))}#munPage .mun-summary{grid-template-columns:repeat(2,minmax(150px,1fr))}}
+  @media(max-width:768px){ #munPage .mun-filter-grid,#munPage .mun-summary{grid-template-columns:1fr}#munPage .mun-actions{justify-content:flex-start}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" id="munPage">
+  <section class="mun-header">
+    <div class="mun-header-kicker"><i class="fas fa-chart-line"></i> Reportes especiales - resultados</div>
+    <h1 class="mun-header-title">Movimiento por Unidad</h1>
+  </section>
+
+  {% if error %}
+  <div class="alert alert-warning border-0 rounded-4 shadow-sm"><i class="fas fa-triangle-exclamation me-2"></i>{{ error }}</div>
+  {% endif %}
+
+  <section class="mun-card mun-filter-card">
+    <form method="get">
+      <div class="mun-filter-grid">
+        <div class="mun-field"><label for="fecha_desde">Desde</label><input type="date" class="form-control" id="fecha_desde" name="fecha_desde" value="{{ filtros.fecha_desde }}"></div>
+        <div class="mun-field"><label for="fecha_hasta">Hasta</label><input type="date" class="form-control" id="fecha_hasta" name="fecha_hasta" value="{{ filtros.fecha_hasta }}"></div>
+        <div class="mun-field"><label for="unidad_negocio_id">Unidad</label><select name="unidad_negocio_id" id="unidad_negocio_id" class="form-select"><option value="">Todas</option>{% for un in unidades %}<option value="{{ un.id }}" {% if filtros.unidad_negocio_id == un.id %}selected{% endif %}>{{ un.codigo }} · {{ un.nombre }}</option>{% endfor %}</select></div>
+        <div class="mun-field"><label for="moneda_codigo">Moneda</label><select name="moneda_codigo" id="moneda_codigo" class="form-select"><option value="">Todas</option>{% for moneda in monedas %}<option value="{{ moneda.codigo }}" {% if filtros.moneda_codigo == moneda.codigo %}selected{% endif %}>{{ moneda.simbolo or moneda.codigo }}</option>{% endfor %}</select></div>
+        <div class="mun-actions"><button class="btn btn-primary mun-action-btn" type="submit"><i class="fas fa-filter"></i> Filtrar</button><a class="btn btn-outline-secondary mun-action-btn" href="{{ url_for('movimiento_unidad_negocio.index') }}" title="Limpiar filtros"><i class="fas fa-eraser"></i></a></div>
+      </div>
+    </form>
+  </section>
+
+  <section class="mun-summary">
+    <div class="mun-card mun-summary-card is-primary"><div class="mun-summary-label">Comprobantes</div><div class="mun-summary-value">{{ totales.comprobantes }}</div><div class="mun-summary-note">Confirmados</div></div>
+    <div class="mun-card mun-summary-card is-success"><div class="mun-summary-label">Ingresos</div><div class="mun-summary-value">{{ totales.ingresos.value }}</div><div class="mun-summary-note">{{ totales.ingresos.note }}</div></div>
+    <div class="mun-card mun-summary-card is-warning"><div class="mun-summary-label">Costos + Gastos</div><div class="mun-summary-value">{{ totales.egresos.value }}</div><div class="mun-summary-note">{{ totales.egresos.note }}</div></div>
+    <div class="mun-card mun-summary-card {% if totales.resultado_neto.css == 'positive' %}is-success{% elif totales.resultado_neto.css == 'negative' %}is-danger{% endif %}"><div class="mun-summary-label">Resultado neto</div><div class="mun-summary-value">{{ totales.resultado_neto.value }}</div><div class="mun-summary-note">{{ totales.resultado_neto.note }}</div></div>
+    <div class="mun-card mun-summary-card"><div class="mun-summary-label">Margen</div><div class="mun-summary-value">{{ totales.margen.value }}</div><div class="mun-summary-note">{{ totales.margen.note }}</div></div>
+  </section>
+
+  <section class="mun-card mun-table-card">
+    <div class="mun-table-toolbar">
+      <div><h2 class="h6 mun-table-title mb-0">Resultado por unidad</h2><p class="mun-table-note">{{ filtros.fecha_desde_label }} al {{ filtros.fecha_hasta_label }}</p></div>
+      <a class="btn btn-outline-danger mun-action-btn" target="_blank" href="{{ url_for('movimiento_unidad_negocio.pdf', **query_args) }}"><i class="fas fa-file-pdf"></i> PDF</a>
+    </div>
+    <div class="mun-table-wrap table-responsive">
+      <table class="table table-hover align-middle mun-table">
+        <thead><tr><th>Unidad</th><th class="text-center">Moneda</th><th class="text-center">Comp.</th><th class="text-end">Ingresos</th><th class="text-end">Costos</th><th class="text-end">Gastos</th><th class="text-end">Resultado</th><th class="text-end">Margen</th><th class="text-center">Detalle</th></tr></thead>
+        <tbody>
+          {% for row in resumen %}
+          <tr>
+            <td><span class="mun-main-text">{{ row.unidad_nombre }}</span><span class="mun-sub-text">{{ row.unidad_codigo or 'Sin código' }}</span></td>
+            <td class="text-center"><span class="badge text-bg-light border">{{ row.moneda_label }}</span></td>
+            <td class="text-center fw-bold">{{ row.comprobantes }}</td>
+            <td class="mun-money">{{ row.ingresos_label }}</td>
+            <td class="mun-money">{{ row.costos_label }}</td>
+            <td class="mun-money">{{ row.gastos_label }}</td>
+            <td class="mun-money {% if row.resultado_tipo == 'positivo' %}is-positive{% else %}is-negative{% endif %}">{{ row.resultado_neto_label }}</td>
+            <td class="mun-money">{{ row.margen_label }}</td>
+            <td class="text-center"><a class="btn btn-sm btn-outline-primary mun-detail-button" href="{{ url_for('movimiento_unidad_negocio.detalle', unidad_id=row.unidad_id, **query_args) }}" title="Ver detalle"><i class="fas fa-eye"></i></a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="9" class="mun-empty">Sin movimientos para los filtros seleccionados.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="mun-card mun-table-card">
+    <div class="mun-table-toolbar"><div><h2 class="h6 mun-table-title mb-0">Resultado mensual</h2><p class="mun-table-note">Distribución de resultado neto por mes.</p></div></div>
+    <div class="mun-table-wrap table-responsive">
+      <table class="table table-hover align-middle mun-table mun-month-table">
+        <thead><tr><th>Unidad</th><th class="text-center">Moneda</th>{% for m, nombre in meses.items() %}<th class="text-end">{{ nombre[:3] }}</th>{% endfor %}<th class="text-end">Total</th></tr></thead>
+        <tbody>
+          {% for row in mensual %}
+          <tr>
+            <td><span class="mun-main-text">{{ row.unidad_nombre }}</span><span class="mun-sub-text">{{ row.unidad_codigo or 'Sin código' }}</span></td>
+            <td class="text-center"><span class="badge text-bg-light border">{{ row.moneda_label }}</span></td>
+            {% for m, nombre in meses.items() %}<td class="mun-money">{{ row.meses_label[m] }}</td>{% endfor %}
+            <td class="mun-money {% if row.resultado_tipo == 'positivo' %}is-positive{% else %}is-negative{% endif %}">{{ row.total_label }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="15" class="mun-empty">Sin datos mensuales para los filtros seleccionados.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    {% if error %}
+    if (window.Swal) {
+      Swal.fire({ icon: 'warning', title: 'Movimiento por Unidad', text: {{ error|tojson }}, timer: 2200, showConfirmButton: false });
+    }
+    {% endif %}
+  });
+</script>
+{% endblock %}

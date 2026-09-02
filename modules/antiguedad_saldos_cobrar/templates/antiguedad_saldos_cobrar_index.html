@@ -1,0 +1,308 @@
+{% extends "layout.html" %}
+{% block title %}Reportes Especiales · Antigüedad de Cartera{% endblock title %}
+{% block page_help_url %}{{ url_for('antiguedad_saldos_cobrar.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .asc-page { display: grid; gap: 1rem; }
+  .asc-header {
+    background: linear-gradient(135deg, #0f2340, #17406f);
+    border-radius: 1.15rem;
+    box-shadow: 0 18px 38px rgba(15, 35, 64, 0.18);
+    color: #fff;
+    padding: 1.15rem 1.3rem;
+  }
+  .asc-header-kicker { color: rgba(255,255,255,.78); font-size: .78rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .asc-header-title { font-size: clamp(1.35rem, 2vw, 1.9rem); font-weight: 850; margin: .25rem 0 0; }
+  .asc-card { background: #fff; border: 1px solid #dfe7f1; border-radius: 1.15rem; box-shadow: 0 14px 34px rgba(15,35,64,.08); }
+  .asc-filter-card { padding: 1rem; }
+  .asc-filter-grid { align-items: end; display: grid; gap: .85rem; grid-template-columns: .85fr .95fr 1.2fr .95fr .9fr 1.25fr auto; }
+  .asc-field label { color: #334155; font-size: .78rem; font-weight: 800; margin-bottom: .3rem; }
+  .asc-field .form-control, .asc-field .form-select { border-color: #d5deea; border-radius: .8rem; min-height: 40px; }
+  .asc-actions { display: flex; gap: .45rem; justify-content: flex-end; }
+  .asc-summary-grid { display: grid; gap: .85rem; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .asc-summary { padding: 1rem; }
+  .asc-summary-label { color: #64748b; font-size: .76rem; font-weight: 800; text-transform: uppercase; }
+  .asc-summary-value { color: #0f2340; font-size: 1.35rem; font-weight: 850; line-height: 1.1; margin-top: .2rem; }
+  .asc-summary-note { color: #64748b; font-size: .78rem; margin-top: .2rem; }
+  .asc-table-card { overflow: hidden; }
+  .asc-table-head { align-items: center; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; padding: .9rem 1rem; }
+  .asc-table-title { color: #0f2340; font-weight: 850; margin: 0; }
+  .asc-table-wrap { padding: .75rem 1rem 1rem; }
+  .asc-table { width: 100%; }
+  .asc-table thead th { background: #f1f5f9; color: #334155; font-size: .73rem; letter-spacing: .04em; text-transform: uppercase; vertical-align: middle; white-space: nowrap; }
+  .asc-table td { color: #334155; font-size: .86rem; vertical-align: middle; }
+  .asc-money { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 800; text-align: right; white-space: nowrap; }
+  .asc-muted { color: #64748b; font-size: .76rem; }
+  .asc-empty { color: #64748b; padding: 2rem !important; text-align: center; }
+  .asc-modal-table th { background: #f1f5f9; color: #334155; font-size: .72rem; text-transform: uppercase; }
+  @media (max-width: 1200px) { .asc-filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .asc-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 768px) { .asc-filter-grid, .asc-summary-grid { grid-template-columns: 1fr; } .asc-actions { justify-content: stretch; } .asc-actions .btn { flex: 1; } }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="asc-page">
+  <section class="asc-header">
+    <div class="asc-header-kicker"><i class="fas fa-hourglass-half me-1"></i> Reportes especiales</div>
+    <h1 class="asc-header-title">Antigüedad de Cartera por Cobrar</h1>
+  </section>
+
+  {% if error %}
+  <div class="alert alert-danger rounded-4 shadow-sm border-0 mb-0">{{ error }}</div>
+  {% endif %}
+
+  <section class="asc-card asc-filter-card">
+    <form method="get" class="asc-filter-grid">
+      <div class="asc-field">
+        <label for="fecha_corte">Fecha corte</label>
+        <input type="date" class="form-control" id="fecha_corte" name="fecha_corte" value="{{ filtros.fecha_corte.isoformat() }}">
+      </div>
+      <div class="asc-field">
+        <label for="origen">Origen</label>
+        <select class="form-select" id="origen" name="origen">
+          {% for codigo, label in origenes.items() %}
+          <option value="{{ codigo }}" {% if filtros.origen == codigo %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="asc-field">
+        <label for="unidad_negocio_id">Unidad</label>
+        <select class="form-select" id="unidad_negocio_id" name="unidad_negocio_id">
+          <option value="">Todas</option>
+          {% for unidad in unidades %}
+          <option value="{{ unidad.id }}" {% if filtros.unidad_negocio_id == unidad.id %}selected{% endif %}>{{ unidad.codigo }} · {{ unidad.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="asc-field">
+        <label for="moneda">Moneda</label>
+        <select class="form-select" id="moneda" name="moneda">
+          <option value="">Todas</option>
+          {% for moneda in monedas %}
+          <option value="{{ moneda.codigo }}" {% if filtros.moneda == moneda.codigo %}selected{% endif %}>{{ moneda.simbolo or moneda.codigo }}{% if moneda.nombre %} · {{ moneda.nombre }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="asc-field">
+        <label for="auxiliar_id">Cliente</label>
+        <select class="form-select" id="auxiliar_id" name="auxiliar_id">
+          <option value="">Todos</option>
+          {% for auxiliar in auxiliares %}
+          <option value="{{ auxiliar.id }}" {% if filtros.auxiliar_id == auxiliar.id %}selected{% endif %}>{{ auxiliar.nombre }}{% if auxiliar.nit_ci %} · {{ auxiliar.nit_ci }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="asc-field">
+        <label for="q">Buscar</label>
+        <input type="search" class="form-control" id="q" name="q" value="{{ filtros.q }}" placeholder="Cliente, documento, cuenta">
+      </div>
+      <div class="asc-actions">
+        <button class="btn btn-primary rounded-pill fw-bold" type="submit"><i class="fas fa-filter me-1"></i>Filtrar</button>
+        <a class="btn btn-outline-secondary rounded-pill fw-bold" href="{{ url_for('antiguedad_saldos_cobrar.index') }}"><i class="fas fa-eraser me-1"></i>Limpiar</a>
+      </div>
+    </form>
+  </section>
+
+  <section class="asc-summary-grid">
+    <div class="asc-card asc-summary"><div class="asc-summary-label">Total pendiente</div><div class="asc-summary-value">{{ resumen.total_label }}</div><div class="asc-summary-note">Separado por moneda</div></div>
+    <div class="asc-card asc-summary"><div class="asc-summary-label">Clientes</div><div class="asc-summary-value">{{ resumen.clientes }}</div><div class="asc-summary-note">Con saldo</div></div>
+    <div class="asc-card asc-summary"><div class="asc-summary-label">Registros</div><div class="asc-summary-value">{{ resumen.registros }}</div><div class="asc-summary-note">Pendientes</div></div>
+    <div class="asc-card asc-summary"><div class="asc-summary-label">Corte</div><div class="asc-summary-value">{{ filtros.fecha_corte.strftime('%d/%m/%Y') }}</div><div class="asc-summary-note">Fecha base</div></div>
+    <div class="asc-card asc-summary"><div class="asc-summary-label">Monedas</div><div class="asc-summary-value">{{ resumen.monedas|length }}</div><div class="asc-summary-note">Separadas</div></div>
+  </section>
+
+  <section class="asc-card asc-table-card">
+    <div class="asc-table-head">
+      <h2 class="h6 asc-table-title">Cartera clasificada</h2>
+      <a class="btn btn-outline-danger btn-sm rounded-pill fw-bold" href="{{ url_for('antiguedad_saldos_cobrar.pdf_general', **query_args) }}" target="_blank">
+        <i class="fas fa-file-pdf me-1"></i>PDF
+      </a>
+    </div>
+    <div class="asc-table-wrap table-responsive">
+      <table id="ascTabla" class="table table-hover align-middle asc-table">
+        <thead>
+          <tr>
+            <th>Riesgo</th>
+            <th>Cliente</th>
+            <th>Moneda</th>
+            <th>Reg.</th>
+            <th>Por vencer</th>
+            <th>0-30</th>
+            <th>31-60</th>
+            <th>61-90</th>
+            <th>+90</th>
+            <th>Sin venc.</th>
+            <th>Total</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          {% set detail_args = query_args.copy() %}
+          {% set _ = detail_args.update({'cliente_key': row.cliente_key, 'moneda': row.moneda_codigo}) %}
+          <tr>
+            <td class="text-center"><span class="badge text-bg-{{ row.riesgo_badge }}">{{ row.riesgo_label }}</span></td>
+            <td>
+              <div class="fw-bold text-dark">{{ row.cliente_nombre or 'Sin cliente' }}</div>
+              {% if row.cliente_doc %}<div class="asc-muted">{{ row.cliente_doc }}</div>{% endif %}
+              {% if row.origenes_label %}<div class="asc-muted">{{ row.origenes_label }}</div>{% endif %}
+            </td>
+            <td class="text-center fw-bold">{{ row.moneda_label }}</td>
+            <td class="text-center">{{ row.registros }}</td>
+            <td class="asc-money">{{ row.por_vencer_label }}</td>
+            <td class="asc-money">{{ row.bucket_0_30_label }}</td>
+            <td class="asc-money">{{ row.bucket_31_60_label }}</td>
+            <td class="asc-money">{{ row.bucket_61_90_label }}</td>
+            <td class="asc-money">{{ row.bucket_mas_90_label }}</td>
+            <td class="asc-money">{{ row.sin_vencimiento_label }}</td>
+            <td class="asc-money text-primary">{{ row.total_pendiente_label }}</td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline-primary rounded-pill" type="button"
+                data-detail-url="{{ url_for('antiguedad_saldos_cobrar.api_detalle_unificado', **detail_args) }}"
+                data-pdf-url="{{ url_for('antiguedad_saldos_cobrar.pdf_detalle_unificado', **detail_args) }}">
+                <i class="fas fa-list-ul"></i>
+              </button>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td class="asc-empty" colspan="12">No hay cartera pendiente para los filtros seleccionados.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div class="modal fade" id="detalleModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h5 class="modal-title fw-bold">Detalle de cartera</h5>
+          <div class="text-muted small" id="detalleSubtitle">{{ periodo_label }}</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div id="detalleLoading" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
+        <div id="detalleContent" class="d-none">
+          <div class="row g-3 mb-3">
+            <div class="col-md-4"><div class="asc-card p-3"><div class="asc-summary-label">Cliente</div><div class="fw-bold" id="detalleCliente">—</div></div></div>
+            <div class="col-md-2"><div class="asc-card p-3"><div class="asc-summary-label">Moneda</div><div class="fw-bold" id="detalleMoneda">—</div></div></div>
+            <div class="col-md-2"><div class="asc-card p-3"><div class="asc-summary-label">Registros</div><div class="fw-bold" id="detalleRegistros">0</div></div></div>
+            <div class="col-md-2"><div class="asc-card p-3"><div class="asc-summary-label">Total</div><div class="fw-bold" id="detalleTotal">0.00</div></div></div>
+            <div class="col-md-2"><div class="asc-card p-3"><div class="asc-summary-label">Saldo</div><div class="fw-bold text-primary" id="detalleSaldo">0.00</div></div></div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm asc-modal-table align-middle">
+              <thead>
+                <tr>
+                  <th>Origen</th><th>Referencia</th><th>Vencimiento</th><th>Rango</th><th>Total</th><th>Cobrado</th><th>Saldo</th><th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="detalleBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <a id="detallePdf" class="btn btn-outline-danger rounded-pill fw-bold d-none" target="_blank"><i class="fas fa-file-pdf me-1"></i>PDF</a>
+        <button type="button" class="btn btn-secondary rounded-pill fw-bold" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const tableEl = document.getElementById('ascTabla');
+    if (tableEl && window.jQuery && jQuery.fn.DataTable && tableEl.querySelectorAll('tbody tr').length > 1) {
+      jQuery(tableEl).DataTable({
+        pageLength: 25,
+        order: [[10, 'desc']],
+        language: window.DXTBase && typeof window.DXTBase.getDataTableLanguageEs === 'function'
+          ? window.DXTBase.getDataTableLanguageEs()
+          : {
+              search: 'Buscar:', lengthMenu: 'Mostrar _MENU_', info: 'Mostrando _START_ a _END_ de _TOTAL_',
+              infoEmpty: 'Sin registros', zeroRecords: 'Sin resultados', emptyTable: 'Sin datos disponibles',
+              paginate: { first: 'Primero', last: 'Último', next: 'Siguiente', previous: 'Anterior' }
+            }
+      });
+    }
+
+    const modalEl = document.getElementById('detalleModal');
+    const loadingEl = document.getElementById('detalleLoading');
+    const contentEl = document.getElementById('detalleContent');
+    const bodyEl = document.getElementById('detalleBody');
+    const pdfEl = document.getElementById('detallePdf');
+
+    function td(text, className) {
+      const cell = document.createElement('td');
+      cell.textContent = text || '—';
+      if (className) cell.className = className;
+      return cell;
+    }
+
+    function renderDetalle(payload, pdfUrl) {
+      const resumen = payload.resumen || {};
+      document.getElementById('detalleCliente').textContent = `${resumen.cliente_nombre || '—'}${resumen.cliente_doc ? ' · ' + resumen.cliente_doc : ''}`;
+      document.getElementById('detalleMoneda').textContent = resumen.moneda_label || resumen.moneda_simbolo || resumen.moneda_codigo || '—';
+      document.getElementById('detalleRegistros').textContent = resumen.registros || 0;
+      document.getElementById('detalleTotal').textContent = resumen.total_label || '0.00';
+      document.getElementById('detalleSaldo').textContent = resumen.saldo_label || '0.00';
+      bodyEl.innerHTML = '';
+      (payload.detalle || []).forEach((item) => {
+        const row = document.createElement('tr');
+        row.appendChild(td(item.origen_label));
+        row.appendChild(td(item.referencia));
+        row.appendChild(td(item.fecha_vencimiento_label, 'text-center'));
+        row.appendChild(td(item.bucket_label, 'text-center'));
+        row.appendChild(td(item.total_label, 'asc-money'));
+        row.appendChild(td(item.aplicado_label, 'asc-money'));
+        row.appendChild(td(item.saldo_label, 'asc-money'));
+        row.appendChild(td(item.estado, 'text-center'));
+        bodyEl.appendChild(row);
+      });
+      if (!(payload.detalle || []).length) {
+        const row = document.createElement('tr');
+        const cell = td('Sin detalle para el cliente seleccionado.', 'asc-empty');
+        cell.colSpan = 8;
+        row.appendChild(cell);
+        bodyEl.appendChild(row);
+      }
+      if (pdfUrl) {
+        pdfEl.href = pdfUrl;
+        pdfEl.classList.remove('d-none');
+      } else {
+        pdfEl.classList.add('d-none');
+      }
+      loadingEl.classList.add('d-none');
+      contentEl.classList.remove('d-none');
+    }
+
+    async function openDetalle(button) {
+      const modal = window.bootstrap ? window.bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+      loadingEl.classList.remove('d-none');
+      contentEl.classList.add('d-none');
+      bodyEl.innerHTML = '';
+      pdfEl.classList.add('d-none');
+      if (modal) modal.show();
+      try {
+        const response = await fetch(button.dataset.detailUrl, { headers: { Accept: 'application/json' } });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.message || 'No se pudo cargar el detalle.');
+        renderDetalle(payload, button.dataset.pdfUrl);
+      } catch (error) {
+        renderDetalle({ detalle: [], resumen: { cliente_nombre: error.message } }, '');
+      }
+    }
+
+    document.querySelectorAll('[data-detail-url]').forEach((button) => {
+      button.addEventListener('click', () => openDetalle(button));
+    });
+  })();
+</script>
+{% endblock extra_js %}

@@ -1,0 +1,1953 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard Ejecutivo{% endblock %}
+{% block page_help_url %}{{ url_for('dashboard.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ══════════════════════════════════════════════════════════════
+     VARIABLES & BASE
+  ══════════════════════════════════════════════════════════════ */
+  .de-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    --de-navy: #0c1e35;
+    --de-blue: #1a4d8f;
+    --de-blue-m: #2266b3;
+    --de-orange: #ea6f1b;
+    --de-border: #dde6f0;
+    --de-surface: #f3f7fc;
+    --de-text: #1c2b3a;
+    --de-muted: #7389a0;
+    --de-success: #0d9e6a;
+    --de-warning: #d08010;
+    --de-danger: #c0252f;
+    --de-info: #2369c0;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     HERO / HEADER
+  ══════════════════════════════════════════════════════════════ */
+  .de-header {
+    background: linear-gradient(128deg, var(--de-navy) 0%, #1a3f70 50%, #1d6bb0 100%);
+    color: #fff;
+    border-radius: 1.1rem;
+    padding: 1.3rem 1.5rem;
+    box-shadow: 0 18px 42px rgba(12, 30, 53, 0.20);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Decoración geométrica de fondo */
+  .de-header::before {
+    content: "";
+    position: absolute;
+    right: -60px;
+    top: -60px;
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: rgba(234, 111, 27, 0.10);
+    pointer-events: none;
+  }
+
+  .de-header::after {
+    content: "";
+    position: absolute;
+    right: 80px;
+    bottom: -80px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+  }
+
+  /* Barra de acento naranja inferior */
+  .de-header-accent {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--de-orange) 0%, #f2994a 60%, transparent 100%);
+  }
+
+  .de-header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    position: relative;
+  }
+
+  .de-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 0.3rem;
+  }
+
+  .de-title {
+    margin: 0;
+    font-size: clamp(1.35rem, 2vw, 1.85rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  .de-subtitle {
+    margin: 0.3rem 0 0 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.88rem;
+    max-width: 60rem;
+  }
+
+  .de-money-note {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(234, 111, 27, 0.22);
+    border: 1px solid rgba(234, 111, 27, 0.38);
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #ffd49e;
+    letter-spacing: 0.02em;
+  }
+
+  .de-header-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    position: relative;
+  }
+
+  .de-header-actions .btn {
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.86rem;
+    padding: 0.55rem 1rem;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     TARJETA GENÉRICA
+  ══════════════════════════════════════════════════════════════ */
+  .de-card {
+    background: #fff;
+    border: 1px solid var(--de-border);
+    border-radius: 1rem;
+    box-shadow: 0 4px 18px rgba(12, 30, 53, 0.055);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     PANEL DE FILTROS
+  ══════════════════════════════════════════════════════════════ */
+  .de-filters {
+    padding: 1rem 1.1rem;
+  }
+
+  .de-filters-head {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--de-border);
+  }
+
+  .de-filters-head-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--de-blue) 0%, var(--de-blue-m) 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  .de-filters-head-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--de-muted);
+  }
+
+  .de-filter-grid {
+    display: grid;
+    grid-template-columns: minmax(150px, 1fr) minmax(150px, 1fr) minmax(220px, 1.2fr) minmax(145px, 1fr) minmax(145px, 1fr) minmax(178px, 0.8fr) minmax(178px, 0.8fr);
+    gap: 0.8rem;
+    align-items: end;
+  }
+
+  .de-field label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-bottom: 0.35rem;
+    color: var(--de-navy);
+    font-weight: 700;
+    font-size: 0.78rem;
+  }
+
+  .de-field label i {
+    color: var(--de-muted);
+    font-size: 0.72rem;
+    width: 13px;
+    text-align: center;
+  }
+
+  .de-field .form-control,
+  .de-field .form-select {
+    border-radius: 10px;
+    min-height: 40px;
+    border-color: #d0dcea;
+    font-size: 0.88rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .de-field .form-control:focus,
+  .de-field .form-select:focus {
+    border-color: #5a9ee0;
+    box-shadow: 0 0 0 3px rgba(34, 102, 179, 0.14);
+  }
+
+  .de-field.is-hidden {
+    display: none;
+  }
+
+  /* Cajas de Tipo de Cambio */
+  .de-tc-box {
+    min-height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--de-border);
+    padding: 0.55rem 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .de-tc-box::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+  }
+
+  .de-tc-box.is-usd {
+    background: linear-gradient(135deg, #f0f7ff 0%, #f8fbff 100%);
+    border-color: #bfdbfe;
+  }
+
+  .de-tc-box.is-usd::before {
+    background: #3b82f6;
+  }
+
+  .de-tc-box.is-ufv {
+    background: linear-gradient(135deg, #f8f5ff 0%, #fbfaff 100%);
+    border-color: #ddd6fe;
+  }
+
+  .de-tc-box.is-ufv::before {
+    background: #8b5cf6;
+  }
+
+  .de-tc-box.is-missing {
+    background: linear-gradient(135deg, #fff8f0 0%, #fffcf8 100%);
+    border-color: #fdba74;
+  }
+
+  .de-tc-box.is-missing::before {
+    background: var(--de-orange);
+  }
+
+  .de-tc-main {
+    min-width: 0;
+  }
+
+  .de-tc-title {
+    display: block;
+    color: var(--de-muted);
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .de-tc-value {
+    display: block;
+    margin-top: 0.08rem;
+    color: var(--de-navy);
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+
+  .de-tc-meta {
+    display: block;
+    margin-top: 0.05rem;
+    color: var(--de-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+
+  .de-tc-action {
+    border: 0;
+    border-radius: 8px;
+    background: var(--de-navy);
+    color: #fff;
+    min-width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: background 0.14s;
+    flex-shrink: 0;
+  }
+
+  .de-tc-action:hover {
+    background: var(--de-blue-m);
+  }
+
+  .de-tc-action[hidden] {
+    display: none;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     LOADER
+  ══════════════════════════════════════════════════════════════ */
+  .de-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+
+  .de-loader {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 4rem;
+    background: rgba(243, 247, 252, 0.65);
+    backdrop-filter: blur(3px);
+    border-radius: 1rem;
+  }
+
+  .de-loader.is-visible {
+    display: flex;
+  }
+
+  .de-loader-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.7rem 1.1rem;
+    border-radius: 999px;
+    color: var(--de-navy);
+    background: #fff;
+    border: 1px solid var(--de-border);
+    box-shadow: 0 14px 28px rgba(12, 30, 53, 0.14);
+    font-weight: 800;
+    font-size: 0.88rem;
+  }
+
+  .de-spinner {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 999px;
+    border: 3px solid #dbe5ef;
+    border-top-color: var(--de-orange);
+    animation: de-spin 0.8s linear infinite;
+  }
+
+  @keyframes de-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     KPI CARDS — con color contextual completo
+  ══════════════════════════════════════════════════════════════ */
+  .de-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.9rem;
+  }
+
+  .de-kpi {
+    position: relative;
+    overflow: hidden;
+    padding: 1rem 1.1rem;
+    min-height: 128px;
+  }
+
+  /* Barra izquierda */
+  .de-kpi::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    border-radius: 1rem 0 0 1rem;
+    background: var(--de-border);
+  }
+
+  .de-kpi.is-success::before {
+    background: var(--de-success);
+  }
+
+  .de-kpi.is-warning::before {
+    background: var(--de-warning);
+  }
+
+  .de-kpi.is-danger::before {
+    background: var(--de-danger);
+  }
+
+  .de-kpi.is-info::before {
+    background: var(--de-info);
+  }
+
+  .de-kpi.is-neutral::before {
+    background: #94a3b8;
+  }
+
+  /* Tono de fondo sutil por tipo */
+  .de-kpi.is-success {
+    background: linear-gradient(160deg, #f0fdf8 0%, #fff 60%);
+  }
+
+  .de-kpi.is-warning {
+    background: linear-gradient(160deg, #fffbf0 0%, #fff 60%);
+  }
+
+  .de-kpi.is-danger {
+    background: linear-gradient(160deg, #fff5f5 0%, #fff 60%);
+  }
+
+  .de-kpi.is-info {
+    background: linear-gradient(160deg, #f0f6ff 0%, #fff 60%);
+  }
+
+  .de-kpi.is-clickable {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: transform 0.16s, box-shadow 0.16s, border-color 0.16s;
+  }
+
+  .de-kpi.is-clickable:hover,
+  .de-kpi.is-clickable:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(12, 30, 53, 0.12);
+    outline: none;
+  }
+
+  .de-kpi.is-success.is-clickable:hover {
+    border-color: #6ee7c0;
+  }
+
+  .de-kpi.is-warning.is-clickable:hover {
+    border-color: #fcd34d;
+  }
+
+  .de-kpi.is-danger.is-clickable:hover {
+    border-color: #fca5a5;
+  }
+
+  .de-kpi.is-info.is-clickable:hover {
+    border-color: #93c5fd;
+  }
+
+  .de-kpi.is-clickable .de-kpi-note::after {
+    content: "  →";
+    font-weight: 900;
+  }
+
+  .de-kpi-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .de-kpi-title {
+    color: var(--de-muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .de-kpi-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    /* Color por tipo via herencia */
+    background: #f1f5f9;
+    color: var(--de-navy);
+  }
+
+  .de-kpi.is-success .de-kpi-icon {
+    background: #d1fae5;
+    color: var(--de-success);
+  }
+
+  .de-kpi.is-warning .de-kpi-icon {
+    background: #fef3c7;
+    color: var(--de-warning);
+  }
+
+  .de-kpi.is-danger .de-kpi-icon {
+    background: #fee2e2;
+    color: var(--de-danger);
+  }
+
+  .de-kpi.is-info .de-kpi-icon {
+    background: #dbeafe;
+    color: var(--de-info);
+  }
+
+  .de-kpi-value {
+    margin-top: 0.65rem;
+    color: var(--de-navy);
+    font-size: clamp(1.3rem, 1.7vw, 1.75rem);
+    font-weight: 850;
+    letter-spacing: -0.04em;
+  }
+
+  .de-kpi-note {
+    color: var(--de-muted);
+    font-weight: 600;
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     CABECERAS DE SECCIÓN
+  ══════════════════════════════════════════════════════════════ */
+  .de-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--de-border);
+  }
+
+  .de-section-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .de-section-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .de-section-title {
+    margin: 0;
+    color: var(--de-navy);
+    font-size: 0.9rem;
+    font-weight: 800;
+  }
+
+  .de-section-subtitle {
+    margin: 0.1rem 0 0 0;
+    color: var(--de-muted);
+    font-size: 0.79rem;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     CHARTS GRID
+  ══════════════════════════════════════════════════════════════ */
+  .de-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .de-chart-card {
+    padding: 1rem 1.1rem;
+    min-height: 280px;
+  }
+
+  .de-chart-box {
+    min-height: 198px;
+  }
+
+  .de-balance-chart {
+    min-height: 198px;
+    display: grid;
+    grid-template-columns: minmax(145px, 180px) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .de-balance-donut-wrap {
+    width: 165px;
+    height: 165px;
+    position: relative;
+    margin: 0 auto;
+  }
+
+  .de-balance-donut {
+    width: 165px;
+    height: 165px;
+    transform: rotate(-90deg);
+  }
+
+  .de-balance-ring-bg {
+    fill: none;
+    stroke: #e2e8f0;
+    stroke-width: 18;
+  }
+
+  .de-balance-ring-segment {
+    fill: none;
+    stroke-width: 18;
+    stroke-linecap: round;
+  }
+
+  .de-balance-ring-segment.is-cobros {
+    stroke: #10b981;
+  }
+
+  .de-balance-ring-segment.is-pagos {
+    stroke: #f59e0b;
+  }
+
+  .de-balance-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .de-balance-center-label {
+    color: var(--de-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .de-balance-center-value {
+    color: var(--de-navy);
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+  }
+
+  .de-balance-detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .de-balance-detail-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.55rem;
+    align-items: center;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--de-border);
+    border-radius: 0.85rem;
+    background: #fbfdff;
+  }
+
+  .de-balance-detail-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    display: inline-block;
+  }
+
+  .de-balance-detail-dot.is-cobros {
+    background: #10b981;
+  }
+
+  .de-balance-detail-dot.is-pagos {
+    background: #f59e0b;
+  }
+
+  .de-balance-detail-main {
+    min-width: 0;
+  }
+
+  .de-balance-detail-label {
+    color: var(--de-text);
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.15;
+  }
+
+  .de-balance-detail-percent {
+    color: var(--de-muted);
+    font-size: 0.74rem;
+    font-weight: 700;
+  }
+
+  .de-balance-detail-value {
+    color: var(--de-navy);
+    font-size: 0.86rem;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .de-balance-neto {
+    margin-top: 0.15rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    font-weight: 900;
+    border: 1px solid var(--de-border);
+    background: #f8fbff;
+  }
+
+  .de-balance-neto.is-positive {
+    color: #047857;
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+  }
+
+  .de-balance-neto.is-negative {
+    color: #b45309;
+    background: #fffbeb;
+    border-color: #fde68a;
+  }
+
+  /* Colores distintos por chart card */
+  .de-chart-card:nth-child(1) .de-section-icon {
+    background: linear-gradient(135deg, #10b981, #059669);
+  }
+
+  .de-chart-card:nth-child(2) .de-section-icon {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+  }
+
+  .de-chart-card:nth-child(3) .de-section-icon {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+  }
+
+  .de-chart-card:nth-child(4) .de-section-icon {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     EMPTY STATE
+  ══════════════════════════════════════════════════════════════ */
+  .de-empty {
+    min-height: 145px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.4rem;
+    text-align: center;
+    color: var(--de-muted);
+    border: 2px dashed var(--de-border);
+    border-radius: 0.9rem;
+    background: var(--de-surface);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ALERTAS
+  ══════════════════════════════════════════════════════════════ */
+  .de-alerts-card {
+    padding: 1rem 1.1rem;
+  }
+
+  .de-alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .de-alert-row {
+    display: grid;
+    grid-template-columns: 90px 90px 150px minmax(0, 1fr) 105px minmax(150px, 0.8fr);
+    gap: 0.65rem;
+    align-items: center;
+    padding: 0.75rem 0.85rem;
+    border-radius: 0.85rem;
+    background: #fafcff;
+    border: 1px solid var(--de-border);
+    border-left: 4px solid var(--de-border);
+    position: relative;
+  }
+
+  /* Borde izquierdo por prioridad */
+  .de-alert-row:has(.de-badge.CRITICA) {
+    border-left-color: var(--de-danger);
+    background: #fff8f8;
+  }
+
+  .de-alert-row:has(.de-badge.ALTA) {
+    border-left-color: var(--de-orange);
+    background: #fff9f5;
+  }
+
+  .de-alert-row:has(.de-badge.MEDIA) {
+    border-left-color: var(--de-warning);
+    background: #fffdf5;
+  }
+
+  .de-alert-row.is-clickable {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .de-alert-row.is-clickable:hover,
+  .de-alert-row.is-clickable:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(12, 30, 53, 0.10);
+    outline: none;
+  }
+
+  .de-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.69rem;
+    font-weight: 800;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+  }
+
+  .de-badge.CRITICA {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+  }
+
+  .de-badge.ALTA {
+    background: #ffedd5;
+    color: #9a3412;
+    border: 1px solid #fdba74;
+  }
+
+  .de-badge.MEDIA {
+    background: #fef9c3;
+    color: #854d0e;
+    border: 1px solid #fde68a;
+  }
+
+  .de-alert-date,
+  .de-alert-type,
+  .de-alert-amount,
+  .de-alert-action {
+    color: var(--de-text);
+    font-weight: 700;
+    font-size: 0.81rem;
+  }
+
+  .de-alert-type {
+    color: var(--de-muted);
+  }
+
+  .de-alert-desc {
+    color: var(--de-navy);
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.87rem;
+  }
+
+  .de-alert-amount {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ACCESOS RÁPIDOS
+  ══════════════════════════════════════════════════════════════ */
+  .de-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .de-quick-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    min-height: 72px;
+    border-radius: 12px;
+    border: 1px solid var(--de-border);
+    background: #fff;
+    color: var(--de-navy);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-align: center;
+    padding: 0.65rem 0.5rem;
+    transition: transform 0.16s, box-shadow 0.16s, background 0.16s, border-color 0.16s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .de-quick-link i {
+    font-size: 1.1rem;
+    transition: transform 0.16s;
+  }
+
+  /* Colores rotativos por posición */
+  .de-quick-link:nth-child(6n+1) {
+    border-top: 3px solid #3b82f6;
+  }
+
+  .de-quick-link:nth-child(6n+2) {
+    border-top: 3px solid #10b981;
+  }
+
+  .de-quick-link:nth-child(6n+3) {
+    border-top: 3px solid #f59e0b;
+  }
+
+  .de-quick-link:nth-child(6n+4) {
+    border-top: 3px solid #8b5cf6;
+  }
+
+  .de-quick-link:nth-child(6n+5) {
+    border-top: 3px solid #ef4444;
+  }
+
+  .de-quick-link:nth-child(6n+6) {
+    border-top: 3px solid #06b6d4;
+  }
+
+  .de-quick-link:nth-child(6n+1) i {
+    color: #3b82f6;
+  }
+
+  .de-quick-link:nth-child(6n+2) i {
+    color: #10b981;
+  }
+
+  .de-quick-link:nth-child(6n+3) i {
+    color: #f59e0b;
+  }
+
+  .de-quick-link:nth-child(6n+4) i {
+    color: #8b5cf6;
+  }
+
+  .de-quick-link:nth-child(6n+5) i {
+    color: #ef4444;
+  }
+
+  .de-quick-link:nth-child(6n+6) i {
+    color: #06b6d4;
+  }
+
+  .de-quick-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(12, 30, 53, 0.10);
+    background: #f8fbff;
+  }
+
+  .de-quick-link:hover i {
+    transform: scale(1.15);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     MINI CHART ELEMENTS
+  ══════════════════════════════════════════════════════════════ */
+  .de-chart-svg {
+    width: 100%;
+    height: 205px;
+    overflow: visible;
+  }
+
+  .de-mini-legend {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    color: var(--de-muted);
+    font-size: 0.77rem;
+    font-weight: 700;
+    margin-top: 0.4rem;
+  }
+
+  .de-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    display: inline-block;
+    margin-right: 0.28rem;
+  }
+
+  .de-hbar-row {
+    margin-bottom: 0.65rem;
+  }
+
+  .de-hbar-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    color: var(--de-text);
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .de-hbar-track {
+    margin-top: 0.25rem;
+    height: 9px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+  }
+
+  .de-hbar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  }
+
+  .de-priority-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #edf2f7;
+    color: var(--de-text);
+    font-weight: 700;
+    font-size: 0.86rem;
+  }
+
+  .de-priority-count {
+    min-width: 40px;
+    padding: 0.16rem 0.5rem;
+    text-align: center;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: var(--de-navy);
+    font-weight: 800;
+    font-size: 0.82rem;
+    border: 1px solid var(--de-border);
+  }
+
+  .de-criterion {
+    color: var(--de-muted);
+    font-size: 0.78rem;
+    margin-top: 0.75rem;
+    font-weight: 600;
+    font-style: italic;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     RESPONSIVE
+  ══════════════════════════════════════════════════════════════ */
+  @media (max-width: 1200px) {
+    .de-summary-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .de-filter-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .de-quick-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 900px) {
+    .de-charts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .de-balance-chart {
+      grid-template-columns: 1fr;
+    }
+
+    .de-alert-row {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .de-alert-desc {
+      white-space: normal;
+    }
+  }
+
+  @media (max-width: 640px) {
+
+    .de-summary-grid,
+    .de-filter-grid,
+    .de-quick-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="de-shell">
+
+  <!-- ── Hero ── -->
+  <section class="de-header" aria-label="Encabezado del dashboard ejecutivo">
+    <div class="de-header-accent"></div>
+    <div class="de-header-top">
+      <div>
+        <div class="de-eyebrow">
+          <i class="fas fa-chart-line"></i>
+          <span>Vista ejecutiva</span>
+        </div>
+        <h1 class="de-title">Dashboard Ejecutivo</h1>
+        <p id="dashboardSubtitle" class="de-subtitle">Situación financiera, alertas y vencimientos relevantes.</p>
+        <div id="moneyNote" class="de-money-note">(Expresado en Bs.)</div>
+      </div>
+      <div class="de-header-actions">
+        <button id="btnActualizar" type="button" class="btn btn-light">
+          <i class="fas fa-rotate me-1"></i>Actualizar
+        </button>
+        <button id="btnPdf" type="button" class="btn btn-outline-light">
+          <i class="fas fa-file-pdf me-1"></i>PDF ejecutivo
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Filtros ── -->
+  <section class="de-card de-filters" aria-label="Filtros del dashboard">
+    <div class="de-filters-head">
+      <div class="de-filters-head-icon"><i class="fas fa-sliders"></i></div>
+      <span class="de-filters-head-label">Parámetros de consulta</span>
+    </div>
+    <div class="de-filter-grid">
+
+      <div class="de-field">
+        <label for="rango"><i class="fas fa-calendar-alt"></i> Rango</label>
+        <select id="rango" class="form-select">
+          {% for rango in rangos %}
+          <option value="{{ rango.id }}" {% if rango.id==rango_default %}selected{% endif %}>{{ rango.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="de-field">
+        <label for="fechaCorte"><i class="fas fa-calendar-check"></i> Fecha de corte</label>
+        <input id="fechaCorte" type="date" class="form-control" value="{{ fecha_hoy }}" />
+      </div>
+
+      <div class="de-field">
+        <label for="unidadNegocio"><i class="fas fa-building"></i> Unidad de negocio</label>
+        <select id="unidadNegocio" class="form-select">
+          {% for unidad in unidades_negocio %}
+          <option value="{{ unidad.id }}">{{ unidad.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div id="fechaDesdeWrap" class="de-field is-hidden">
+        <label for="fechaDesde"><i class="fas fa-calendar-day"></i> Fecha desde</label>
+        <input id="fechaDesde" type="date" class="form-control" value="{{ fecha_hoy }}" />
+      </div>
+
+      <div id="fechaHastaWrap" class="de-field is-hidden">
+        <label for="fechaHasta"><i class="fas fa-calendar-week"></i> Fecha hasta</label>
+        <input id="fechaHasta" type="date" class="form-control" value="{{ fecha_hoy }}" />
+      </div>
+
+      <div class="de-field">
+        <label><i class="fas fa-dollar-sign"></i> T.C. $us</label>
+        <div id="tcUsdBox" class="de-tc-box is-usd">
+          <div class="de-tc-main">
+            <span class="de-tc-title">Dólar estadounidense</span>
+            <span id="tcUsdValue" class="de-tc-value">Cargando...</span>
+            <span id="tcUsdMeta" class="de-tc-meta">Tipo de cambio del día</span>
+          </div>
+          <button id="btnTipoCambio" type="button" class="de-tc-action" title="Ir a gestión de tipo de cambio"
+            aria-label="Ir a gestión de tipo de cambio" hidden>
+            <i class="fas fa-pen"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="de-field">
+        <label><i class="fas fa-house"></i> T.C. UFV</label>
+        <div id="tcUfvBox" class="de-tc-box is-ufv">
+          <div class="de-tc-main">
+            <span class="de-tc-title">Unidad de Fomento a la Vivienda</span>
+            <span id="tcUfvValue" class="de-tc-value">Cargando...</span>
+            <span id="tcUfvMeta" class="de-tc-meta">Valor en Bs</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Contenido dinámico ── -->
+  <section class="de-content" aria-live="polite">
+
+    <div id="dashboardLoader" class="de-loader" aria-hidden="true">
+      <div class="de-loader-card">
+        <span class="de-spinner"></span>
+        <span>Actualizando dashboard...</span>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <section id="summaryGrid" class="de-summary-grid" aria-label="Indicadores principales"></section>
+
+    <!-- Gráficos -->
+    <section class="de-charts-grid" aria-label="Gráficos ejecutivos">
+
+      <article class="de-card de-chart-card">
+        <div class="de-section-head">
+          <div class="de-section-title-wrap">
+            <div class="de-section-icon"><i class="fas fa-chart-pie"></i></div>
+            <div>
+              <h2 id="chart1Title" class="de-section-title">Cobros y pagos del período</h2>
+              <p id="chart1Subtitle" class="de-section-subtitle"></p>
+            </div>
+          </div>
+        </div>
+        <div id="chartFlujo" class="de-chart-box"></div>
+      </article>
+
+      <article class="de-card de-chart-card">
+        <div class="de-section-head">
+          <div class="de-section-title-wrap">
+            <div class="de-section-icon"><i class="fas fa-triangle-exclamation"></i></div>
+            <div>
+              <h2 id="chart2Title" class="de-section-title">Cuentas vencidas</h2>
+              <p id="chart2Subtitle" class="de-section-subtitle"></p>
+            </div>
+          </div>
+        </div>
+        <div id="chartVencidas" class="de-chart-box"></div>
+      </article>
+
+      <article class="de-card de-chart-card">
+        <div class="de-section-head">
+          <div class="de-section-title-wrap">
+            <div class="de-section-icon"><i class="fas fa-users"></i></div>
+            <div>
+              <h2 id="chart3Title" class="de-section-title">Top clientes con saldo</h2>
+              <p id="chart3Subtitle" class="de-section-subtitle"></p>
+            </div>
+          </div>
+        </div>
+        <div id="chartClientes" class="de-chart-box"></div>
+      </article>
+
+      <article class="de-card de-chart-card">
+        <div class="de-section-head">
+          <div class="de-section-title-wrap">
+            <div class="de-section-icon"><i class="fas fa-calendar-xmark"></i></div>
+            <div>
+              <h2 id="chart4Title" class="de-section-title">Vencimientos de publicidad</h2>
+              <p id="chart4Subtitle" class="de-section-subtitle"></p>
+            </div>
+          </div>
+        </div>
+        <div id="chartPublicidad" class="de-chart-box"></div>
+      </article>
+
+    </section>
+
+    <!-- Alertas -->
+    <section class="de-card de-alerts-card" aria-label="Atención prioritaria">
+      <div class="de-section-head">
+        <div class="de-section-title-wrap">
+          <div class="de-section-icon" style="background:linear-gradient(135deg,#c0252f,#e53935)">
+            <i class="fas fa-bell"></i>
+          </div>
+          <div>
+            <h2 class="de-section-title">Atención prioritaria</h2>
+            <p id="periodoLabel" class="de-section-subtitle">Cargando... · Se muestran las alertas más relevantes.</p>
+          </div>
+        </div>
+      </div>
+      <div id="alertList" class="de-alert-list"></div>
+      <div id="criterioLabel" class="de-criterion"></div>
+    </section>
+
+    <!-- Accesos rápidos -->
+    <section aria-label="Accesos rápidos a reportes">
+      <div class="de-section-head" style="margin-bottom:0.75rem">
+        <div class="de-section-title-wrap">
+          <div class="de-section-icon" style="background:linear-gradient(135deg,var(--de-blue),var(--de-blue-m))">
+            <i class="fas fa-bolt"></i>
+          </div>
+          <div>
+            <h2 class="de-section-title">Accesos rápidos</h2>
+            <p class="de-section-subtitle">Reportes operativos de consulta directa.</p>
+          </div>
+        </div>
+      </div>
+      <div class="de-quick-grid">
+        {% for item in quick_links %}
+        <a class="de-quick-link" href="{{ item.url }}">
+          <i class="{{ item.icono }}"></i>
+          <span>{{ item.label }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+
+  </section>
+</div>
+
+<script type="application/json" id="dashboardEjecutivoBootstrap">
+  {{ {
+    'urls': urls,
+    'fecha_hoy': fecha_hoy
+  } | tojson }}
+</script>
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const bootEl = document.getElementById("dashboardEjecutivoBootstrap");
+    const boot = JSON.parse(bootEl.textContent || "{}");
+
+    const el = {
+      rango: document.getElementById("rango"),
+      fechaCorte: document.getElementById("fechaCorte"),
+      fechaDesde: document.getElementById("fechaDesde"),
+      fechaHasta: document.getElementById("fechaHasta"),
+      fechaDesdeWrap: document.getElementById("fechaDesdeWrap"),
+      fechaHastaWrap: document.getElementById("fechaHastaWrap"),
+      unidadNegocio: document.getElementById("unidadNegocio"),
+      btnActualizar: document.getElementById("btnActualizar"),
+      btnPdf: document.getElementById("btnPdf"),
+      loader: document.getElementById("dashboardLoader"),
+      summaryGrid: document.getElementById("summaryGrid"),
+      moneyNote: document.getElementById("moneyNote"),
+      dashboardSubtitle: document.getElementById("dashboardSubtitle"),
+      periodoLabel: document.getElementById("periodoLabel"),
+      criterioLabel: document.getElementById("criterioLabel"),
+      alertList: document.getElementById("alertList"),
+      charts: {
+        flujo: document.getElementById("chartFlujo"),
+        vencidas: document.getElementById("chartVencidas"),
+        clientes: document.getElementById("chartClientes"),
+        publicidad: document.getElementById("chartPublicidad"),
+      },
+      chartTitles: [
+        document.getElementById("chart1Title"),
+        document.getElementById("chart2Title"),
+        document.getElementById("chart3Title"),
+        document.getElementById("chart4Title"),
+      ],
+      chartSubtitles: [
+        document.getElementById("chart1Subtitle"),
+        document.getElementById("chart2Subtitle"),
+        document.getElementById("chart3Subtitle"),
+        document.getElementById("chart4Subtitle"),
+      ],
+      tcUsdBox: document.getElementById("tcUsdBox"),
+      tcUfvBox: document.getElementById("tcUfvBox"),
+      tcUsdValue: document.getElementById("tcUsdValue"),
+      tcUsdMeta: document.getElementById("tcUsdMeta"),
+      tcUfvValue: document.getElementById("tcUfvValue"),
+      tcUfvMeta: document.getElementById("tcUfvMeta"),
+      btnTipoCambio: document.getElementById("btnTipoCambio"),
+    };
+
+    let timer = null;
+    let controller = null;
+    let tcPrompted = false;
+
+    function showLoader() { el.loader.classList.add("is-visible"); }
+    function hideLoader() { el.loader.classList.remove("is-visible"); }
+
+    function alertError(message) {
+      if (window.Swal) {
+        window.Swal.fire({
+          icon: "error",
+          title: "No se pudo actualizar el dashboard",
+          text: message || "Revise la consola del servidor.",
+          confirmButtonText: "Aceptar",
+        });
+      } else {
+        window.alert(message || "No se pudo actualizar el dashboard.");
+      }
+    }
+
+    function getTipoCambioFecha() {
+      if (el.rango.value === "rango") {
+        return el.fechaHasta.value || el.fechaCorte.value || boot.fecha_hoy;
+      }
+      return el.fechaCorte.value || boot.fecha_hoy;
+    }
+
+    function updateTcBoxState(hasData) {
+      el.tcUsdBox.classList.toggle("is-missing", !hasData);
+      el.tcUfvBox.classList.toggle("is-missing", !hasData);
+    }
+
+    function renderTipoCambio(payload) {
+      const tc = payload || {};
+      const hasData = Boolean(tc.existe);
+      updateTcBoxState(hasData);
+      el.tcUsdValue.textContent = tc.usd_label || "Sin registro";
+      el.tcUfvValue.textContent = tc.ufv_label || "Sin registro";
+      const metaFecha = tc.fecha ? `Fecha ${String(tc.fecha).split("-").reverse().join("/")}` : "Sin fecha";
+      el.tcUsdMeta.textContent = hasData ? metaFecha : `${metaFecha} · pendiente`;
+      el.tcUfvMeta.textContent = hasData ? "Valor en Bs" : "Registre el valor del día";
+      const canOpen = Boolean(tc.gestion_url && tc.gestion_url !== "#" && tc.puede_editar);
+      el.btnTipoCambio.hidden = !canOpen;
+      el.btnTipoCambio.dataset.url = tc.gestion_url || "#";
+      el.btnTipoCambio.dataset.fecha = tc.fecha || getTipoCambioFecha();
+    }
+
+    async function fetchTipoCambio(silent) {
+      try {
+        const fecha = getTipoCambioFecha();
+        const response = await fetch(`${boot.urls.tipo_cambio}?fecha=${encodeURIComponent(fecha)}`, {
+          headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error(data.message || "No se pudo consultar el tipo de cambio.");
+        }
+        renderTipoCambio(data.tipo_cambio || {});
+        maybePromptTipoCambio(data.tipo_cambio || {});
+      } catch (error) {
+        renderTipoCambio({ fecha: getTipoCambioFecha(), existe: false, usd_label: "Sin registro", ufv_label: "Sin registro", puede_editar: false });
+        if (!silent) alertError(error.message || "No se pudo consultar el tipo de cambio.");
+      }
+    }
+
+    function irAGestionTipoCambio() {
+      const url = el.btnTipoCambio.dataset.url || boot.urls.tipo_cambio_gestion || "#";
+      if (!url || url === "#") return;
+      window.location.assign(url);
+    }
+
+    function maybePromptTipoCambio(tc) {
+      const fecha = getTipoCambioFecha();
+      const isToday = fecha === boot.fecha_hoy;
+      if (!tc || tc.existe || !tc.puede_editar || !isToday || tcPrompted) return;
+      tcPrompted = true;
+      if (window.Swal) {
+        window.Swal.fire({
+          icon: "info",
+          title: "Falta registrar el tipo de cambio del día",
+          text: "Para completar la referencia financiera del dashboard, registre el T.C. en la gestión correspondiente.",
+          showCancelButton: true,
+          confirmButtonText: "Registrar ahora",
+          cancelButtonText: "Más tarde",
+        }).then((result) => {
+          if (result.isConfirmed) irAGestionTipoCambio();
+        });
+      }
+    }
+
+    function buildParams() {
+      const params = new URLSearchParams();
+      params.set("rango", el.rango.value || "hoy");
+      params.set("fecha_corte", el.fechaCorte.value || boot.fecha_hoy);
+      params.set("unidad_negocio_id", el.unidadNegocio.value || "");
+      if (el.rango.value === "rango") {
+        params.set("fecha_desde", el.fechaDesde.value || boot.fecha_hoy);
+        params.set("fecha_hasta", el.fechaHasta.value || boot.fecha_hoy);
+      }
+      return params;
+    }
+
+    function updateRangeFields() {
+      const isCustom = el.rango.value === "rango";
+      el.fechaDesdeWrap.classList.toggle("is-hidden", !isCustom);
+      el.fechaHastaWrap.classList.toggle("is-hidden", !isCustom);
+    }
+
+    function emptyBox(text) {
+      const box = document.createElement("div");
+      box.className = "de-empty";
+      box.textContent = text || "Sin datos para mostrar.";
+      return box;
+    }
+
+    function renderCards(cards) {
+      el.summaryGrid.textContent = "";
+      (cards || []).forEach((card) => {
+        const hasDetail = Boolean(card.detalle_url && card.detalle_url !== "#");
+        const article = document.createElement(hasDetail ? "a" : "article");
+        article.className = `de-card de-kpi is-${card.tipo || "neutral"}${hasDetail ? " is-clickable" : ""}`;
+        if (hasDetail) {
+          article.href = card.detalle_url;
+          article.title = `Ver detalle de ${card.titulo || "indicador"}`;
+          article.setAttribute("aria-label", `Ver detalle de ${card.titulo || "indicador"}`);
+        }
+
+        const head = document.createElement("div");
+        head.className = "de-kpi-head";
+
+        const title = document.createElement("p");
+        title.className = "de-kpi-title";
+        title.textContent = card.titulo || "Indicador";
+
+        const icon = document.createElement("span");
+        icon.className = "de-kpi-icon";
+        const iconI = document.createElement("i");
+        iconI.className = card.icono || "fas fa-chart-simple";
+        icon.appendChild(iconI);
+
+        head.appendChild(title);
+        head.appendChild(icon);
+
+        const value = document.createElement("div");
+        value.className = "de-kpi-value";
+        value.textContent = String(card.valor ?? "0");
+
+        const note = document.createElement("div");
+        note.className = "de-kpi-note";
+        note.textContent = card.detalle || "";
+
+        article.appendChild(head);
+        article.appendChild(value);
+        article.appendChild(note);
+        el.summaryGrid.appendChild(article);
+      });
+    }
+
+    function maxValue(values) {
+      return Math.max(1, ...values.map((value) => Number(value || 0)));
+    }
+
+    function renderDualBar(container, chart) {
+      container.textContent = "";
+      const data = chart.data || [];
+      if (!data.length) {
+        container.appendChild(emptyBox("Sin movimientos confirmados para el periodo."));
+        return;
+      }
+      const max = maxValue(data.flatMap((item) => [item.cobros, item.pagos]));
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("class", "de-chart-svg");
+      svg.setAttribute("viewBox", "0 0 520 205");
+
+      const width = 470, height = 145, baseX = 32, baseY = 162;
+      const groupW = width / Math.max(data.length, 1);
+      const barW = Math.max(7, Math.min(22, groupW / 3.2));
+
+      data.forEach((item, index) => {
+        const x = baseX + index * groupW + groupW / 2;
+        const cobrosH = (Number(item.cobros || 0) / max) * height;
+        const pagosH = (Number(item.pagos || 0) / max) * height;
+        const rectCobro = document.createElementNS(svgNS, "rect");
+        rectCobro.setAttribute("x", x - barW - 2);
+        rectCobro.setAttribute("y", baseY - cobrosH);
+        rectCobro.setAttribute("width", barW);
+        rectCobro.setAttribute("height", cobrosH);
+        rectCobro.setAttribute("rx", "4");
+        rectCobro.setAttribute("fill", "#10b981");
+        const rectPago = document.createElementNS(svgNS, "rect");
+        rectPago.setAttribute("x", x + 2);
+        rectPago.setAttribute("y", baseY - pagosH);
+        rectPago.setAttribute("width", barW);
+        rectPago.setAttribute("height", pagosH);
+        rectPago.setAttribute("rx", "4");
+        rectPago.setAttribute("fill", "#f59e0b");
+        const label = document.createElementNS(svgNS, "text");
+        label.setAttribute("x", x);
+        label.setAttribute("y", "187");
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("font-size", "9");
+        label.setAttribute("fill", "#64748b");
+        label.textContent = item.label ? item.label.slice(0, 5) : "";
+        svg.appendChild(rectCobro);
+        svg.appendChild(rectPago);
+        svg.appendChild(label);
+      });
+
+      const axis = document.createElementNS(svgNS, "line");
+      axis.setAttribute("x1", baseX);
+      axis.setAttribute("x2", baseX + width);
+      axis.setAttribute("y1", baseY);
+      axis.setAttribute("y2", baseY);
+      axis.setAttribute("stroke", "#cbd5e1");
+      svg.appendChild(axis);
+      container.appendChild(svg);
+
+      const legend = document.createElement("div");
+      legend.className = "de-mini-legend";
+      legend.innerHTML = '<span><span class="de-legend-dot" style="background:#10b981"></span>Cobros</span><span><span class="de-legend-dot" style="background:#f59e0b"></span>Pagos</span>';
+      container.appendChild(legend);
+    }
+
+    function renderDonutBalance(container, chart) {
+      container.textContent = "";
+      const data = chart.data || [];
+      const resumen = chart.resumen || {};
+      const total = data.reduce((acc, item) => acc + Math.max(0, Number(item.total || 0)), 0);
+      if (!total) {
+        container.appendChild(emptyBox("Sin cobros ni pagos confirmados para el período."));
+        return;
+      }
+
+      const wrap = document.createElement("div");
+      wrap.className = "de-balance-chart";
+
+      const donutWrap = document.createElement("div");
+      donutWrap.className = "de-balance-donut-wrap";
+
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("class", "de-balance-donut");
+      svg.setAttribute("viewBox", "0 0 160 160");
+      svg.setAttribute("aria-hidden", "true");
+
+      const radius = 58;
+      const circumference = 2 * Math.PI * radius;
+      const bg = document.createElementNS(svgNS, "circle");
+      bg.setAttribute("class", "de-balance-ring-bg");
+      bg.setAttribute("cx", "80");
+      bg.setAttribute("cy", "80");
+      bg.setAttribute("r", String(radius));
+      svg.appendChild(bg);
+
+      let offset = 0;
+      data.forEach((item) => {
+        const value = Math.max(0, Number(item.total || 0));
+        if (!value) return;
+        const length = (value / total) * circumference;
+        const circle = document.createElementNS(svgNS, "circle");
+        circle.setAttribute("class", `de-balance-ring-segment is-${item.tipo || "item"}`);
+        circle.setAttribute("cx", "80");
+        circle.setAttribute("cy", "80");
+        circle.setAttribute("r", String(radius));
+        circle.setAttribute("stroke-dasharray", `${length} ${circumference - length}`);
+        circle.setAttribute("stroke-dashoffset", String(-offset));
+        svg.appendChild(circle);
+        offset += length;
+      });
+
+      const center = document.createElement("div");
+      center.className = "de-balance-center";
+      const centerLabel = document.createElement("span");
+      centerLabel.className = "de-balance-center-label";
+      centerLabel.textContent = "Neto";
+      const centerValue = document.createElement("span");
+      centerValue.className = "de-balance-center-value";
+      centerValue.textContent = resumen.neto_label || "Bs 0.00";
+      center.appendChild(centerLabel);
+      center.appendChild(centerValue);
+
+      donutWrap.appendChild(svg);
+      donutWrap.appendChild(center);
+
+      const detailList = document.createElement("div");
+      detailList.className = "de-balance-detail-list";
+      data.forEach((item) => {
+        const value = Math.max(0, Number(item.total || 0));
+        const percent = total ? (value / total) * 100 : 0;
+        const row = document.createElement("div");
+        row.className = "de-balance-detail-item";
+
+        const dot = document.createElement("span");
+        dot.className = `de-balance-detail-dot is-${item.tipo || "item"}`;
+
+        const main = document.createElement("div");
+        main.className = "de-balance-detail-main";
+        const label = document.createElement("div");
+        label.className = "de-balance-detail-label";
+        label.textContent = item.label || "Concepto";
+        const percentLabel = document.createElement("div");
+        percentLabel.className = "de-balance-detail-percent";
+        percentLabel.textContent = `${percent.toFixed(1)}% del movimiento`;
+        main.appendChild(label);
+        main.appendChild(percentLabel);
+
+        const amount = document.createElement("div");
+        amount.className = "de-balance-detail-value";
+        amount.textContent = item.total_label || "Bs 0.00";
+
+        row.appendChild(dot);
+        row.appendChild(main);
+        row.appendChild(amount);
+        detailList.appendChild(row);
+      });
+
+      const neto = Number(resumen.neto || 0);
+      const netoRow = document.createElement("div");
+      netoRow.className = `de-balance-neto ${neto < 0 ? "is-negative" : "is-positive"}`;
+      const netoLabel = document.createElement("span");
+      netoLabel.textContent = "Saldo neto";
+      const netoValue = document.createElement("span");
+      netoValue.textContent = resumen.neto_label || "Bs 0.00";
+      netoRow.appendChild(netoLabel);
+      netoRow.appendChild(netoValue);
+      detailList.appendChild(netoRow);
+
+      wrap.appendChild(donutWrap);
+      wrap.appendChild(detailList);
+      container.appendChild(wrap);
+    }
+
+    function renderDonutSimple(container, chart) {
+      container.textContent = "";
+      const data = chart.data || [];
+      const total = data.reduce((acc, item) => acc + Number(item.total || 0), 0);
+      if (!total) {
+        container.appendChild(emptyBox("No hay cuentas vencidas."));
+        return;
+      }
+      const wrap = document.createElement("div");
+      wrap.className = "de-alert-list";
+      data.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "de-priority-item";
+        const left = document.createElement("span");
+        left.textContent = `${item.label || "Concepto"} · ${item.cantidad || 0}`;
+        const right = document.createElement("span");
+        right.className = "de-priority-count";
+        right.textContent = item.total_label || "0.00";
+        row.appendChild(left);
+        row.appendChild(right);
+        wrap.appendChild(row);
+      });
+      container.appendChild(wrap);
+    }
+
+    function renderHorizontalBars(container, chart) {
+      container.textContent = "";
+      const data = chart.data || [];
+      if (!data.length) {
+        container.appendChild(emptyBox("No hay saldos pendientes relevantes."));
+        return;
+      }
+      const max = maxValue(data.map((item) => item.total));
+      data.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "de-hbar-row";
+        const top = document.createElement("div");
+        top.className = "de-hbar-top";
+        const label = document.createElement("span");
+        label.textContent = item.label || "Sin nombre";
+        const total = document.createElement("span");
+        total.textContent = item.total_label || "0.00";
+        top.appendChild(label);
+        top.appendChild(total);
+        const track = document.createElement("div");
+        track.className = "de-hbar-track";
+        const fill = document.createElement("div");
+        fill.className = "de-hbar-fill";
+        fill.style.width = `${Math.max(4, (Number(item.total || 0) / max) * 100)}%`;
+        track.appendChild(fill);
+        row.appendChild(top);
+        row.appendChild(track);
+        container.appendChild(row);
+      });
+    }
+
+    function renderPriorityList(container, chart) {
+      container.textContent = "";
+      const data = chart.data || [];
+      if (!data.length) {
+        container.appendChild(emptyBox("Sin vencimientos publicitarios."));
+        return;
+      }
+      const wrap = document.createElement("div");
+      data.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "de-priority-item";
+        const label = document.createElement("span");
+        label.textContent = item.label || "Concepto";
+        const count = document.createElement("span");
+        count.className = "de-priority-count";
+        count.textContent = item.cantidad || 0;
+        row.appendChild(label);
+        row.appendChild(count);
+        wrap.appendChild(row);
+      });
+      container.appendChild(wrap);
+    }
+
+    function renderCharts(charts) {
+      const chartList = charts || [];
+      const targets = [el.charts.flujo, el.charts.vencidas, el.charts.clientes, el.charts.publicidad];
+      chartList.forEach((chart, index) => {
+        if (el.chartTitles[index]) el.chartTitles[index].textContent = chart.titulo || "Gráfico";
+        if (el.chartSubtitles[index]) el.chartSubtitles[index].textContent = chart.subtitulo || "";
+        const target = targets[index];
+        if (!target) return;
+        if (chart.tipo === "donut_balance") renderDonutBalance(target, chart);
+        else if (chart.tipo === "bar_dual") renderDualBar(target, chart);
+        else if (chart.tipo === "donut_simple") renderDonutSimple(target, chart);
+        else if (chart.tipo === "bar_horizontal") renderHorizontalBars(target, chart);
+        else renderPriorityList(target, chart);
+      });
+    }
+
+    function renderAlerts(alerts) {
+      el.alertList.textContent = "";
+      if (!alerts || !alerts.length) {
+        el.alertList.appendChild(emptyBox("No hay alertas prioritarias para los filtros seleccionados."));
+        return;
+      }
+      alerts.forEach((item) => {
+        const hasDetail = Boolean(item.detalle_url && item.detalle_url !== "#");
+        const row = document.createElement(hasDetail ? "a" : "article");
+        row.className = `de-alert-row${hasDetail ? " is-clickable" : ""}`;
+        if (hasDetail) {
+          row.href = item.detalle_url;
+          row.title = `Ver detalle: ${item.tipo || "alerta"}`;
+          row.setAttribute("aria-label", `Ver detalle: ${item.tipo || "alerta"}`);
+        }
+
+        const priority = document.createElement("span");
+        priority.className = `de-badge ${item.prioridad || "MEDIA"}`;
+        priority.textContent = item.prioridad || "MEDIA";
+
+        const fecha = document.createElement("div");
+        fecha.className = "de-alert-date";
+        fecha.textContent = item.fecha_label || "";
+
+        const tipo = document.createElement("div");
+        tipo.className = "de-alert-type";
+        tipo.textContent = item.tipo || "";
+
+        const desc = document.createElement("div");
+        desc.className = "de-alert-desc";
+        desc.textContent = item.descripcion || "";
+        desc.title = item.descripcion || "";
+
+        const monto = document.createElement("div");
+        monto.className = "de-alert-amount";
+        monto.textContent = item.monto_label || "";
+
+        const action = document.createElement("div");
+        action.className = "de-alert-action";
+        action.textContent = item.accion || "";
+
+        row.appendChild(priority);
+        row.appendChild(fecha);
+        row.appendChild(tipo);
+        row.appendChild(desc);
+        row.appendChild(monto);
+        row.appendChild(action);
+        el.alertList.appendChild(row);
+      });
+    }
+
+    function renderPayload(payload) {
+      el.dashboardSubtitle.textContent = payload.subtitulo || "";
+      el.moneyNote.textContent = `(${payload.moneda_note || "Expresado en Bs."})`;
+      const alertasCantidad = Array.isArray(payload.alertas) ? payload.alertas.length : 0;
+      el.periodoLabel.textContent = `${payload.periodo || ""} · Se muestran hasta ${alertasCantidad ? alertasCantidad : 10} alertas prioritarias.`;
+      el.criterioLabel.textContent = payload.criterio || "";
+      renderCards(payload.cards || []);
+      renderCharts(payload.charts || []);
+      renderAlerts(payload.alertas || []);
+    }
+
+    async function loadDashboard() {
+      if (controller) controller.abort();
+      controller = new AbortController();
+      showLoader();
+      try {
+        const response = await fetch(`${boot.urls.data}?${buildParams().toString()}`, {
+          headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" },
+          signal: controller.signal,
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) throw new Error(data.message || "No se pudo consultar el dashboard.");
+        renderPayload(data);
+      } catch (error) {
+        if (error.name !== "AbortError") alertError(error.message || "No se pudo consultar el dashboard.");
+      } finally {
+        hideLoader();
+      }
+    }
+
+    function scheduleLoad() {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        fetchTipoCambio(true);
+        loadDashboard();
+      }, 280);
+    }
+
+    function openPdf() {
+      const url = `${boot.urls.pdf}?${buildParams().toString()}`;
+      window.open(url, "_blank", "noopener");
+    }
+
+    [el.rango, el.fechaCorte, el.fechaDesde, el.fechaHasta, el.unidadNegocio].forEach((input) => {
+      input.addEventListener("change", () => {
+        updateRangeFields();
+        scheduleLoad();
+      });
+    });
+
+    el.btnActualizar.addEventListener("click", () => { fetchTipoCambio(true); loadDashboard(); });
+    el.btnPdf.addEventListener("click", openPdf);
+    el.btnTipoCambio.addEventListener("click", irAGestionTipoCambio);
+
+    updateRangeFields();
+    fetchTipoCambio(true);
+    loadDashboard();
+
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) {
+        fetchTipoCambio(true);
+        loadDashboard();
+      }
+    });
+  });
+</script>
+{% endblock %}

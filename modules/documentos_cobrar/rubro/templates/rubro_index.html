@@ -1,0 +1,938 @@
+{% extends "layout.html" %}
+{% block title %}Rubro{% endblock %}
+{% block page_help_url %}{{ url_for('rubro.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  #rubroPage {
+    --rb-accent: #2563eb;
+    --rb-accent-lt: #eaf2ff;
+    --rb-success: #15803d;
+    --rb-success-lt: #e9f8ee;
+    --rb-warning: #d97706;
+    --rb-warning-lt: #fff7ed;
+    --rb-border: #e2e8f0;
+    --rb-surface: #f8fafc;
+    --rb-text: #334155;
+    --rb-muted: #64748b;
+    --rb-radius: 14px;
+  }
+
+  #rubroPage .rb-header {
+    background: linear-gradient(120deg, #0f2340 0%, #153d6f 60%, #1d4ed8 100%);
+    border-radius: var(--rb-radius);
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15, 35, 64, 0.14);
+    position: sticky;
+    top: 72px;
+    z-index: 30;
+    overflow: hidden;
+  }
+
+  #rubroPage .rb-header::before {
+    content: "";
+    position: absolute;
+    top: -45px;
+    right: -35px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+  }
+
+  #rubroPage .rb-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  #rubroPage .rb-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.12rem;
+    flex-shrink: 0;
+  }
+
+  #rubroPage .rb-header-title {
+    color: #fff;
+    font-size: 1.08rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.2px;
+  }
+
+  #rubroPage .rb-header-sub {
+    color: rgba(255, 255, 255, 0.66);
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+
+  #rubroPage .rb-header .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+    font-size: 0.82rem;
+    z-index: 1;
+    position: relative;
+  }
+
+  #rubroPage .rb-header .btn-primary:hover {
+    background: #eff6ff;
+    border-color: #eff6ff;
+  }
+
+  #rubroPage .rb-card {
+    background: #fff;
+    border: 1px solid var(--rb-border);
+    border-radius: var(--rb-radius);
+    box-shadow: 0 4px 18px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+  }
+
+  #rubroPage .rb-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.95rem 1.1rem;
+    background: var(--rb-surface);
+    border-bottom: 1px solid var(--rb-border);
+  }
+
+  #rubroPage .rb-toolbar-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--rb-muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  #rubroPage .rb-toolbar-title-bar {
+    display: block;
+    width: 3px;
+    height: 13px;
+    background: var(--rb-accent);
+    border-radius: 2px;
+  }
+
+  #rubroPage .rb-note {
+    font-size: 0.78rem;
+    color: #475569;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    padding: 6px 10px;
+    border-radius: 999px;
+  }
+
+  #rubroPage .rb-filter-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+
+  #rubroPage .rb-filter-inline-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--rb-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  #rubroPage .rb-filter-inline .form-select {
+    min-width: 170px;
+    border: 1.5px solid var(--rb-border);
+    border-radius: 8px;
+    font-size: 0.84rem;
+    min-height: 38px;
+  }
+
+  @media (max-width: 768px) {
+    #rubroPage .rb-filter-inline {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    #rubroPage .rb-filter-inline .form-select {
+      width: 100%;
+    }
+  }
+
+  #rubroPage .rb-table-wrap {
+    padding: 0.8rem 1rem 1rem;
+  }
+
+  #rubroPage #tblRubro {
+    width: 100% !important;
+  }
+
+  #rubroPage #tblRubro thead th {
+    background: var(--rb-surface);
+    color: var(--rb-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.55px;
+    border-bottom: 2px solid var(--rb-border);
+    padding: 11px 12px;
+    white-space: nowrap;
+  }
+
+  #rubroPage #tblRubro tbody td {
+    padding: 10px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eef2f7;
+    font-size: 0.86rem;
+    color: var(--rb-text);
+  }
+
+  #rubroPage #tblRubro tbody tr:nth-child(even) {
+    background: #fbfdff;
+  }
+
+  #rubroPage #tblRubro tbody tr:hover td {
+    background: var(--rb-accent-lt) !important;
+  }
+
+  #rubroPage .badge-codigo {
+    display: inline-flex;
+    align-items: center;
+    font-family: Consolas, monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.45px;
+    background: var(--rb-accent-lt);
+    color: var(--rb-accent);
+    border: 1px solid #bfdbfe;
+    padding: 3px 10px;
+    border-radius: 7px;
+  }
+
+  #rubroPage .badge-bool {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+  }
+
+  #rubroPage .badge-bool.si {
+    background: var(--rb-success-lt);
+    color: var(--rb-success);
+    border-color: #b7e4c7;
+  }
+
+  #rubroPage .badge-bool.no {
+    background: var(--rb-warning-lt);
+    color: var(--rb-warning);
+    border-color: #fed7aa;
+  }
+
+  #rubroPage .rb-desc {
+    color: #475569;
+    line-height: 1.4;
+  }
+
+  #rubroPage .rb-desc.empty {
+    color: #94a3b8;
+    font-style: italic;
+  }
+
+  #rubroPage .rb-btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid var(--rb-border);
+    background: #fff;
+    color: var(--rb-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.8rem;
+    padding: 0;
+  }
+
+  #rubroPage .rb-btn-action:hover {
+    transform: translateY(-1px);
+  }
+
+  #rubroPage .rb-btn-edit:hover {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+  }
+
+  #rubroPage .rb-btn-toggle:hover {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #d97706;
+  }
+
+  #rubroPage div.dataTables_wrapper div.dataTables_filter input,
+  #rubroPage div.dataTables_wrapper div.dataTables_length select {
+    border: 1.5px solid var(--rb-border);
+    border-radius: 8px;
+    font-size: 0.84rem;
+    padding: 5px 10px;
+  }
+
+  #rubroPage div.dataTables_wrapper div.dataTables_filter label,
+  #rubroPage div.dataTables_wrapper div.dataTables_length label,
+  #rubroPage div.dataTables_wrapper div.dataTables_info {
+    font-size: 0.8rem;
+    color: var(--rb-muted);
+  }
+
+  #rubroPage div.dataTables_wrapper div.dataTables_paginate .paginate_button {
+    border-radius: 7px !important;
+    font-size: 0.82rem;
+    padding: 4px 10px !important;
+    border: 1px solid transparent !important;
+    color: var(--rb-muted) !important;
+  }
+
+  #rubroPage div.dataTables_wrapper div.dataTables_paginate .paginate_button.current,
+  #rubroPage div.dataTables_wrapper div.dataTables_paginate .paginate_button.current:hover {
+    background: var(--rb-accent) !important;
+    border-color: var(--rb-accent) !important;
+    color: #fff !important;
+    font-weight: 600;
+  }
+
+  #rubroPage div.dataTables_wrapper div.dataTables_paginate .paginate_button:hover {
+    background: var(--rb-accent-lt) !important;
+    border-color: var(--rb-accent-lt) !important;
+    color: var(--rb-accent) !important;
+  }
+
+  #rubroModal .modal-dialog {
+    max-width: 760px;
+  }
+
+  #rubroModal .modal-content {
+    border: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+  }
+
+  #rubroModal .modal-header {
+    background: linear-gradient(120deg, #0f2340 0%, #153d6f 60%, #1d4ed8 100%);
+    color: #fff;
+    border-bottom: 0;
+    padding: 1rem 1.2rem;
+  }
+
+  #rubroModal .modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  #rubroModal .btn-close {
+    filter: invert(1);
+    opacity: 0.9;
+  }
+
+  #rubroModal .modal-body {
+    padding: 1.1rem 1.2rem 1rem;
+    background: #f8fafc;
+  }
+
+  #rubroModal .modal-footer {
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+    padding: 0.9rem 1.2rem;
+  }
+
+  #rubroModal .card-form {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #fff;
+    padding: 1rem;
+  }
+
+  #rubroModal .card-form-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.55px;
+    color: #64748b;
+    font-weight: 800;
+    margin-bottom: 0.85rem;
+  }
+
+  #rubroModal .form-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 0.32rem;
+  }
+
+  #rubroModal .form-control,
+  #rubroModal .form-select,
+  #rubroModal textarea.form-control {
+    border-radius: 10px;
+    border: 1.5px solid #dbe3ee;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+
+  #rubroModal textarea.form-control {
+    min-height: 110px;
+    resize: vertical;
+  }
+
+  #rubroModal .form-text {
+    font-size: 0.77rem;
+    color: #64748b;
+  }
+
+  #rubroModal .campo-autogenerado {
+    background: #eef2f7 !important;
+    color: #64748b !important;
+    cursor: not-allowed;
+    font-weight: 700;
+    border-color: #d6dee8 !important;
+  }
+
+  #rubroModal .campo-autogenerado:focus {
+    background: #eef2f7 !important;
+    color: #64748b !important;
+    border-color: #d6dee8 !important;
+    box-shadow: none !important;
+  }
+
+  #rubroPage .col-codigo {
+    width: 120px;
+  }
+
+  #rubroPage .col-nombre {
+    width: 260px;
+  }
+
+  #rubroPage .col-desc {
+    width: 420px;
+  }
+
+  #rubroPage .col-activo {
+    width: 90px;
+  }
+
+  #rubroPage .col-acciones {
+    width: 110px;
+  }
+
+  @media (max-width: 768px) {
+    #rubroModal .modal-dialog {
+      max-width: 96vw;
+      margin: 0.8rem auto;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="rubroPage">
+  <div class="rb-header">
+    <div class="rb-header-left">
+      <div class="rb-header-icon">
+        <i class="fas fa-tags"></i>
+      </div>
+      <div>
+        <h4 class="rb-header-title">Rubro</h4>
+        <div class="rb-header-sub">Catálogo de rubros operativos para pagos, cobros y comprobantes</div>
+      </div>
+    </div>
+
+    {% if puede_editar %}
+    <button id="btnNuevoRubro" type="button" class="btn btn-primary">
+      <i class="fas fa-plus me-1"></i>
+      Nuevo registro
+    </button>
+    {% endif %}
+  </div>
+
+  <div class="rb-card">
+    <div class="rb-toolbar">
+      <span class="rb-toolbar-title">
+        <span class="rb-toolbar-title-bar"></span>
+        Listado de rubros operativos
+      </span>
+
+      <span class="rb-note">
+        El código se genera automáticamente al guardar. El nombre no puede repetirse.
+      </span>
+
+      <div class="rb-filter-inline">
+        <label class="rb-filter-inline-label" for="filtroEstadoRubro">Mostrar</label>
+        <select id="filtroEstadoRubro" class="form-select">
+          <option value="activos" selected>Activos</option>
+          <option value="todos">Todos</option>
+          <option value="inactivos">No activos</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="rb-table-wrap">
+      <div class="table-responsive">
+        <table id="tblRubro" class="table table-hover w-100">
+          <thead>
+            <tr>
+              <th class="col-codigo">Código</th>
+              <th class="col-nombre">Nombre</th>
+              <th class="col-desc">Descripción</th>
+              <th class="col-activo">Activo</th>
+              {% if puede_editar %}
+              <th class="col-acciones text-center no-sort">Acciones</th>
+              {% endif %}
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="rubroModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Rubro</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="formRubro" novalidate>
+          <input type="hidden" id="rubro_id" />
+
+          <div class="card-form">
+            <div class="card-form-title">Datos principales</div>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="rubroCodigo">Código</label>
+                <input type="text" id="rubroCodigo" class="form-control campo-autogenerado" maxlength="30" readonly
+                  tabindex="-1" />
+                <div class="form-text" id="rubroCodigoHelpText">Se generará automáticamente al guardar por primera vez.
+                </div>
+              </div>
+
+              <div class="col-md-8">
+                <label class="form-label" for="rubroNombre">Nombre</label>
+                <input type="text" id="rubroNombre" class="form-control" maxlength="150" />
+              </div>
+
+              <div class="col-md-9">
+                <label class="form-label" for="rubroDescripcion">Descripción</label>
+                <textarea id="rubroDescripcion" class="form-control" maxlength="300"></textarea>
+                <div class="form-text">Opcional. Úselo para aclarar cuándo o cómo debe utilizarse este rubro.</div>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label" for="rubroActivo">Activo</label>
+                <select id="rubroActivo" class="form-select">
+                  <option value="true">Sí</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnGuardarRubro">
+          <i class="fas fa-save me-1"></i>
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="application/json" id="rubroBootstrap">
+  {{
+    {
+      "puedeEditar": puede_editar,
+      "urls": {
+        "lista": url_for('rubro.api_lista'),
+        "crear": url_for('rubro.api_crear'),
+        "baseApi": url_for('rubro.index') ~ 'api'
+      }
+    } | tojson
+  }}
+</script>
+
+<script>
+  (function () {
+    "use strict";
+
+    let tabla = null;
+    let modalRubro = null;
+
+    const bootEl = document.getElementById("rubroBootstrap");
+    const boot = JSON.parse((bootEl && bootEl.textContent) || "{}");
+    const puedeEditar = Boolean(boot.puedeEditar);
+    const urls = boot.urls || {};
+
+    function escHtml(valor) {
+      return String(valor ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function boolBadge(valor) {
+      return valor
+        ? '<span class="badge-bool si"><i class="fas fa-check-circle"></i> Sí</span>'
+        : '<span class="badge-bool no"><i class="fas fa-ban"></i> No</span>';
+    }
+
+    function descRender(valor) {
+      if (!valor) {
+        return '<span class="rb-desc empty">Sin descripción</span>';
+      }
+      return `<span class="rb-desc">${escHtml(valor)}</span>`;
+    }
+
+    function mostrarMensaje(tipo, titulo, texto) {
+      return Swal.fire({
+        icon: tipo,
+        title: titulo,
+        text: texto,
+        confirmButtonText: "Aceptar",
+        allowOutsideClick: false,
+        allowEscapeKey: true,
+        buttonsStyling: false,
+        customClass: {
+          confirmButton: "btn btn-primary"
+        }
+      });
+    }
+
+    function confirmarCambioEstado(activar) {
+      return Swal.fire({
+        icon: "warning",
+        title: activar ? "Activar rubro" : "Desactivar rubro",
+        text: activar ? "El rubro será activado." : "El rubro será desactivado.",
+        showCancelButton: true,
+        confirmButtonText: activar ? "Activar" : "Desactivar",
+        cancelButtonText: "Cancelar",
+        allowOutsideClick: false,
+        buttonsStyling: false,
+        customClass: {
+          confirmButton: "btn btn-primary",
+          cancelButton: "btn btn-light me-2"
+        }
+      });
+    }
+
+    function ajaxJSON(options) {
+      return $.ajax({
+        url: options.url,
+        method: options.method || "GET",
+        data: options.body ? JSON.stringify(options.body) : null,
+        contentType: "application/json; charset=UTF-8",
+        dataType: "json",
+        processData: false
+      });
+    }
+
+    function getDtLanguage() {
+      if (window.DXTBase && DXTBase.dtLang) {
+        return typeof DXTBase.dtLang === "function" ? DXTBase.dtLang() : DXTBase.dtLang;
+      }
+      return {
+        processing: "Procesando...",
+        search: "Buscar:",
+        lengthMenu: "Mostrar _MENU_ registros",
+        info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+        infoEmpty: "Mostrando 0 a 0 de 0 registros",
+        infoFiltered: "(filtrado de _MAX_ registros totales)",
+        loadingRecords: "Cargando...",
+        zeroRecords: "No se encontraron resultados",
+        emptyTable: "No hay datos disponibles",
+        paginate: {
+          first: "Primero",
+          previous: "Anterior",
+          next: "Siguiente",
+          last: "Último"
+        }
+      };
+    }
+
+    function urlObtener(id) {
+      return `${urls.baseApi}/${encodeURIComponent(id)}`;
+    }
+
+    function urlEditar(id) {
+      return `${urls.baseApi}/editar/${encodeURIComponent(id)}`;
+    }
+
+    function urlToggle(id) {
+      return `${urls.baseApi}/toggle-activo/${encodeURIComponent(id)}`;
+    }
+
+    function renderAcciones(row) {
+      const toggleTitle = row.activo ? "Desactivar" : "Activar";
+      const toggleIcon = row.activo ? "fa-toggle-on" : "fa-toggle-off";
+      const wrap = document.createElement("div");
+      wrap.className = "d-flex justify-content-center gap-1";
+
+      const btnEditar = document.createElement("button");
+      btnEditar.type = "button";
+      btnEditar.className = "rb-btn-action rb-btn-edit btn-editar";
+      btnEditar.title = "Editar";
+      btnEditar.setAttribute("data-id", row.id);
+      btnEditar.innerHTML = '<i class="fas fa-pencil-alt"></i>';
+
+      const btnToggle = document.createElement("button");
+      btnToggle.type = "button";
+      btnToggle.className = "rb-btn-action rb-btn-toggle btn-toggle";
+      btnToggle.title = toggleTitle;
+      btnToggle.setAttribute("data-id", row.id);
+      btnToggle.setAttribute("data-activo", row.activo ? "true" : "false");
+      btnToggle.innerHTML = `<i class="fas ${toggleIcon}"></i>`;
+
+      wrap.appendChild(btnEditar);
+      wrap.appendChild(btnToggle);
+      return wrap.outerHTML;
+    }
+
+    function initTabla() {
+      const columns = [
+        {
+          data: "codigo",
+          render: function (valor) {
+            return `<span class="badge-codigo">${escHtml(valor)}</span>`;
+          }
+        },
+        {
+          data: "nombre",
+          render: function (valor) {
+            return escHtml(valor || "");
+          }
+        },
+        {
+          data: "descripcion",
+          render: function (valor) {
+            return descRender(valor || "");
+          }
+        },
+        {
+          data: "activo",
+          render: function (valor) {
+            return boolBadge(Boolean(valor));
+          }
+        }
+      ];
+
+      if (puedeEditar) {
+        columns.push({
+          data: null,
+          className: "text-center",
+          orderable: false,
+          render: function (row) {
+            return renderAcciones(row);
+          }
+        });
+      }
+
+      tabla = $("#tblRubro").DataTable({
+        ajax: {
+          url: urls.lista,
+          dataSrc: "data",
+          cache: false,
+          data: function (d) {
+            d.estado = ($("#filtroEstadoRubro").val() || "activos");
+          }
+        },
+        columns: columns,
+        language: getDtLanguage(),
+        order: [[0, "asc"]],
+        pageLength: 15,
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
+        columnDefs: [
+          { targets: "no-sort", orderable: false }
+        ]
+      });
+    }
+
+    function limpiarFormulario() {
+      $("#rubro_id").val("");
+      $("#rubroCodigo").val("");
+      $("#rubroCodigoHelpText").text("Se generará automáticamente al guardar por primera vez.");
+      $("#rubroNombre").val("");
+      $("#rubroDescripcion").val("");
+      $("#rubroActivo").val("true");
+    }
+
+    function payloadFormulario() {
+      return {
+        nombre: ($("#rubroNombre").val() || "").trim(),
+        descripcion: ($("#rubroDescripcion").val() || "").trim(),
+        activo: $("#rubroActivo").val() === "true"
+      };
+    }
+
+    function validarPayload(payload) {
+      if (!payload.nombre) return "El nombre es obligatorio.";
+      if (payload.nombre.length > 150) return "El nombre no puede exceder 150 caracteres.";
+      if (payload.descripcion && payload.descripcion.length > 300) return "La descripción no puede exceder 300 caracteres.";
+      return "";
+    }
+
+    function abrirModalNuevo() {
+      limpiarFormulario();
+      $("#rubroModal .modal-title").text("Nuevo rubro");
+      $("#rubroCodigoHelpText").text("Se generará automáticamente al guardar por primera vez.");
+      modalRubro.show();
+
+      setTimeout(function () {
+        $("#rubroNombre").trigger("focus");
+      }, 180);
+    }
+
+    function abrirModalEditar(id) {
+      ajaxJSON({
+        url: urlObtener(id),
+        method: "GET"
+      })
+        .done(function (resp) {
+          const row = resp.data || {};
+          limpiarFormulario();
+          $("#rubro_id").val(row.id || "");
+          $("#rubroCodigo").val(row.codigo || "");
+          $("#rubroCodigoHelpText").text("El código es autogenerado y no puede modificarse.");
+          $("#rubroNombre").val(row.nombre || "");
+          $("#rubroDescripcion").val(row.descripcion || "");
+          $("#rubroActivo").val(row.activo ? "true" : "false");
+          $("#rubroModal .modal-title").text("Editar rubro");
+          modalRubro.show();
+
+          setTimeout(function () {
+            $("#rubroNombre").trigger("focus").trigger("select");
+          }, 180);
+        })
+        .fail(function (xhr) {
+          const resp = xhr.responseJSON || {};
+          mostrarMensaje("error", "No se pudo abrir", resp.message || "Ocurrió un error al cargar el rubro.");
+        });
+    }
+
+    function guardarFormulario() {
+      const payload = payloadFormulario();
+      const error = validarPayload(payload);
+
+      if (error) {
+        mostrarMensaje("warning", "Datos incompletos", error);
+        return;
+      }
+
+      const id = $("#rubro_id").val();
+      const esEdicion = !!id;
+
+      ajaxJSON({
+        url: esEdicion ? urlEditar(id) : urls.crear,
+        method: esEdicion ? "PUT" : "POST",
+        body: payload
+      })
+        .done(function (resp) {
+          modalRubro.hide();
+          tabla.ajax.reload(null, false);
+          mostrarMensaje("success", "Guardado correctamente", resp.message || "Rubro guardado correctamente.");
+        })
+        .fail(function (xhr) {
+          const resp = xhr.responseJSON || {};
+          mostrarMensaje("error", "No se pudo guardar", resp.message || "Ocurrió un error al guardar el rubro.");
+        });
+    }
+
+    function toggleActivo(id, activoActual) {
+      const activar = !activoActual;
+
+      confirmarCambioEstado(activar).then(function (result) {
+        if (!result.isConfirmed) return;
+
+        ajaxJSON({
+          url: urlToggle(id),
+          method: "POST"
+        })
+          .done(function (resp) {
+            tabla.ajax.reload(null, false);
+            mostrarMensaje("success", "Actualización correcta", resp.message || "Estado actualizado correctamente.");
+          })
+          .fail(function (xhr) {
+            const resp = xhr.responseJSON || {};
+            mostrarMensaje("error", "No se pudo actualizar", resp.message || "Ocurrió un error al actualizar el estado.");
+          });
+      });
+    }
+
+    $(function () {
+      modalRubro = new bootstrap.Modal(document.getElementById("rubroModal"));
+      initTabla();
+
+      if (puedeEditar) {
+        $("#btnNuevoRubro").on("click", function () {
+          abrirModalNuevo();
+        });
+
+        $("#btnGuardarRubro").on("click", function () {
+          guardarFormulario();
+        });
+
+        $(document).on("click", ".btn-editar", function () {
+          abrirModalEditar($(this).data("id"));
+        });
+
+        $(document).on("click", ".btn-toggle", function () {
+          toggleActivo($(this).data("id"), $(this).data("activo") === true || $(this).data("activo") === "true");
+        });
+      }
+
+      $("#rubroModal").on("hidden.bs.modal", function () {
+        limpiarFormulario();
+      });
+
+      $("#filtroEstadoRubro").on("change", function () {
+        if (tabla) {
+          tabla.ajax.reload();
+        }
+      });
+    });
+  })();
+</script>
+{% endblock %}

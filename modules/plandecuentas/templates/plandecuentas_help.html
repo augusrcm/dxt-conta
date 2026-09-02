@@ -1,0 +1,316 @@
+{% extends "layouthelp.html" %} {% block title %}Ayuda · Plan de Cuentas{%
+endblock %} {% block help_title %}Ayuda rápida · Plan de Cuentas{% endblock %}
+{% block help_subtitle %}Guía práctica para consultar, crear, editar y organizar
+la estructura jerárquica del catálogo contable.{% endblock %} {% block
+help_summary %}
+<li>Qué muestra esta pantalla.</li>
+<li>Cómo usar los filtros del catálogo.</li>
+<li>Qué significa cada columna de la tabla.</li>
+<li>Cómo crear o editar una cuenta contable.</li>
+<li>Qué validaciones jerárquicas aplica el sistema.</li>
+{% endblock %} {% block help_content %}
+<section class="help-section">
+  <h2>1. ¿Para qué sirve esta pantalla?</h2>
+  <div class="help-callout">
+    Esta interfaz permite administrar el <strong>Plan de Cuentas</strong> del
+    sistema contable: consultar la estructura existente, crear nuevas cuentas,
+    editar cuentas ya registradas y mantener el orden jerárquico del catálogo.
+  </div>
+  <p>
+    El plan de cuentas es la base sobre la que operan los asientos contables,
+    los auxiliares, los centros de costo y otros módulos relacionados. Por eso,
+    cualquier cambio debe realizarse con criterio y validando la estructura
+    antes de guardar.
+  </p>
+</section>
+
+<section class="help-section">
+  <h2>2. Filtros de búsqueda</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Código</h3>
+      <p>Permite ubicar cuentas por su código contable exacto o parcial.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Nombre</h3>
+      <p>
+        Busca cuentas por su denominación o descripción visible en la tabla.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Tipo</h3>
+      <p>
+        Filtra por grandes grupos contables como ACTIVO, PASIVO, PATRIMONIO,
+        INGRESO, GASTO, COSTO u ORDEN.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Nivel</h3>
+      <p>
+        Permite concentrarse en un nivel jerárquico específico dentro de la
+        estructura del plan de cuentas.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Estado</h3>
+      <p>Distingue entre cuentas activas e inactivas.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Postable</h3>
+      <p>
+        Permite filtrar cuentas que aceptan asiento directo y cuentas que solo
+        funcionan como agrupadoras.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>3. ¿Qué muestra la tabla principal?</h2>
+  <div class="help-callout">
+    La tabla presenta el catálogo contable con su estructura jerárquica y sus
+    propiedades operativas.
+  </div>
+
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Código</h3>
+      <p>
+        Identificador contable de la cuenta. Define su posición dentro de la
+        jerarquía.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Nombre / Jerarquía</h3>
+      <p>
+        Muestra el nombre de la cuenta y su ubicación dentro de la estructura
+        padre-hijo.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Tipo</h3>
+      <p>
+        Clasificación principal de la cuenta: ACTIVO, PASIVO, PATRIMONIO,
+        INGRESO, GASTO, COSTO u ORDEN.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Nivel</h3>
+      <p>Indica la profundidad jerárquica de la cuenta dentro del plan.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Naturaleza</h3>
+      <p>Define si la cuenta es de naturaleza DEUDORA o ACREEDORA.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Postable</h3>
+      <p>Señala si la cuenta admite registros contables directos.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Aux.</h3>
+      <p>
+        Indica si la cuenta requiere trabajar obligatoriamente con auxiliar.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>C.C.</h3>
+      <p>
+        Indica si la cuenta requiere centro de costo al momento de registrar el
+        asiento.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Estado</h3>
+      <p>
+        Muestra si la cuenta está activa para uso operativo dentro del sistema.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Acción</h3>
+      <p>
+        Contiene las opciones disponibles para crear subcuentas, editar o
+        eliminar, según permisos y restricciones.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>4. Acciones principales</h2>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Nueva cuenta</h3>
+      <p>Abre el formulario para registrar una nueva cuenta contable.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Crear subcuenta</h3>
+      <p>
+        Permite generar una cuenta hija respetando la jerarquía de la cuenta
+        seleccionada.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Editar</h3>
+      <p>
+        Permite actualizar la información de una cuenta existente, siempre que
+        la estructura lo permita.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Eliminar</h3>
+      <p>
+        Solo procede cuando la cuenta no tiene hijos ni movimientos o
+        dependencias relacionadas.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>5. Formulario de cuenta</h2>
+  <div class="help-callout">
+    El formulario del modal se divide en tres bloques: identificación,
+    clasificación contable y propiedades.
+  </div>
+
+  <h3>Identificación</h3>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Código</h3>
+      <p>
+        Debe seguir formato numérico jerárquico usando puntos. Ejemplo:
+        <strong>1.1.01.001</strong>.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Nombre</h3>
+      <p>Descripción de la cuenta dentro del catálogo.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Cuenta padre</h3>
+      <p>
+        Define la cuenta superior bajo la que quedará registrada la nueva
+        cuenta. Si no tiene padre, será una cuenta de nivel 1.
+      </p>
+    </div>
+  </div>
+
+  <h3>Clasificación contable</h3>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Tipo</h3>
+      <p>Clasificación estructural de la cuenta dentro del plan.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Naturaleza</h3>
+      <p>
+        Comportamiento contable principal de la cuenta: DEUDORA o ACREEDORA.
+      </p>
+    </div>
+  </div>
+
+  <h3>Propiedades</h3>
+  <div class="help-grid-2">
+    <div class="help-mini-card">
+      <h3>Es postable</h3>
+      <p>La cuenta puede recibir asientos contables directos.</p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Requiere auxiliar</h3>
+      <p>
+        Obliga a seleccionar o asociar un auxiliar al usar la cuenta en
+        operaciones contables.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Requiere C. Costo</h3>
+      <p>
+        Obliga a informar centro de costo cuando se use la cuenta en un asiento.
+      </p>
+    </div>
+    <div class="help-mini-card">
+      <h3>Cuenta activa</h3>
+      <p>
+        Define si la cuenta queda habilitada para uso visible y operativo dentro
+        del sistema.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>6. Validaciones jerárquicas importantes</h2>
+  <ul class="help-summary-list">
+    <li>El código solo puede contener números y puntos.</li>
+    <li>
+      Una cuenta hija debe comenzar con el código de su cuenta padre seguido de
+      un punto.
+    </li>
+    <li>La cuenta hija debe agregar un único segmento respecto al padre.</li>
+    <li>La cuenta hija debe tener el mismo tipo que su cuenta padre.</li>
+    <li>La cuenta hija debe tener la misma naturaleza que su cuenta padre.</li>
+    <li>
+      No se pueden crear hijos debajo de una cuenta marcada como postable.
+    </li>
+    <li>No se puede usar como padre una cuenta inactiva.</li>
+  </ul>
+  <div class="help-callout">
+    Estas validaciones existen para preservar la coherencia del catálogo y
+    evitar estructuras contables inválidas.
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>7. Restricciones para eliminar cuentas</h2>
+  <p>
+    No todas las cuentas pueden eliminarse. El sistema bloquea la eliminación
+    cuando la cuenta:
+  </p>
+  <ul class="help-summary-list">
+    <li>Tiene cuentas hijas.</li>
+    <li>Ya fue usada en asientos contables.</li>
+    <li>
+      Tiene vínculos con auxiliares, cajas, cuentas bancarias u otros módulos
+      relacionados.
+    </li>
+  </ul>
+  <div class="help-callout">
+    Antes de eliminar una cuenta, verifica que no forme parte de la operación
+    histórica del sistema.
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>8. Ejemplos prácticos</h2>
+  <div class="help-callout">
+    <strong>Ejemplo 1:</strong> una cuenta <strong>1</strong> puede ser de nivel
+    1.<br />
+    <strong>Ejemplo 2:</strong> una cuenta hija de <strong>1.1</strong> podría
+    ser <strong>1.1.01</strong>.<br />
+    <strong>Ejemplo 3:</strong> si una cuenta es solo agrupadora, no debe
+    marcarse como <strong>postable</strong>.
+  </div>
+</section>
+
+<section class="help-section">
+  <h2>9. Recomendaciones de uso</h2>
+  <ul class="help-summary-list">
+    <li>
+      Crea primero la estructura principal y luego desagrega en subcuentas.
+    </li>
+    <li>No cambies códigos sin revisar el impacto jerárquico y operativo.</li>
+    <li>
+      Usa cuentas postables solo cuando realmente deban admitir movimiento
+      directo.
+    </li>
+    <li>
+      Marca “requiere auxiliar” y “requiere centro de costo” solo cuando sea
+      necesario para el control contable.
+    </li>
+    <li>
+      Antes de inactivar o eliminar, revisa si la cuenta ya participa en otros
+      módulos.
+    </li>
+  </ul>
+</section>
+{% endblock %}

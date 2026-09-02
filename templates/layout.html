@@ -1,0 +1,2378 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ dxt_csrf_token() }}" />
+    <meta
+      name="description"
+      content="DXTSYS Contabilidad - Sistema modular de contabilidad, tesorería y control operativo."
+    />
+    <meta
+      name="keywords"
+      content="DXTSYS, contabilidad, tesorería, facturas electrónicas, cobros, pagos, caja y bancos"
+    />
+    <title>{% block title %}DXTSYS{% endblock %}</title>
+    <!-- Favicon -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='select2/select2.min.css') }}"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='images/favicon/favicon.png') }}"
+    />
+    <!-- Librerías CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='fontawesome/css/all.min.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='datatables/datatables.min.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='flatpickr/flatpickr.min.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='sweetalert2/sweetalert2.min.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/dxt-base-grid.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/layouthelp.css') }}"
+    />
+    {% block extra_css %}{% endblock %}
+    <style>
+      /* ============================================================
+           VARIABLES DE COLORES - PALETA NEUTRA PROFESIONAL
+           ============================================================ */
+      :root {
+        /* Grises principales */
+        --color-gray-50: #f9fafb;
+        --color-gray-100: #f3f4f6;
+        --color-gray-200: #e5e7eb;
+        --color-gray-300: #d1d5db;
+        --color-gray-400: #9ca3af;
+        --color-gray-500: #6b7280;
+        --color-gray-600: #4b5563;
+        --color-gray-700: #374151;
+        --color-gray-800: #475569;
+        /* ← MÁS CLARO (era #1f2937) */
+        --color-gray-900: #334155;
+        /* ← MÁS CLARO (era #111827) */
+
+        /* Colores de acento */
+        --color-blue-500: #3b82f6;
+        --color-blue-600: #2563eb;
+        --color-blue-700: #1d4ed8;
+        --color-green-500: #10b981;
+        --color-amber-500: #f59e0b;
+        --color-red-500: #ef4444;
+
+        /* Aplicación */
+        --color-navbar: var(--color-gray-900);
+        /* CABECERA */
+        --color-sidebar: var(--color-gray-800);
+        /* MENÚ LATERAL */
+        --color-background: var(--color-gray-50);
+        --color-card: #ffffff;
+        --color-text: var(--color-gray-900);
+        --color-text-muted: var(--color-gray-600);
+        --color-border: var(--color-gray-200);
+        --color-primary: var(--color-blue-500);
+        --color-success: var(--color-green-500);
+        --color-warning: var(--color-amber-500);
+        --color-danger: var(--color-red-500);
+
+        /* Sombras */
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md:
+          0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg:
+          0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --shadow-xl:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+
+      /* ============================================================
+           RESET & BASE
+           ============================================================ */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        background-color: var(--color-background);
+        color: var(--color-text);
+        overflow-x: hidden;
+        min-height: 100vh;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      /* ============================================================
+           NAVBAR - GRIS OSCURO ELEGANTE
+           ============================================================ */
+      .main-navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 64px;
+        background: var(--color-navbar);
+        z-index: 1000;
+        box-shadow: var(--shadow-md);
+        display: flex;
+        align-items: center;
+      }
+
+      .main-navbar .navbar-brand {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 1.25rem;
+        margin-left: 1.5rem;
+        letter-spacing: -0.025em;
+      }
+
+      .main-navbar .navbar-brand small {
+        color: var(--color-gray-400);
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-left: 0.5rem;
+      }
+
+      .main-navbar .btn-toggle {
+        background: transparent;
+        border: 1px solid var(--color-gray-600);
+        color: #ffffff;
+        padding: 0.5rem 0.875rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
+        font-size: 1rem;
+      }
+
+      .main-navbar .btn-toggle:hover {
+        background: var(--color-gray-700);
+        border-color: var(--color-gray-500);
+      }
+
+      /* Gestión selector */
+      .gestion-display {
+        background: var(--color-gray-700);
+        color: #ffffff;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        border: 1px solid var(--color-gray-600);
+      }
+
+      /* Menú de usuario */
+      .user-menu .dropdown-toggle {
+        background: var(--color-gray-700);
+        color: #ffffff;
+        border: 1px solid var(--color-gray-600);
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+      }
+
+      .user-menu .dropdown-toggle:hover {
+        background: var(--color-gray-600);
+        border-color: var(--color-gray-500);
+      }
+
+      .user-menu .dropdown-menu {
+        border: 1px solid var(--color-border);
+        box-shadow: var(--shadow-lg);
+        border-radius: 0.5rem;
+        margin-top: 0.5rem;
+      }
+
+      .user-menu .dropdown-item {
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+        color: var(--color-text);
+        transition: all 0.15s ease;
+      }
+
+      .user-menu .dropdown-item:hover {
+        background: var(--color-gray-50);
+        color: var(--color-primary);
+      }
+
+      /* ============================================================
+           SIDEBAR - GRIS ANTRACITA MODERNO
+           ============================================================ */
+      .main-sidebar {
+        position: fixed;
+        left: 0;
+        top: 64px;
+        width: 260px;
+        height: calc(100vh - 104px);
+        background: var(--color-sidebar);
+        z-index: 900;
+        overflow: hidden;
+        padding: 1.25rem 0 0 0;
+        transition: transform 0.3s ease;
+        box-shadow: var(--shadow-lg);
+
+        display: flex;
+        flex-direction: column;
+      }
+
+      .sidebar-nav {
+        padding: 0 0.875rem;
+        flex: 1 1 auto;
+        overflow-y: auto;
+        min-height: 0;
+      }
+
+      /* Links del sidebar - GRIS MEDIO */
+      .sidebar-nav .nav-link {
+        color: var(--color-gray-300);
+        background: var(--color-gray-700);
+        padding: 0.75rem 1rem;
+        margin: 0.25rem 0;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        text-align: left;
+        border: 1px solid transparent;
+      }
+
+      .sidebar-nav .nav-link:hover {
+        background: var(--color-gray-600);
+        color: #ffffff;
+        transform: translateX(4px);
+      }
+
+      /* Opción activa - AZUL CORPORATIVO */
+      .sidebar-nav .nav-link.active,
+      .sidebar-nav .nav-link:focus {
+        background: var(--color-primary);
+        color: #ffffff;
+        font-weight: 600;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        outline: none;
+      }
+
+      .sidebar-nav .nav-link i {
+        width: 1.25rem;
+        margin-right: 0.875rem;
+        font-size: 1rem;
+        flex-shrink: 0;
+      }
+
+      /* Secciones del sidebar - GRIS OSCURO CON TEXTO CLARO */
+      .sidebar-section {
+        margin: 1.25rem 0 0.625rem 0;
+        padding: 0 0.875rem;
+      }
+
+      .sidebar-section-title {
+        background: transparent;
+        color: var(--color-gray-400);
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.075em;
+        padding: 0.5rem 0;
+        display: block;
+        text-align: left;
+      }
+
+      /* Menú colapsable */
+      .sidebar-main-item {
+        background: var(--color-gray-700);
+        color: var(--color-gray-300);
+        padding: 0.75rem 1rem;
+        margin: 0.25rem 0;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        width: 100%;
+        text-align: left;
+      }
+
+      .sidebar-main-item > div {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+      }
+
+      .sidebar-main-item:hover {
+        background: var(--color-gray-600);
+        color: #ffffff;
+        transform: translateX(4px);
+      }
+
+      .sidebar-main-item:focus,
+      .sidebar-main-item.active {
+        background: var(--color-primary);
+        color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        outline: none;
+      }
+
+      .sidebar-main-item i:first-child {
+        width: 1.25rem;
+        margin-right: 0.875rem;
+        font-size: 1rem;
+        flex-shrink: 0;
+      }
+
+      .transition-icon {
+        transition: transform 0.3s ease;
+        font-size: 0.75rem;
+        margin-left: auto;
+        color: var(--color-gray-400);
+      }
+
+      .sidebar-main-item[aria-expanded="true"] .transition-icon {
+        transform: rotate(180deg);
+      }
+
+      .sidebar-submenu {
+        padding-left: 0.5rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 0 0 0.5rem 0.5rem;
+        overflow: hidden;
+        margin-top: 0.25rem;
+      }
+
+      .sidebar-submenu .nav-link {
+        padding-left: 2.5rem;
+        background: transparent;
+        font-size: 0.8125rem;
+        margin: 0.125rem 0;
+      }
+
+      .sidebar-submenu .nav-link:hover {
+        background: var(--color-gray-700);
+        padding-left: 2.75rem;
+      }
+
+      .sidebar-submenu .nav-link.active {
+        background: var(--color-primary);
+        color: #ffffff;
+      }
+
+      .sidebar-critical-zone {
+        flex: 0 0 auto;
+        margin-top: auto;
+        padding: 0.75rem 0.875rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.18);
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 0.55rem;
+      }
+
+      .sidebar-critical-toggle {
+        width: 100%;
+        border: 1px solid rgba(248, 113, 113, 0.18);
+        border-radius: 0.65rem;
+        background: #2f2626;
+        color: #f8fafc;
+        padding: 0.75rem 0.9rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        transition: all 0.2s ease;
+      }
+
+      .sidebar-critical-toggle:hover,
+      .sidebar-critical-toggle:focus {
+        background: #3b2f2f;
+        color: #ffffff;
+        outline: none;
+      }
+
+      .sidebar-critical-toggle > div {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+      }
+
+      .sidebar-critical-toggle .transition-icon {
+        transition: transform 0.2s ease;
+      }
+
+      .sidebar-critical-toggle[aria-expanded="true"] .transition-icon {
+        transform: rotate(180deg);
+      }
+
+      .sidebar-critical-content {
+        max-height: min(42vh, 360px);
+        overflow-y: auto;
+        padding: 0.15rem 0.1rem 0 0.1rem;
+      }
+
+      .sidebar-critical-content::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .sidebar-critical-content::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.65);
+        border-radius: 999px;
+      }
+
+      .sidebar-critical-content::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.65);
+        border-radius: 999px;
+      }
+
+      .sidebar-critical-link {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.72rem 0.9rem;
+        border-radius: 0.6rem;
+        background: #3b2f2f;
+        color: #f1f5f9;
+        text-decoration: none;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        transition: all 0.2s ease;
+      }
+
+      .sidebar-critical-link:hover {
+        background: #4b2f2f;
+        color: #ffffff;
+        transform: translateX(3px);
+      }
+
+      .sidebar-critical-link.active {
+        background: #7f1d1d;
+        color: #fff;
+      }
+
+      .sidebar-critical-link.is-disabled {
+        background: rgba(71, 85, 105, 0.5);
+        color: rgba(241, 245, 249, 0.72);
+        cursor: not-allowed;
+        border: 1px dashed rgba(148, 163, 184, 0.28);
+        box-shadow: none;
+        pointer-events: none;
+      }
+
+      .sidebar-critical-link.is-disabled:hover {
+        background: rgba(71, 85, 105, 0.5);
+        transform: none;
+      }
+
+      .sidebar-critical-note {
+        margin: -0.1rem 0 0.55rem 0;
+        padding: 0 0.2rem;
+        color: rgba(226, 232, 240, 0.72);
+        font-size: 0.74rem;
+        line-height: 1.35;
+      }
+
+      /* Scrollbar personalizado */
+      .main-sidebar::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .main-sidebar::-webkit-scrollbar-track {
+        background: var(--color-gray-900);
+      }
+
+      .main-sidebar::-webkit-scrollbar-thumb {
+        background: var(--color-gray-600);
+        border-radius: 3px;
+      }
+
+      .main-sidebar::-webkit-scrollbar-thumb:hover {
+        background: var(--color-gray-500);
+      }
+
+      /* ============================================================
+           CONTENIDO PRINCIPAL
+           ============================================================ */
+      .main-content {
+        margin-left: 260px;
+        margin-top: 64px;
+        padding: 2rem;
+        min-height: calc(100vh - 104px);
+        background: var(--color-background);
+        transition: margin-left 0.3s ease;
+      }
+
+      /* ============================================================
+           FOOTER - GRIS OSCURO
+           ============================================================ */
+      .main-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: var(--color-navbar);
+        border-top: 1px solid var(--color-gray-700);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .main-footer small {
+        color: var(--color-gray-400);
+        font-weight: 500;
+        font-size: 0.8125rem;
+      }
+
+      /* ============================================================
+           BOTONES DE ACCIÓN
+           ============================================================ */
+      .btn-action {
+        background: var(--color-card);
+        color: var(--color-text);
+        border: 1px solid var(--color-border);
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        box-shadow: var(--shadow-sm);
+      }
+
+      .btn-action:hover {
+        background: var(--color-primary);
+        color: #ffffff;
+        border-color: var(--color-primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+      }
+
+      .btn-action i {
+        margin-right: 0.75rem;
+        flex-shrink: 0;
+        font-size: 1rem;
+      }
+
+      .navbar-status-group {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .navbar-status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.875rem;
+        border-radius: 999px;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        line-height: 1;
+        border: 1px solid transparent;
+        white-space: nowrap;
+      }
+
+      .navbar-status-chip.is-ready {
+        background: rgba(16, 185, 129, 0.18);
+        color: #d1fae5;
+        border-color: rgba(16, 185, 129, 0.32);
+      }
+
+      .navbar-status-chip.is-pending {
+        background: rgba(245, 158, 11, 0.18);
+        color: #fde68a;
+        border-color: rgba(245, 158, 11, 0.32);
+      }
+
+      .tc-lock-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 5000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: rgba(15, 23, 42, 0.72);
+        backdrop-filter: blur(4px);
+      }
+
+      body.tc-lock-active {
+        overflow: hidden;
+      }
+
+      .tc-lock-overlay.is-visible {
+        display: flex;
+      }
+
+      .tc-lock-card {
+        width: 100%;
+        max-width: 560px;
+        background: #ffffff;
+        border-radius: 1rem;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        box-shadow: 0 30px 60px rgba(15, 23, 42, 0.28);
+        overflow: hidden;
+      }
+
+      .tc-lock-header {
+        padding: 1.35rem 1.5rem 1rem;
+        border-bottom: 1px solid var(--color-border);
+        background: linear-gradient(
+          180deg,
+          rgba(248, 250, 252, 0.98) 0%,
+          rgba(255, 255, 255, 1) 100%
+        );
+      }
+
+      .tc-lock-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        background: rgba(245, 158, 11, 0.14);
+        color: #b45309;
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin-bottom: 0.85rem;
+      }
+
+      .tc-lock-title {
+        margin: 0;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--color-text);
+        letter-spacing: -0.02em;
+      }
+
+      .tc-lock-subtitle {
+        margin: 0.55rem 0 0;
+        color: var(--color-text-muted);
+        font-size: 0.94rem;
+        line-height: 1.55;
+      }
+
+      .tc-lock-body {
+        padding: 1.5rem;
+      }
+
+      .tc-lock-date {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.9rem 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.85rem;
+        background: var(--color-gray-50);
+        border: 1px solid var(--color-border);
+        color: var(--color-text);
+        font-weight: 700;
+      }
+
+      .tc-lock-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .tc-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+      }
+
+      .tc-field-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--color-text);
+      }
+
+      .tc-field-label small {
+        color: var(--color-text-muted);
+        font-weight: 600;
+        font-size: 0.78rem;
+      }
+
+      .tc-input-wrap {
+        position: relative;
+      }
+
+      .tc-input-icon {
+        position: absolute;
+        top: 50%;
+        left: 0.95rem;
+        transform: translateY(-50%);
+        color: var(--color-gray-400);
+        pointer-events: none;
+      }
+
+      .tc-input {
+        width: 100%;
+        height: 48px;
+        padding: 0.75rem 0.95rem 0.75rem 2.5rem;
+        border-radius: 0.85rem;
+        border: 1px solid var(--color-border);
+        background: #ffffff;
+        color: var(--color-text);
+        font-size: 0.95rem;
+        font-weight: 600;
+        transition: all 0.18s ease;
+        outline: none;
+      }
+
+      .tc-input::placeholder {
+        color: var(--color-gray-400);
+        font-weight: 500;
+      }
+
+      .tc-input::-webkit-outer-spin-button,
+      .tc-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      .tc-input:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+      }
+
+      .tc-input[disabled] {
+        background: var(--color-gray-100);
+        cursor: not-allowed;
+      }
+
+      .tc-lock-alert {
+        display: none;
+        margin-top: 1rem;
+        padding: 0.9rem 1rem;
+        border-radius: 0.85rem;
+        border: 1px solid rgba(239, 68, 68, 0.15);
+        background: rgba(239, 68, 68, 0.08);
+        color: #b91c1c;
+        font-size: 0.9rem;
+        font-weight: 600;
+        line-height: 1.45;
+      }
+
+      .tc-lock-alert.is-visible {
+        display: block;
+      }
+
+      .tc-lock-info {
+        display: none;
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: 0.85rem;
+        border: 1px solid rgba(245, 158, 11, 0.16);
+        background: rgba(245, 158, 11, 0.08);
+        color: #92400e;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      .tc-lock-info.is-visible {
+        display: block;
+      }
+
+      .tc-lock-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem 1.5rem 1.35rem;
+        border-top: 1px solid var(--color-border);
+        background: #ffffff;
+      }
+
+      .tc-lock-footer-note {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        color: var(--color-text-muted);
+        font-size: 0.84rem;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      .tc-lock-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-left: auto;
+      }
+
+      .tc-lock-btn {
+        min-width: 168px;
+        height: 46px;
+        border: none;
+        border-radius: 0.85rem;
+        padding: 0 1.2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        font-size: 0.92rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.18s ease;
+        text-decoration: none;
+      }
+
+      .tc-lock-btn-primary {
+        background: var(--color-primary);
+        color: #ffffff;
+        box-shadow: 0 14px 24px rgba(37, 99, 235, 0.22);
+      }
+
+      .tc-lock-btn-primary:hover {
+        background: var(--color-blue-600);
+        color: #ffffff;
+        transform: translateY(-1px);
+      }
+
+      .tc-lock-btn-secondary {
+        background: var(--color-gray-100);
+        color: var(--color-text);
+        border: 1px solid var(--color-border);
+      }
+
+      .tc-lock-btn-secondary:hover {
+        background: var(--color-gray-200);
+        color: var(--color-text);
+      }
+
+      .tc-lock-btn[disabled] {
+        opacity: 0.7;
+        cursor: wait;
+        transform: none;
+      }
+
+      /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+      .sidebar-backdrop {
+        display: none;
+        position: fixed;
+        top: 64px;
+        left: 0;
+        width: 100%;
+        height: calc(100vh - 64px);
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 850;
+        transition: opacity 0.3s ease;
+      }
+
+      @media (max-width: 991.98px) {
+        .main-sidebar {
+          transform: translateX(-100%);
+          width: 280px;
+          height: calc(100vh - 64px);
+          z-index: 1100;
+        }
+
+        body.sidebar-open .main-sidebar {
+          transform: translateX(0);
+        }
+
+        body.sidebar-open .sidebar-backdrop {
+          display: block;
+        }
+
+        .main-content {
+          margin-left: 0;
+          width: 100%;
+        }
+
+        .main-footer {
+          left: 0;
+          width: 100%;
+        }
+      }
+
+      @media (min-width: 992px) {
+        .main-sidebar {
+          transform: translateX(0) !important;
+        }
+
+        .sidebar-backdrop {
+          display: none !important;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .main-sidebar {
+          width: 85%;
+          max-width: 300px;
+        }
+
+        .main-content {
+          padding: 1rem;
+        }
+
+        .main-navbar .navbar-brand {
+          font-size: 1rem;
+        }
+
+        .gestion-display {
+          font-size: 0.75rem;
+          padding: 0.375rem 0.75rem;
+        }
+
+        .navbar-status-group {
+          gap: 0.5rem !important;
+        }
+
+        .navbar-status-chip {
+          font-size: 0.75rem;
+          padding: 0.4rem 0.7rem;
+        }
+
+        .tc-lock-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .tc-lock-footer {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .tc-lock-actions {
+          width: 100%;
+          margin-left: 0;
+          flex-direction: column;
+        }
+
+        .tc-lock-btn {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+
+  <body data-base-path="{{ base_path }}">
+    <!-- Navbar -->
+    <nav class="main-navbar navbar navbar-expand-lg">
+      <div class="container-fluid">
+        <button class="btn btn-toggle d-lg-none me-2" id="btnToggleSidebar">
+          <i class="fas fa-bars"></i>
+        </button>
+
+        <a class="navbar-brand" href="{{ url_for('dashboard.index') }}">
+          DXT Contabilidad <small>Bolivia</small>
+        </a>
+
+        <div class="ms-auto d-flex align-items-center gap-3">
+          <!-- Estado operativo -->
+          <div class="d-flex align-items-center gap-2 navbar-status-group">
+            <div class="gestion-display">{{ current_gestion_label }}</div>
+            <div
+              class="navbar-status-chip {% if tipo_cambio_hoy_completo %}is-ready{% else %}is-pending{% endif %}"
+            >
+              <i
+                class="fas {% if tipo_cambio_hoy_completo %}fa-badge-check{% else %}fa-triangle-exclamation{% endif %}"
+              ></i>
+              <span>{{ tipo_cambio_hoy_label }}</span>
+            </div>
+          </div>
+
+          <!-- Dropdown usuario -->
+          <div class="dropdown user-menu">
+            <button
+              class="btn dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+            >
+              <i class="fas fa-user-circle me-2"></i>{{
+              session.get('usuario_nombre', 'Usuario') }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  onclick="
+                    alert('Función en desarrollo');
+                    return false;
+                  "
+                >
+                  <i class="fas fa-user me-2"></i>Mi Perfil
+                </a>
+              </li>
+              <li>
+                <a
+                  class="dropdown-item"
+                  href="#"
+                  onclick="
+                    alert('Función en desarrollo');
+                    return false;
+                  "
+                >
+                  <i class="fas fa-key me-2"></i>Cambiar Contraseña
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider" />
+              </li>
+              <li>
+                <a
+                  class="dropdown-item text-danger"
+                  href="{{ url_for('auth.logout') }}"
+                >
+                  <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Backdrop para móvil -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- Sidebar -->
+    <aside class="main-sidebar">
+      <nav class="sidebar-nav">
+        <!-- Dashboard -->
+        <a
+          class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}"
+          href="{{ url_for('dashboard.index') }}"
+          tabindex="0"
+        >
+          <i class="fas fa-home"></i>
+          <span>Dashboard</span>
+        </a>
+        <!-- Compromisos -->
+        <div class="sidebar-collapsible">
+          <button
+            class="sidebar-main-item"
+            data-bs-toggle="collapse"
+            data-bs-target="#compromisosSubmenu"
+            aria-expanded="false"
+            tabindex="0"
+          >
+            <div>
+              <i class="fas fa-calendar-check"></i>
+              <span>Compromisos</span>
+            </div>
+            <i class="fas fa-chevron-down transition-icon"></i>
+          </button>
+
+          <div class="collapse" id="compromisosSubmenu">
+            <div class="sidebar-submenu">
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('compromisos.') and request.endpoint != 'compromisos.pendientes' %}active{% endif %}"
+                href="{{ url_for('compromisos.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-list-check"></i>
+                <span>Programación</span>
+              </a>
+
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('saldos_iniciales_cobrar.') %}active{% endif %}"
+                href="{{ url_for('saldos_iniciales_cobrar.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Doc. por Cobrar - Saldo Inicial</span>
+              </a>
+
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('documentos_cobrar.') %}active{% endif %}"
+                href="{{ url_for('documentos_cobrar.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-file-circle-plus"></i>
+                <span>Documentos por Cobrar</span>
+              </a>
+
+              <a
+                class="nav-link {% if request.endpoint == 'compromisos.pendientes' %}active{% endif %}"
+                href="{{ url_for('compromisos.pendientes') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-hourglass-half"></i>
+                <span>Pendientes</span>
+              </a>
+
+              <a
+                class="nav-link {% if request.endpoint and 'agenda_financiera' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('agenda_financiera.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-bolt"></i>
+                <span>Agenda Financiera</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Planillas -->
+        <div class="sidebar-collapsible">
+          <button
+            class="sidebar-main-item"
+            data-bs-toggle="collapse"
+            data-bs-target="#planillasSubmenu"
+            aria-expanded="false"
+            tabindex="0"
+          >
+            <div>
+              <i class="fas fa-users-gear"></i>
+              <span>Planillas</span>
+            </div>
+            <i class="fas fa-chevron-down transition-icon"></i>
+          </button>
+          <div class="collapse" id="planillasSubmenu">
+            <div class="sidebar-submenu">
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('planilla_personas.') %}active{% endif %}"
+                href="{{ url_for('planilla_personas.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-user-group"></i>
+                <span>Personas de Planilla</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('planilla_parametros.') %}active{% endif %}"
+                href="{{ url_for('planilla_parametros.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-gear"></i>
+                <span>Parámetros de Planilla</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('planilla_conceptos.') %}active{% endif %}"
+                href="{{ url_for('planilla_conceptos.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-sliders"></i>
+                <span>Conceptos de Planilla</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('planilla_prestamos.') %}active{% endif %}"
+                href="{{ url_for('planilla_prestamos.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-hand-holding-dollar"></i>
+                <span>Anticipos y Préstamos</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('planilla_sueldos_planta.') %}active{% endif %}"
+                href="{{ url_for('planilla_sueldos_planta.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-users"></i>
+                <span>Planilla de Sueldos - Planta</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('planilla_honorarios_colaboradores.') %}active{% endif %}"
+                href="{{ url_for('planilla_honorarios_colaboradores.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-handshake"></i>
+                <span>Planilla de Honorarios - Colaboradores</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('planilla_pagos.') %}active{% endif %}"
+                href="{{ url_for('planilla_pagos.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-money-check-dollar"></i>
+                <span>Pago de Planillas</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Tesorería -->
+        <div class="sidebar-collapsible">
+          <button
+            class="sidebar-main-item"
+            data-bs-toggle="collapse"
+            data-bs-target="#tesoreriaSubmenu"
+            aria-expanded="false"
+            tabindex="0"
+          >
+            <div>
+              <i class="fas fa-wallet"></i>
+              <span>Tesorería</span>
+            </div>
+            <i class="fas fa-chevron-down transition-icon"></i>
+          </button>
+          <div class="collapse" id="tesoreriaSubmenu">
+            <div class="sidebar-submenu">
+              <a
+                class="nav-link {% if request.endpoint and 'tesoreria_pagos' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('tesoreria_pagos.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-arrow-up-right-dots"></i>
+                <span>Pagos</span>
+              </a>
+
+              <a
+                class="nav-link {% if request.endpoint and 'tesoreria_cobros' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('tesoreria_cobros.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-arrow-down-short-wide"></i>
+                <span>Cobros</span>
+              </a>
+
+              <a
+                class="nav-link {% if request.endpoint and 'tesoreria_caja_bancos' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('tesoreria_caja_bancos.dashboard') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-building-columns"></i>
+                <span>Caja y Bancos</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'tesoreria_arqueo_caja' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('tesoreria_arqueo_caja.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-vault"></i>
+                <span>Arqueo de Caja</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'tesoreria_bancarizacion' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('tesoreria_bancarizacion.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-building-columns"></i>
+                <span>Bancarización Básica</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'facturas_electronicas' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('facturas_electronicas.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Facturas Electrónicas</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'facturas_mantenimiento' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('facturas_mantenimiento.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-file-circle-check"></i>
+                <span>Facturas · Mantenimiento</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Contabilidad -->
+        <div class="sidebar-collapsible">
+          <button
+            class="sidebar-main-item"
+            data-bs-toggle="collapse"
+            data-bs-target="#contabilidadSubmenu"
+            aria-expanded="false"
+            tabindex="0"
+          >
+            <div>
+              <i class="fas fa-calculator"></i>
+              <span>Contabilidad</span>
+            </div>
+            <i class="fas fa-chevron-down transition-icon"></i>
+          </button>
+          <div class="collapse" id="contabilidadSubmenu">
+            <div class="sidebar-submenu">
+              <a
+                class="nav-link {% if request.endpoint and 'plandecuentas' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('plandecuentas.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-sitemap"></i>
+                <span>Plan de Cuentas</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'comprobantes' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('comprobantes.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-file-invoice"></i>
+                <span>Comprobantes</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'libro_diario' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('libro_diario.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-book-open"></i>
+                <span>Libro Diario</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'libro_mayor' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('libro_mayor.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-book"></i>
+                <span>Libro Mayor</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'balance_comprobacion' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('balance_comprobacion.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-scale-balanced"></i>
+                <span>Balance de Comprobación</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'estado_resultados' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('estado_resultados.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-chart-line"></i>
+                <span>Estado de Resultados</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'balance_general' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('balance_general.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-building-columns"></i>
+                <span>Balance General</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Auxiliares -->
+        <div class="sidebar-collapsible">
+          <button
+            class="sidebar-main-item"
+            data-bs-toggle="collapse"
+            data-bs-target="#auxiliarSubmenu"
+            aria-expanded="false"
+            tabindex="0"
+          >
+            <div>
+              <i class="fas fa-chart-bar"></i>
+              <span>Accesorios</span>
+            </div>
+            <i class="fas fa-chevron-down transition-icon"></i>
+          </button>
+          <div class="collapse" id="auxiliarSubmenu">
+            <div class="sidebar-submenu">
+              <!-- Monedas -->
+              <a
+                class="nav-link {% if request.endpoint and 'monedas' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('monedas.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-coins"></i>
+                <span>Monedas</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'centro_costo' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('centro_costo.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-layer-group"></i>
+                <span>Centro de Costo</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'auxiliar' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('auxiliar.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-address-book"></i>
+                <span>Auxiliares</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'caja' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('caja.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-cash-register"></i>
+                <span>Caja</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'cuenta_bancaria' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('cuenta_bancaria.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-university"></i>
+                <span>Cuenta Bancaria</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'auxiliar_cuenta' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('auxiliar_cuenta.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-link"></i>
+                <span>Auxiliar Cuenta</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'unidad_negocio' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('unidad_negocio.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-building"></i>
+                <span>Unidad de Negocio</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('rubro.') %}active{% endif %}"
+                href="{{ url_for('rubro.index') }}"
+              >
+                <i class="fas fa-tags"></i>
+                <span>Rubros</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Reportes -->
+        <div class="sidebar-collapsible">
+          <button
+            class="sidebar-main-item"
+            data-bs-toggle="collapse"
+            data-bs-target="#reportesSubmenu"
+            aria-expanded="false"
+            tabindex="0"
+          >
+            <div>
+              <i class="fas fa-chart-bar"></i>
+              <span>Reportes</span>
+            </div>
+            <i class="fas fa-chevron-down transition-icon"></i>
+          </button>
+          <div class="collapse" id="reportesSubmenu">
+            <div class="sidebar-submenu">
+              <a
+                class="nav-link {% if request.endpoint and 'reportes_rapidos' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('reportes_rapidos.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-bolt"></i>
+                <span>Reportes rápidos</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Reportes Especiales -->
+        <div class="sidebar-collapsible">
+          <button
+            class="sidebar-main-item"
+            data-bs-toggle="collapse"
+            data-bs-target="#reportesEspecialesSubmenu"
+            aria-expanded="false"
+            tabindex="0"
+          >
+            <div>
+              <i class="fas fa-file-waveform"></i>
+              <span>Reportes Especiales</span>
+            </div>
+            <i class="fas fa-chevron-down transition-icon"></i>
+          </button>
+          <div class="collapse" id="reportesEspecialesSubmenu">
+            <div class="sidebar-submenu">
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('facturas_auxiliar.') %}active{% endif %}"
+                href="{{ url_for('facturas_auxiliar.facturas_estado') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Cartera documental</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('estado_resultados_mes.') %}active{% endif %}"
+                href="{{ url_for('estado_resultados_mes.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-chart-line"></i>
+                <span>Resultado mensual</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('auxiliar_estado.') %}active{% endif %}"
+                href="{{ url_for('auxiliar_estado.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-address-book"></i>
+                <span>Estado de Auxiliares</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('caja_bancos_estado.') %}active{% endif %}"
+                href="{{ url_for('caja_bancos_estado.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-wallet"></i>
+                <span>Estado de Caja y Bancos</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('antiguedad_saldos_cobrar.') %}active{% endif %}"
+                href="{{ url_for('antiguedad_saldos_cobrar.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-hourglass-half"></i>
+                <span>Antigüedad de CxC</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('estado_cuentas_cobrar.') %}active{% endif %}"
+                href="{{ url_for('estado_cuentas_cobrar.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>Estado de CxC</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('resumen_ejecutivo_mensual.') %}active{% endif %}"
+                href="{{ url_for('resumen_ejecutivo_mensual.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-chart-pie"></i>
+                <span>Resumen Ejecutivo Mensual</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('movimiento_unidad_negocio.') %}active{% endif %}"
+                href="{{ url_for('movimiento_unidad_negocio.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-layer-group"></i>
+                <span>Movimiento por Unidad</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and request.endpoint.startswith('estado_cuentas_pagar.') %}active{% endif %}"
+                href="{{ url_for('estado_cuentas_pagar.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-hand-holding-dollar"></i>
+                <span>Estado de CxP</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Herramientas -->
+        <div class="sidebar-collapsible">
+          <button
+            class="sidebar-main-item"
+            data-bs-toggle="collapse"
+            data-bs-target="#herramientasSubmenu"
+            aria-expanded="false"
+            tabindex="0"
+          >
+            <div>
+              <i class="fas fa-toolbox"></i>
+              <span>Herramientas</span>
+            </div>
+            <i class="fas fa-chevron-down transition-icon"></i>
+          </button>
+          <div class="collapse" id="herramientasSubmenu">
+            <div class="sidebar-submenu">
+              <a
+                class="nav-link {% if request.endpoint and 'revision_contable' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('revision_contable.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-stethoscope"></i>
+                <span>Revisión Contable</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'checklist_precierre' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('checklist_precierre.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-clipboard-check"></i>
+                <span>Checklist Pre-Cierre</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'compromisos_vencidos' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('compromisos_vencidos.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-calendar-xmark"></i>
+                <span>Compromisos Vencidos</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'conciliacion_caja_banco' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('conciliacion_caja_banco.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-balance-scale"></i>
+                <span>Conciliacion Caja/Banco</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'movimientos_observados' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('movimientos_observados.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Movimientos Observados</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'asistente_ajustes' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('asistente_ajustes.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-wand-magic-sparkles"></i>
+                <span>Asistente de Ajustes</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'bitacora_procesos' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('bitacora_procesos.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-clock-rotate-left"></i>
+                <span>Bitacora de Procesos</span>
+              </a>
+              <a
+                class="nav-link {% if request.endpoint and 'estado_cuenta_auxiliar' in request.endpoint %}active{% endif %}"
+                href="{{ url_for('estado_cuenta_auxiliar.index') }}"
+                tabindex="0"
+              >
+                <i class="fas fa-address-book"></i>
+                <span>Estado Cuenta Auxiliar</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Configuración -->
+        <a
+          class="nav-link"
+          href="{{ url_for('tipo_cambio.gestion') }}"
+          tabindex="0"
+        >
+          <i class="fas fa-dollar-sign"></i>
+          <span>Tipo de Cambio</span>
+        </a>
+      </nav>
+
+      {% set procesos_especiales_activo = request.endpoint and (
+      'configuracion_inicial' in request.endpoint or 'saldos_iniciales' in
+      request.endpoint or 'backups_gestion' in request.endpoint or
+      'cierre_gestion' in request.endpoint ) %}
+
+      <div class="sidebar-critical-zone">
+        <button
+          class="sidebar-critical-toggle"
+          data-bs-toggle="collapse"
+          data-bs-target="#procesosEspecialesSubmenu"
+          aria-expanded="{{ 'true' if procesos_especiales_activo else 'false' }}"
+          tabindex="0"
+        >
+          <div>
+            <i class="fas fa-shield-alt"></i>
+            <span>Procesos especiales</span>
+          </div>
+          <i class="fas fa-chevron-up transition-icon"></i>
+        </button>
+
+        <div
+          class="collapse {% if procesos_especiales_activo %}show{% endif %}"
+          id="procesosEspecialesSubmenu"
+        >
+          <div class="sidebar-critical-content">
+            <a
+              class="sidebar-critical-link {% if request.endpoint and 'configuracion_inicial' in request.endpoint %}active{% endif %}"
+              href="{{ url_for('configuracion_inicial.index') }}"
+              tabindex="0"
+            >
+              <i class="fas fa-rocket"></i>
+              <span>Configuración Inicial</span>
+            </a>
+
+            <a
+              class="sidebar-critical-link {% if request.endpoint and 'saldos_iniciales' in request.endpoint %}active{% endif %}"
+              href="{{ url_for('saldos_iniciales.index') }}"
+              tabindex="0"
+            >
+              <i class="fas fa-layer-group"></i>
+              <span>Saldos Iniciales</span>
+            </a>
+
+            <a
+              class="sidebar-critical-link {% if request.endpoint and 'backups_gestion' in request.endpoint %}active{% endif %}"
+              href="{{ url_for('backups_gestion.index') }}"
+              tabindex="0"
+            >
+              <i class="fas fa-database"></i>
+              <span>Backups y Restore</span>
+            </a>
+
+            {% if configuracion_inicial_pendiente %}
+            <div
+              class="sidebar-critical-link is-disabled"
+              aria-disabled="true"
+              tabindex="-1"
+            >
+              <i class="fas fa-lock"></i>
+              <span>Cierre de Gestión</span>
+            </div>
+            <div class="sidebar-critical-note">
+              Disponible después de inicializar una gestión.
+            </div>
+            {% else %}
+            <a
+              class="sidebar-critical-link {% if request.endpoint and 'cierre_gestion' in request.endpoint %}active{% endif %}"
+              href="{{ url_for('cierre_gestion.index') }}"
+              tabindex="0"
+            >
+              <i class="fas fa-lock"></i>
+              <span>Cierre de Gestión</span>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </aside>
+    <!-- Main Content -->
+    <main class="main-content">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        class="alert alert-{{ category }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
+      {% endfor %} {% endif %} {% endwith %} {% block content %}{% endblock %}
+    </main>
+    <div class="tc-lock-overlay" id="tipoCambioLockOverlay" aria-hidden="true">
+      <div
+        class="tc-lock-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tipoCambioLockTitle"
+      >
+        <div class="tc-lock-header">
+          <div class="tc-lock-eyebrow">
+            <i class="fas fa-shield-halved"></i>
+            <span>Control diario obligatorio</span>
+          </div>
+          <h2 class="tc-lock-title" id="tipoCambioLockTitle">
+            Registro del tipo de cambio del día
+          </h2>
+          <p class="tc-lock-subtitle">
+            Para iniciar operaciones en DXT-Conta se debe registrar el valor
+            diario de SUS y UFV. Mientras este control no sea completado, el
+            sistema permanecerá bloqueado.
+          </p>
+        </div>
+        <div class="tc-lock-body">
+          <div class="tc-lock-date">
+            <i class="fas fa-calendar-day"></i>
+            <span id="tipoCambioLockFecha">Fecha del día</span>
+          </div>
+
+          <div class="tc-lock-grid">
+            <div class="tc-field">
+              <label class="tc-field-label" for="tipoCambioUsdInput">
+                <span>SUS</span>
+                <small>USD paralelo</small>
+              </label>
+              <div class="tc-input-wrap">
+                <i class="fas fa-dollar-sign tc-input-icon"></i>
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  class="tc-input"
+                  id="tipoCambioUsdInput"
+                  autocomplete="off"
+                  placeholder="0.0000"
+                />
+              </div>
+            </div>
+
+            <div class="tc-field">
+              <label class="tc-field-label" for="tipoCambioUfvInput">
+                <span>UFV</span>
+                <small>Unidad de Fomento a la Vivienda</small>
+              </label>
+              <div class="tc-input-wrap">
+                <i class="fas fa-chart-line tc-input-icon"></i>
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  class="tc-input"
+                  id="tipoCambioUfvInput"
+                  autocomplete="off"
+                  placeholder="0.000000"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="tc-lock-alert" id="tipoCambioLockError"></div>
+          <div class="tc-lock-info" id="tipoCambioLockInfo"></div>
+        </div>
+        <div class="tc-lock-footer">
+          <div class="tc-lock-footer-note">
+            <i class="fas fa-circle-info"></i>
+            <span>El registro queda almacenado para la fecha actual.</span>
+          </div>
+          <div class="tc-lock-actions">
+            <a
+              class="tc-lock-btn tc-lock-btn-secondary"
+              id="tipoCambioLockLogout"
+              href="{{ url_for('auth.logout') }}"
+            >
+              <i class="fas fa-right-from-bracket"></i>
+              <span>Cerrar sesión</span>
+            </a>
+            <button
+              type="button"
+              class="tc-lock-btn tc-lock-btn-primary"
+              id="tipoCambioLockGuardar"
+            >
+              <i class="fas fa-floppy-disk"></i>
+              <span>Guardar y continuar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="application/json" id="layoutTipoCambioBootstrap">
+      {{ {
+        'tipoCambio': {
+          'verificarUrl': url_for('tipo_cambio.verificar_hoy'),
+          'registrarUrl': url_for('tipo_cambio.registrar'),
+          'gestionUrl': url_for('tipo_cambio.gestion')
+        }
+      } | tojson }}
+    </script>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+      <small>© 2025 DXT Bolivia - Sistema de Contabilidad | v1.0.0</small>
+    </footer>
+
+    <!-- Librerías JS -->
+    <script src="{{ url_for('static', filename='jquery/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='datatables/datatables.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='flatpickr/flatpickr.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='flatpickr/l10n/es.js') }}"></script>
+    <script src="{{ url_for('static', filename='sweetalert2/sweetalert2.all.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dxt-base.js') }}"></script>
+    <script src="{{ url_for('static', filename='select2/select2.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='select2/i18n/es.js') }}"></script>
+    <script>
+      // Toggle sidebar en móvil
+      document
+        .getElementById("btnToggleSidebar")
+        ?.addEventListener("click", function () {
+          document.body.classList.toggle("sidebar-open");
+        });
+
+      // Cerrar sidebar al hacer click en backdrop
+      document
+        .getElementById("sidebarBackdrop")
+        ?.addEventListener("click", function () {
+          document.body.classList.remove("sidebar-open");
+        });
+
+      // NAVEGACIÓN CON TECLADO (↑ ↓)
+      document.addEventListener("DOMContentLoaded", function () {
+        const menuItems = document.querySelectorAll(
+          ".sidebar-nav .nav-link, .sidebar-main-item",
+        );
+        let currentIndex = -1;
+
+        menuItems.forEach((item, index) => {
+          if (item.classList.contains("active")) {
+            currentIndex = index;
+          }
+        });
+
+        document.addEventListener("keydown", function (e) {
+          if (
+            !document
+              .querySelector(".main-sidebar")
+              .contains(document.activeElement)
+          ) {
+            return;
+          }
+
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            currentIndex = (currentIndex + 1) % menuItems.length;
+            menuItems[currentIndex].focus();
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            currentIndex =
+              (currentIndex - 1 + menuItems.length) % menuItems.length;
+            menuItems[currentIndex].focus();
+          } else if (e.key === "Enter") {
+            e.preventDefault();
+            menuItems[currentIndex].click();
+          }
+        });
+      });
+    </script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const bootEl = document.getElementById("layoutTipoCambioBootstrap");
+        const boot = JSON.parse(bootEl?.textContent || "{}");
+        const tipoCambioBoot = boot.tipoCambio || {};
+
+        const overlay = document.getElementById("tipoCambioLockOverlay");
+        const fechaEl = document.getElementById("tipoCambioLockFecha");
+        const usdInput = document.getElementById("tipoCambioUsdInput");
+        const ufvInput = document.getElementById("tipoCambioUfvInput");
+        const guardarBtn = document.getElementById("tipoCambioLockGuardar");
+        const logoutBtn = document.getElementById("tipoCambioLockLogout");
+        const errorBox = document.getElementById("tipoCambioLockError");
+        const infoBox = document.getElementById("tipoCambioLockInfo");
+        const statusChip = document.querySelector(".navbar-status-chip");
+        const statusChipText = statusChip?.querySelector("span");
+        const statusChipIcon = statusChip?.querySelector("i");
+
+        if (
+          !overlay ||
+          !tipoCambioBoot.verificarUrl ||
+          !tipoCambioBoot.registrarUrl
+        ) {
+          return;
+        }
+
+        let bloqueoActivo = false;
+
+        function formatFechaIso(isoDate) {
+          if (!isoDate) {
+            return "Fecha del día";
+          }
+
+          const parts = String(isoDate).split("-");
+          if (parts.length !== 3) {
+            return isoDate;
+          }
+
+          return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        function mostrarError(message) {
+          errorBox.textContent =
+            message || "No se pudo registrar el tipo de cambio del día.";
+          errorBox.classList.add("is-visible");
+        }
+
+        function ocultarError() {
+          errorBox.textContent = "";
+          errorBox.classList.remove("is-visible");
+        }
+
+        function mostrarInfo(message) {
+          infoBox.textContent = message || "";
+          infoBox.classList.add("is-visible");
+        }
+
+        function ocultarInfo() {
+          infoBox.textContent = "";
+          infoBox.classList.remove("is-visible");
+        }
+
+        function bloquearSistema() {
+          bloqueoActivo = true;
+          overlay.classList.add("is-visible");
+          overlay.setAttribute("aria-hidden", "false");
+          document.body.classList.add("tc-lock-active");
+        }
+
+        function desbloquearSistema() {
+          bloqueoActivo = false;
+          overlay.classList.remove("is-visible");
+          overlay.setAttribute("aria-hidden", "true");
+          document.body.classList.remove("tc-lock-active");
+        }
+
+        function setInputsEnabled(enabled) {
+          usdInput.disabled = !enabled;
+          ufvInput.disabled = !enabled;
+          guardarBtn.disabled = !enabled;
+        }
+
+        function normalizarDecimal(valor) {
+          let limpio = String(valor || "")
+            .trim()
+            .replace(",", ".");
+          limpio = limpio.replace(/[^0-9.]/g, "");
+
+          const partes = limpio.split(".");
+          if (partes.length > 2) {
+            limpio = `${partes.shift()}.${partes.join("")}`;
+          }
+
+          return limpio;
+        }
+
+        function aplicarMascaraDecimal(input) {
+          if (!input) {
+            return;
+          }
+
+          input.addEventListener("input", function () {
+            const cursor = this.selectionStart || this.value.length;
+            const anterior = this.value;
+            const normalizado = normalizarDecimal(anterior);
+
+            if (anterior !== normalizado) {
+              this.value = normalizado;
+              const delta = anterior.length - normalizado.length;
+              const nuevaPos = Math.max(0, cursor - delta);
+              this.setSelectionRange(nuevaPos, nuevaPos);
+            }
+          });
+
+          input.addEventListener("blur", function () {
+            this.value = normalizarDecimal(this.value);
+          });
+        }
+
+        function formatearValorTipoCambio(valor, decimales) {
+          if (valor === null || valor === undefined || valor === "") {
+            return "—";
+          }
+
+          const numero = Number(valor);
+          if (!Number.isFinite(numero)) {
+            return String(valor);
+          }
+
+          return numero.toFixed(decimales);
+        }
+
+        function construirEtiquetaTipoCambio(completo, data) {
+          if (!completo) {
+            return "TC hoy pendiente";
+          }
+
+          const usdParalelo = formatearValorTipoCambio(data?.usd_paralelo, 4);
+          const ufv = formatearValorTipoCambio(data?.ufv, 6);
+
+          return `TC hoy: $us ${usdParalelo} | UFV ${ufv}`;
+        }
+
+        function actualizarChip(completo, data = null) {
+          if (!statusChip) {
+            return;
+          }
+
+          statusChip.classList.toggle("is-ready", !!completo);
+          statusChip.classList.toggle("is-pending", !completo);
+
+          if (statusChipText) {
+            statusChipText.textContent = construirEtiquetaTipoCambio(
+              completo,
+              data,
+            );
+          }
+
+          if (statusChipIcon) {
+            statusChipIcon.className = completo
+              ? "fas fa-badge-check"
+              : "fas fa-triangle-exclamation";
+          }
+        }
+
+        async function consultarEstadoTipoCambio() {
+          const response = await fetch(tipoCambioBoot.verificarUrl, {
+            headers: {
+              "X-Requested-With": "XMLHttpRequest",
+              Accept: "application/json",
+            },
+            credentials: "same-origin",
+          });
+
+          if (!response.ok) {
+            throw new Error("No se pudo verificar el tipo de cambio del día.");
+          }
+
+          return response.json();
+        }
+
+        aplicarMascaraDecimal(usdInput);
+        aplicarMascaraDecimal(ufvInput);
+
+        async function cargarControlDiario() {
+          try {
+            const data = await consultarEstadoTipoCambio();
+            fechaEl.textContent = `Fecha operativa: ${formatFechaIso(data.fecha)}`;
+
+            if (data.existe) {
+              actualizarChip(true, data);
+              desbloquearSistema();
+              return;
+            }
+
+            actualizarChip(false);
+            bloquearSistema();
+            ocultarError();
+            usdInput.value = "";
+            ufvInput.value = "";
+            usdInput.focus();
+
+            if (data.puede_editar) {
+              ocultarInfo();
+              setInputsEnabled(true);
+              guardarBtn.style.display = "inline-flex";
+            } else {
+              setInputsEnabled(false);
+              guardarBtn.style.display = "none";
+              mostrarInfo(
+                "Falta registrar el tipo de cambio del día. Este usuario no tiene permisos para hacerlo. Solicite el registro a un usuario autorizado o cierre sesión.",
+              );
+            }
+          } catch (error) {
+            actualizarChip(false);
+            bloquearSistema();
+            setInputsEnabled(false);
+            guardarBtn.style.display = "none";
+            mostrarInfo(
+              "No se pudo validar el estado del tipo de cambio del día. Intente nuevamente o cierre sesión.",
+            );
+            mostrarError(error.message || "Error de validación.");
+          }
+        }
+
+        async function guardarTipoCambioDiario() {
+          ocultarError();
+
+          const usdParalelo = normalizarDecimal(usdInput.value);
+          const ufv = normalizarDecimal(ufvInput.value);
+
+          usdInput.value = usdParalelo;
+          ufvInput.value = ufv;
+
+          if (!usdParalelo || !ufv) {
+            mostrarError(
+              "Debe registrar ambos valores obligatorios: SUS y UFV.",
+            );
+            return;
+          }
+
+          const payload = {
+            usd_paralelo: usdParalelo,
+            ufv,
+          };
+
+          const originalHtml = guardarBtn.innerHTML;
+          guardarBtn.disabled = true;
+          guardarBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i><span>Guardando...</span>';
+
+          try {
+            const response = await fetch(tipoCambioBoot.registrarUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+                Accept: "application/json",
+              },
+              credentials: "same-origin",
+              body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+              throw new Error(
+                data.error || "No se pudo guardar el tipo de cambio del día.",
+              );
+            }
+
+            actualizarChip(true, data);
+            desbloquearSistema();
+
+            if (window.Swal) {
+              window.Swal.fire({
+                icon: "success",
+                title: "Tipo de cambio registrado",
+                text:
+                  data.mensaje || "La jornada quedó habilitada para operar.",
+                confirmButtonText: "Continuar",
+              });
+            }
+          } catch (error) {
+            mostrarError(
+              error.message || "No se pudo guardar el tipo de cambio del día.",
+            );
+          } finally {
+            guardarBtn.disabled = false;
+            guardarBtn.innerHTML = originalHtml;
+          }
+        }
+
+        guardarBtn?.addEventListener("click", guardarTipoCambioDiario);
+
+        document.addEventListener(
+          "keydown",
+          function (event) {
+            if (!bloqueoActivo) {
+              return;
+            }
+
+            if (event.key === "Escape") {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+          },
+          true,
+        );
+
+        overlay.addEventListener("click", function (event) {
+          if (event.target === overlay) {
+            event.preventDefault();
+          }
+        });
+
+        cargarControlDiario();
+      });
+    </script>
+
+<!-- DXT_GLOBAL_CSRF_FETCH_GUARD_START -->
+<script>
+(function(){
+  'use strict';
+
+  if (window.__DXT_GLOBAL_CSRF_FETCH_GUARD__) return;
+  window.__DXT_GLOBAL_CSRF_FETCH_GUARD__ = true;
+
+  var appRoot = {{ request.script_root|default('', true)|tojson }};
+  if (!appRoot || appRoot === '/') {
+    var currentPath = window.location.pathname || '/';
+    if (currentPath === '/dxt-conta' || currentPath.indexOf('/dxt-conta/') === 0) {
+      appRoot = '/dxt-conta';
+    } else {
+      appRoot = '';
+    }
+  }
+  if (appRoot.length > 1 && appRoot.slice(-1) === '/') {
+    appRoot = appRoot.slice(0, -1);
+  }
+
+  function csrfToken(){
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta && meta.getAttribute('content')) return meta.getAttribute('content');
+    var input = document.querySelector('input[name="csrf_token"]');
+    return input ? (input.value || '') : '';
+  }
+
+  function isUnsafeMethod(method){
+    return ['GET', 'HEAD', 'OPTIONS', 'TRACE'].indexOf(String(method || 'GET').toUpperCase()) === -1;
+  }
+
+  function toUrl(input){
+    try {
+      var rawUrl = '';
+      if (typeof input === 'string') rawUrl = input;
+      else if (input && input.url) rawUrl = input.url;
+      else rawUrl = window.location.href;
+      return new URL(rawUrl, window.location.href);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function isSameAppUrl(input){
+    var url = toUrl(input);
+    if (!url) return true;
+    if (url.origin !== window.location.origin) return false;
+    if (!appRoot) return true;
+    return url.pathname === appRoot || url.pathname.indexOf(appRoot + '/') === 0;
+  }
+
+  var nativeFetch = window.fetch;
+  if (typeof nativeFetch === 'function') {
+    window.fetch = function(input, init){
+      init = init || {};
+      var method = String(init.method || (input && input.method) || 'GET').toUpperCase();
+
+      if (isSameAppUrl(input) && isUnsafeMethod(method)) {
+        var headers = new Headers(init.headers || (input && input.headers) || {});
+        if (!headers.has('X-CSRFToken')) {
+          var token = csrfToken();
+          if (token) headers.set('X-CSRFToken', token);
+        }
+        init = Object.assign({}, init, {headers: headers});
+      }
+
+      return nativeFetch.call(this, input, init);
+    };
+  }
+
+  function installJqueryCsrf(){
+    var jq = window.jQuery;
+    if (!jq || !jq.ajaxPrefilter || jq.__dxtCsrfPrefilterInstalled) return false;
+
+    jq.ajaxPrefilter(function(options, _originalOptions, jqXHR){
+      var method = String((options && (options.type || options.method)) || 'GET').toUpperCase();
+      var url = (options && options.url) || window.location.href;
+      if (isSameAppUrl(url) && isUnsafeMethod(method)) {
+        var token = csrfToken();
+        if (token) jqXHR.setRequestHeader('X-CSRFToken', token);
+      }
+    });
+
+    jq.__dxtCsrfPrefilterInstalled = true;
+    return true;
+  }
+
+  installJqueryCsrf();
+  document.addEventListener('DOMContentLoaded', installJqueryCsrf);
+
+  var tries = 0;
+  var timer = window.setInterval(function(){
+    tries += 1;
+    if (installJqueryCsrf() || tries > 20) window.clearInterval(timer);
+  }, 250);
+})();
+</script>
+<!-- DXT_GLOBAL_CSRF_FETCH_GUARD_END -->
+
+    {% block extra_js %}{% endblock %} {% set __page_help_url %}{% block
+    page_help_url %}{% endblock %}{% endset %} {% include
+    'includes/layout_help_button.html' %}
+    <script src="{{ url_for('static', filename='js/layouthelp.js') }}"></script>
+  </body>
+</html>

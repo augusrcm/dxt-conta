@@ -1,0 +1,516 @@
+{% extends "layout.html" %}
+{% block title %}Reportes Especiales · Cartera documental por auxiliar{% endblock title %}
+{% block page_help_url %}{{ url_for('facturas_auxiliar.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .re-page { display: grid; gap: 1rem; }
+  .re-header {
+    background: linear-gradient(135deg, #0f2340, #17406f);
+    border-radius: 1.15rem;
+    box-shadow: 0 18px 38px rgba(15, 35, 64, 0.18);
+    color: #fff;
+    padding: 1.2rem 1.35rem;
+  }
+  .re-header-kicker { align-items: center; color: rgba(255,255,255,.82); display: flex; font-size: .78rem; font-weight: 800; gap: .45rem; letter-spacing: .06em; text-transform: uppercase; }
+  .re-header-title { font-size: clamp(1.35rem, 2vw, 2rem); font-weight: 850; margin: .35rem 0 0; }
+  .re-header-meta { color: rgba(255,255,255,.76); margin: .15rem 0 0; }
+  .re-card { background: #fff; border: 1px solid #dfe7f1; border-radius: 1.15rem; box-shadow: 0 14px 34px rgba(15,35,64,.08); }
+  .re-filter-card { padding: 1rem; }
+  .re-filter-grid { align-items: end; display: grid; gap: .85rem; grid-template-columns: 1.05fr 1fr 1fr 1fr 1.15fr 1.1fr 1.25fr 1.25fr auto; }
+  .re-field.is-hidden { display: none; }
+  .re-field label { color: #334155; font-size: .78rem; font-weight: 800; margin-bottom: .3rem; }
+  .re-field .form-control, .re-field .form-select { border-color: #d5deea; border-radius: .8rem; min-height: 40px; }
+  .re-actions { display: flex; gap: .45rem; justify-content: flex-end; }
+  .re-action-btn { align-items: center; border-radius: .85rem; display: inline-flex; font-weight: 800; gap: .45rem; min-height: 40px; padding-inline: .9rem; white-space: nowrap; }
+  .re-summary { display: grid; gap: .75rem; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .re-summary-card { border-left: 5px solid #8aa1bd; padding: .95rem 1rem; }
+  .re-summary-card.is-primary { border-left-color: #2563eb; }
+  .re-summary-card.is-success { border-left-color: #0f766e; }
+  .re-summary-card.is-warning { border-left-color: #f97316; }
+  .re-summary-card.is-danger { border-left-color: #dc2626; }
+  .re-summary-label { color: #64748b; font-size: .74rem; font-weight: 850; letter-spacing: .04em; text-transform: uppercase; }
+  .re-summary-value { color: #0f2340; font-size: 1.2rem; font-weight: 900; line-height: 1.15; margin-top: .2rem; }
+  .re-summary-note { color: #64748b; font-size: .74rem; margin-top: .1rem; }
+  .re-table-card { overflow: hidden; }
+  .re-table-toolbar { align-items: center; border-bottom: 1px solid #dfe7f1; display: flex; justify-content: space-between; gap: 1rem; padding: .9rem 1rem; }
+  .re-table-title { color: #0f2340; font-weight: 900; margin: 0; }
+  .re-table-note { color: #64748b; font-size: .78rem; margin: .15rem 0 0; }
+  .re-export-row { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .re-table-wrap { padding: 1rem; }
+  .re-table { width: 100%; }
+  .re-table thead th { background: #eef3f8; color: #0f2340; font-size: .74rem; letter-spacing: .03em; text-transform: uppercase; vertical-align: middle; }
+  .re-table td { vertical-align: middle; }
+  .re-main-text { color: #0f2340; display: block; font-weight: 850; }
+  .re-sub-text { color: #64748b; display: block; font-size: .76rem; line-height: 1.2; }
+  .re-money { font-feature-settings: "tnum"; font-weight: 850; text-align: right; white-space: nowrap; }
+  .re-empty { color: #64748b; padding: 2rem 1rem; text-align: center; }
+  .re-detail-button { border-radius: .75rem; font-weight: 800; min-width: 38px; }
+  .re-detail-summary { background: #f8fafc; border: 1px solid #dfe7f1; border-radius: .9rem; display: grid; gap: .75rem; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: .9rem; padding: .85rem; }
+  .re-detail-kv span { color: #64748b; display: block; font-size: .72rem; font-weight: 850; letter-spacing: .03em; text-transform: uppercase; }
+  .re-detail-kv strong { color: #0f2340; display: block; margin-top: .15rem; }
+  .re-modal-loading { align-items: center; color: #64748b; display: flex; gap: .5rem; justify-content: center; min-height: 170px; }
+  @media (max-width: 1400px) { .re-filter-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .re-actions { grid-column: 1 / -1; justify-content: flex-start; } }
+  @media (max-width: 900px) { .re-summary, .re-detail-summary { grid-template-columns: 1fr; } .re-filter-grid { grid-template-columns: 1fr; } .re-table-toolbar { align-items: flex-start; flex-direction: column; } }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="re-page">
+  <section class="re-header">
+    <div class="re-header-kicker">
+      <i class="fas fa-folder-open"></i>
+      <span>Reportes Especiales</span>
+    </div>
+    <h1 class="re-header-title">Cartera documental por auxiliar</h1>
+    <p class="re-header-meta">{{ periodo_label }}</p>
+  </section>
+
+  {% if error %}
+    <div class="alert alert-warning rounded-4 shadow-sm" role="alert">
+      <i class="fas fa-triangle-exclamation me-1"></i>
+      {{ error }}
+    </div>
+  {% endif %}
+
+  <section class="re-card re-filter-card">
+    <form method="get" action="{{ url_for('facturas_auxiliar.facturas_estado') }}">
+      <div class="re-filter-grid">
+        <div class="re-field">
+          <label for="fecha_corte">Fecha de corte</label>
+          <input id="fecha_corte" class="form-control" type="date" name="fecha_corte" value="{{ filtros.fecha_corte.isoformat() }}" />
+        </div>
+        <div class="re-field">
+          <label for="fecha_modo">Fecha documento</label>
+          <select id="fecha_modo" class="form-select" name="fecha_modo">
+            {% for code, label in fecha_modos.items() %}
+              <option value="{{ code }}" {% if filtros.fecha_modo == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="re-field" data-date-range-field>
+          <label for="fecha_desde">Desde</label>
+          <input id="fecha_desde" class="form-control" type="date" name="fecha_desde" value="{{ filtros.fecha_desde.isoformat() }}" />
+        </div>
+        <div class="re-field" data-date-range-field>
+          <label for="fecha_hasta">Hasta</label>
+          <input id="fecha_hasta" class="form-control" type="date" name="fecha_hasta" value="{{ filtros.fecha_hasta.isoformat() }}" />
+        </div>
+        <div class="re-field">
+          <label for="origen">Origen</label>
+          <select id="origen" class="form-select" name="origen">
+            {% for code, label in origenes.items() %}
+              <option value="{{ code }}" {% if filtros.origen == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="re-field">
+          <label for="estado">Estado</label>
+          <select id="estado" class="form-select" name="estado">
+            {% for code, label in estados.items() %}
+              <option value="{{ code }}" {% if filtros.estado == code %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="re-field">
+          <label for="unidad_negocio_id">Unidad</label>
+          <select id="unidad_negocio_id" class="form-select" name="unidad_negocio_id">
+            <option value="">Todas</option>
+            {% for unidad in unidades %}
+              <option value="{{ unidad.id }}" {% if filtros.unidad_negocio_id == unidad.id %}selected{% endif %}>{{ unidad.codigo }} · {{ unidad.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="re-field">
+          <label for="auxiliar_id">Auxiliar</label>
+          <select id="auxiliar_id" class="form-select" name="auxiliar_id">
+            <option value="">Todos</option>
+            {% for auxiliar in auxiliares %}
+              <option value="{{ auxiliar.id }}" {% if filtros.auxiliar_id == auxiliar.id %}selected{% endif %}>{{ auxiliar.nombre }}{% if auxiliar.nit_ci %} · {{ auxiliar.nit_ci }}{% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="re-field">
+          <label for="moneda">Moneda</label>
+          <select id="moneda" class="form-select" name="moneda">
+            <option value="">Todas</option>
+            {% for moneda in monedas %}
+              <option value="{{ moneda.codigo }}" {% if filtros.moneda == moneda.codigo %}selected{% endif %}>{{ moneda.simbolo }} · {{ moneda.nombre or moneda.codigo }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="re-field">
+          <label for="q">Buscar</label>
+          <input id="q" class="form-control" type="search" name="q" value="{{ filtros.q }}" placeholder="Referencia, auxiliar o cuenta" />
+        </div>
+        <div class="re-actions">
+          <button class="btn btn-primary re-action-btn" type="submit">
+            <i class="fas fa-magnifying-glass"></i>
+            <span>Consultar</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="re-summary">
+    <article class="re-card re-summary-card is-primary">
+      <div class="re-summary-label">Registros</div>
+      <div class="re-summary-value">{{ resumen.registros }}</div>
+      <div class="re-summary-note">Documentos pendientes</div>
+    </article>
+    <article class="re-card re-summary-card is-primary">
+      <div class="re-summary-label">Auxiliares</div>
+      <div class="re-summary-value">{{ resumen.auxiliares }}</div>
+      <div class="re-summary-note">Por moneda</div>
+    </article>
+    <article class="re-card re-summary-card is-danger">
+      <div class="re-summary-label">Vencidos</div>
+      <div class="re-summary-value">{{ resumen.vencidos }}</div>
+      <div class="re-summary-note">Con vencimiento superado</div>
+    </article>
+    <article class="re-card re-summary-card is-warning">
+      <div class="re-summary-label">Parciales</div>
+      <div class="re-summary-value">{{ resumen.parciales }}</div>
+      <div class="re-summary-note">Con cobros aplicados</div>
+    </article>
+    <article class="re-card re-summary-card is-success">
+      <div class="re-summary-label">Saldo</div>
+      <div class="re-summary-value">{{ resumen.saldo_label }}</div>
+      <div class="re-summary-note">Pendiente</div>
+    </article>
+  </section>
+
+  {% if resumen.monedas|length > 1 %}
+  <section class="re-card re-table-card">
+    <div class="re-table-toolbar">
+      <div>
+        <h2 class="re-table-title h6">Totales por moneda</h2>
+      </div>
+    </div>
+    <div class="re-table-wrap table-responsive">
+      <table class="table table-sm align-middle re-table">
+        <thead>
+          <tr>
+            <th>Moneda</th>
+            <th class="text-end">Total</th>
+            <th class="text-end">Aplicado</th>
+            <th class="text-end">Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for moneda in resumen.monedas %}
+          <tr>
+            <td>{{ moneda.moneda_label }}</td>
+            <td class="re-money">{{ moneda.total_label }}</td>
+            <td class="re-money">{{ moneda.aplicado_label }}</td>
+            <td class="re-money">{{ moneda.saldo_label }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="re-card re-table-card">
+    <div class="re-table-toolbar">
+      <div>
+        <h2 class="re-table-title h5">Cartera documental</h2>
+        <p class="re-table-note">{{ filtros.origen_label }} · {{ filtros.estado_label }}</p>
+      </div>
+      <div class="re-export-row">
+        <a class="btn btn-outline-danger re-action-btn" href="{{ url_for('facturas_auxiliar.facturas_estado_pdf_general', **query_args) }}" target="_blank" rel="noopener">
+          <i class="fas fa-file-pdf"></i>
+          <span>PDF</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="re-table-wrap table-responsive">
+      <table id="carteraDocumentalTable" class="table table-hover align-middle re-table">
+        <thead>
+          <tr>
+            <th>Auxiliar</th>
+            <th>Origen</th>
+            <th>Referencia</th>
+            <th>Documento</th>
+            <th>Vencimiento</th>
+            <th class="text-center">Estado</th>
+            <th class="text-center">Moneda</th>
+            <th class="text-end">Total</th>
+            <th class="text-end">Aplicado</th>
+            <th class="text-end">Saldo</th>
+            <th class="text-center">Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in items %}
+          <tr>
+            <td>
+              <span class="re-main-text">{{ row.auxiliar_nombre }}</span>
+              <span class="re-sub-text">{{ row.auxiliar_doc or 'Sin documento' }}</span>
+            </td>
+            <td>
+              <span class="re-main-text">{{ row.origen_label }}</span>
+              <span class="re-sub-text">{{ row.cuenta_codigo }}{% if row.cuenta_nombre %} · {{ row.cuenta_nombre }}{% endif %}</span>
+            </td>
+            <td>
+              <span class="re-main-text">{{ row.referencia }}</span>
+              <span class="re-sub-text">{{ row.detalle }}</span>
+            </td>
+            <td>
+              <span class="re-main-text">{{ row.fecha_documento_label }}</span>
+              <span class="re-sub-text">{{ row.unidad_label }}</span>
+            </td>
+            <td>
+              <span class="re-main-text">{{ row.fecha_vencimiento_label }}</span>
+              <span class="re-sub-text">{{ row.dias_label }}</span>
+            </td>
+            <td class="text-center">
+              <span class="badge text-bg-{{ row.estado_badge }}">{{ row.estado_label }}</span>
+              {% if row.cobro_codigo == 'PARCIAL' %}
+                <span class="badge text-bg-primary">Parcial</span>
+              {% endif %}
+            </td>
+            <td class="text-center">{{ row.moneda_label }}</td>
+            <td class="re-money">{{ row.total_label }}</td>
+            <td class="re-money">{{ row.aplicado_label }}</td>
+            <td class="re-money">{{ row.saldo_label }}</td>
+            <td class="text-center">
+              <button class="btn btn-outline-primary btn-sm re-detail-button" type="button" title="Ver extracto"
+                data-detail-url="{{ url_for('facturas_auxiliar.facturas_estado_api_detalle', fuente=row.fuente_codigo, fuente_id=row.fuente_id) }}"
+                data-pdf-url="{{ url_for('facturas_auxiliar.facturas_estado_pdf_detalle', fuente=row.fuente_codigo, fuente_id=row.fuente_id) }}">
+                <i class="fas fa-eye"></i>
+              </button>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td class="re-empty" colspan="11">No hay cartera pendiente con los filtros seleccionados.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div class="modal fade" id="documentoDetalleModal" tabindex="-1" aria-labelledby="documentoDetalleTitle" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content rounded-4">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title h5" id="documentoDetalleTitle">Extracto documental</h2>
+          <small class="text-muted" id="documentoDetalleSubtitle">—</small>
+        </div>
+        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div id="documentoDetalleLoading" class="re-modal-loading">
+          <i class="fas fa-circle-notch fa-spin"></i>
+          <span>Cargando detalle...</span>
+        </div>
+        <div id="documentoDetalleContent" class="d-none">
+          <div class="re-detail-summary">
+            <div class="re-detail-kv">
+              <span>Auxiliar</span>
+              <strong id="detalleAuxiliar">—</strong>
+            </div>
+            <div class="re-detail-kv">
+              <span>Referencia</span>
+              <strong id="detalleReferencia">—</strong>
+            </div>
+            <div class="re-detail-kv">
+              <span>Moneda</span>
+              <strong id="detalleMoneda">—</strong>
+            </div>
+            <div class="re-detail-kv">
+              <span>Saldo</span>
+              <strong id="detalleSaldo">—</strong>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle re-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Documento</th>
+                  <th>Glosa</th>
+                  <th class="text-end">Debe</th>
+                  <th class="text-end">Haber</th>
+                  <th class="text-end">Saldo</th>
+                </tr>
+              </thead>
+              <tbody id="detalleMovimientosBody"></tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="3" class="text-end">Totales</th>
+                  <th class="text-end" id="detalleTotalDebe">0.00</th>
+                  <th class="text-end" id="detalleTotalHaber">0.00</th>
+                  <th class="text-end" id="detalleTotalSaldo">0.00</th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a id="detallePdfLink" class="btn btn-outline-danger re-action-btn d-none" href="#" target="_blank" rel="noopener">
+          <i class="fas fa-file-pdf"></i>
+          <span>PDF extracto</span>
+        </a>
+        <button class="btn btn-secondary re-action-btn" type="button" data-bs-dismiss="modal">
+          <i class="fas fa-xmark"></i>
+          <span>Cerrar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const fechaModo = document.getElementById('fecha_modo');
+    const dateRangeFields = document.querySelectorAll('[data-date-range-field]');
+    const modalEl = document.getElementById('documentoDetalleModal');
+    const loadingEl = document.getElementById('documentoDetalleLoading');
+    const contentEl = document.getElementById('documentoDetalleContent');
+    const subtitleEl = document.getElementById('documentoDetalleSubtitle');
+    const auxiliarEl = document.getElementById('detalleAuxiliar');
+    const referenciaEl = document.getElementById('detalleReferencia');
+    const monedaEl = document.getElementById('detalleMoneda');
+    const saldoEl = document.getElementById('detalleSaldo');
+    const totalDebeEl = document.getElementById('detalleTotalDebe');
+    const totalHaberEl = document.getElementById('detalleTotalHaber');
+    const totalSaldoEl = document.getElementById('detalleTotalSaldo');
+    const movimientosBody = document.getElementById('detalleMovimientosBody');
+    const pdfLink = document.getElementById('detallePdfLink');
+
+    function syncDateFields() {
+      const isRange = fechaModo && fechaModo.value === 'RANGO_DOCUMENTO';
+      dateRangeFields.forEach((field) => {
+        field.classList.toggle('is-hidden', !isRange);
+        field.querySelectorAll('input').forEach((input) => { input.disabled = !isRange; });
+      });
+    }
+
+    function initDataTable() {
+      const table = document.querySelector('#carteraDocumentalTable');
+      if (!table || table.querySelector('tbody td[colspan]')) return;
+      if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.DataTable) return;
+      window.jQuery('#carteraDocumentalTable').DataTable({
+        language: window.DXTBase && typeof window.DXTBase.getDataTableLanguageEs === 'function'
+          ? window.DXTBase.getDataTableLanguageEs()
+          : {},
+        pageLength: 25,
+        order: [],
+        autoWidth: false
+      });
+    }
+
+    function setLoading() {
+      loadingEl.classList.remove('d-none');
+      contentEl.classList.add('d-none');
+      movimientosBody.innerHTML = '';
+      pdfLink.classList.add('d-none');
+      pdfLink.removeAttribute('href');
+    }
+
+    function appendTextCell(row, value, className) {
+      const cell = document.createElement('td');
+      if (className) cell.className = className;
+      cell.textContent = value || '—';
+      row.appendChild(cell);
+    }
+
+    function paintDetalle(payload, pdfUrl) {
+      const item = payload.item || {};
+      const resumen = payload.resumen || {};
+      const movimientos = payload.movimientos || [];
+      subtitleEl.textContent = `${item.origen_label || 'Documento'} · ${item.referencia || '—'}`;
+      auxiliarEl.textContent = `${item.auxiliar_nombre || '—'}${item.auxiliar_doc ? ' · ' + item.auxiliar_doc : ''}`;
+      referenciaEl.textContent = item.referencia || '—';
+      monedaEl.textContent = item.moneda_label || resumen.moneda_label || '—';
+      saldoEl.textContent = resumen.saldo_label || '0.00';
+      totalDebeEl.textContent = resumen.debe_label || '0.00';
+      totalHaberEl.textContent = resumen.haber_label || '0.00';
+      totalSaldoEl.textContent = resumen.saldo_label || '0.00';
+
+      movimientosBody.innerHTML = '';
+      if (!movimientos.length) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.className = 're-empty';
+        cell.colSpan = 6;
+        cell.textContent = 'No hay operaciones para este documento.';
+        row.appendChild(cell);
+        movimientosBody.appendChild(row);
+      } else {
+        movimientos.forEach((mov) => {
+          const row = document.createElement('tr');
+          appendTextCell(row, mov.fecha_label, 'text-nowrap');
+          appendTextCell(row, mov.documento, 'text-nowrap');
+          appendTextCell(row, mov.glosa, '');
+          appendTextCell(row, mov.debe_label, 're-money');
+          appendTextCell(row, mov.haber_label, 're-money');
+          appendTextCell(row, mov.saldo_label, 're-money');
+          movimientosBody.appendChild(row);
+        });
+      }
+
+      if (pdfUrl) {
+        pdfLink.href = pdfUrl;
+        pdfLink.classList.remove('d-none');
+      }
+      loadingEl.classList.add('d-none');
+      contentEl.classList.remove('d-none');
+    }
+
+    function showError(message) {
+      loadingEl.classList.add('d-none');
+      contentEl.classList.remove('d-none');
+      movimientosBody.innerHTML = '';
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.className = 're-empty text-danger';
+      cell.colSpan = 6;
+      cell.textContent = message || 'No se pudo cargar el detalle.';
+      row.appendChild(cell);
+      movimientosBody.appendChild(row);
+      auxiliarEl.textContent = '—';
+      referenciaEl.textContent = '—';
+      monedaEl.textContent = '—';
+      saldoEl.textContent = '—';
+      totalDebeEl.textContent = '0.00';
+      totalHaberEl.textContent = '0.00';
+      totalSaldoEl.textContent = '0.00';
+    }
+
+    async function openDetalle(button) {
+      const detailUrl = button.getAttribute('data-detail-url');
+      const pdfUrl = button.getAttribute('data-pdf-url');
+      const modal = window.bootstrap ? window.bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+      setLoading();
+      if (modal) modal.show();
+      try {
+        const response = await fetch(detailUrl, { headers: { Accept: 'application/json' } });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.message || 'No se pudo cargar el detalle.');
+        paintDetalle(payload, pdfUrl);
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+
+    document.querySelectorAll('[data-detail-url]').forEach((button) => {
+      button.addEventListener('click', () => openDetalle(button));
+    });
+    if (fechaModo) fechaModo.addEventListener('change', syncDateFields);
+    syncDateFields();
+    initDataTable();
+  })();
+</script>
+{% endblock extra_js %}

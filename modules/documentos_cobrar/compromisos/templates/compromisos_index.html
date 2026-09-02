@@ -1,0 +1,486 @@
+{% extends "layout.html" %} {% block title %}Compromisos{% endblock %} {% block
+page_help_url %}{{ url_for('compromisos.help') }}{% endblock %} {% block
+extra_css %}
+<style>
+  #compromisosPage {
+    --dxt-accent: #7c3aed;
+    --dxt-accent-lt: #f3e8ff;
+  }
+
+  .cp-grid-wrap {
+    padding: 0 1.75rem 1.75rem;
+  }
+
+  .cp-top-actions {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .cp-acciones {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+
+  .cp-btn-accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: var(--dxt-text-soft);
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 50%;
+    transition: all 0.18s ease;
+  }
+
+  .cp-btn-accion:hover {
+    background: #eef2f7;
+    color: var(--dxt-text);
+  }
+
+  .cp-badge-pagar {
+    background: var(--dxt-danger-lt);
+    color: var(--dxt-danger);
+  }
+
+  .cp-badge-cobrar {
+    background: var(--dxt-success-lt);
+    color: var(--dxt-success);
+  }
+
+  .cp-num {
+    font-family: var(--dxt-font-mono);
+    font-size: 0.86rem;
+  }
+
+  .cp-num-registrado {
+    color: var(--dxt-success);
+    font-weight: 600;
+  }
+
+  .cp-readonly-note {
+    font-size: 0.82rem;
+    color: var(--dxt-text-soft);
+  }
+
+  .cp-unidad-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  #compromisosPage .select2-container {
+    width: 100% !important;
+  }
+
+  #tablaCompromisos td:last-child,
+  #tablaCompromisos th:last-child {
+    white-space: nowrap;
+    width: 90px;
+    min-width: 90px;
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid py-4 dxt-page" id="compromisosPage" data-puede-editar="{{ '1' if puede_editar else '0' }}">
+  <div class="dxt-card">
+    <div class="dxt-card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div class="d-flex align-items-center">
+        <div class="dxt-header-icon">
+          <i class="fas fa-calendar-check"></i>
+        </div>
+        <div>
+          <h1 class="dxt-header-title">Compromisos</h1>
+          <div class="dxt-header-sub">
+            Programación anual de cuentas por pagar y por cobrar
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <div class="dxt-stat-chips">
+          <span class="dxt-stat-chip">
+            <span class="dxt-chip-dot"></span>
+            Gestión {{ gestion_actual }}
+          </span>
+        </div>
+
+        {% if not puede_editar %}
+        <span class="dxt-badge-readonly">
+          <i class="fas fa-eye"></i>
+          Modo lectura
+        </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="dxt-filtros">
+      <div class="row g-3 align-items-end">
+        <div class="col-6 col-md-2">
+          <label for="filtroGestion" class="form-label">Gestión</label>
+          <input type="number" id="filtroGestion" class="form-control" value="{{ gestion_actual }}" readonly />
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label for="filtroTipo" class="form-label">Tipo</label>
+          <select id="filtroTipo" class="form-select">
+            <option value="">Todos</option>
+            {% for tipo in tipos_compromiso %}
+            <option value="{{ tipo }}">{{ tipo }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label for="filtroEstado" class="form-label">Estado</label>
+          <select id="filtroEstado" class="form-select">
+            <option value="">Todos</option>
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="PAGADO">Pagado</option>
+            <option value="COBRADO">Cobrado</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-3">
+          <label for="filtroUnidadNegocio" class="form-label">Unidad de Negocio</label>
+          <select id="filtroUnidadNegocio" class="form-select">
+            <option value="">Todas</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <label for="filtroTexto" class="form-label">Buscar</label>
+          <input type="text" id="filtroTexto" class="form-control" autocomplete="off" />
+        </div>
+
+        <div class="col-12 col-md-1">
+          <div class="form-check pt-4">
+            <input class="form-check-input" type="checkbox" id="filtroActivos" checked />
+            <label class="form-check-label" for="filtroActivos">Activos</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dxt-table-topbar">
+      <div class="cp-readonly-note">
+        El detalle ya registrado no puede modificarse ni eliminarse.
+      </div>
+
+      <div class="cp-top-actions">
+        {% if puede_editar %}
+        <a href="{{ url_for('compromisos.nuevo') }}" class="btn btn-primary btn-sm">
+          <i class="fas fa-plus me-1"></i>
+          Nuevo compromiso
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="cp-grid-wrap">
+      <div class="table-responsive">
+        <table id="tablaCompromisos" class="table dxt-table w-100">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Tipo</th>
+              <th>Nombre</th>
+              <th>Unidad de Negocio</th>
+              <th>Auxiliar</th>
+              <th>Cuenta</th>
+              <th>Venc.</th>
+              <th>Primer vencimiento</th>
+              <th>Último vencimiento</th>
+              <th>Total programado</th>
+              <th>Total registrado</th>
+              <th>Estado</th>
+              <th class="text-center">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Automatico-->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  const PUEDE_EDITAR_COMP =
+    document.getElementById("compromisosPage").dataset.puedeEditar === "1";
+  let tablaCompromisos = null;
+  let debounceComp = null;
+
+  function notificar(icon, title, text, autoClose = true) {
+    if (typeof Swal !== "undefined") {
+      return Swal.fire({
+        icon: icon,
+        title: title,
+        text: text,
+        timer: autoClose ? 1700 : undefined,
+        showConfirmButton: !autoClose,
+      });
+    }
+    if (icon === "error" || icon === "warning") alert(`${title}\n\n${text}`);
+  }
+
+  function htmlEscape(text) {
+    return $("<div>")
+      .text(text ?? "")
+      .html();
+  }
+
+  function money(v) {
+    return Number(v || 0).toFixed(2);
+  }
+
+  function renderBadgeTipo(tipo) {
+    const clase = tipo === "COBRAR" ? "cp-badge-cobrar" : "cp-badge-pagar";
+    return `<span class="dxt-badge ${clase}">${htmlEscape(tipo)}</span>`;
+  }
+
+  function renderBadgeEstado(estado) {
+    let clase = "dxt-badge-accent";
+    if (estado === "PAGADO" || estado === "COBRADO")
+      clase = "dxt-badge-success";
+    return `<span class="dxt-badge ${clase}">${htmlEscape(estado)}</span>`;
+  }
+
+  function renderUnidad(row) {
+    if (!row.unidad_negocio_id) {
+      return '<span class="dxt-vacio">—</span>';
+    }
+    const codigo = htmlEscape(row.unidad_negocio_codigo || "");
+    const nombre = htmlEscape(row.unidad_negocio_nombre || "");
+    return `<span class="cp-unidad-badge">${codigo}${nombre ? ` · ${nombre}` : ""}</span>`;
+  }
+
+  function initFiltroUnidad() {
+    const $select = $("#filtroUnidadNegocio");
+    $select.select2({
+      width: "100%",
+      language: "es",
+      placeholder: "Todas",
+      allowClear: true,
+      minimumInputLength: 0,
+      ajax: {
+        url: "{{ base_path }}/compromisos/api/unidades-negocio",
+        dataType: "json",
+        delay: 250,
+        data: function (params) {
+          return { q: params.term || "" };
+        },
+        processResults: function (resp) {
+          return {
+            results: [{ id: "", text: "Todas" }].concat(
+              (resp.data || []).map(function (row) {
+                return {
+                  id: row.id,
+                  text: row.etiqueta || `${row.codigo} - ${row.nombre}`,
+                };
+              }),
+            ),
+          };
+        },
+      },
+    });
+  }
+
+  function renderAcciones(row) {
+    let acciones = `
+      <a href="/compromisos/editar/${row.compromiso_id}" class="cp-btn-accion" title="Editar">
+        <i class="fas fa-pen"></i>
+      </a>
+    `;
+
+    if (PUEDE_EDITAR_COMP && !row.compromiso_tiene_registrados) {
+      acciones += `
+        <button type="button" class="cp-btn-accion btn-eliminar" title="Eliminar" data-id="${row.compromiso_id
+        }" data-nombre="${htmlEscape(row.nombre)}">
+          <i class="fas fa-trash"></i>
+        </button>
+      `;
+    }
+
+    return `<div class="cp-acciones">${acciones}</div>`;
+  }
+
+  function construirTabla() {
+    tablaCompromisos = $("#tablaCompromisos").DataTable({
+      processing: true,
+      serverSide: false,
+      responsive: true,
+      autoWidth: false,
+      pageLength: 50,
+      order: [
+        [5, "asc"],
+        [0, "asc"],
+      ],
+      ajax: {
+        url: "{{ base_path }}/compromisos/api/listar",
+        dataSrc: "data",
+        data: function (d) {
+          d.gestion = $("#filtroGestion").val();
+          d.tipo = $("#filtroTipo").val();
+          d.estado = $("#filtroEstado").val();
+          d.unidad_negocio_id = $("#filtroUnidadNegocio").val();
+          d.texto = $("#filtroTexto").val();
+          d.solo_activos = $("#filtroActivos").is(":checked");
+        },
+        error: function (xhr) {
+          let mensaje = "No se pudo cargar la lista de compromisos.";
+          if (xhr.responseJSON && xhr.responseJSON.message)
+            mensaje = xhr.responseJSON.message;
+          notificar("error", "Error al cargar", mensaje, false);
+        },
+      },
+      columns: [
+        {
+          data: "codigo",
+          render: (d) => `<span class="dxt-codigo">${htmlEscape(d)}</span>`,
+        },
+        { data: "tipo", render: (d) => renderBadgeTipo(d) },
+        { data: "nombre" },
+        {
+          data: null,
+          render: (d, t, row) => renderUnidad(row),
+        },
+        {
+          data: "auxiliar_nombre",
+          render: (d) =>
+            d ? htmlEscape(d) : '<span class="dxt-vacio">—</span>',
+        },
+        {
+          data: null,
+          render: function (d, t, row) {
+            if (!row.cuenta_contable) return '<span class="dxt-vacio">—</span>';
+            return `<span class="dxt-codigo">${htmlEscape(
+              row.cuenta_contable,
+            )}</span>`;
+          },
+        },
+        { data: "cantidad_detalles", className: "text-center" },
+        {
+          data: "primer_vencimiento",
+          render: function (d) {
+            if (!d) return '<span class="dxt-vacio">—</span>';
+            const [y, m, day] = d.split("-");
+            return `<span class="dxt-fecha-pill"><i class="fas fa-calendar"></i>${day}/${m}/${y}</span>`;
+          },
+        },
+        {
+          data: "ultimo_vencimiento",
+          render: function (d) {
+            if (!d) return '<span class="dxt-vacio">—</span>';
+            const [y, m, day] = d.split("-");
+            return `<span class="dxt-fecha-pill"><i class="fas fa-calendar"></i>${day}/${m}/${y}</span>`;
+          },
+        },
+        {
+          data: "total_programado",
+          className: "text-end",
+          render: (d) => `<span class="cp-num">${money(d)}</span>`,
+        },
+        {
+          data: "total_registrado",
+          className: "text-end",
+          render: (d) =>
+            `<span class="cp-num cp-num-registrado">${money(d)}</span>`,
+        },
+        { data: "estado_general", render: (d) => renderBadgeEstado(d) },
+        {
+          data: null,
+          className: "text-center",
+          orderable: false,
+          searchable: false,
+          render: (d, t, row) => renderAcciones(row),
+        },
+      ],
+
+      language: {
+        processing: "Procesando...",
+        search: "Buscar:",
+        lengthMenu: "Mostrar _MENU_ registros",
+        info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+        infoEmpty: "Mostrando 0 a 0 de 0 registros",
+        infoFiltered: "(filtrado de _MAX_ registros totales)",
+        loadingRecords: "Cargando...",
+        zeroRecords: "No se encontraron registros",
+        emptyTable: "No hay compromisos registrados",
+        paginate: {
+          first: "Primero",
+          last: "Último",
+          next: "Siguiente",
+          previous: "Anterior",
+        },
+      },
+    });
+  }
+
+  function recargarConDebounce() {
+    clearTimeout(debounceComp);
+    debounceComp = setTimeout(
+      () => tablaCompromisos.ajax.reload(null, false),
+      250,
+    );
+  }
+
+  function eliminarCompromiso(id, nombre) {
+    const proceed = function () {
+      $.ajax({
+        url: `/compromisos/api/eliminar/${id}`,
+        method: "DELETE",
+        success: function (resp) {
+          tablaCompromisos.ajax.reload(null, false);
+          notificar("success", "Eliminado", resp.message, true);
+        },
+        error: function (xhr) {
+          let mensaje = "No se pudo eliminar el compromiso.";
+          if (xhr.responseJSON && xhr.responseJSON.message)
+            mensaje = xhr.responseJSON.message;
+          notificar("error", "No se puede eliminar", mensaje, false);
+        },
+      });
+    };
+
+    Swal.fire({
+      icon: "warning",
+      title: "Confirmar eliminación",
+      text: `¿Desea eliminar el compromiso "${nombre}"?`,
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#b83232",
+    }).then(function (result) {
+      if (result.isConfirmed) proceed();
+    });
+  }
+
+  $(document).ready(function () {
+    initFiltroUnidad();
+    construirTabla();
+
+    $("#filtroTipo, #filtroEstado").on("change", recargarConDebounce);
+    $("#filtroUnidadNegocio").on("change", recargarConDebounce);
+    $("#filtroTexto").on("input", recargarConDebounce);
+    $("#filtroActivos").on("change", recargarConDebounce);
+
+    $("#tablaCompromisos tbody").on("click", ".btn-eliminar", function () {
+      eliminarCompromiso($(this).data("id"), $(this).data("nombre"));
+    });
+  });
+</script>
+{% endblock %}

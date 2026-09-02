@@ -1,0 +1,878 @@
+{% extends "layout.html" %} {% block title %}Centro de Costo{% endblock %} {%
+block extra_css %}
+<style>
+  #ccostoPage {
+    --cc-accent: #2d7dd2;
+    --cc-accent-lt: #e8f1fc;
+    --cc-success: #16a34a;
+    --cc-success-lt: #e8f7ee;
+    --cc-danger: #dc2626;
+    --cc-danger-lt: #fdecec;
+    --cc-warning: #d97706;
+    --cc-surface: #f8fafc;
+    --cc-border: #e2e8f0;
+    --cc-text: #334155;
+    --cc-muted: #64748b;
+    --cc-radius: 14px;
+  }
+
+  #ccostoPage .cc-header {
+    background: linear-gradient(120deg, #0f2340 0%, #1a4a7a 60%, #1f5d9e 100%);
+    border-radius: var(--cc-radius);
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15, 35, 64, 0.14);
+    position: sticky;
+    top: 72px;
+    z-index: 30;
+    overflow: hidden;
+  }
+
+  #ccostoPage .cc-header::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+  }
+
+  #ccostoPage .cc-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  #ccostoPage .cc-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.12rem;
+    flex-shrink: 0;
+  }
+
+  #ccostoPage .cc-header-title {
+    color: #fff;
+    font-size: 1.08rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.2px;
+  }
+
+  #ccostoPage .cc-header-sub {
+    color: rgba(255, 255, 255, 0.66);
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+
+  #ccostoPage .cc-header .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+    font-size: 0.82rem;
+    z-index: 1;
+    position: relative;
+  }
+
+  #ccostoPage .cc-header .btn-primary:hover {
+    background: #eff6ff;
+    border-color: #eff6ff;
+  }
+
+  #ccostoPage .cc-card {
+    background: #fff;
+    border: 1px solid var(--cc-border);
+    border-radius: var(--cc-radius);
+    box-shadow: 0 4px 18px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+  }
+
+  #ccostoPage .cc-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.95rem 1.1rem;
+    background: var(--cc-surface);
+    border-bottom: 1px solid var(--cc-border);
+  }
+
+  #ccostoPage .cc-table-wrap {
+    padding-bottom: 0.35rem;
+  }
+
+  #ccostoPage #tblCentroCosto thead th {
+    background: var(--cc-surface);
+    color: var(--cc-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.55px;
+    border-bottom: 2px solid var(--cc-border);
+    padding: 11px 14px;
+    white-space: nowrap;
+  }
+
+  #ccostoPage #tblCentroCosto thead th:first-child,
+  #ccostoPage #tblCentroCosto tbody td:first-child {
+    padding-left: 1.1rem;
+  }
+
+  #ccostoPage #tblCentroCosto tbody td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eef2f7;
+    font-size: 0.875rem;
+    color: var(--cc-text);
+  }
+
+  #ccostoPage #tblCentroCosto tbody tr:nth-child(even) {
+    background: #fbfdff;
+  }
+
+  #ccostoPage #tblCentroCosto tbody tr:hover td {
+    background: var(--cc-accent-lt) !important;
+  }
+
+  #ccostoPage .badge-codigo {
+    display: inline-flex;
+    align-items: center;
+    font-family: Consolas, monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.45px;
+    background: var(--cc-accent-lt);
+    color: var(--cc-accent);
+    border: 1px solid #bfdbfe;
+    padding: 3px 10px;
+    border-radius: 7px;
+  }
+
+  #ccostoPage .badge-activo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+  }
+
+  #ccostoPage .badge-activo.si {
+    background: var(--cc-success-lt);
+    color: var(--cc-success);
+    border-color: #b7e4c7;
+  }
+
+  #ccostoPage .badge-activo.no {
+    background: #fff7ed;
+    color: var(--cc-warning);
+    border-color: #fed7aa;
+  }
+
+  #ccostoPage .inline-input,
+  #ccostoPage .inline-select {
+    width: 100%;
+    border: 1.5px solid var(--cc-accent);
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 0.875rem;
+    outline: none;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+    transition: box-shadow 0.16s ease;
+  }
+
+  #ccostoPage .inline-input:focus,
+  #ccostoPage .inline-select:focus {
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.18);
+  }
+
+  #ccostoPage tr#filaTemp,
+  #ccostoPage tr.fila-en-edicion {
+    background: rgba(45, 125, 210, 0.05) !important;
+    box-shadow: inset 3px 0 0 var(--cc-accent);
+  }
+
+  #ccostoPage .cc-btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 31px;
+    height: 31px;
+    border-radius: 8px;
+    border: 1.5px solid var(--cc-border);
+    background: #fff;
+    color: var(--cc-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.78rem;
+    padding: 0;
+  }
+
+  #ccostoPage .cc-btn-action:hover {
+    transform: translateY(-1px);
+  }
+
+  #ccostoPage .cc-btn-save:hover {
+    background: var(--cc-success-lt);
+    border-color: #b7e4c7;
+    color: var(--cc-success);
+  }
+
+  #ccostoPage .cc-btn-cancel:hover {
+    background: #f8ecec;
+    border-color: #fecaca;
+    color: var(--cc-danger);
+  }
+
+  #ccostoPage .cc-btn-edit:hover {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+  }
+
+  #ccostoPage .cc-btn-delete:hover {
+    background: var(--cc-danger-lt);
+    border-color: #fecaca;
+    color: var(--cc-danger);
+  }
+
+  #ccostoPage div.dataTables_wrapper {
+    padding: 0.8rem 1rem 1rem;
+  }
+
+  #ccostoPage div.dataTables_wrapper div.dataTables_filter input,
+  #ccostoPage div.dataTables_wrapper div.dataTables_length select {
+    border: 1.5px solid var(--cc-border);
+    border-radius: 8px;
+    font-size: 0.84rem;
+    padding: 5px 10px;
+  }
+
+  #ccostoPage div.dataTables_wrapper div.dataTables_filter input:focus {
+    border-color: var(--cc-accent);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+    outline: none;
+  }
+
+  #ccostoPage div.dataTables_wrapper div.dataTables_filter label,
+  #ccostoPage div.dataTables_wrapper div.dataTables_length label,
+  #ccostoPage div.dataTables_wrapper div.dataTables_info {
+    font-size: 0.8rem;
+    color: var(--cc-muted);
+  }
+
+  #ccostoPage div.dataTables_wrapper div.dataTables_paginate .paginate_button {
+    border-radius: 7px !important;
+    font-size: 0.82rem;
+    padding: 4px 10px !important;
+    border: 1px solid transparent !important;
+    color: var(--cc-muted) !important;
+  }
+
+  #ccostoPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button.current,
+  #ccostoPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button.current:hover {
+    background: var(--cc-accent) !important;
+    border-color: var(--cc-accent) !important;
+    color: #fff !important;
+    font-weight: 600;
+  }
+
+  #ccostoPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button:hover {
+    background: var(--cc-accent-lt) !important;
+    border-color: var(--cc-accent-lt) !important;
+    color: var(--cc-accent) !important;
+  }
+
+  .swal2-modal-lg {
+    width: 42rem !important;
+    max-width: 92vw !important;
+    border-radius: 16px !important;
+    padding: 1.9rem 1.4rem 1.35rem !important;
+  }
+
+  .swal2-title-lg {
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+    color: #334155 !important;
+    line-height: 1.25 !important;
+  }
+
+  .swal2-text-md {
+    font-size: 0.98rem !important;
+    color: #475569 !important;
+    line-height: 1.5 !important;
+  }
+
+  .swal2-actions {
+    margin-top: 1.15rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .swal2-styled.btn {
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  @media (max-width: 640px) {
+    #ccostoPage .cc-header {
+      top: 68px;
+    }
+
+    .swal2-modal-lg {
+      width: 94vw !important;
+      padding: 1.35rem 1rem 1rem !important;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div id="ccostoPage">
+  <div class="cc-header">
+    <div class="cc-header-left">
+      <div class="cc-header-icon">
+        <i class="fas fa-layer-group"></i>
+      </div>
+      <div>
+        <h4 class="cc-header-title">Centro de Costo</h4>
+        <div class="cc-header-sub">Catálogo maestro de centros de costo</div>
+      </div>
+    </div>
+
+    <button id="btnNuevoCentroCosto" type="button" class="btn btn-primary">
+      <i class="fas fa-plus me-1"></i>
+      Nuevo registro
+    </button>
+  </div>
+
+  <div class="cc-card">
+    <div class="cc-toolbar">
+      <span
+        style="
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.6px;
+          text-transform: uppercase;
+          color: #64748b;
+          display: flex;
+          align-items: center;
+          gap: 7px;
+        "
+      >
+        <span
+          style="
+            display: block;
+            width: 3px;
+            height: 13px;
+            background: #2d7dd2;
+            border-radius: 2px;
+          "
+        ></span>
+        Listado de centros de costo
+      </span>
+    </div>
+
+    <div class="cc-table-wrap">
+      <div class="table-responsive">
+        <table id="tblCentroCosto" class="table table-hover w-100">
+          <thead>
+            <tr>
+              <th style="width: 130px">Código</th>
+              <th style="width: 240px">Nombre</th>
+              <th>Descripción</th>
+              <th style="width: 110px">Activo</th>
+              <th style="width: 110px" class="text-center no-sort">Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script>
+  ;(function () {
+    'use strict'
+
+    let tabla = null
+
+    function escHtml(valor) {
+      return String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+    }
+
+    function mostrarMensaje(tipo, titulo, texto) {
+      return Swal.fire({
+        icon: tipo,
+        title: titulo,
+        text: texto,
+        confirmButtonText: 'Aceptar',
+        allowOutsideClick: false,
+        allowEscapeKey: true,
+        buttonsStyling: false,
+        customClass: {
+          popup: 'swal2-modal-lg',
+          title: 'swal2-title-lg',
+          htmlContainer: 'swal2-text-md',
+          confirmButton: 'btn btn-primary',
+          cancelButton: 'btn btn-secondary'
+        }
+      })
+    }
+
+    function confirmarEliminacion() {
+      return Swal.fire({
+        icon: 'warning',
+        title: 'Confirmar eliminación',
+        text: 'Esta acción eliminará el centro de costo si no está en uso.',
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar',
+        allowOutsideClick: false,
+        buttonsStyling: false,
+        customClass: {
+          popup: 'swal2-modal-lg',
+          title: 'swal2-title-lg',
+          htmlContainer: 'swal2-text-md',
+          confirmButton: 'btn btn-danger',
+          cancelButton: 'btn btn-secondary'
+        }
+      })
+    }
+
+    function ajaxJSON(options) {
+      return $.ajax({
+        url: options.url,
+        method: options.method || 'GET',
+        data: options.body ? JSON.stringify(options.body) : null,
+        contentType: 'application/json; charset=UTF-8',
+        dataType: 'json',
+        processData: false
+      })
+    }
+
+    function getDtLanguage() {
+      if (window.DXTBase && DXTBase.dtLang) {
+        return typeof DXTBase.dtLang === 'function'
+          ? DXTBase.dtLang()
+          : DXTBase.dtLang
+      }
+
+      return {
+        processing: 'Procesando...',
+        search: 'Buscar:',
+        lengthMenu: 'Mostrar _MENU_ registros',
+        info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
+        infoEmpty: 'Mostrando 0 a 0 de 0 registros',
+        infoFiltered: '(filtrado de _MAX_ registros totales)',
+        loadingRecords: 'Cargando...',
+        zeroRecords: 'No se encontraron resultados',
+        emptyTable: 'No hay datos disponibles',
+        paginate: {
+          first: 'Primero',
+          previous: 'Anterior',
+          next: 'Siguiente',
+          last: 'Último'
+        }
+      }
+    }
+
+    function baseUrl() {
+      return `{{ url_for("centro_costo.index") }}`.replace(/\/$/, '')
+    }
+
+    function renderActivo(valor) {
+      return valor
+        ? '<span class="badge-activo si"><i class="fas fa-check-circle"></i> Sí</span>'
+        : '<span class="badge-activo no"><i class="fas fa-ban"></i> No</span>'
+    }
+
+    function initTabla() {
+      tabla = $('#tblCentroCosto').DataTable({
+        ajax: {
+          url: '{{ url_for("centro_costo.data") }}',
+          dataSrc: 'data',
+          cache: false
+        },
+        columns: [
+          {
+            data: 'codigo',
+            render: function (valor) {
+              return `<span class="badge-codigo">${escHtml(valor)}</span>`
+            }
+          },
+          {
+            data: 'nombre',
+            render: function (valor) {
+              return escHtml(valor || '')
+            }
+          },
+          {
+            data: 'descripcion',
+            render: function (valor) {
+              return escHtml(valor || '')
+            }
+          },
+          {
+            data: 'activo',
+            render: function (valor) {
+              return renderActivo(Boolean(valor))
+            }
+          },
+          {
+            data: null,
+            className: 'text-center',
+            orderable: false,
+            render: function () {
+              return `
+                <div class="d-flex justify-content-center gap-1">
+                  <button class="cc-btn-action cc-btn-edit btn-editar" type="button" title="Editar">
+                    <i class="fas fa-pencil-alt"></i>
+                  </button>
+                  <button class="cc-btn-action cc-btn-save btn-guardar d-none" type="button" title="Guardar">
+                    <i class="fas fa-save"></i>
+                  </button>
+                  <button class="cc-btn-action cc-btn-cancel btn-cancelar d-none" type="button" title="Cancelar">
+                    <i class="fas fa-times"></i>
+                  </button>
+                  <button class="cc-btn-action cc-btn-delete btn-eliminar" type="button" title="Eliminar">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
+              `
+            }
+          }
+        ],
+        language: getDtLanguage(),
+        order: [[0, 'asc']],
+        pageLength: 15,
+        columnDefs: [{ targets: 'no-sort', orderable: false }]
+      })
+    }
+
+    function hayEdicionActiva() {
+      return (
+        $(
+          '#tblCentroCosto tbody tr.fila-en-edicion, #tblCentroCosto tbody tr#filaTemp'
+        ).length > 0
+      )
+    }
+
+    function activarEdicionFila($fila) {
+      if (!$fila.length || $fila.hasClass('fila-en-edicion')) return
+
+      if (hayEdicionActiva()) {
+        mostrarMensaje(
+          'warning',
+          'Edición en curso',
+          'Primero guarda o cancela la fila que estás editando.'
+        )
+        return
+      }
+
+      const rowData = tabla.row($fila).data()
+      if (!rowData) return
+
+      $fila.addClass('fila-en-edicion')
+
+      $fila.find('td').eq(0).html(`
+        <input type="text" class="inline-input input-codigo" maxlength="30" value="${escHtml(
+          rowData.codigo || ''
+        )}">
+      `)
+
+      $fila.find('td').eq(1).html(`
+        <input type="text" class="inline-input input-nombre" maxlength="150" value="${escHtml(
+          rowData.nombre || ''
+        )}">
+      `)
+
+      $fila.find('td').eq(2).html(`
+        <input type="text" class="inline-input input-descripcion" value="${escHtml(
+          rowData.descripcion || ''
+        )}">
+      `)
+
+      $fila.find('td').eq(3).html(`
+        <select class="inline-select input-activo">
+          <option value="true" ${rowData.activo ? 'selected' : ''}>Sí</option>
+          <option value="false" ${!rowData.activo ? 'selected' : ''}>No</option>
+        </select>
+      `)
+
+      $fila.find('.btn-editar, .btn-eliminar').addClass('d-none')
+      $fila.find('.btn-guardar, .btn-cancelar').removeClass('d-none')
+      $fila.find('.input-codigo').trigger('focus').select()
+    }
+
+    function cancelarEdicion() {
+      tabla.ajax.reload(null, false)
+    }
+
+    function payloadDesdeFila($fila) {
+      return {
+        codigo: ($fila.find('.input-codigo').val() || '').trim().toUpperCase(),
+        nombre: ($fila.find('.input-nombre').val() || '').trim(),
+        descripcion: ($fila.find('.input-descripcion').val() || '').trim(),
+        activo: String($fila.find('.input-activo').val()) === 'true'
+      }
+    }
+
+    function validarPayload(payload) {
+      if (!payload.codigo) {
+        return 'El código es obligatorio.'
+      }
+      if (!payload.nombre) {
+        return 'El nombre es obligatorio.'
+      }
+      if (payload.codigo.length > 30) {
+        return 'El código no puede exceder 30 caracteres.'
+      }
+      if (payload.nombre.length > 150) {
+        return 'El nombre no puede exceder 150 caracteres.'
+      }
+      return ''
+    }
+
+    function guardarNuevo() {
+      const $fila = $('#filaTemp')
+      if (!$fila.length) return
+
+      const payload = payloadDesdeFila($fila)
+      const error = validarPayload(payload)
+      if (error) {
+        mostrarMensaje('warning', 'Datos incompletos', error)
+        return
+      }
+
+      ajaxJSON({
+        url: baseUrl() + '/crear',
+        method: 'POST',
+        body: payload
+      })
+        .done(function (resp) {
+          tabla.ajax.reload(null, false)
+          mostrarMensaje(
+            'success',
+            'Guardado correctamente',
+            resp.msg || 'Registro creado correctamente.'
+          )
+        })
+        .fail(function (xhr) {
+          const resp = xhr.responseJSON || {}
+          mostrarMensaje(
+            'error',
+            'No se pudo guardar',
+            resp.msg || 'Ocurrió un error al crear el registro.'
+          )
+        })
+    }
+
+    function guardarEdicionFila($fila) {
+      const rowData = tabla.row($fila).data()
+      if (!rowData) return
+
+      const payload = payloadDesdeFila($fila)
+      const error = validarPayload(payload)
+      if (error) {
+        mostrarMensaje('warning', 'Datos incompletos', error)
+        return
+      }
+
+      ajaxJSON({
+        url: baseUrl() + '/editar/' + encodeURIComponent(rowData.id),
+        method: 'PUT',
+        body: payload
+      })
+        .done(function (resp) {
+          tabla.ajax.reload(null, false)
+          mostrarMensaje(
+            'success',
+            'Guardado correctamente',
+            resp.msg || 'Registro actualizado correctamente.'
+          )
+        })
+        .fail(function (xhr) {
+          const resp = xhr.responseJSON || {}
+          tabla.ajax.reload(null, false)
+          mostrarMensaje(
+            'error',
+            'No se pudo guardar',
+            resp.msg || 'Ocurrió un error al actualizar el registro.'
+          )
+        })
+    }
+
+    function agregarFilaTemporal() {
+      if (hayEdicionActiva()) {
+        mostrarMensaje(
+          'warning',
+          'Edición en curso',
+          'Primero guarda o cancela la fila que estás editando.'
+        )
+        return
+      }
+
+      const $tbody = $('#tblCentroCosto tbody')
+
+      const html = `
+        <tr id="filaTemp">
+          <td>
+            <input type="text" class="inline-input input-codigo" maxlength="30">
+          </td>
+          <td>
+            <input type="text" class="inline-input input-nombre" maxlength="150">
+          </td>
+          <td>
+            <input type="text" class="inline-input input-descripcion">
+          </td>
+          <td>
+            <select class="inline-select input-activo">
+              <option value="true" selected>Sí</option>
+              <option value="false">No</option>
+            </select>
+          </td>
+          <td class="text-center">
+            <div class="d-flex justify-content-center gap-1">
+              <button class="cc-btn-action cc-btn-save" type="button" id="btnGuardarNuevo" title="Guardar">
+                <i class="fas fa-save"></i>
+              </button>
+              <button class="cc-btn-action cc-btn-cancel" type="button" id="btnCancelarNuevo" title="Cancelar">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `
+
+      $tbody.prepend(html)
+      $('#filaTemp .input-codigo').trigger('focus')
+    }
+
+    function eliminarFila(rowData) {
+      confirmarEliminacion().then(function (result) {
+        if (!result.isConfirmed) return
+
+        ajaxJSON({
+          url: baseUrl() + '/eliminar/' + encodeURIComponent(rowData.id),
+          method: 'DELETE'
+        })
+          .done(function (resp) {
+            tabla.ajax.reload(null, false)
+            mostrarMensaje(
+              'success',
+              'Eliminado correctamente',
+              resp.msg || 'Registro eliminado correctamente.'
+            )
+          })
+          .fail(function (xhr) {
+            const resp = xhr.responseJSON || {}
+            mostrarMensaje(
+              'error',
+              'No se pudo eliminar',
+              resp.msg || 'Ocurrió un error al eliminar el registro.'
+            )
+          })
+      })
+    }
+
+    $(function () {
+      initTabla()
+
+      $('#btnNuevoCentroCosto').on('click', function () {
+        agregarFilaTemporal()
+      })
+
+      $(document).on('click', '#btnGuardarNuevo', function () {
+        guardarNuevo()
+      })
+
+      $(document).on('click', '#btnCancelarNuevo', function () {
+        $('#filaTemp').remove()
+      })
+
+      $(document).on('click', '.btn-editar', function () {
+        activarEdicionFila($(this).closest('tr'))
+      })
+
+      $(document).on('click', '.btn-cancelar', function () {
+        cancelarEdicion()
+      })
+
+      $(document).on('click', '.btn-guardar', function () {
+        guardarEdicionFila($(this).closest('tr'))
+      })
+
+      $(document).on('click', '.btn-eliminar', function () {
+        const rowData = tabla.row($(this).closest('tr')).data()
+        if (rowData) {
+          eliminarFila(rowData)
+        }
+      })
+
+      $(document).on(
+        'keydown',
+        '#filaTemp input, #filaTemp select',
+        function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            guardarNuevo()
+          }
+          if (e.key === 'Escape') {
+            e.preventDefault()
+            $('#filaTemp').remove()
+          }
+        }
+      )
+
+      $(document).on(
+        'keydown',
+        '.fila-en-edicion input, .fila-en-edicion select',
+        function (e) {
+          const $fila = $(this).closest('tr')
+
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            guardarEdicionFila($fila)
+          }
+          if (e.key === 'Escape') {
+            e.preventDefault()
+            cancelarEdicion()
+          }
+        }
+      )
+    })
+  })()
+</script>
+{% endblock %}

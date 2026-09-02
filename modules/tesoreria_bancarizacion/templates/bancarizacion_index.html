@@ -1,0 +1,547 @@
+{% extends "layout.html" %}
+{% block title %}Tesorería · Bancarización{% endblock %}
+
+{% block extra_css %}
+<style>
+  #bancarizacionPage {
+    --bn-navy:       #0f2340;
+    --bn-blue:       #1a4a7a;
+    --bn-accent:     #2d7dd2;
+    --bn-accent-lt:  #e8f1fc;
+    --bn-success:    #1a7a4a;
+    --bn-success-lt: #e6f6ee;
+    --bn-danger:     #b83232;
+    --bn-danger-lt:  #fdeaea;
+    --bn-warning:    #c8962a;
+    --bn-warning-lt: #fdf6e3;
+    --bn-surface:    #f5f8fc;
+    --bn-border:     #dde4ed;
+    --bn-text:       #1e2d3d;
+    --bn-muted:      #8898aa;
+    --bn-radius:     14px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  /* ── Header sticky ──────────────────────────────────── */
+  #bancarizacionPage .bn-header {
+    background: linear-gradient(120deg, var(--bn-navy) 0%, var(--bn-blue) 60%, #1f5d9e 100%);
+    border-radius: var(--bn-radius);
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1.1rem;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 1rem; flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15,35,64,.16);
+    position: sticky; top: 64px; z-index: 40; overflow: hidden;
+  }
+  .bn-header::before { content:''; position:absolute; top:-40px; right:-40px; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,.04); pointer-events:none; }
+  .bn-header-left   { display:flex; align-items:center; gap:.85rem; position:relative; }
+  .bn-header-icon   { width:42px; height:42px; border-radius:11px; background:rgba(255,255,255,.14); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+  .bn-header-title  { color:#fff; font-size:1.1rem; font-weight:700; margin:0; }
+  .bn-header-sub    { color:rgba(255,255,255,.62); font-size:.8rem; margin-top:2px; }
+
+  /* ── KPI Grid ───────────────────────────────────────── */
+  #bancarizacionPage .bn-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .85rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .bn-kpi-card {
+    background: #fff; border: 1px solid var(--bn-border);
+    border-radius: var(--bn-radius);
+    padding: 1rem 1.1rem;
+    display: flex; align-items: center; gap: .85rem;
+    box-shadow: 0 4px 16px rgba(15,35,64,.06);
+    transition: transform .15s, box-shadow .15s;
+    position: relative; overflow: hidden;
+  }
+  .bn-kpi-card::before { content:''; position:absolute; top:0; left:0; width:100%; height:3px; border-radius:var(--bn-radius) var(--bn-radius) 0 0; }
+  .bn-kpi-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(15,35,64,.1); }
+  .kpi-ops::before  { background: var(--bn-accent); }
+  .kpi-ing::before  { background: var(--bn-success); }
+  .kpi-eg::before   { background: var(--bn-danger); }
+  .kpi-obs::before  { background: var(--bn-warning); }
+
+  .bn-kpi-icon { width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+  .kpi-ops .bn-kpi-icon { background:var(--bn-accent-lt);   color:var(--bn-accent); }
+  .kpi-ing .bn-kpi-icon { background:var(--bn-success-lt);  color:var(--bn-success); }
+  .kpi-eg  .bn-kpi-icon { background:var(--bn-danger-lt);   color:var(--bn-danger); }
+  .kpi-obs .bn-kpi-icon { background:var(--bn-warning-lt);  color:var(--bn-warning); }
+
+  .bn-kpi-label { font-size:.7rem; font-weight:700; letter-spacing:.6px; text-transform:uppercase; color:var(--bn-muted); margin-bottom:.2rem; }
+  .bn-kpi-value { font-size:1.3rem; font-weight:800; color:var(--bn-text); font-family:'Consolas',monospace; font-variant-numeric:tabular-nums; line-height:1.1; }
+  .bn-kpi-value.warn { color:var(--bn-warning); }
+  .bn-kpi-help  { font-size:.74rem; color:var(--bn-muted); margin-top:2px; }
+  .bn-kpi-money-list { display:flex; flex-direction:column; gap:2px; margin-top:2px; }
+  .bn-kpi-money-row { display:flex; align-items:baseline; justify-content:space-between; gap:.65rem; font-family:'Consolas',monospace; font-variant-numeric:tabular-nums; line-height:1.2; }
+  .bn-kpi-money-row span { color:var(--bn-muted); font-size:.78rem; font-weight:700; }
+  .bn-kpi-money-row strong { color:var(--bn-text); font-size:1.05rem; font-weight:800; }
+  .bn-kpi-money-empty { font-family:'Consolas',monospace; font-size:1.05rem; font-weight:800; color:var(--bn-muted); }
+
+  /* ── Filtros ────────────────────────────────────────── */
+  #bancarizacionPage .bn-filter-card {
+    background: var(--bn-surface); border: 1px solid var(--bn-border);
+    border-radius: var(--bn-radius); padding: 1rem 1.1rem;
+    margin-bottom: 1.1rem;
+  }
+  .bn-section-label { font-size:.72rem; font-weight:700; letter-spacing:.65px; text-transform:uppercase; color:var(--bn-muted); margin-bottom:.85rem; display:flex; align-items:center; gap:7px; }
+  .bn-section-label::before { content:''; display:block; width:3px; height:13px; background:var(--bn-accent); border-radius:2px; }
+  .bn-label { font-size:.71rem; font-weight:700; letter-spacing:.55px; text-transform:uppercase; color:#4a6070; margin-bottom:5px; display:block; }
+  .bn-filter-card .form-control,
+  .bn-filter-card .form-select {
+    border: 1.5px solid var(--bn-border); border-radius:9px;
+    font-size:.875rem; height:36px;
+    transition: border-color .16s, box-shadow .16s;
+  }
+  .bn-filter-card .form-control:focus,
+  .bn-filter-card .form-select:focus {
+    border-color: var(--bn-accent);
+    box-shadow: 0 0 0 3px rgba(45,125,210,.1); outline: none;
+  }
+  #q { height: auto; }  /* textarea-like search box keeps auto */
+  .bn-filter-card input[type="date"] { font-family:'Consolas',monospace; font-size:.85rem; }
+
+  /* ── Tabla card ─────────────────────────────────────── */
+  #bancarizacionPage .bn-table-card {
+    background: #fff; border: 1px solid var(--bn-border);
+    border-radius: var(--bn-radius);
+    box-shadow: 0 4px 16px rgba(15,35,64,.06); overflow: hidden;
+  }
+  .bn-table-head { padding:.85rem 1.1rem; border-bottom:1px solid var(--bn-border); background:var(--bn-surface); display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
+  .bn-section-sub { font-size:.78rem; color:var(--bn-muted); margin-top:1px; }
+
+  /* ── Tabla ──────────────────────────────────────────── */
+  .bn-table-wrap { overflow:auto; max-height:60vh; }
+
+  #tablaBancarizacion { width:100%; min-width:1200px; }
+
+  #tablaBancarizacion thead th {
+    position:sticky; top:0; z-index:2;
+    background:var(--bn-surface);
+    font-size:.7rem; font-weight:700; letter-spacing:.65px;
+    text-transform:uppercase; color:var(--bn-muted);
+    border-bottom:2px solid var(--bn-border);
+    padding:9px 12px; white-space:nowrap;
+    box-shadow:0 1px 0 var(--bn-border);
+  }
+
+  #tablaBancarizacion tbody td {
+    padding:9px 12px; vertical-align:middle;
+    border-bottom:1px solid #eef1f6;
+    font-size:.875rem; color:var(--bn-text);
+  }
+
+  #tablaBancarizacion tbody tr:nth-child(even) { background:#f9fbfe; }
+  #tablaBancarizacion tbody tr { transition:background .12s; }
+  #tablaBancarizacion tbody tr:hover td { background:var(--bn-accent-lt) !important; }
+
+  /* Fila observada — fondo ámbar muy sutil */
+  #tablaBancarizacion tbody tr.bn-row-observada td { background:#fffbeb !important; }
+  #tablaBancarizacion tbody tr.bn-row-observada:hover td { background:#fef3c7 !important; }
+
+  /* ── Utilidades ─────────────────────────────────────── */
+  .bn-mono  { font-family:'Consolas',monospace; font-variant-numeric:tabular-nums; }
+  .bn-muted { font-size:.78rem; color:var(--bn-muted); margin-top:1px; }
+
+  .bn-code-pill { font-family:'Consolas',monospace; font-size:.78rem; font-weight:700; background:var(--bn-accent-lt); color:var(--bn-accent); border:1px solid #bfdbfe; border-radius:5px; padding:2px 7px; display:inline-block; }
+
+  /* ── Badges ─────────────────────────────────────────── */
+  .bn-badge { display:inline-flex; align-items:center; gap:4px; border-radius:6px; padding:2px 8px; font-size:.72rem; font-weight:700; white-space:nowrap; }
+  .bn-badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.8; }
+  .bn-badge-ok   { background:var(--bn-success-lt); border:1px solid #bbf7d0; color:var(--bn-success); }
+  .bn-badge-warn { background:var(--bn-warning-lt); border:1px solid #fde68a; color:var(--bn-warning); }
+  .bn-badge-info { background:var(--bn-accent-lt);  border:1px solid #bfdbfe; color:var(--bn-accent); }
+  .bn-badge-danger { background:var(--bn-danger-lt); border:1px solid #fca5a5; color:var(--bn-danger); }
+  .bn-badge-noref { background:#f1f5f9; border:1px solid #e2e8f0; color:var(--bn-muted); font-style:italic; }
+
+  /* ── Botón acción ───────────────────────────────────── */
+  .bn-btn-act { width:30px; height:30px; padding:0; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid var(--bn-border); border-radius:7px; color:var(--bn-muted); background:#fff; transition:all .15s; text-decoration:none; }
+  .bn-btn-act:hover { background:var(--bn-accent-lt); border-color:#bfdbfe; color:var(--bn-accent); }
+
+  /* ── Empty state ────────────────────────────────────── */
+  .bn-empty { padding:3rem 1rem; text-align:center; color:var(--bn-muted); }
+  .bn-empty i { font-size:2rem; margin-bottom:.75rem; display:block; opacity:.4; }
+  .bn-empty strong { display:block; font-size:.9rem; color:var(--bn-text); margin-bottom:.35rem; }
+
+
+  .bn-count-chip { font-size:.75rem; font-weight:600; color:var(--bn-muted); background:var(--bn-surface); border:1px solid var(--bn-border); border-radius:20px; padding:3px 12px; }
+  .bn-col-action { width:50px; }
+  .bn-date-cell { font-size:.82rem; }
+  .bn-icon-xs { font-size:.6rem; }
+  .bn-icon-sm { font-size:.65rem; }
+  .bn-bank-line { font-size:.875rem; font-weight:600; }
+  .bn-third-line { font-size:.875rem; }
+  .bn-ref-line { font-size:.85rem; font-weight:600; }
+  .bn-glosa-tight { margin-top:2px; }
+  .bn-btn-icon-xs { font-size:.68rem; }
+  .bn-empty-dash { color:var(--bn-border); }
+
+  @media (max-width:1100px) { #bancarizacionPage .bn-kpi-grid { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:640px)  { #bancarizacionPage .bn-kpi-grid { grid-template-columns:1fr; } .bn-header::before { display:none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" id="bancarizacionPage">
+
+  <!-- Header -->
+  <div class="bn-header">
+    <div class="bn-header-left">
+      <div class="bn-header-icon"><i class="fas fa-building-columns"></i></div>
+      <div>
+        <h1 class="bn-header-title">Tesorería · Bancarización</h1>
+        <div class="bn-header-sub">Operaciones bancarias confirmadas, referencia y trazabilidad.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="bn-kpi-grid">
+    <div class="bn-kpi-card kpi-ops">
+      <div class="bn-kpi-icon"><i class="fas fa-list-check"></i></div>
+      <div>
+        <div class="bn-kpi-label">Operaciones</div>
+        <div class="bn-kpi-value">{{ summary.total_operaciones }}</div>
+        <div class="bn-kpi-help">Registros bancarios visibles</div>
+      </div>
+    </div>
+    <div class="bn-kpi-card kpi-ing">
+      <div class="bn-kpi-icon"><i class="fas fa-arrow-trend-up"></i></div>
+      <div>
+        <div class="bn-kpi-label">Ingresos bancarios</div>
+        {% if summary.ingresos_por_moneda %}
+        <div class="bn-kpi-money-list">
+          {% for item in summary.ingresos_por_moneda %}
+          <div class="bn-kpi-money-row"><span>{{ item.moneda }}</span><strong>{{ '{:,.2f}'.format(item.monto) }}</strong></div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="bn-kpi-money-empty">0.00</div>
+        {% endif %}
+        <div class="bn-kpi-help">Cobros y entradas por banco</div>
+      </div>
+    </div>
+    <div class="bn-kpi-card kpi-eg">
+      <div class="bn-kpi-icon"><i class="fas fa-arrow-trend-down"></i></div>
+      <div>
+        <div class="bn-kpi-label">Egresos bancarios</div>
+        {% if summary.egresos_por_moneda %}
+        <div class="bn-kpi-money-list">
+          {% for item in summary.egresos_por_moneda %}
+          <div class="bn-kpi-money-row"><span>{{ item.moneda }}</span><strong>{{ '{:,.2f}'.format(item.monto) }}</strong></div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="bn-kpi-money-empty">0.00</div>
+        {% endif %}
+        <div class="bn-kpi-help">Pagos y salidas por banco</div>
+      </div>
+    </div>
+    <div class="bn-kpi-card kpi-obs">
+      <div class="bn-kpi-icon"><i class="fas fa-triangle-exclamation"></i></div>
+      <div>
+        <div class="bn-kpi-label">Observadas</div>
+        <div class="bn-kpi-value {% if summary.observadas > 0 %}warn{% endif %}">{{ summary.observadas }}</div>
+        <div class="bn-kpi-help">Sin referencia bancaria</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="bn-filter-card">
+    <div class="bn-section-label">Filtros de consulta</div>
+    <form method="get" class="row g-3">
+
+      <!-- Fila 1: Fechas + cuenta + tipo + origen -->
+      <div class="col-6 col-md-2">
+        <label class="bn-label" for="fechaDesde"><i class="far fa-calendar me-1"></i>Desde</label>
+        <input type="date" class="form-control" id="fechaDesde" name="fecha_desde" value="{{ filtros.fecha_desde or '' }}">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="bn-label" for="fechaHasta"><i class="far fa-calendar me-1"></i>Hasta</label>
+        <input type="date" class="form-control" id="fechaHasta" name="fecha_hasta" value="{{ filtros.fecha_hasta or '' }}">
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="bn-label" for="bancoId">Cuenta bancaria</label>
+        <select class="form-select" id="bancoId" name="banco_id">
+          <option value="">Todas</option>
+          {% for banco in bancos %}
+          {% if filtros.banco_id == banco.id %}
+          <option value="{{ banco.id }}" selected>{{ banco.etiqueta }}</option>
+          {% else %}
+          <option value="{{ banco.id }}">{{ banco.etiqueta }}</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="bn-label" for="unidadNegocioId">Unidad de Negocio</label>
+        <select class="form-select" id="unidadNegocioId" name="unidad_negocio_id">
+          <option value="">Todas</option>
+          {% for unidad in unidades_negocio %}
+          {% if filtros.unidad_negocio_id == unidad.id %}
+          <option value="{{ unidad.id }}" selected>{{ unidad.etiqueta }}</option>
+          {% else %}
+          <option value="{{ unidad.id }}">{{ unidad.etiqueta }}</option>
+          {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="bn-label" for="tipoOperacion">Tipo</label>
+        <select class="form-select" id="tipoOperacion" name="tipo_operacion">
+          <option value="">Todos</option>
+          {% if filtros.tipo_operacion == 'INGRESO' %}
+          <option value="INGRESO" selected>Ingreso</option>
+          {% else %}
+          <option value="INGRESO">Ingreso</option>
+          {% endif %}
+          {% if filtros.tipo_operacion == 'EGRESO' %}
+          <option value="EGRESO" selected>Egreso</option>
+          {% else %}
+          <option value="EGRESO">Egreso</option>
+          {% endif %}
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="bn-label" for="origenModulo">Origen</label>
+        <select class="form-select" id="origenModulo" name="origen_modulo">
+          <option value="">Todos</option>
+          {% if filtros.origen_modulo == 'COBRO' %}
+          <option value="COBRO" selected>Cobros</option>
+          {% else %}
+          <option value="COBRO">Cobros</option>
+          {% endif %}
+          {% if filtros.origen_modulo == 'PAGO' %}
+          <option value="PAGO" selected>Pagos</option>
+          {% else %}
+          <option value="PAGO">Pagos</option>
+          {% endif %}
+          {% if filtros.origen_modulo == 'TESORERIA' %}
+          <option value="TESORERIA" selected>Caja y Bancos</option>
+          {% else %}
+          <option value="TESORERIA">Caja y Bancos</option>
+          {% endif %}
+        </select>
+      </div>
+
+      <!-- Fila 2: Estado + bancarización + búsqueda libre -->
+      <div class="col-6 col-md-2">
+        <label class="bn-label" for="estado">Estado doc.</label>
+        <select class="form-select" id="estado" name="estado">
+          <option value="">Todos</option>
+          {% if filtros.estado == 'BORRADOR' %}
+          <option value="BORRADOR" selected>Borrador</option>
+          {% else %}
+          <option value="BORRADOR">Borrador</option>
+          {% endif %}
+          {% if filtros.estado == 'CONFIRMADO' %}
+          <option value="CONFIRMADO" selected>Confirmado</option>
+          {% else %}
+          <option value="CONFIRMADO">Confirmado</option>
+          {% endif %}
+          {% if filtros.estado == 'ANULADO' %}
+          <option value="ANULADO" selected>Anulado</option>
+          {% else %}
+          <option value="ANULADO">Anulado</option>
+          {% endif %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="bn-label" for="completitud">Bancarización</label>
+        <select class="form-select" id="completitud" name="completitud">
+          <option value="">Todas</option>
+          {% if filtros.completitud == 'COMPLETA' %}
+          <option value="COMPLETA" selected>Completa</option>
+          {% else %}
+          <option value="COMPLETA">Completa</option>
+          {% endif %}
+          {% if filtros.completitud == 'OBSERVADA' %}
+          <option value="OBSERVADA" selected>Observada</option>
+          {% else %}
+          <option value="OBSERVADA">Observada</option>
+          {% endif %}
+        </select>
+      </div>
+      <div class="col-12 col-md-5">
+        <label class="bn-label" for="q"><i class="fas fa-magnifying-glass me-1"></i>Búsqueda libre</label>
+        <input type="text" class="form-control" id="q" name="q" maxlength="120"
+               placeholder="Referencia, tercero, glosa, número de cuenta, ID..."
+               value="{{ filtros.q or '' }}">
+      </div>
+      <div class="col-12 col-md-3 d-flex align-items-end gap-2">
+        <a href="{{ url_for('tesoreria_bancarizacion.index') }}" class="btn btn-outline-secondary btn-sm w-100">
+          <i class="fas fa-xmark me-1"></i>Limpiar
+        </a>
+        <button type="submit" class="btn btn-primary btn-sm w-100">
+          <i class="fas fa-filter me-1"></i>Filtrar
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Tabla -->
+  <div class="bn-table-card">
+    <div class="bn-table-head">
+      <div>
+        <div class="bn-section-label">Libro de bancarización</div>
+        <div class="bn-section-sub">Vista consolidada de operaciones que afectan cuentas bancarias.</div>
+      </div>
+      {% if rows %}
+      <span class="bn-count-chip">
+        {{ rows|length }} registros
+      </span>
+      {% endif %}
+    </div>
+
+    <div class="bn-table-wrap">
+      {% if rows %}
+      <table class="table table-hover align-middle w-100" id="tablaBancarizacion">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Origen</th>
+            <th>Tipo</th>
+            <th>Cuenta bancaria</th>
+            <th>Unidad de negocio</th>
+            <th>Tercero</th>
+            <th>Moneda</th>
+            <th class="text-end">Monto</th>
+            <th>Referencia / Glosa</th>
+            <th class="text-center">Estado doc.</th>
+            <th class="text-center">Bancarización</th>
+            <th class="text-center bn-col-action"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr class="{% if row.bancarizacion_estado == 'OBSERVADA' %}bn-row-observada{% endif %}">
+
+            <td class="bn-mono bn-date-cell" data-order="{{ row.fecha.isoformat() if row.fecha else '' }}">{{ row.fecha.strftime('%d/%m/%Y') if row.fecha else '—' }}</td>
+
+            <td>
+              <span class="bn-badge bn-badge-info">{{ row.origen_modulo }}</span>
+              {% if row.origen_detalle %}
+              <div class="bn-muted">{{ row.origen_detalle }}</div>
+              {% endif %}
+            </td>
+
+            <td>
+              {% if row.tipo_operacion == 'INGRESO' %}
+                <span class="bn-badge bn-badge-ok"><i class="fas fa-arrow-up bn-icon-xs"></i>INGRESO</span>
+              {% else %}
+                <span class="bn-badge bn-badge-danger"><i class="fas fa-arrow-down bn-icon-xs"></i>EGRESO</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <div class="bn-bank-line">{{ row.cuenta_bancaria }}</div>
+              <div class="bn-muted">ID {{ row.banco_id }}</div>
+            </td>
+
+            <td>
+              {% if row.unidad_codigo or row.unidad_nombre %}
+              <div class="bn-third-line">{{ row.unidad_codigo }}{% if row.unidad_codigo and row.unidad_nombre %} · {% endif %}{{ row.unidad_nombre }}</div>
+              {% else %}
+              <span class="bn-badge bn-badge-warn">Sin unidad</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <div class="bn-third-line">{{ row.tercero_nombre }}</div>
+              {% if row.tercero_documento %}
+              <div class="bn-muted bn-mono">{{ row.tercero_documento }}</div>
+              {% endif %}
+            </td>
+
+            <td>
+              <span class="bn-code-pill">{{ row.moneda_codigo }}</span>
+            </td>
+
+            <td class="bn-mono text-end" data-order="{{ row.monto }}">{{ '{:,.2f}'.format(row.monto) }}</td>
+
+            <td>
+              {% if row.referencia %}
+              <div class="bn-ref-line">{{ row.referencia }}</div>
+              {% else %}
+              <span class="bn-badge bn-badge-noref"><i class="fas fa-circle-xmark me-1 bn-icon-sm"></i>Sin referencia</span>
+              {% endif %}
+              {% if row.glosa %}
+              <div class="bn-muted bn-glosa-tight">{{ row.glosa }}</div>
+              {% endif %}
+            </td>
+
+            <td class="text-center">
+              {% if row.estado == 'CONFIRMADO' %}
+                <span class="bn-badge bn-badge-ok">CONFIRMADO</span>
+              {% elif row.estado == 'ANULADO' %}
+                <span class="bn-badge bn-badge-danger">ANULADO</span>
+              {% else %}
+                <span class="bn-badge bn-badge-info">BORRADOR</span>
+              {% endif %}
+            </td>
+
+            <td class="text-center">
+              {% if row.bancarizacion_estado == 'COMPLETA' %}
+                <span class="bn-badge bn-badge-ok"><i class="fas fa-circle-check bn-icon-sm"></i>COMPLETA</span>
+              {% else %}
+                <span class="bn-badge bn-badge-warn"><i class="fas fa-triangle-exclamation bn-icon-sm"></i>OBSERVADA</span>
+              {% endif %}
+            </td>
+
+            <td class="text-center">
+              {% if row.detalle_url %}
+              <a href="{{ row.detalle_url }}" class="bn-btn-act" title="Ver detalle">
+                <i class="fas fa-arrow-up-right-from-square bn-btn-icon-xs"></i>
+              </a>
+              {% else %}
+              <span class="bn-empty-dash">—</span>
+              {% endif %}
+            </td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="bn-empty">
+        <i class="fas fa-building-columns"></i>
+        <strong>No hay operaciones bancarias con ese filtro.</strong>
+        <span>Prueba con otro rango de fechas, otra cuenta o reduce las restricciones.</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  'use strict';
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!window.jQuery || !window.jQuery.fn || !window.jQuery.fn.DataTable) return;
+    const $table = window.jQuery('#tablaBancarizacion');
+    if (!$table.length) return;
+
+    const lang = window.DXTBase && typeof window.DXTBase.getDataTableLanguageEs === 'function'
+      ? window.DXTBase.getDataTableLanguageEs({ search:'', searchPlaceholder:'Buscar en resultados…', paginate:{ first:'«', last:'»', next:'›', previous:'‹' } })
+      : { search:'', searchPlaceholder:'Buscar…', paginate:{ first:'«', last:'»', next:'›', previous:'‹' } };
+
+    $table.DataTable({
+      pageLength: 25,
+      order: [[0, 'desc']],
+      language: lang,
+      autoWidth: false,
+      columnDefs: [
+        { targets: [7], className: 'text-end' },
+        { targets: [11], orderable: false, searchable: false }
+      ]
+    });
+  });
+})();
+</script>
+{% endblock %}

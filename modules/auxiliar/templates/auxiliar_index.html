@@ -1,0 +1,1129 @@
+{% extends "layout.html" %} {% block title %}Auxiliares{% endblock %} {% block
+extra_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='select2/css/select2.min.css') }}"
+/>
+<style>
+  #auxPage {
+    --ax-accent: #2d7dd2;
+    --ax-accent-lt: #e8f1fc;
+    --ax-success: #16a34a;
+    --ax-success-lt: #e8f7ee;
+    --ax-danger: #dc2626;
+    --ax-danger-lt: #fdecec;
+    --ax-warning: #d97706;
+    --ax-surface: #f8fafc;
+    --ax-border: #e2e8f0;
+    --ax-text: #334155;
+    --ax-muted: #64748b;
+    --ax-radius: 14px;
+  }
+
+  #auxPage .ax-header {
+    background: linear-gradient(120deg, #0f2340 0%, #1a4a7a 60%, #1f5d9e 100%);
+    border-radius: var(--ax-radius);
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15, 35, 64, 0.14);
+    position: sticky;
+    top: 72px;
+    z-index: 30;
+    overflow: hidden;
+  }
+
+  #auxPage .ax-header::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+  }
+
+  #auxPage .ax-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  #auxPage .ax-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.12rem;
+    flex-shrink: 0;
+  }
+
+  #auxPage .ax-header-title {
+    color: #fff;
+    font-size: 1.08rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.2px;
+  }
+
+  #auxPage .ax-header-sub {
+    color: rgba(255, 255, 255, 0.66);
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+
+  #auxPage .ax-header .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+    font-size: 0.82rem;
+    z-index: 1;
+    position: relative;
+  }
+
+  #auxPage .ax-header .btn-primary:hover {
+    background: #eff6ff;
+    border-color: #eff6ff;
+  }
+
+  #auxPage .ax-card {
+    background: #fff;
+    border: 1px solid var(--ax-border);
+    border-radius: var(--ax-radius);
+    box-shadow: 0 4px 18px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+  }
+
+  #auxPage .ax-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.95rem 1.1rem;
+    background: var(--ax-surface);
+    border-bottom: 1px solid var(--ax-border);
+  }
+
+  #auxPage .ax-note {
+    font-size: 0.78rem;
+    color: #475569;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    padding: 6px 10px;
+    border-radius: 999px;
+  }
+
+  #auxPage .ax-table-wrap {
+    padding: 0.8rem 1rem 1rem;
+  }
+
+  #auxPage #tblAuxiliar {
+    width: 100% !important;
+  }
+
+  #auxPage #tblAuxiliar thead th {
+    background: var(--ax-surface);
+    color: var(--ax-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.55px;
+    border-bottom: 2px solid var(--ax-border);
+    padding: 11px 12px;
+    white-space: nowrap;
+  }
+
+  #auxPage #tblAuxiliar tbody td {
+    padding: 10px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eef2f7;
+    font-size: 0.86rem;
+    color: var(--ax-text);
+  }
+
+  #auxPage #tblAuxiliar tbody tr:nth-child(even) {
+    background: #fbfdff;
+  }
+
+  #auxPage #tblAuxiliar tbody tr:hover td {
+    background: var(--ax-accent-lt) !important;
+  }
+
+  #auxPage .badge-tipo {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    background: var(--ax-accent-lt);
+    color: var(--ax-accent);
+    border: 1px solid #bfdbfe;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  #auxPage .badge-bool {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+  }
+
+  #auxPage .badge-bool.si {
+    background: var(--ax-success-lt);
+    color: var(--ax-success);
+    border-color: #b7e4c7;
+  }
+
+  #auxPage .badge-bool.no {
+    background: #fff7ed;
+    color: var(--ax-warning);
+    border-color: #fed7aa;
+  }
+
+  #auxPage .ax-btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid var(--ax-border);
+    background: #fff;
+    color: var(--ax-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.8rem;
+    padding: 0;
+  }
+
+  #auxPage .ax-btn-action:hover {
+    transform: translateY(-1px);
+  }
+
+  #auxPage .ax-btn-edit:hover {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+  }
+
+  #auxPage .ax-btn-toggle:hover {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #d97706;
+  }
+
+  #auxPage div.dataTables_wrapper div.dataTables_filter input,
+  #auxPage div.dataTables_wrapper div.dataTables_length select {
+    border: 1.5px solid var(--ax-border);
+    border-radius: 8px;
+    font-size: 0.84rem;
+    padding: 5px 10px;
+  }
+
+  #auxPage div.dataTables_wrapper div.dataTables_filter label,
+  #auxPage div.dataTables_wrapper div.dataTables_length label,
+  #auxPage div.dataTables_wrapper div.dataTables_info {
+    font-size: 0.8rem;
+    color: var(--ax-muted);
+  }
+
+  #auxPage div.dataTables_wrapper div.dataTables_paginate .paginate_button {
+    border-radius: 7px !important;
+    font-size: 0.82rem;
+    padding: 4px 10px !important;
+    border: 1px solid transparent !important;
+    color: var(--ax-muted) !important;
+  }
+
+  #auxPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button.current,
+  #auxPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button.current:hover {
+    background: var(--ax-accent) !important;
+    border-color: var(--ax-accent) !important;
+    color: #fff !important;
+    font-weight: 600;
+  }
+
+  #auxPage
+    div.dataTables_wrapper
+    div.dataTables_paginate
+    .paginate_button:hover {
+    background: var(--ax-accent-lt) !important;
+    border-color: var(--ax-accent-lt) !important;
+    color: var(--ax-accent) !important;
+  }
+
+  #auxiliarModal .modal-dialog {
+    max-width: 980px;
+  }
+
+  #auxiliarModal .modal-content {
+    border: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(15, 23, 42, 0.22);
+  }
+
+  #auxiliarModal .modal-header {
+    background: linear-gradient(120deg, #0f2340 0%, #1a4a7a 60%, #1f5d9e 100%);
+    color: #fff;
+    border-bottom: 0;
+    padding: 1rem 1.2rem;
+  }
+
+  #auxiliarModal .modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  #auxiliarModal .btn-close {
+    filter: invert(1);
+    opacity: 0.9;
+  }
+
+  #auxiliarModal .modal-body {
+    padding: 1.1rem 1.2rem 1rem;
+    background: #f8fafc;
+  }
+
+  #auxiliarModal .modal-footer {
+    border-top: 1px solid #e2e8f0;
+    background: #fff;
+    padding: 0.9rem 1.2rem;
+  }
+
+  #auxiliarModal .card-form {
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #fff;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  #auxiliarModal .card-form-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.55px;
+    color: #64748b;
+    font-weight: 800;
+    margin-bottom: 0.85rem;
+  }
+
+  #auxiliarModal .form-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 0.32rem;
+  }
+
+  #auxiliarModal .form-control,
+  #auxiliarModal .form-select {
+    border-radius: 10px;
+    border: 1.5px solid #dbe3ee;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+
+  #auxiliarModal textarea.form-control {
+    min-height: 84px;
+  }
+
+  #auxiliarModal .select2-container {
+    width: 100% !important;
+  }
+
+  #auxiliarModal .select2-container .select2-selection--single {
+    height: 40px;
+    border: 1.5px solid #dbe3ee;
+    border-radius: 10px;
+  }
+
+  #auxiliarModal
+    .select2-container--default
+    .select2-selection--single
+    .select2-selection__rendered {
+    line-height: 38px;
+    padding-left: 11px;
+    font-size: 0.9rem;
+  }
+
+  #auxiliarModal
+    .select2-container--default
+    .select2-selection--single
+    .select2-selection__arrow {
+    height: 38px;
+  }
+
+  .d-none-force {
+    display: none !important;
+  }
+
+  @media (max-width: 768px) {
+    #auxiliarModal .modal-dialog {
+      max-width: 96vw;
+      margin: 0.8rem auto;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div id="auxPage">
+  <div class="ax-header">
+    <div class="ax-header-left">
+      <div class="ax-header-icon">
+        <i class="fas fa-address-book"></i>
+      </div>
+      <div>
+        <h4 class="ax-header-title">Auxiliares</h4>
+        <div class="ax-header-sub">
+          Catálogo maestro de auxiliares contables
+        </div>
+      </div>
+    </div>
+
+    <button id="btnNuevoAuxiliar" type="button" class="btn btn-primary">
+      <i class="fas fa-plus me-1"></i>
+      Nuevo registro
+    </button>
+  </div>
+
+  <div class="ax-card">
+    <div class="ax-toolbar">
+      <span
+        style="
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.6px;
+          text-transform: uppercase;
+          color: #64748b;
+          display: flex;
+          align-items: center;
+          gap: 7px;
+        "
+      >
+        <span
+          style="
+            display: block;
+            width: 3px;
+            height: 13px;
+            background: #2d7dd2;
+            border-radius: 2px;
+          "
+        ></span>
+        Listado de auxiliares
+      </span>
+
+      <span class="ax-note">
+        Para CLIENTE la referencia a empresa es opcional
+      </span>
+    </div>
+
+    <div class="ax-table-wrap">
+      <div class="table-responsive">
+        <table id="tblAuxiliar" class="table table-hover w-100">
+          <thead>
+            <tr>
+              <th style="width: 120px">Tipo</th>
+              <th style="width: 130px">Código externo</th>
+              <th style="width: 130px">NIT / CI</th>
+              <th style="width: 260px">Nombre</th>
+              <th style="width: 240px">Razón social</th>
+              <th style="width: 90px">Ocasional</th>
+              <th style="width: 80px">Activo</th>
+              <th style="width: 110px" class="text-center no-sort">Acciones</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="auxiliarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Auxiliar</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Cerrar"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="formAuxiliar" novalidate>
+          <input type="hidden" id="aux_id" />
+          <input type="hidden" id="empresa_id" />
+
+          <div class="card-form">
+            <div class="card-form-title">Datos principales</div>
+
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label" for="tipo">Tipo</label>
+                <select id="tipo" class="form-select">
+                  <option value="CLIENTE">CLIENTE</option>
+                  <option value="PROVEEDOR">PROVEEDOR</option>
+                  <option value="FUNCIONARIO">FUNCIONARIO</option>
+                  <option value="BANCO">BANCO</option>
+                  <option value="OTRO">OTRO</option>
+                </select>
+              </div>
+
+              <div class="col-md-3" id="grupoClienteReferenciado">
+                <label class="form-label" for="cliente_referenciado"
+                  >Cliente referenciado</label
+                >
+                <select id="cliente_referenciado" class="form-select">
+                  <option value="false">No</option>
+                  <option value="true">Sí</option>
+                </select>
+              </div>
+
+              <div class="col-md-6" id="grupoEmpresa">
+                <label class="form-label" for="empresa_select">Empresa</label>
+                <select id="empresa_select" class="form-select"></select>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label" for="codigo_externo"
+                  >Código externo</label
+                >
+                <input
+                  type="text"
+                  id="codigo_externo"
+                  class="form-control"
+                  maxlength="100"
+                />
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label" for="nit_ci">NIT / CI</label>
+                <input
+                  type="text"
+                  id="nit_ci"
+                  class="form-control"
+                  maxlength="50"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label" for="nombre">Nombre</label>
+                <input
+                  type="text"
+                  id="nombre"
+                  class="form-control"
+                  maxlength="200"
+                />
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label" for="razon_social"
+                  >Razón social</label
+                >
+                <input
+                  type="text"
+                  id="razon_social"
+                  class="form-control"
+                  maxlength="200"
+                />
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label" for="telefono">Teléfono</label>
+                <input
+                  type="text"
+                  id="telefono"
+                  class="form-control"
+                  maxlength="50"
+                />
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label" for="email">Email</label>
+                <input
+                  type="text"
+                  id="email"
+                  class="form-control"
+                  maxlength="120"
+                />
+              </div>
+
+              <div class="col-md-12">
+                <label class="form-label" for="direccion">Dirección</label>
+                <input
+                  type="text"
+                  id="direccion"
+                  class="form-control"
+                  maxlength="250"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="card-form">
+            <div class="card-form-title">Configuración</div>
+
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label" for="es_ocasional"
+                  >Es ocasional</label
+                >
+                <select id="es_ocasional" class="form-select">
+                  <option value="false">No</option>
+                  <option value="true">Sí</option>
+                </select>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label" for="activo">Activo</label>
+                <select id="activo" class="form-select">
+                  <option value="true">Sí</option>
+                  <option value="false">No</option>
+                </select>
+              </div>
+
+              <div class="col-md-12">
+                <label class="form-label" for="observaciones"
+                  >Observaciones</label
+                >
+                <textarea id="observaciones" class="form-control"></textarea>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" id="btnGuardarAuxiliar">
+          <i class="fas fa-save me-1"></i>
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="{{ url_for('static', filename='select2/js/select2.min.js') }}"></script>
+<script>
+  ;(function () {
+    'use strict'
+
+    let tabla = null
+    let modalAuxiliar = null
+
+    function escHtml(valor) {
+      return String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+    }
+
+    function boolBadge(valor) {
+      return valor
+        ? '<span class="badge-bool si"><i class="fas fa-check-circle"></i> Sí</span>'
+        : '<span class="badge-bool no"><i class="fas fa-ban"></i> No</span>'
+    }
+
+    function tipoBadge(valor) {
+      return `<span class="badge-tipo">${escHtml(valor || '')}</span>`
+    }
+
+    function mostrarMensaje(tipo, titulo, texto) {
+      return Swal.fire({
+        icon: tipo,
+        title: titulo,
+        text: texto,
+        confirmButtonText: 'Aceptar',
+        allowOutsideClick: false,
+        allowEscapeKey: true,
+        buttonsStyling: false,
+        customClass: {
+          confirmButton: 'btn btn-primary'
+        }
+      })
+    }
+
+    function confirmarCambioEstado(activar) {
+      return Swal.fire({
+        icon: 'warning',
+        title: activar ? 'Activar auxiliar' : 'Desactivar auxiliar',
+        text: activar
+          ? 'El auxiliar será activado.'
+          : 'El auxiliar será desactivado.',
+        showCancelButton: true,
+        confirmButtonText: activar ? 'Activar' : 'Desactivar',
+        cancelButtonText: 'Cancelar',
+        allowOutsideClick: false,
+        buttonsStyling: false,
+        customClass: {
+          confirmButton: 'btn btn-primary',
+          cancelButton: 'btn btn-light me-2'
+        }
+      })
+    }
+
+    function ajaxJSON(options) {
+      return $.ajax({
+        url: options.url,
+        method: options.method || 'GET',
+        data: options.body ? JSON.stringify(options.body) : null,
+        contentType: 'application/json; charset=UTF-8',
+        dataType: 'json',
+        processData: false
+      })
+    }
+
+    function getDtLanguage() {
+      if (window.DXTBase && DXTBase.dtLang) {
+        return typeof DXTBase.dtLang === 'function'
+          ? DXTBase.dtLang()
+          : DXTBase.dtLang
+      }
+
+      return {
+        processing: 'Procesando...',
+        search: 'Buscar:',
+        lengthMenu: 'Mostrar _MENU_ registros',
+        info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
+        infoEmpty: 'Mostrando 0 a 0 de 0 registros',
+        infoFiltered: '(filtrado de _MAX_ registros totales)',
+        loadingRecords: 'Cargando...',
+        zeroRecords: 'No se encontraron resultados',
+        emptyTable: 'No hay datos disponibles',
+        paginate: {
+          first: 'Primero',
+          previous: 'Anterior',
+          next: 'Siguiente',
+          last: 'Último'
+        }
+      }
+    }
+
+    function baseUrl() {
+      return `{{ url_for("auxiliar.index") }}`.replace(/\/$/, '')
+    }
+
+    function renderAcciones(row) {
+      return `
+      <div class="d-flex justify-content-center gap-1">
+        <button
+          class="ax-btn-action ax-btn-edit btn-editar"
+          type="button"
+          data-id="${row.id}"
+          title="Editar"
+        >
+          <i class="fas fa-pencil-alt"></i>
+        </button>
+        <button
+          class="ax-btn-action ax-btn-toggle btn-toggle"
+          type="button"
+          data-id="${row.id}"
+          data-activo="${row.activo ? 'true' : 'false'}"
+          title="${row.activo ? 'Desactivar' : 'Activar'}"
+        >
+          <i class="fas ${row.activo ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
+        </button>
+      </div>
+    `
+    }
+
+    function initTabla() {
+      tabla = $('#tblAuxiliar').DataTable({
+        ajax: {
+          url: '{{ url_for("auxiliar.data") }}',
+          dataSrc: 'data',
+          cache: false
+        },
+        columns: [
+          { data: 'tipo', render: valor => tipoBadge(valor) },
+          { data: 'codigo_externo', render: valor => escHtml(valor || '') },
+          { data: 'nit_ci', render: valor => escHtml(valor || '') },
+          { data: 'nombre', render: valor => escHtml(valor || '') },
+          { data: 'razon_social', render: valor => escHtml(valor || '') },
+          { data: 'es_ocasional', render: valor => boolBadge(Boolean(valor)) },
+          { data: 'activo', render: valor => boolBadge(Boolean(valor)) },
+          {
+            data: null,
+            className: 'text-center',
+            orderable: false,
+            render: function (row) {
+              return renderAcciones(row)
+            }
+          }
+        ],
+        language: getDtLanguage(),
+        order: [
+          [0, 'asc'],
+          [3, 'asc']
+        ],
+        pageLength: 15,
+        scrollX: true,
+        scrollCollapse: true,
+        autoWidth: false,
+        columnDefs: [{ targets: 'no-sort', orderable: false }]
+      })
+    }
+
+    function initEmpresaSelect() {
+      $('#empresa_select').select2({
+        width: '100%',
+        dropdownParent: $('#auxiliarModal'),
+        placeholder: 'Buscar empresa por nombre, NIT o razón social',
+        allowClear: true,
+        minimumInputLength: 1,
+        ajax: {
+          url: baseUrl() + '/empresas/buscar',
+          dataType: 'json',
+          delay: 250,
+          data: function (params) {
+            return { q: params.term || '' }
+          },
+          processResults: function (data) {
+            return { results: data.results || [] }
+          }
+        }
+      })
+
+      $('#empresa_select').on('select2:select', function (e) {
+        aplicarEmpresaSeleccionada(e.params.data)
+      })
+
+      $('#empresa_select').on('select2:clear', function () {
+        if ($('#cliente_referenciado').val() === 'true') {
+          limpiarCamposClienteReferenciado()
+        }
+      })
+    }
+
+    function limpiarFormulario() {
+      $('#aux_id').val('')
+      $('#empresa_id').val('')
+      $('#tipo').val('CLIENTE')
+      $('#cliente_referenciado').val('false')
+      $('#codigo_externo').val('')
+      $('#nit_ci').val('')
+      $('#nombre').val('')
+      $('#razon_social').val('')
+      $('#telefono').val('')
+      $('#email').val('')
+      $('#direccion').val('')
+      $('#es_ocasional').val('false')
+      $('#activo').val('true')
+      $('#observaciones').val('')
+
+      $('#empresa_select').empty().trigger('change')
+      actualizarModoFormulario()
+    }
+
+    function setEmpresaSeleccionada(id, text) {
+      const $select = $('#empresa_select')
+      $select.empty()
+
+      if (id && text) {
+        const option = new Option(text, id, true, true)
+        $select.append(option).trigger('change')
+      } else {
+        $select.val(null).trigger('change')
+      }
+
+      $('#empresa_id').val(id || '')
+    }
+
+    function aplicarEmpresaSeleccionada(data) {
+      if (!data) return
+
+      const nit = String(data.nit || '').trim()
+      const nombre = String(data.nombre || '').trim()
+      const razonSocial = String(data.razon_social || '').trim()
+      const telefono = String(data.telefono || '').trim()
+      const email = String(data.email || '').trim()
+      const direccion = String(data.direccion || '').trim()
+
+      $('#empresa_id').val(data.id || '')
+      $('#codigo_externo').val(nit ? nit : String(data.id || ''))
+      $('#nit_ci').val(nit)
+      $('#nombre').val(nombre)
+      $('#razon_social').val(razonSocial)
+      $('#telefono').val(telefono)
+      $('#email').val(email)
+      $('#direccion').val(direccion)
+    }
+
+    function limpiarCamposClienteReferenciado() {
+      $('#empresa_id').val('')
+      $('#codigo_externo').val('')
+      $('#nit_ci').val('')
+      $('#nombre').val('')
+      $('#razon_social').val('')
+      $('#telefono').val('')
+      $('#email').val('')
+      $('#direccion').val('')
+    }
+
+    function actualizarModoFormulario() {
+      const tipo = $('#tipo').val()
+      const clienteReferenciado = $('#cliente_referenciado').val() === 'true'
+      const esCliente = tipo === 'CLIENTE'
+
+      $('#grupoClienteReferenciado').toggleClass('d-none-force', !esCliente)
+      $('#grupoEmpresa').toggleClass(
+        'd-none-force',
+        !(esCliente && clienteReferenciado)
+      )
+
+      $('#codigo_externo').prop('readonly', false)
+      $('#nit_ci').prop('readonly', false)
+      $('#nombre').prop('readonly', false)
+      $('#razon_social').prop('readonly', false)
+      $('#telefono').prop('readonly', false)
+      $('#email').prop('readonly', false)
+      $('#direccion').prop('readonly', false)
+
+      if (!esCliente) {
+        $('#cliente_referenciado').val('false')
+        setEmpresaSeleccionada(null, null)
+      }
+
+      if (esCliente && !clienteReferenciado) {
+        setEmpresaSeleccionada(null, null)
+      }
+    }
+
+    function payloadFormulario() {
+      return {
+        tipo: ($('#tipo').val() || '').trim(),
+        cliente_referenciado: $('#cliente_referenciado').val() === 'true',
+        empresa_id: $('#empresa_id').val() || null,
+        codigo_externo: ($('#codigo_externo').val() || '').trim(),
+        nit_ci: ($('#nit_ci').val() || '').trim(),
+        nombre: ($('#nombre').val() || '').trim(),
+        razon_social: ($('#razon_social').val() || '').trim(),
+        telefono: ($('#telefono').val() || '').trim(),
+        email: ($('#email').val() || '').trim(),
+        direccion: ($('#direccion').val() || '').trim(),
+        es_ocasional: $('#es_ocasional').val() === 'true',
+        activo: $('#activo').val() === 'true',
+        observaciones: ($('#observaciones').val() || '').trim()
+      }
+    }
+
+    function validarPayload(payload) {
+      const esCliente = payload.tipo === 'CLIENTE'
+
+      if (!payload.tipo) return 'El tipo es obligatorio.'
+
+      if (esCliente && payload.cliente_referenciado && !payload.empresa_id) {
+        return 'Debes seleccionar una empresa para referenciar el cliente.'
+      }
+
+      if (!esCliente || !payload.cliente_referenciado) {
+        if (!payload.nombre) return 'El nombre es obligatorio.'
+        if (payload.codigo_externo.length > 100)
+          return 'El código externo no puede exceder 100 caracteres.'
+        if (payload.nit_ci.length > 50)
+          return 'El NIT/CI no puede exceder 50 caracteres.'
+        if (payload.nombre.length > 200)
+          return 'El nombre no puede exceder 200 caracteres.'
+        if (payload.razon_social.length > 200)
+          return 'La razón social no puede exceder 200 caracteres.'
+        if (payload.telefono.length > 50)
+          return 'El teléfono no puede exceder 50 caracteres.'
+        if (payload.email.length > 120)
+          return 'El email no puede exceder 120 caracteres.'
+        if (payload.direccion.length > 250)
+          return 'La dirección no puede exceder 250 caracteres.'
+      }
+
+      return ''
+    }
+
+    function abrirModalNuevo() {
+      limpiarFormulario()
+      $('#auxiliarModal .modal-title').text('Nuevo auxiliar')
+      modalAuxiliar.show()
+    }
+
+    function abrirModalEditar(id) {
+      ajaxJSON({
+        url: baseUrl() + '/obtener/' + encodeURIComponent(id),
+        method: 'GET'
+      })
+        .done(function (resp) {
+          const row = resp.data || {}
+
+          limpiarFormulario()
+
+          $('#aux_id').val(row.id || '')
+          $('#tipo').val(row.tipo || 'CLIENTE')
+          $('#cliente_referenciado').val(
+            row.cliente_referenciado ? 'true' : 'false'
+          )
+          $('#codigo_externo').val(row.codigo_externo || '')
+          $('#nit_ci').val(row.nit_ci || '')
+          $('#nombre').val(row.nombre || '')
+          $('#razon_social').val(row.razon_social || '')
+          $('#telefono').val(row.telefono || '')
+          $('#email').val(row.email || '')
+          $('#direccion').val(row.direccion || '')
+          $('#es_ocasional').val(row.es_ocasional ? 'true' : 'false')
+          $('#activo').val(row.activo ? 'true' : 'false')
+          $('#observaciones').val(row.observaciones || '')
+
+          actualizarModoFormulario()
+
+          if (row.cliente_referenciado && row.empresa_id) {
+            setEmpresaSeleccionada(
+              row.empresa_id,
+              row.empresa_text || row.nombre || ''
+            )
+          }
+
+          $('#auxiliarModal .modal-title').text('Editar auxiliar')
+          modalAuxiliar.show()
+        })
+        .fail(function (xhr) {
+          const resp = xhr.responseJSON || {}
+          mostrarMensaje(
+            'error',
+            'No se pudo abrir',
+            resp.msg || 'Ocurrió un error al cargar el auxiliar.'
+          )
+        })
+    }
+
+    function guardarFormulario() {
+      const payload = payloadFormulario()
+      const error = validarPayload(payload)
+
+      if (error) {
+        mostrarMensaje('warning', 'Datos incompletos', error)
+        return
+      }
+
+      const id = $('#aux_id').val()
+      const esEdicion = !!id
+
+      ajaxJSON({
+        url: esEdicion
+          ? baseUrl() + '/editar/' + encodeURIComponent(id)
+          : baseUrl() + '/crear',
+        method: esEdicion ? 'PUT' : 'POST',
+        body: payload
+      })
+        .done(function (resp) {
+          modalAuxiliar.hide()
+          tabla.ajax.reload(null, false)
+          mostrarMensaje(
+            'success',
+            'Guardado correctamente',
+            resp.msg || 'Auxiliar guardado correctamente.'
+          )
+        })
+        .fail(function (xhr) {
+          const resp = xhr.responseJSON || {}
+          mostrarMensaje(
+            'error',
+            'No se pudo guardar',
+            resp.msg || 'Ocurrió un error al guardar el auxiliar.'
+          )
+        })
+    }
+
+    function toggleActivo(id, activoActual) {
+      const activar = !activoActual
+
+      confirmarCambioEstado(activar).then(function (result) {
+        if (!result.isConfirmed) return
+
+        ajaxJSON({
+          url: baseUrl() + '/toggle-activo/' + encodeURIComponent(id),
+          method: 'POST'
+        })
+          .done(function (resp) {
+            tabla.ajax.reload(null, false)
+            mostrarMensaje(
+              'success',
+              'Actualización correcta',
+              resp.msg || 'Estado actualizado correctamente.'
+            )
+          })
+          .fail(function (xhr) {
+            const resp = xhr.responseJSON || {}
+            mostrarMensaje(
+              'error',
+              'No se pudo actualizar',
+              resp.msg || 'Ocurrió un error al actualizar el estado.'
+            )
+          })
+      })
+    }
+
+    $(function () {
+      modalAuxiliar = new bootstrap.Modal(
+        document.getElementById('auxiliarModal')
+      )
+      initTabla()
+      initEmpresaSelect()
+      actualizarModoFormulario()
+
+      $('#btnNuevoAuxiliar').on('click', function () {
+        abrirModalNuevo()
+      })
+
+      $('#tipo, #cliente_referenciado').on('change', function () {
+        actualizarModoFormulario()
+      })
+
+      $('#btnGuardarAuxiliar').on('click', function () {
+        guardarFormulario()
+      })
+
+      $(document).on('click', '.btn-editar', function () {
+        abrirModalEditar($(this).data('id'))
+      })
+
+      $(document).on('click', '.btn-toggle', function () {
+        toggleActivo(
+          $(this).data('id'),
+          $(this).data('activo') === true || $(this).data('activo') === 'true'
+        )
+      })
+
+      $('#auxiliarModal').on('hidden.bs.modal', function () {
+        limpiarFormulario()
+      })
+    })
+  })()
+</script>
+{% endblock %}

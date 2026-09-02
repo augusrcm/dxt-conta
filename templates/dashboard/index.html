@@ -1,0 +1,793 @@
+{% extends "layout.html" %} {% block title %}Dashboard · DXT CONTA{% endblock %}
+{% block extra_css %}
+<style>
+  /* ── Variables del módulo ─────────────────────────────── */
+  #dashboardPage {
+    --db-accent: #2d7dd2;
+    --db-accent-lt: #e8f1fc;
+    --db-navy: #0f2340;
+    --db-blue: #1a4a7a;
+    --db-success: #1a7a4a;
+    --db-success-lt: #e6f6ee;
+    --db-warning: #c8962a;
+    --db-warning-lt: #fdf6e3;
+    --db-danger: #b83232;
+    --db-danger-lt: #fdeaea;
+    --db-surface: #f5f8fc;
+    --db-border: #dde4ed;
+    --db-text: #1e2d3d;
+    --db-muted: #8898aa;
+    --db-radius: 14px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  /* ── BIENVENIDA HERO ──────────────────────────────────── */
+  #dashboardPage .db-hero {
+    background: linear-gradient(120deg,
+        var(--db-navy) 0%,
+        var(--db-blue) 60%,
+        #1f5d9e 100%);
+    border-radius: var(--db-radius);
+    padding: 1.4rem 1.75rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15, 35, 64, 0.18);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #dashboardPage .db-hero::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+  }
+
+  #dashboardPage .db-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    right: 100px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.03);
+    pointer-events: none;
+  }
+
+  .db-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+  }
+
+  .db-hero-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .db-hero-greeting {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.82rem;
+    margin-bottom: 2px;
+  }
+
+  .db-hero-name {
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    margin: 0;
+  }
+
+  .db-hero-sub {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+
+  .db-hero-right {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    position: relative;
+  }
+
+  .db-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 5px 13px;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .db-meta-chip i {
+    font-size: 0.72rem;
+    opacity: 0.8;
+  }
+
+  /* ── KPI GRID ─────────────────────────────────────────── */
+  #dashboardPage .db-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .db-kpi-card {
+    background: #fff;
+    border: 1px solid var(--db-border);
+    border-radius: var(--db-radius);
+    padding: 1.1rem 1.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    box-shadow: 0 4px 16px rgba(15, 35, 64, 0.06);
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .db-kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    border-radius: var(--db-radius) var(--db-radius) 0 0;
+  }
+
+  .db-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15, 35, 64, 0.1);
+  }
+
+  .db-kpi-card.kpi-blue::before {
+    background: #2d7dd2;
+  }
+
+  .db-kpi-card.kpi-green::before {
+    background: #1a7a4a;
+  }
+
+  .db-kpi-card.kpi-purple::before {
+    background: #6d28d9;
+  }
+
+  .db-kpi-card.kpi-amber::before {
+    background: #c8962a;
+  }
+
+  .db-kpi-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  .db-kpi-icon.kpi-blue {
+    background: #e8f1fc;
+    color: #2d7dd2;
+  }
+
+  .db-kpi-icon.kpi-green {
+    background: #e6f6ee;
+    color: #1a7a4a;
+  }
+
+  .db-kpi-icon.kpi-purple {
+    background: #f3e8ff;
+    color: #6d28d9;
+  }
+
+  .db-kpi-icon.kpi-amber {
+    background: #fdf6e3;
+    color: #c8962a;
+  }
+
+  .db-kpi-body {
+    min-width: 0;
+  }
+
+  .db-kpi-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--db-muted);
+    margin-bottom: 0.2rem;
+  }
+
+  .db-kpi-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--db-text);
+    line-height: 1.1;
+    font-family: 'Consolas', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .db-kpi-value.tc-ok {
+    color: var(--db-success);
+  }
+
+  .db-kpi-value.tc-miss {
+    color: var(--db-muted);
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: inherit;
+  }
+
+  .db-kpi-help {
+    font-size: 0.75rem;
+    color: var(--db-muted);
+    margin-top: 2px;
+  }
+
+  /* ── GRID INFERIOR ────────────────────────────────────── */
+  #dashboardPage .db-bottom-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 0.85rem;
+  }
+
+  /* Tarjetas del grid inferior */
+  .db-card {
+    background: #fff;
+    border: 1px solid var(--db-border);
+    border-radius: var(--db-radius);
+    box-shadow: 0 4px 16px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+  }
+
+  .db-card-header {
+    padding: 0.85rem 1.15rem;
+    border-bottom: 1px solid var(--db-border);
+    background: var(--db-surface);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .db-card-header-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    flex-shrink: 0;
+  }
+
+  .db-card-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--db-muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .db-card-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 13px;
+    background: var(--db-accent);
+    border-radius: 2px;
+  }
+
+  .db-card-body {
+    padding: 1.15rem;
+  }
+
+  /* ── INFO BIENVENIDA ──────────────────────────────────── */
+  .db-info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid #eef1f6;
+    font-size: 0.875rem;
+  }
+
+  .db-info-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .db-info-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    flex-shrink: 0;
+  }
+
+  .db-info-label {
+    font-size: 0.72rem;
+    color: var(--db-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .db-info-value {
+    font-weight: 600;
+    color: var(--db-text);
+    margin-top: 1px;
+  }
+
+  /* Acceso rápido */
+  .db-quick-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+    margin-top: 1rem;
+  }
+
+  .db-quick-link {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 0.85rem;
+    border: 1.5px solid var(--db-border);
+    border-radius: 10px;
+    background: var(--db-surface);
+    color: var(--db-text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+
+  .db-quick-link:hover {
+    border-color: var(--db-accent);
+    background: var(--db-accent-lt);
+    color: var(--db-accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 125, 210, 0.1);
+  }
+
+  .db-quick-link i {
+    font-size: 0.88rem;
+    flex-shrink: 0;
+  }
+
+  /* ── TARJETA TC ───────────────────────────────────────── */
+  .db-tc-card .db-card-title::before {
+    background: var(--db-warning);
+  }
+
+  .db-tc-value-block {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .db-tc-item {
+    background: var(--db-surface);
+    border: 1px solid var(--db-border);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+  }
+
+  .db-tc-item-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--db-muted);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .db-tc-item-value {
+    font-family: 'Consolas', monospace;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--db-success);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .db-tc-item-sub {
+    font-size: 0.75rem;
+    color: var(--db-muted);
+    margin-top: 2px;
+  }
+
+  .db-tc-missing {
+    background: var(--db-danger-lt);
+    border: 1px solid #fca5a5;
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    color: var(--db-danger);
+  }
+
+  .db-tc-missing i {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .db-tc-missing strong {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+  }
+
+  .db-tc-missing span {
+    font-size: 0.78rem;
+    opacity: 0.85;
+  }
+
+  /* ── MODAL TC ─────────────────────────────────────────── */
+  #modalTipoCambio .modal-content {
+    border: 0;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(15, 35, 64, 0.2);
+    overflow: hidden;
+  }
+
+  #modalTipoCambio .modal-header {
+    background: linear-gradient(120deg, #7c2d12 0%, #c2410c 60%, #ea580c 100%);
+    padding: 1.1rem 1.4rem;
+    border-bottom: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #modalTipoCambio .modal-header::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    pointer-events: none;
+  }
+
+  #modalTipoCambio .modal-title {
+    color: #fff;
+    font-size: 0.98rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  #modalTipoCambio .modal-title i {
+    font-size: 1.1rem;
+  }
+
+  #modalTipoCambio .modal-body {
+    background: #f9fbfe;
+    padding: 1.5rem;
+  }
+
+  .db-modal-alert {
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    border-left: 4px solid #ea580c;
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.84rem;
+    color: #7c2d12;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .db-modal-alert i {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .db-modal-field {
+    background: #fff;
+    border: 1px solid var(--db-border);
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .db-modal-field label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--db-muted);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .db-modal-field label i {
+    font-size: 0.75rem;
+  }
+
+  .db-modal-field .form-control {
+    border: 1.5px solid var(--db-border);
+    border-radius: 8px;
+    font-family: 'Consolas', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--db-text);
+    transition: border-color 0.16s, box-shadow 0.16s;
+  }
+
+  .db-modal-field .form-control:focus {
+    border-color: #ea580c;
+    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.12);
+    outline: none;
+  }
+
+  .db-modal-field small {
+    font-size: 0.74rem;
+    color: var(--db-muted);
+    display: block;
+    margin-top: 5px;
+  }
+
+  #modalTipoCambio .modal-footer {
+    background: #fff;
+    border-top: 1px solid var(--db-border);
+    padding: 0.85rem 1.4rem;
+    gap: 0.5rem;
+  }
+
+  #modalTipoCambio .btn-guardar-tc {
+    background: linear-gradient(135deg, #c2410c, #ea580c);
+    border: 0;
+    color: #fff;
+    font-weight: 700;
+    padding: 0.55rem 1.25rem;
+    border-radius: 9px;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+
+  #modalTipoCambio .btn-guardar-tc:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  #modalTipoCambio .btn-guardar-tc:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* ── RESPONSIVE ───────────────────────────────────────── */
+  @media (max-width: 1100px) {
+    #dashboardPage .db-kpi-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    #dashboardPage .db-bottom-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    #dashboardPage .db-kpi-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .db-quick-links {
+      grid-template-columns: 1fr;
+    }
+
+    #dashboardPage .db-hero {
+      padding: 1rem;
+    }
+
+    #dashboardPage .db-hero::before,
+    #dashboardPage .db-hero::after {
+      display: none;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid py-4" id="dashboardPage">
+  <!-- ── HERO ─────────────────────────────────────────────── -->
+  <div class="db-hero">
+    <div class="db-hero-left">
+      <div class="db-hero-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <div>
+        <div class="db-hero-greeting">Bienvenido de vuelta</div>
+        <h1 class="db-hero-name">{{ session.nombre }}</h1>
+        <div class="db-hero-sub">Sistema de Contabilidad · DXT CONTA</div>
+      </div>
+    </div>
+    <div class="db-hero-right">
+      <span class="db-meta-chip">
+        <i class="far fa-calendar"></i>
+        {{ fecha_actual }}
+      </span>
+      <span class="db-meta-chip">
+        <i class="far fa-envelope"></i>
+        {{ session.correo }}
+      </span>
+    </div>
+  </div>
+
+  <!-- ── KPIs ─────────────────────────────────────────────── -->
+  <div class="db-kpi-grid">
+    <div class="db-kpi-card kpi-blue">
+      <div class="db-kpi-icon kpi-blue"><i class="fas fa-users"></i></div>
+      <div class="db-kpi-body">
+        <div class="db-kpi-label">Usuarios activos</div>
+        <div class="db-kpi-value">{{ stats.usuarios_activos }}</div>
+        <div class="db-kpi-help">Con acceso al sistema</div>
+      </div>
+    </div>
+
+    <div class="db-kpi-card kpi-green">
+      <div class="db-kpi-icon kpi-green"><i class="fas fa-building"></i></div>
+      <div class="db-kpi-body">
+        <div class="db-kpi-label">Empresas</div>
+        <div class="db-kpi-value">{{ stats.empresas }}</div>
+        <div class="db-kpi-help">Registradas en el sistema</div>
+      </div>
+    </div>
+
+    <div class="db-kpi-card kpi-purple">
+      <div class="db-kpi-icon kpi-purple">
+        <i class="fas fa-file-invoice"></i>
+      </div>
+      <div class="db-kpi-body">
+        <div class="db-kpi-label">Comprobantes hoy</div>
+        <div class="db-kpi-value">{{ stats.comprobantes_hoy }}</div>
+        <div class="db-kpi-help">Registrados en la sesión</div>
+      </div>
+    </div>
+
+    <div class="db-kpi-card kpi-amber">
+      <div class="db-kpi-icon kpi-amber">
+        <i class="fas fa-dollar-sign"></i>
+      </div>
+      <div class="db-kpi-body">
+        <div class="db-kpi-label">USD Paralelo hoy</div>
+        {% if tipo_cambio %}
+        <div class="db-kpi-value tc-ok">
+          Bs {{ "%.4f"|format(tipo_cambio.usd_paralelo) }}
+        </div>
+        <div class="db-kpi-help">Tipo de cambio registrado</div>
+        {% else %}
+        <div class="db-kpi-value tc-miss">Pendiente</div>
+        <div class="db-kpi-help">No configurado para hoy</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GRID INFERIOR ────────────────────────────────────── -->
+  <div class="db-bottom-grid">
+    <!-- Información de sesión + accesos rápidos -->
+    <div class="db-card">
+      <div class="db-card-header">
+        <span class="db-card-title">Sesión actual</span>
+      </div>
+      <div class="db-card-body">
+        <div class="db-info-row">
+          <div class="db-info-icon" style="background: #e8f1fc; color: #2d7dd2">
+            <i class="fas fa-user"></i>
+          </div>
+          <div>
+            <div class="db-info-label">Usuario</div>
+            <div class="db-info-value">{{ session.nombre }}</div>
+          </div>
+        </div>
+        <div class="db-info-row">
+          <div class="db-info-icon" style="background: #f3e8ff; color: #6d28d9">
+            <i class="far fa-envelope"></i>
+          </div>
+          <div>
+            <div class="db-info-label">Correo</div>
+            <div class="db-info-value">{{ session.correo }}</div>
+          </div>
+        </div>
+        <div class="db-info-row">
+          <div class="db-info-icon" style="background: #e6f6ee; color: #1a7a4a">
+            <i class="far fa-calendar-check"></i>
+          </div>
+          <div>
+            <div class="db-info-label">Fecha de operación</div>
+            <div class="db-info-value">{{ fecha_actual }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta tipo de cambio -->
+    <div class="db-card db-tc-card">
+      <div class="db-card-header">
+        <span class="db-card-title" style="--db-accent: #c8962a">Tipo de cambio</span>
+        <span style="font-size: 0.72rem; color: #8898aa; margin-left: auto">{{
+          fecha_actual
+          }}</span>
+      </div>
+      <div class="db-card-body">
+        {% if tipo_cambio %}
+        <div class="db-tc-value-block">
+          <div class="db-tc-item">
+            <div class="db-tc-item-label">
+              <i class="fas fa-dollar-sign" style="color: #1a7a4a"></i>
+              USD Paralelo
+            </div>
+            <div class="db-tc-item-value">
+              Bs {{ "%.4f"|format(tipo_cambio.usd_paralelo) }}
+            </div>
+            <div class="db-tc-item-sub">Bolivianos por dólar paralelo</div>
+          </div>
+          <div class="db-tc-item">
+            <div class="db-tc-item-label">
+              <i class="fas fa-home" style="color: #2d7dd2"></i>
+              UFV
+            </div>
+            <div class="db-tc-item-value" style="color: #2d7dd2">
+              {{ "%.6f"|format(tipo_cambio.ufv) }}
+            </div>
+            <div class="db-tc-item-sub">Unidad de Fomento a la Vivienda</div>
+          </div>
+        </div>
+        {% else %}
+        <div class="db-tc-missing">
+          <i class="fas fa-exclamation-circle"></i>
+          <div>
+            <strong>Sin tipo de cambio para hoy</strong>
+            <span>Se abrirá el formulario de registro al ingresar al sistema.</span>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

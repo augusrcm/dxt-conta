@@ -1,0 +1,822 @@
+{% extends "layout.html" %}
+{% block title %}Libro Diario{% endblock %}
+{% block page_help_url %}{{ url_for('libro_diario.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  #libroDiarioPage {
+    --ld-navy: #0f2340;
+    --ld-blue: #173f6a;
+    --ld-accent: #2d7dd2;
+    --ld-accent-soft: #edf5ff;
+    --ld-border: #dde5ef;
+    --ld-surface: #f5f8fc;
+    --ld-surface-2: #fbfdff;
+    --ld-text: #1d2c3c;
+    --ld-muted: #6f7f90;
+    --ld-success: #177a53;
+    --ld-warning: #c78a1b;
+    --ld-radius: 18px;
+    color: var(--ld-text);
+  }
+
+  #libroDiarioPage .ld-header {
+    background: linear-gradient(130deg, var(--ld-navy) 0%, var(--ld-blue) 55%, #1f5d9e 100%);
+    border-radius: var(--ld-radius);
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+    box-shadow: 0 14px 34px rgba(15, 35, 64, 0.16);
+  }
+
+  #libroDiarioPage .ld-header-main {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  #libroDiarioPage .ld-header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  #libroDiarioPage .ld-title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  #libroDiarioPage .ld-subtitle {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.78rem;
+    margin-top: 1px;
+  }
+
+  #libroDiarioPage .ld-header-actions {
+    display: none;
+  }
+
+  #libroDiarioPage .ld-btn {
+    min-width: 118px;
+    font-weight: 700;
+  }
+
+  #libroDiarioPage .ld-card {
+    background: #fff;
+    border: 1px solid var(--ld-border);
+    border-radius: var(--ld-radius);
+    box-shadow: 0 8px 28px rgba(15, 35, 64, 0.06);
+    overflow: hidden;
+    margin-bottom: 0.85rem;
+  }
+
+  #libroDiarioPage .ld-card-head {
+    padding: 0.8rem 1rem;
+    border-bottom: 1px solid var(--ld-border);
+    background: linear-gradient(180deg, #fff 0%, #f9fbfe 100%);
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  #libroDiarioPage .ld-card-title {
+    display: flex;
+    gap: 0.65rem;
+    align-items: center;
+    color: var(--ld-navy);
+    font-weight: 700;
+    font-size: 0.92rem;
+  }
+
+  #libroDiarioPage .ld-card-title small {
+    display: block;
+    margin-top: 0.05rem;
+    color: var(--ld-muted);
+    font-size: 0.74rem;
+    font-weight: 500;
+  }
+
+  #libroDiarioPage .ld-card-body {
+    padding: 0.9rem 1rem 1rem;
+  }
+
+  #libroDiarioPage .ld-toolbar {
+    display: grid;
+    grid-template-columns: 260px repeat(3, minmax(0, 1fr)) 230px;
+    gap: 0.7rem;
+    align-items: end;
+  }
+
+  #libroDiarioPage .ld-mode-shell {
+    border: 1px solid #cddced;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #f7fbff 0%, #eef5fd 100%);
+    padding: 0.4rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  }
+
+  #libroDiarioPage .ld-mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+  }
+
+  #libroDiarioPage .ld-mode-card {
+    border: 1px solid #d5e2f0;
+    border-radius: 11px;
+    background: #ffffff;
+    padding: 0.58rem 0.7rem;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    min-height: 56px;
+  }
+
+  #libroDiarioPage .ld-mode-card:hover {
+    border-color: #9fc0e5;
+    background: #f8fbff;
+  }
+
+  #libroDiarioPage .ld-mode-card.active {
+    border-color: #82b1e3;
+    background: linear-gradient(180deg, #f4f9ff 0%, #e9f3ff 100%);
+    box-shadow: 0 0 0 2px rgba(45, 125, 210, 0.10);
+  }
+
+  #libroDiarioPage .ld-mode-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--ld-blue);
+    line-height: 1.1;
+  }
+
+  #libroDiarioPage .ld-mode-text {
+    font-size: 0.69rem;
+    color: var(--ld-muted);
+    margin-top: 0.16rem;
+    line-height: 1.15;
+  }
+
+  #libroDiarioPage .ld-actions-stack {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+  }
+
+  #libroDiarioPage .ld-actions-stack .ld-btn {
+    min-width: 0;
+    width: 100%;
+    min-height: 40px;
+    font-size: 0.84rem;
+  }
+
+  #libroDiarioPage .form-label {
+    color: var(--ld-navy);
+    font-weight: 700;
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+  }
+
+  #libroDiarioPage .form-control,
+  #libroDiarioPage .form-select {
+    min-height: 40px;
+    border-radius: 12px;
+    border: 1px solid #d7e2ee;
+    box-shadow: none;
+    font-size: 0.86rem;
+  }
+
+  #libroDiarioPage .form-control:focus,
+  #libroDiarioPage .form-select:focus {
+    border-color: #8fb8eb;
+    box-shadow: 0 0 0 0.2rem rgba(45, 125, 210, 0.12);
+  }
+
+  #libroDiarioPage .ld-date-wrap {
+    position: relative;
+  }
+
+  #libroDiarioPage .ld-date-input {
+    padding-right: 2.6rem;
+    cursor: pointer;
+    background-color: #fff;
+  }
+
+  #libroDiarioPage .ld-date-button {
+    position: absolute;
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
+    width: 1.8rem;
+    height: 1.8rem;
+    border: none;
+    border-radius: 10px;
+    background: var(--ld-accent-soft);
+    color: var(--ld-blue);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  #libroDiarioPage .ld-hidden {
+    display: none !important;
+  }
+
+  #libroDiarioPage .ld-summary-strip {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.7rem;
+    margin-top: 0.8rem;
+  }
+
+  #libroDiarioPage .ld-summary-box {
+    background: linear-gradient(180deg, #fff 0%, var(--ld-surface-2) 100%);
+    border: 1px solid var(--ld-border);
+    border-radius: 14px;
+    padding: 0.75rem 0.85rem;
+    min-height: 74px;
+  }
+
+  #libroDiarioPage .ld-summary-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.68rem;
+    color: var(--ld-muted);
+    font-weight: 700;
+    margin-bottom: 0.22rem;
+  }
+
+  #libroDiarioPage .ld-summary-value {
+    color: var(--ld-navy);
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.15;
+  }
+
+  #libroDiarioPage .ld-summary-value.is-text {
+    font-size: 0.84rem;
+    line-height: 1.3;
+  }
+
+  #libroDiarioPage .ld-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    background: var(--ld-accent-soft);
+    color: var(--ld-blue);
+    font-weight: 700;
+    font-size: 0.78rem;
+  }
+
+  #libroDiarioPage .ld-chip.is-muted {
+    background: #f3f6fa;
+    color: var(--ld-muted);
+  }
+
+  #libroDiarioPage .ld-chip.is-success {
+    background: #eaf8f1;
+    color: var(--ld-success);
+  }
+
+  #libroDiarioPage .ld-chip.is-warning {
+    background: #fff7e6;
+    color: var(--ld-warning);
+  }
+
+  #libroDiarioPage .ld-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  #libroDiarioPage table.dataTable thead th {
+    background: #f2f6fb;
+    color: var(--ld-blue);
+    border-bottom: 1px solid var(--ld-border) !important;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  #libroDiarioPage table.dataTable tbody td {
+    vertical-align: middle;
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+
+  #libroDiarioPage .ld-money {
+    text-align: right;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  #libroDiarioPage .ld-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.32rem 0.68rem;
+    border-radius: 999px;
+    background: #edf8f3;
+    color: var(--ld-success);
+    font-weight: 700;
+    font-size: 0.74rem;
+  }
+
+  #libroDiarioPage .ld-empty {
+    text-align: center;
+    padding: 1.4rem 1rem 1.1rem;
+    color: var(--ld-muted);
+    font-size: 0.86rem;
+  }
+
+  #libroDiarioPage .dataTables_wrapper .dataTables_length,
+  #libroDiarioPage .dataTables_wrapper .dataTables_filter,
+  #libroDiarioPage .dataTables_wrapper .dataTables_info,
+  #libroDiarioPage .dataTables_wrapper .dataTables_paginate {
+    font-size: 0.8rem;
+  }
+
+  #libroDiarioPage .dataTables_wrapper .dataTables_filter input,
+  #libroDiarioPage .dataTables_wrapper .dataTables_length select {
+    border-radius: 10px;
+    border: 1px solid #d7e2ee;
+    min-height: 34px;
+    padding: 0.2rem 0.55rem;
+  }
+
+  @media (max-width: 1440px) {
+    #libroDiarioPage .ld-toolbar {
+      grid-template-columns: 260px repeat(2, minmax(0, 1fr)) 230px;
+    }
+
+    #libroDiarioPage .ld-summary-strip {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 1100px) {
+    #libroDiarioPage .ld-toolbar {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #libroDiarioPage .ld-actions-stack {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    #libroDiarioPage .ld-summary-strip {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    #libroDiarioPage .ld-toolbar,
+    #libroDiarioPage .ld-summary-strip {
+      grid-template-columns: 1fr;
+    }
+
+    #libroDiarioPage .ld-header,
+    #libroDiarioPage .ld-card-head {
+      align-items: stretch;
+    }
+
+    #libroDiarioPage .ld-actions-stack {
+      grid-template-columns: 1fr;
+    }
+
+    #libroDiarioPage .ld-btn {
+      flex: 1 1 auto;
+      width: 100%;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div id="libroDiarioPage">
+  <div class="ld-header">
+    <div class="ld-header-main">
+      <div class="ld-header-icon"><i class="fas fa-book-open"></i></div>
+      <div>
+        <h1 class="ld-title">Libro Diario</h1>
+        <div class="ld-subtitle">Consulta cronológica de asientos confirmados, con filtro por Unidad de Negocio y salida PDF.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ld-card">
+    <div class="ld-card-head">
+      <div class="ld-card-title">
+        <i class="fas fa-filter"></i>
+        <div>
+          Filtros del libro diario
+          <small>Vista compacta para consulta rápida sin ocupar altura innecesaria.</small>
+        </div>
+      </div>
+      <div class="ld-badge">
+        <i class="fas fa-shield-check"></i> Confirmados
+      </div>
+    </div>
+    <div class="ld-card-body">
+      <div class="ld-toolbar">
+        <div>
+          <label class="form-label">Modo de período</label>
+          <div class="ld-mode-shell">
+            <div class="ld-mode-grid">
+              <div class="ld-mode-card active" data-mode="rango">
+                <div class="ld-mode-title">Rango libre</div>
+                <div class="ld-mode-text">Por fechas</div>
+              </div>
+              <div class="ld-mode-card" data-mode="gestion">
+                <div class="ld-mode-title">Gestión</div>
+                <div class="ld-mode-text">Año completo</div>
+              </div>
+            </div>
+          </div>
+          <input id="modoPeriodo" type="hidden" value="rango" />
+        </div>
+
+        <div id="campoFechaDesde">
+          <label for="fechaDesde" class="form-label">Fecha desde</label>
+          <div class="ld-date-wrap">
+            <input id="fechaDesde" type="text" class="form-control ld-date-input" value="{{ fecha_hoy }}" autocomplete="off" readonly />
+            <button id="btnFechaDesde" type="button" class="ld-date-button" aria-label="Seleccionar fecha desde">
+              <i class="fas fa-calendar-alt"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="campoFechaHasta">
+          <label for="fechaHasta" class="form-label">Fecha hasta</label>
+          <div class="ld-date-wrap">
+            <input id="fechaHasta" type="text" class="form-control ld-date-input" value="{{ fecha_hoy }}" autocomplete="off" readonly />
+            <button id="btnFechaHasta" type="button" class="ld-date-button" aria-label="Seleccionar fecha hasta">
+              <i class="fas fa-calendar-alt"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="campoGestion" class="ld-hidden">
+          <label for="gestion" class="form-label">Gestión</label>
+          <select id="gestion" class="form-select">
+            {% for item in gestiones %}
+              {% if item == gestion_actual %}
+                <option value="{{ item }}" selected>{{ item }}</option>
+              {% else %}
+                <option value="{{ item }}">{{ item }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label for="unidadNegocio" class="form-label">Unidad de Negocio</label>
+          <select id="unidadNegocio" class="form-select">
+            <option value="">Todas las unidades</option>
+            {% for item in unidades_negocio %}
+              <option value="{{ item.id }}">{{ item.codigo }} · {{ item.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label">Acciones</label>
+          <div class="ld-actions-stack">
+            <button id="btnConsultar" type="button" class="btn btn-primary btn-sm ld-btn">
+              <i class="fas fa-search me-1"></i> Consultar
+            </button>
+            <button id="btnPdf" type="button" class="btn btn-outline-secondary btn-sm ld-btn">
+              <i class="fas fa-file-pdf me-1"></i> PDF
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ld-summary-strip">
+        <div class="ld-summary-box">
+          <div class="ld-summary-label">Período</div>
+          <div id="periodoBadge" class="ld-summary-value is-text">Sin consulta realizada</div>
+        </div>
+        <div class="ld-summary-box">
+          <div class="ld-summary-label">Unidad</div>
+          <div id="unidadBadge" class="ld-summary-value is-text">Todas las unidades</div>
+        </div>
+        <div class="ld-summary-box">
+          <div class="ld-summary-label">Asientos</div>
+          <div id="sumAsientos" class="ld-summary-value">0</div>
+        </div>
+        <div class="ld-summary-box">
+          <div class="ld-summary-label">Líneas / Unidades</div>
+          <div id="sumLineas" class="ld-summary-value">0</div>
+          <div id="sumUnidades" class="ld-chip is-muted mt-2"><i class="fas fa-building"></i> 0 unidades</div>
+        </div>
+        <div class="ld-summary-box">
+          <div class="ld-summary-label">Totales</div>
+          <div class="ld-summary-value is-text">
+            <span id="sumDebe">0,00</span> / <span id="sumHaber">0,00</span>
+          </div>
+          <div id="sumMonedas" class="ld-chip is-muted mt-2"><i class="fas fa-coins"></i> 0 monedas</div>
+        </div>
+        <div class="ld-summary-box">
+          <div class="ld-summary-label">Cuadre</div>
+          <div id="sumDiferencia" class="ld-summary-value is-text">0,00</div>
+          <div id="sumCuadre" class="ld-chip is-success mt-2"><i class="fas fa-check-circle"></i> Cuadrado</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ld-card">
+    <div class="ld-card-head">
+      <div class="ld-card-title">
+        <i class="fas fa-table"></i>
+        <div>
+          Detalle del libro diario
+          <small>Vista cronológica por asiento y línea contable.</small>
+        </div>
+      </div>
+    </div>
+    <div class="ld-card-body">
+      <div class="ld-table-wrap">
+        <table id="tablaLibroDiario" class="table table-striped align-middle w-100">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Asiento</th>
+              <th>Sec.</th>
+              <th>Unidad</th>
+              <th>Cuenta</th>
+              <th>Auxiliar</th>
+              <th>Centro de costo</th>
+              <th>Glosa</th>
+              <th>Debe</th>
+              <th>Haber</th>
+              <th>Origen</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="emptyState" class="ld-empty ld-hidden">
+        <i class="fas fa-folder-open fa-2x mb-3"></i>
+        <div>No existen registros para el filtro consultado.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="libroDiarioBootstrap" type="application/json">
+  {{ {
+    "fecha_hoy": fecha_hoy,
+    "gestion_actual": gestion_actual,
+    "urls": {
+      "datos": url_for('libro_diario.datos'),
+      "pdf": url_for('libro_diario.pdf')
+    }
+  } | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const bootEl = document.getElementById("libroDiarioBootstrap");
+    if (!bootEl) {
+      return;
+    }
+
+    if (typeof flatpickr === "undefined") {
+      Swal.fire({
+        icon: "error",
+        title: "Libro Diario",
+        text: "No se pudo cargar el calendario de fechas.",
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#1d4ed8",
+      });
+      return;
+    }
+
+    const boot = JSON.parse(bootEl.textContent || "{}");
+    const modeCards = Array.from(document.querySelectorAll("#libroDiarioPage .ld-mode-card"));
+    const modoPeriodo = document.getElementById("modoPeriodo");
+    const fechaDesde = document.getElementById("fechaDesde");
+    const fechaHasta = document.getElementById("fechaHasta");
+    const btnFechaDesde = document.getElementById("btnFechaDesde");
+    const btnFechaHasta = document.getElementById("btnFechaHasta");
+    const campoFechaDesde = document.getElementById("campoFechaDesde");
+    const campoFechaHasta = document.getElementById("campoFechaHasta");
+    const campoGestion = document.getElementById("campoGestion");
+    const gestion = document.getElementById("gestion");
+    const unidadNegocio = document.getElementById("unidadNegocio");
+    const btnConsultar = document.getElementById("btnConsultar");
+    const btnPdf = document.getElementById("btnPdf");
+    const periodoBadge = document.getElementById("periodoBadge");
+    const unidadBadge = document.getElementById("unidadBadge");
+    const emptyState = document.getElementById("emptyState");
+    const sumAsientos = document.getElementById("sumAsientos");
+    const sumLineas = document.getElementById("sumLineas");
+    const sumUnidades = document.getElementById("sumUnidades");
+    const sumDebe = document.getElementById("sumDebe");
+    const sumHaber = document.getElementById("sumHaber");
+    const sumMonedas = document.getElementById("sumMonedas");
+    const sumDiferencia = document.getElementById("sumDiferencia");
+    const sumCuadre = document.getElementById("sumCuadre");
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("es-BO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    function showError(message) {
+      Swal.fire({
+        icon: "error",
+        title: "Libro Diario",
+        text: message,
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#1d4ed8",
+      });
+    }
+
+    function setMode(mode) {
+      modoPeriodo.value = mode;
+      modeCards.forEach((card) => {
+        card.classList.toggle("active", card.dataset.mode === mode);
+      });
+      const isRango = mode === "rango";
+      campoFechaDesde.classList.toggle("ld-hidden", !isRango);
+      campoFechaHasta.classList.toggle("ld-hidden", !isRango);
+      campoGestion.classList.toggle("ld-hidden", isRango);
+    }
+
+    modeCards.forEach((card) => {
+      card.addEventListener("click", function () {
+        setMode(card.dataset.mode || "rango");
+      });
+    });
+
+    const fpDesde = flatpickr(fechaDesde, {
+      locale: flatpickr.l10ns.es || "es",
+      dateFormat: "Y-m-d",
+      allowInput: false,
+      clickOpens: true,
+      disableMobile: true,
+      defaultDate: boot.fecha_hoy,
+    });
+
+    const fpHasta = flatpickr(fechaHasta, {
+      locale: flatpickr.l10ns.es || "es",
+      dateFormat: "Y-m-d",
+      allowInput: false,
+      clickOpens: true,
+      disableMobile: true,
+      defaultDate: boot.fecha_hoy,
+    });
+
+    btnFechaDesde.addEventListener("click", function () { fpDesde.open(); });
+    btnFechaHasta.addEventListener("click", function () { fpHasta.open(); });
+    fechaDesde.addEventListener("click", function () { fpDesde.open(); });
+    fechaHasta.addEventListener("click", function () { fpHasta.open(); });
+
+    const tabla = $("#tablaLibroDiario").DataTable({
+      data: [],
+      columns: [
+        {
+          data: "fecha",
+          render: function (value, type, row) {
+            return type === "sort" || type === "type" ? (row.fecha_iso || value || "") : (value || "");
+          },
+        },
+        { data: "asiento" },
+        { data: "secuencia" },
+        { data: "unidad_negocio" },
+        { data: "cuenta" },
+        { data: "auxiliar" },
+        { data: "centro_costo" },
+        { data: "glosa_linea" },
+        {
+          data: "debe",
+          className: "ld-money",
+          render: function (value) { return formatMoney(value); },
+        },
+        {
+          data: "haber",
+          className: "ld-money",
+          render: function (value) { return formatMoney(value); },
+        },
+        { data: "origen" },
+      ],
+      pageLength: 25,
+      order: [[0, "asc"], [1, "asc"], [2, "asc"]],
+      responsive: false,
+      language: {
+        search: "Buscar:",
+        lengthMenu: "Mostrar _MENU_ registros",
+        info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+        infoEmpty: "Sin registros",
+        zeroRecords: "No se encontraron registros",
+        paginate: {
+          first: "Primero",
+          last: "Último",
+          next: "Siguiente",
+          previous: "Anterior",
+        },
+      },
+    });
+
+    function collectParams() {
+      return new URLSearchParams({
+        modo_periodo: modoPeriodo.value || "rango",
+        gestion: gestion.value || boot.gestion_actual,
+        fecha_desde: fechaDesde.value || boot.fecha_hoy,
+        fecha_hasta: fechaHasta.value || boot.fecha_hoy,
+        unidad_negocio_id: unidadNegocio.value || "",
+      });
+    }
+
+    async function cargarLibroDiario() {
+      const params = collectParams();
+      btnConsultar.disabled = true;
+      btnPdf.disabled = true;
+      try {
+        const response = await fetch(`${boot.urls.datos}?${params.toString()}`, {
+          headers: {
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.success === false) {
+          throw new Error(payload.message || "No se pudo consultar el libro diario.");
+        }
+
+        tabla.clear().rows.add(payload.rows || []).draw();
+        emptyState.classList.toggle("ld-hidden", (payload.rows || []).length > 0);
+        periodoBadge.textContent = payload.filtros.descripcion_periodo || "Sin consulta realizada";
+        unidadBadge.textContent = payload.filtros.unidad_negocio_nombre || "Todas las unidades";
+        sumAsientos.textContent = Number(payload.resumen.asientos || 0).toLocaleString("es-BO");
+        sumLineas.textContent = Number(payload.resumen.lineas || 0).toLocaleString("es-BO");
+        sumUnidades.innerHTML = `<i class="fas fa-building"></i> ${Number(payload.resumen.unidades || 0).toLocaleString("es-BO")} unidades`;
+        sumDebe.textContent = formatMoney(payload.resumen.total_debe || 0);
+        sumHaber.textContent = formatMoney(payload.resumen.total_haber || 0);
+        const monedas = Array.isArray(payload.resumen.monedas) ? payload.resumen.monedas : [];
+        sumMonedas.innerHTML = `<i class="fas fa-coins"></i> ${monedas.length.toLocaleString("es-BO")} moneda${monedas.length === 1 ? "" : "s"}`;
+        sumDiferencia.textContent = formatMoney(payload.resumen.diferencia || 0);
+        const cuadrado = payload.resumen.cuadrado !== false;
+        sumCuadre.classList.toggle("is-success", cuadrado);
+        sumCuadre.classList.toggle("is-warning", !cuadrado);
+        sumCuadre.innerHTML = cuadrado
+          ? '<i class="fas fa-check-circle"></i> Cuadrado'
+          : '<i class="fas fa-triangle-exclamation"></i> Diferencia';
+      } catch (error) {
+        tabla.clear().draw();
+        emptyState.classList.remove("ld-hidden");
+        periodoBadge.textContent = "Consulta no disponible";
+        unidadBadge.textContent = "Sin información";
+        sumAsientos.textContent = "0";
+        sumLineas.textContent = "0";
+        sumUnidades.innerHTML = '<i class="fas fa-building"></i> 0 unidades';
+        sumDebe.textContent = "0,00";
+        sumHaber.textContent = "0,00";
+        sumMonedas.innerHTML = '<i class="fas fa-coins"></i> 0 monedas';
+        sumDiferencia.textContent = "0,00";
+        sumCuadre.classList.add("is-success");
+        sumCuadre.classList.remove("is-warning");
+        sumCuadre.innerHTML = '<i class="fas fa-check-circle"></i> Cuadrado';
+        showError(error.message || "No se pudo consultar el libro diario.");
+      } finally {
+        btnConsultar.disabled = false;
+        btnPdf.disabled = false;
+      }
+    }
+
+    btnConsultar.addEventListener("click", cargarLibroDiario);
+    btnPdf.addEventListener("click", function () {
+      const params = collectParams();
+      window.open(`${boot.urls.pdf}?${params.toString()}`, "_blank", "noopener");
+    });
+
+    setMode("rango");
+    cargarLibroDiario();
+  })();
+</script>
+{% endblock extra_js %}

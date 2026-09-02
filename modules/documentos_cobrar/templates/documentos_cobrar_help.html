@@ -1,0 +1,20 @@
+<div class="layout-help-content">
+  <h2>Documentos por Cobrar</h2>
+  <p>
+    Esta pantalla registra documentos pendientes de cobro que no nacen directamente desde el módulo de Facturas Electrónicas.
+  </p>
+  <h3>Tratamiento por gestión</h3>
+  <ul>
+    <li><strong>Histórico:</strong> si la gestión origen es anterior a la gestión activa, se permite factura u otro documento anterior; queda como cartera operativa y no genera asiento al registrarse.</li>
+    <li><strong>Vigente:</strong> si la gestión origen coincide con la gestión activa, el registro genera asiento contable automático usando las cuentas seleccionadas.</li>
+  </ul>
+  <h3>Reglas importantes</h3>
+  <ul>
+    <li>Las facturas de la gestión activa deben registrarse en Facturas Electrónicas; por eso la opción Factura se bloquea cuando la gestión origen es la vigente.</li>
+    <li>La fecha del documento debe corresponder a la gestión origen.</li>
+    <li>El vencimiento es opcional; úselo solo cuando se conozca.</li>
+    <li>El listado principal muestra documentos pendientes con saldo; los cobrados se consultan usando el filtro de estado.</li>
+    <li>Solo se pueden editar o anular documentos pendientes sin cobros aplicados.</li>
+    <li>Si un documento tiene cobro parcial o total, queda en solo lectura. Para anularlo, primero debe revertirse el cobro desde el módulo de cobros.</li>
+  </ul>
+</div>

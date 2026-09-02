@@ -1,0 +1,19 @@
+{% extends "layouthelp.html" %}
+{% block title %}Ayuda - Planilla de Sueldos - Planta{% endblock %}
+{% block content %}
+<h4>Planilla de Sueldos - Planta</h4>
+<p>Permite generar la planilla mensual del personal de planta en estado <strong>BORRADOR</strong>, editar datos por trabajador, consolidar la planilla y preparar el devengamiento contable.</p>
+
+<h5>Estados operativos</h5>
+<ul>
+  <li><strong>BORRADOR:</strong> permite edición total y eliminación si no tiene efectos contables, pagos ni aplicaciones definitivas.</li>
+  <li><strong>CONSOLIDADA:</strong> bloquea la edición y genera el asiento de devengamiento por unidad de negocio. Puede revertirse a borrador con justificativo si no tiene pagos.</li>
+  <li><strong>PAGADA:</strong> queda bloqueada. El pago individual o global se implementa desde el flujo de pagos de planilla.</li>
+</ul>
+
+<h5>Devengamiento</h5>
+<p>Al consolidar, el sistema usa las cuentas configuradas en <strong>Parámetros de Planilla</strong>. Si la planilla contiene anticipos o préstamos programados, el recupero se aplica contra la cuenta por cobrar correspondiente.</p>
+
+<h5>Reversión</h5>
+<p>Si se revierte una planilla consolidada sin pagos, el sistema genera asiento reverso, libera las aplicaciones de anticipos/préstamos y retorna la planilla a BORRADOR.</p>
+{% endblock %}

@@ -1,0 +1,3020 @@
+function num2(v){const n=Number(v);return Number.isFinite(n)?n:0;}
+{% extends "layout.html" %} {% block title %}Tesorería · Pagos{% endblock %} {%
+block page_help_url %}{{ url_for('tesoreria_pagos.help') }}{% endblock %} {%
+block extra_css %}
+<style>
+  /* ── Variables del módulo (extiende dxt-base-grid.css) ─── */
+  #pagoEditorPage {
+    --tp-primary: #2563eb;
+    --tp-primary-soft: #eff6ff;
+    --tp-primary-border: #bfdbfe;
+    --tp-radius: 16px;
+    --tp-navbar-h: 56px;
+    /* ← NUEVO: ajustar si tu navbar mide distinto */
+    font-family: var(--dxt-font-sans, "Segoe UI", system-ui, sans-serif);
+  }
+
+  /* ── HEADER BANNER (sticky dentro del contenido) ──────── */
+  .tp-page-header {
+    position: sticky;
+    top: var(--tp-navbar-h, 56px);
+    /* ← CAMBIO: era top: 0 */
+    z-index: 40;
+    background: linear-gradient(120deg, #0f2340 0%, #1a4a7a 60%, #1f5d9e 100%);
+    border-radius: 14px;
+    padding: 1rem 1.4rem;
+    margin-bottom: 1.1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 28px rgba(15, 35, 64, 0.18);
+    overflow: hidden;
+  }
+
+  /* Círculos decorativos */
+  .tp-page-header::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    pointer-events: none;
+  }
+
+  .tp-page-header::after {
+    content: "";
+    position: absolute;
+    bottom: -50px;
+    right: 100px;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.03);
+    pointer-events: none;
+  }
+
+  .tp-page-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    position: relative;
+  }
+
+  .tp-page-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  .tp-page-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    letter-spacing: -0.2px;
+  }
+
+  .tp-page-subtitle {
+    color: rgba(255, 255, 255, 0.62);
+    margin-top: 2px;
+    font-size: 0.8rem;
+  }
+
+  /* Chip de estado en header */
+  .tp-state-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: #fff;
+    position: relative;
+  }
+
+  .tp-state-chip .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #94a3b8;
+  }
+
+  .tp-state-chip[data-state="BORRADOR"] .dot {
+    background: #fbbf24;
+  }
+
+  .tp-state-chip[data-state="CONFIRMADO"] .dot {
+    background: #34d399;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.25);
+  }
+
+  .tp-state-chip[data-state="ANULADO"] .dot {
+    background: #f87171;
+  }
+
+  /* Botones en header */
+  .tp-header-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    position: relative;
+  }
+
+  .tp-header-actions .btn-outline-secondary {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.85);
+    background: transparent;
+  }
+
+  .tp-header-actions .btn-outline-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #fff;
+  }
+
+  .tp-header-actions .btn-outline-primary {
+    border-color: #93c5fd;
+    color: #bfdbfe;
+    background: transparent;
+  }
+
+  .tp-header-actions .btn-outline-primary:hover {
+    background: rgba(147, 197, 253, 0.15);
+    border-color: #bfdbfe;
+    color: #fff;
+  }
+
+  .tp-header-actions .btn-primary {
+    background: #fff;
+    border-color: #fff;
+    color: #1d4ed8;
+    font-weight: 700;
+  }
+
+  .tp-header-actions .btn-primary:hover {
+    background: #eff6ff;
+    border-color: #eff6ff;
+  }
+
+  .tp-header-actions .btn-outline-danger {
+    border-color: #fca5a5;
+    color: #fca5a5;
+    background: transparent;
+  }
+
+  .tp-header-actions .btn-outline-danger:hover {
+    background: rgba(252, 165, 165, 0.15);
+    color: #fff;
+  }
+
+  /* ── BANNER READONLY ──────────────────────────────────── */
+  .tp-readonly-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 0.85rem 1.1rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f0f4ff 0%, #e8efff 100%);
+    border: 1px solid #c7d7fa;
+    border-left: 4px solid #3b82f6;
+    color: #1e40af;
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  .tp-readonly-banner i {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  /* ── LAYOUT PRINCIPAL ─────────────────────────────────── */
+  .tp-page-shell {
+    display: grid;
+    grid-template-columns: 360px minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+  }
+
+  /* ── TARJETAS ─────────────────────────────────────────── */
+  .tp-card,
+  .tp-sidebar-card,
+  .tp-grid-card,
+  .tp-summary-card,
+  .tp-alert-strip {
+    background: #fff;
+    border: 1px solid #dde4ed;
+    border-radius: var(--tp-radius);
+    box-shadow: 0 4px 20px rgba(15, 35, 64, 0.07);
+  }
+
+  /* Sidebar con sticky natural (no fixed) */
+  .tp-sidebar-card {
+    position: sticky;
+    top: 80px;
+    /* altura del header sticky */
+    padding: 1.1rem;
+    align-self: start;
+    border-top: 3px solid #2d7dd2;
+  }
+
+  .tp-grid-card {
+    overflow: hidden;
+    border-top: 3px solid #2d7dd2;
+  }
+
+  .tp-summary-card {
+    padding: 1.1rem;
+    border-top: 3px solid #1a7a4a;
+  }
+
+  /* ── SECCIONES DEL SIDEBAR ────────────────────────────── */
+  .tp-block-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: #8898aa;
+    margin-bottom: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .tp-block-title::before {
+    content: "";
+    display: block;
+    width: 3px;
+    height: 13px;
+    background: #2d7dd2;
+    border-radius: 2px;
+  }
+
+  .tp-group {
+    margin-bottom: 1.1rem;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px dashed #e9eef5;
+  }
+
+  .tp-group:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  /* Labels de formulario */
+  .tp-sidebar-card .form-label,
+  .tp-label-row .form-label {
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #4a6070;
+    margin-bottom: 5px;
+  }
+
+  .tp-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .tp-field-help {
+    font-size: 0.75rem;
+    color: #8898aa;
+    font-weight: 400;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  /* Inputs del formulario */
+  .tp-sidebar-card .form-control,
+  .tp-sidebar-card .form-select {
+    border: 1.5px solid #dde4ed;
+    border-radius: 9px;
+    font-size: 0.875rem;
+    color: #1e2d3d;
+    transition:
+      border-color 0.16s,
+      box-shadow 0.16s;
+  }
+
+  .tp-sidebar-card .form-control:focus,
+  .tp-sidebar-card .form-select:focus {
+    border-color: #2d7dd2;
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.12);
+    outline: none;
+  }
+
+  /* Campos numéricos TC en monospace */
+  #pagoTipoCambio,
+  #pagoTcUsd,
+  #pagoTcUfv {
+    font-family: var(--dxt-font-mono, "Consolas", monospace);
+    font-size: 0.85rem;
+    background: #f5f8fc;
+    color: #1a4070;
+    font-weight: 600;
+  }
+
+  /* ── TOGGLE DE ORIGEN (Directo / Compromiso) ──────────── */
+  .tp-mode-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    margin-bottom: 0;
+  }
+
+  .tp-mode-btn {
+    border: 1.5px solid #dde4ed;
+    border-radius: 12px;
+    padding: 0.8rem 0.85rem;
+    background: #f9fbfe;
+    text-align: left;
+    transition: all 0.18s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tp-mode-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: transparent;
+    transition: background 0.18s;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .tp-mode-btn:hover:not(.disabled) {
+    border-color: #a8c0e8;
+    background: #f0f6ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(45, 125, 210, 0.1);
+  }
+
+  .tp-mode-btn.active {
+    border-color: #2d7dd2;
+    background: linear-gradient(160deg, #fff 0%, #eff6ff 100%);
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+  }
+
+  .tp-mode-btn.active::before {
+    background: #2d7dd2;
+  }
+
+  .tp-mode-btn.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .tp-mode-btn-icon {
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+    display: block;
+    color: #8898aa;
+    transition: color 0.18s;
+  }
+
+  .tp-mode-btn.active .tp-mode-btn-icon {
+    color: #2d7dd2;
+  }
+
+  .tp-mode-btn-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #1e2d3d;
+    margin-bottom: 0.18rem;
+    display: block;
+  }
+
+  .tp-mode-btn-text {
+    color: #8898aa;
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  /* ── BLOQUE TIPO DE CAMBIO ────────────────────────────── */
+  .tp-tc-group .form-control {
+    border-right: 0;
+  }
+
+  .tp-tc-group-btn {
+    border: 1.5px solid #dde4ed;
+    border-left: 0;
+    background: #f8fbff;
+    color: #2563eb;
+    min-width: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tp-tc-group-btn:hover {
+    background: #e8f1fc;
+    color: #1d4ed8;
+  }
+
+  .tp-input-alert {
+    border-color: #fb923c !important;
+    background: #fff7ed !important;
+    color: #7c2d12 !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.15) !important;
+  }
+
+  /* ── MODO DIRECTO ─────────────────────────────────────── */
+  .tp-direct-mode-card {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0.8rem 0.9rem;
+  }
+
+  .tp-direct-mode-help {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 0.3rem;
+  }
+
+  .tp-direct-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #dde4ed;
+    background: #f5f8fc;
+  }
+
+  .tp-direct-toggle-text {
+    font-size: 0.83rem;
+    color: #64748b;
+  }
+
+  .tp-direct-toggle-text strong {
+    color: #1e2d3d;
+    font-weight: 700;
+  }
+
+  .tp-direct-simple {
+    padding: 1rem;
+  }
+
+  .tp-direct-simple-card {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border: 1px solid #bae6fd;
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    font-size: 0.87rem;
+    color: #0c4a6e;
+    line-height: 1.5;
+  }
+
+  .tp-direct-simple-card strong {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: #082f49;
+  }
+
+  .tp-hidden-soft {
+    display: none !important;
+  }
+
+  /* ── GRID HEAD / BODY / FOOT ──────────────────────────── */
+  .tp-grid-head {
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid #dde4ed;
+    background: #f5f8fc;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .tp-grid-title {
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: #8898aa;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .tp-grid-title::before {
+    content: "";
+    display: block;
+    width: 3px;
+    height: 13px;
+    background: #2d7dd2;
+    border-radius: 2px;
+  }
+
+  .tp-grid-subtitle {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-top: 0.1rem;
+  }
+
+  .tp-grid-tools {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .tp-grid-body {
+    overflow: auto;
+    max-height: 44vh;
+  }
+
+  .tp-grid-body.tp-grid-body-large {
+    max-height: 52vh;
+  }
+
+  .tp-grid-table {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+  }
+
+  .tp-grid-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f5f8fc;
+    white-space: nowrap;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 2px solid #dde4ed;
+  }
+
+  .tp-grid-table th,
+  .tp-grid-table td {
+    padding: 0.7rem 0.8rem;
+    border-bottom: 1px solid #eef1f6;
+    vertical-align: middle;
+    font-size: 0.875rem;
+  }
+
+  .tp-grid-table tbody tr:nth-child(even) {
+    background: #f9fbfe;
+  }
+
+  .tp-grid-table tbody tr:hover {
+    background: #e8f1fc !important;
+  }
+
+  .tp-grid-table tbody tr.tp-row-selected {
+    background: rgba(45, 125, 210, 0.08) !important;
+    box-shadow: inset 3px 0 0 #2d7dd2;
+  }
+
+  .tp-grid-table tbody tr.tp-row-muted {
+    opacity: 0.55;
+  }
+
+  .tp-grid-foot {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding: 0.8rem 1rem;
+    background: #fff;
+    border-top: 1px solid #dde4ed;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  /* ── TOTALES ──────────────────────────────────────────── */
+  .tp-total-pack {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .tp-total-chip {
+    display: inline-flex;
+    gap: 0.45rem;
+    align-items: center;
+    padding: 0.45rem 0.8rem;
+    border-radius: 10px;
+    background: #f5f8fc;
+    border: 1px solid #dde4ed;
+    font-weight: 700;
+    font-size: 0.87rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tp-total-chip-main {
+    background: #e8f1fc;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+  }
+
+  /* ── RESUMEN DEL DOCUMENTO ────────────────────────────── */
+  .tp-summary-card .tp-block-title::before {
+    background: #1a7a4a;
+  }
+
+  .tp-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .tp-summary-item {
+    border: 1px solid #dde4ed;
+    border-radius: 12px;
+    background: #f9fbfe;
+    padding: 0.85rem 1rem;
+    transition:
+      transform 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .tp-summary-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(15, 35, 64, 0.08);
+  }
+
+  .tp-summary-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #8898aa;
+    margin-bottom: 0.3rem;
+  }
+
+  .tp-summary-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #1e2d3d;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tp-summary-small {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin-top: 0.18rem;
+  }
+
+  /* ── BADGES DE ESTADO ─────────────────────────────────── */
+  .tp-badge-soft {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 999px;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    background: #f5f8fc;
+    color: #64748b;
+    border: 1px solid #dde4ed;
+  }
+
+  .tp-badge-soft::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.7;
+  }
+
+  .tp-badge-soft.tp-badge-warning {
+    background: #fffbeb;
+    color: #b45309;
+    border-color: #fde68a;
+  }
+
+  .tp-badge-soft.tp-badge-success {
+    background: #ecfdf5;
+    color: #047857;
+    border-color: #bbf7d0;
+  }
+
+  .tp-badge-soft.tp-badge-danger {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+  }
+
+  /* ── UTILIDADES ───────────────────────────────────────── */
+  .tp-money {
+    font-family: var(--dxt-font-mono, "Consolas", monospace);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tp-entity {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .tp-entity small,
+  .tp-muted {
+    color: #64748b;
+    font-size: 0.8rem;
+  }
+
+  .tp-inline-input {
+    min-width: 100%;
+    width: 100%;
+    padding: 0.45rem 0.55rem;
+    border: 1.5px solid #dde4ed;
+    border-radius: 9px;
+    background: #fff;
+    font-size: 0.875rem;
+    font-family: inherit;
+    transition:
+      border-color 0.16s,
+      box-shadow 0.16s;
+  }
+
+  .tp-inline-input:focus {
+    outline: none;
+    border-color: #2d7dd2;
+    box-shadow: 0 0 0 3px rgba(45, 125, 210, 0.1);
+  }
+
+  .tp-input-number {
+    text-align: right;
+    font-family: var(--dxt-font-mono, "Consolas", monospace);
+  }
+
+  .tp-btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid #dde4ed;
+    background: #fff;
+    color: #8898aa;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+
+  .tp-btn-icon:hover:not(:disabled) {
+    background: #e8f1fc;
+    border-color: #bfdbfe;
+    color: #2d7dd2;
+    transform: translateY(-1px);
+  }
+
+  .tp-btn-icon-danger:hover:not(:disabled) {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+  }
+
+  .tp-btn-icon:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .tp-modal-search {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.7rem;
+    width: min(100%, 520px);
+  }
+
+  .tp-hidden {
+    display: none !important;
+  }
+
+  .tp-modal-footer-note {
+    color: #64748b;
+    font-size: 0.82rem;
+  }
+
+  /* ── ALERT STRIP ──────────────────────────────────────── */
+  .tp-alert-strip {
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+  }
+
+  .tp-alert-strip-warning {
+    background: linear-gradient(135deg, #fffdf5, #fffbeb);
+    border-color: #fde68a;
+  }
+
+  .tp-alert-strip-ok {
+    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+  }
+
+  .tp-alert-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .tp-alert-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #d97706;
+    border: 1px solid #fde68a;
+    flex: 0 0 auto;
+  }
+
+  .tp-alert-strip-ok .tp-alert-icon {
+    color: #2d7dd2;
+    border-color: #bfdbfe;
+    background: #e8f1fc;
+  }
+
+  .tp-alert-title {
+    font-weight: 700;
+    color: #1e2d3d;
+    margin-bottom: 0.12rem;
+    font-size: 0.88rem;
+  }
+
+  .tp-alert-text {
+    font-size: 0.82rem;
+    color: #64748b;
+  }
+
+  /* ── SELECT 2 ─────────────────────────────────────────── */
+  .select2-container--default .select2-selection--single {
+    height: 38px;
+    border-radius: 9px;
+    border: 1.5px solid #dde4ed;
+    display: flex;
+    align-items: center;
+    padding-left: 0.15rem;
+  }
+
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+    padding-left: 0.6rem;
+    padding-right: 2rem;
+    font-size: 0.875rem;
+  }
+
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 36px;
+    right: 8px;
+  }
+
+  /* ── RESPONSIVE ───────────────────────────────────────── */
+  @media (max-width: 1180px) {
+    .tp-page-shell {
+      grid-template-columns: 1fr;
+    }
+
+    .tp-sidebar-card {
+      position: static;
+    }
+  }
+
+  @media (max-width: 768px) {
+
+    .tp-mode-toggle,
+    .tp-summary-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .tp-grid-body,
+    .tp-grid-body.tp-grid-body-large {
+      max-height: 38vh;
+    }
+
+    .tp-grid-head,
+    .tp-grid-foot,
+    .tp-page-header {
+      padding-right: 0.9rem;
+      padding-left: 0.9rem;
+    }
+
+    .tp-page-header::before,
+    .tp-page-header::after {
+      display: none;
+    }
+  }
+
+
+  /* ── REINGENIERÍA UX 2026 ─────────────────────────────── */
+  #pagoEditorPage .tp-page-shell {
+    grid-template-columns: 1fr;
+  }
+
+  #pagoEditorPage .tp-sidebar-card {
+    position: static;
+    top: auto;
+    padding: 1rem 1.1rem 0.95rem;
+  }
+
+  #pagoEditorPage .tp-mode-toggle-card {
+    background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+    border: 1px solid #cfe0f6;
+    border-radius: 14px;
+    padding: 0.65rem;
+  }
+
+  #pagoEditorPage .tp-mode-toggle {
+    gap: 0.55rem;
+  }
+
+  #pagoEditorPage .tp-mode-btn {
+    min-height: 92px;
+    background: #ffffff;
+  }
+
+  #pagoEditorPage .tp-mode-btn-title {
+    font-size: 0.92rem;
+  }
+
+  #pagoEditorPage .tp-mode-btn-text {
+    display: block;
+  }
+
+  #pagoEditorPage .tp-sidebar-card .row.g-3 {
+    row-gap: 0.75rem !important;
+  }
+
+  #pagoEditorPage .tp-workspace {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  #pagoEditorPage .tp-grid-card {
+    min-width: 0;
+  }
+
+  #pagoEditorPage .tp-summary-card {
+    position: sticky;
+    top: 80px;
+    align-self: start;
+    padding: 1rem;
+  }
+
+  #pagoEditorPage .tp-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  #pagoEditorPage .tp-summary-item {
+    padding: 0.8rem 0.9rem;
+  }
+
+  #pagoEditorPage .tp-grid-body.tp-grid-body-large {
+    max-height: 50vh;
+  }
+
+  #pagoEditorPage .tp-publicidad-panel {
+    border: 1px solid #cfe0f6;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+    border-radius: 14px;
+    padding: 0.9rem;
+  }
+
+  #pagoEditorPage .tp-publicidad-panel .tp-publicidad-title {
+    font-size: 0.73rem;
+    font-weight: 800;
+    color: #1e3a5f;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  #pagoEditorPage .tp-compact-help {
+    font-size: 0.76rem;
+    color: #64748b;
+    margin-top: 0.28rem;
+  }
+
+  #pagoEditorPage .tp-summary-value.tp-summary-code {
+    font-family: var(--dxt-font-mono, "Consolas", monospace);
+    font-size: 0.98rem;
+  }
+
+  @media (max-width: 1199.98px) {
+    #pagoEditorPage .tp-workspace {
+      grid-template-columns: 1fr;
+    }
+
+    #pagoEditorPage .tp-summary-card {
+      position: static;
+      top: auto;
+    }
+  }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid py-4 dxt-page" id="pagoEditorPage">
+  <div class="tp-page-header">
+    <div class="tp-page-title-wrap">
+      <div class="tp-page-icon">
+        <i class="fas fa-wallet"></i>
+      </div>
+      <div>
+        <h1 class="tp-page-title">
+          {% if mode == 'create' %} Nuevo pago {% else %} Pago #{{ pago_data.id
+          }} {% endif %}
+        </h1>
+        <div class="tp-page-subtitle">
+          Un solo registro para pagos por compromiso o por concepto directo.
+        </div>
+      </div>
+    </div>
+
+    <div class="tp-header-actions">
+      {% if pago_data %}
+      <span class="tp-state-chip" data-state="{{ pago_data.estado }}">
+        <span class="dot"></span>
+        {{ pago_data.estado }}
+      </span>
+      {% endif %}
+      <a href="{{ url_for('tesoreria_pagos.index') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Volver
+      </a>
+      {% if pago_data %}
+      <a
+        href="{{ url_for('tesoreria_pagos.pdf', pago_id=pago_data.id) }}"
+        class="btn btn-outline-primary"
+        target="_blank"
+        rel="noopener"
+      >
+        <i class="fas fa-file-pdf me-1"></i> PDF
+      </a>
+      {% endif %}
+      {% if puede_editar and (not pago_data or pago_data.estado == 'BORRADOR')
+      %}
+      <button type="button" class="btn btn-outline-primary" id="btnGuardarPagoTop">
+        <i class="fas fa-floppy-disk me-1"></i> Guardar borrador
+      </button>
+      <button type="button" class="btn btn-primary" id="btnConfirmarPagoTop">
+        <i class="fas fa-check me-1"></i> Confirmar
+      </button>
+      {% if pago_data %}
+      <button type="button" class="btn btn-outline-danger" id="btnEliminarPagoTop">
+        <i class="fas fa-trash-can me-1"></i> Eliminar
+      </button>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  {% if pago_data and pago_data.estado != 'BORRADOR' %}
+  <div class="tp-readonly-banner">
+    <i class="fas fa-lock"></i>
+    Este pago está en estado <strong>{{ pago_data.estado }}</strong> — solo
+    lectura, no se puede editar.
+  </div>
+  {% endif %}
+
+  <div class="tp-page-shell">
+    <aside class="tp-sidebar-card">
+      <div class="tp-group">
+        <div class="tp-block-title">Modo de operación</div>
+        <div class="tp-mode-toggle-card">
+          <div class="tp-mode-toggle" id="origenToggle">
+            <button type="button" class="tp-mode-btn" data-origin="DIRECTO" id="btnOrigenDirecto">
+              <span class="tp-mode-btn-icon"><i class="fas fa-money-bill-wave"></i></span>
+              <span class="tp-mode-btn-title">Directo</span>
+              <span class="tp-mode-btn-text">Pago libre por concepto o por un solo elemento publicitario.</span>
+            </button>
+            <button type="button" class="tp-mode-btn" data-origin="COMPROMISO" id="btnOrigenCompromiso">
+              <span class="tp-mode-btn-icon"><i class="fas fa-list-check"></i></span>
+              <span class="tp-mode-btn-title">Compromiso</span>
+              <span class="tp-mode-btn-text">Usa cuotas programadas de compromisos ya registrados.</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+          <div class="tp-label-row">
+            <label for="pagoUnidadNegocio" class="form-label mb-0">Unidad de negocio</label>
+            <span class="tp-field-help">Obligatorio</span>
+          </div>
+          <select id="pagoUnidadNegocio" class="form-select">
+            <option value="">Seleccionar unidad...</option>
+            {% for row in catalogs.unidades_negocio %}
+            {% if pago_data and pago_data.unidad_negocio_id == row.id %}
+            <option value="{{ row.id }}" selected>{{ row.codigo }} · {{ row.nombre }}</option>
+            {% else %}
+            <option value="{{ row.id }}">{{ row.codigo }} · {{ row.nombre }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+          <div class="tp-label-row">
+            <label for="pagoFecha" class="form-label mb-0">Fecha de operación</label>
+            <span class="tp-field-help">Obligatorio</span>
+          </div>
+          <input type="date" id="pagoFecha" class="form-control" value="{{ pago_data.fecha if pago_data else '' }}" />
+        </div>
+
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+          <div class="tp-label-row">
+            <label for="pagoMedio" class="form-label mb-0">Salida</label>
+            <span class="tp-field-help">Caja o banco</span>
+          </div>
+          <select id="pagoMedio" class="form-select">
+            <option value="">Seleccionar salida...</option>
+            {% for medio in catalogs.medios %}
+            {% if (pago_data and pago_data.medio_pago == medio) or (not pago_data and medio == 'CAJA') %}
+            <option value="{{ medio }}" selected>{{ medio }}</option>
+            {% else %}
+            <option value="{{ medio }}">{{ medio }}</option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6" id="wrapCajaPago">
+          <label for="pagoCaja" class="form-label">Caja</label>
+          <select id="pagoCaja" class="form-select">
+            <option value="">Seleccionar caja...</option>
+            {% for row in catalogs.cajas %}
+            {% if pago_data and pago_data.caja_id == row.id %}
+            <option value="{{ row.id }}" selected>
+              {{ row.codigo }} · {{ row.nombre }}
+            </option>
+            {% else %}
+            <option value="{{ row.id }}">
+              {{ row.codigo }} · {{ row.nombre }}
+            </option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6" id="wrapBancoPago">
+          <label for="pagoBanco" class="form-label">Cuenta bancaria</label>
+          <select id="pagoBanco" class="form-select">
+            <option value="">Seleccionar cuenta bancaria...</option>
+            {% for row in catalogs.bancos %}
+            {% set banco_label = row.nombre_banco ~ ' · ' ~ row.numero_cuenta %}
+            {% if pago_data and pago_data.cuenta_bancaria_id == row.id %}
+            <option value="{{ row.id }}" selected>
+              {{ banco_label }}
+            </option>
+            {% else %}
+            <option value="{{ row.id }}">
+              {{ banco_label }}
+            </option>
+            {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+          <label for="pagoMoneda" class="form-label">Moneda</label>
+          <select id="pagoMoneda" class="form-select">
+            {% for row in catalogs.monedas %} {% if (pago_data and
+            pago_data.moneda_codigo == row.codigo) or (not pago_data and
+            row.codigo == 'BOB') %}
+            <option value="{{ row.codigo }}" selected>
+              {{ row.codigo }} · {{ row.nombre }}
+            </option>
+            {% else %}
+            <option value="{{ row.codigo }}">
+              {{ row.codigo }} · {{ row.nombre }}
+            </option>
+            {% endif %} {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+          <label for="pagoTipoCambio" class="form-label">T/C aplicado</label>
+          <div class="input-group tp-tc-group">
+            <input type="number" id="pagoTipoCambio" class="form-control" step="0.000001" min="0.000001"
+              value="{{ pago_data.tipo_cambio if pago_data else '1.000000' }}" readonly />
+            <button type="button" class="btn tp-tc-group-btn" id="btnAbrirTipoCambio" title="Actualizar tipo de cambio"
+              aria-label="Actualizar tipo de cambio">
+              <i class="fas fa-arrow-up-right-from-square"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+          <label for="pagoTcUsd" class="form-label">USD</label>
+          <input type="number" id="pagoTcUsd" class="form-control" step="0.000001"
+            value="{{ '%.6f'|format(tipo_cambio_data.usd_paralelo or 1) }}" readonly />
+        </div>
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+          <label for="pagoTcUfv" class="form-label">UFV</label>
+          <input type="number" id="pagoTcUfv" class="form-control" step="0.000001"
+            value="{{ '%.6f'|format(tipo_cambio_data.ufv or 1) }}" readonly />
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6">
+          <label for="pagoProveedor" class="form-label">Proveedor/Cliente</label>
+          <select id="pagoProveedor" class="form-select" data-placeholder="Buscar proveedor o cliente...">
+            <option value=""></option>
+            {% if pago_data and pago_data.proveedor_auxiliar_id %}
+            <option value="{{ pago_data.proveedor_auxiliar_id }}" selected>
+              {{ pago_data.proveedor_nombre }}
+            </option>
+            {% endif %}
+          </select>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6">
+          <label for="pagoContraCuenta" class="form-label">Contra cuenta</label>
+          <select id="pagoContraCuenta" class="form-select" data-placeholder="Buscar por código o nombre...">
+            <option value=""></option>
+            {% if pago_data and pago_data.contra_cuenta_codigo %}
+            <option value="{{ pago_data.contra_cuenta_codigo }}" selected>
+              {{ pago_data.contra_cuenta_codigo }}{% if
+              pago_data.contra_cuenta_nombre %} · {{
+              pago_data.contra_cuenta_nombre }}{% endif %}
+            </option>
+            {% endif %}
+          </select>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6">
+          <label for="pagoRubro" class="form-label">Rubro</label>
+          <select id="pagoRubro" class="form-select">
+            <option value="">Sin rubro</option>
+            {% for row in catalogs.rubros %}
+            <option value="{{ row.id }}" {% if pago_data and pago_data.rubro_id==row.id %}selected{% endif %}>{{
+              row.codigo }} · {{ row.nombre }}</option>
+            {% endfor %}
+          </select>
+
+        </div>
+
+        <div class="col-12 tp-hidden" id="panelPublicidadPago">
+          <div class="tp-publicidad-panel">
+            <div class="tp-publicidad-title"><i class="fas fa-bullhorn"></i> Referencia publicitaria</div>
+            <div class="row g-3 align-items-end">
+              <input type="hidden" id="pagoElementoId"
+                value="{{ pago_data.publicidad_elemento_id_ref if pago_data else '' }}" />
+
+              <div class="col-xl-5 col-lg-6 col-md-12">
+                <label for="pagoElementoSelector" class="form-label">Referencia publicitaria</label>
+                <select id="pagoElementoSelector" class="form-select">
+                  <option value=""></option>
+                  {% for row in catalogs.publicidad_elementos %}
+                  <option value="{{ row.ref_key }}" data-unidad-id="{{ row.unidad_negocio_id }}"
+                    data-codigo-gamlp="{{ row.codigo_gamlp }}"
+                    data-estructura-codigo-gamlp="{{ row.estructura_codigo_gamlp or '' }}"
+                    data-estructura-nombre="{{ row.estructura_nombre }}" data-etiqueta="{{ row.etiqueta }}" {% if
+                    pago_data and pago_data.publicidad_elemento_id_ref==row.id %}selected{% endif %}>
+                    {{ row.etiqueta }}
+                  </option>
+                  {% endfor %}
+                </select>
+
+              </div>
+
+              <div class="col-xl-3 col-lg-6 col-md-6">
+                <label for="pagoElementoCodigo" class="form-label">Código del elemento publicitario</label>
+                <input type="text" id="pagoElementoCodigo" class="form-control" maxlength="30"
+                  value="{{ pago_data.publicidad_elemento_codigo_ref if pago_data else '' }}" readonly />
+              </div>
+
+              <div class="col-xl-2 col-lg-6 col-md-6">
+                <label for="pagoVigenciaDesde" class="form-label">Vigencia desde</label>
+                <input type="date" id="pagoVigenciaDesde" class="form-control"
+                  value="{{ pago_data.vigencia_desde if pago_data and pago_data.vigencia_desde else '' }}" />
+              </div>
+
+              <div class="col-xl-2 col-lg-6 col-md-6">
+                <label for="pagoVigenciaHasta" class="form-label">Vigencia hasta</label>
+                <input type="date" id="pagoVigenciaHasta" class="form-control"
+                  value="{{ pago_data.vigencia_hasta if pago_data and pago_data.vigencia_hasta else '' }}" />
+              </div>
+
+              <div class="col-12">
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-3 col-lg-4 col-md-6">
+          <label for="pagoReferencia" class="form-label">Referencia</label>
+          <input type="text" id="pagoReferencia" class="form-control" maxlength="150"
+            value="{{ pago_data.referencia if pago_data else '' }}"
+            placeholder="Nro. de documento, comprobante o nota interna" />
+        </div>
+
+        <div class="col-xl-6 col-lg-8 col-md-12">
+          <label for="pagoGlosa" class="form-label">Glosa</label>
+          <textarea id="pagoGlosa" class="form-control" rows="4" maxlength="500" placeholder="Detalle breve del pago">
+{{ pago_data.glosa if pago_data else '' }}</textarea>
+        </div>
+
+
+
+        <div class="col-xl-3 col-lg-4 col-md-6" id="wrapMontoManualPago">
+          <div class="tp-label-row">
+            <label for="pagoMontoManual" class="form-label mb-0">Total del pago</label>
+
+          </div>
+          <input type="number" id="pagoMontoManual" class="form-control" min="0" step="0.01"
+            value="{{ '%.2f'|format(pago_data.monto_total or 0) if pago_data else '0.00' }}" />
+        </div>
+      </div>
+    </aside>
+
+    <section class="tp-workspace">
+      <div class="tp-grid-card">
+        <div class="tp-grid-head">
+          <div>
+            <div class="tp-grid-title" id="panelTituloPago">
+              Detalle del pago
+            </div>
+            <div class="tp-grid-subtitle" id="panelSubtituloPago"></div>
+          </div>
+          <div class="tp-grid-tools">
+            <button type="button" class="btn btn-outline-primary tp-hidden" id="btnAbrirModalCompromisos">
+              <i class="fas fa-list-check me-1"></i> Seleccionar cuotas
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="btnAgregarFilaDirecta">
+              <i class="fas fa-plus me-1"></i> Agregar ítem
+            </button>
+          </div>
+        </div>
+
+        <div id="panelModoDirecto">
+
+          <div id="panelDirectoDetalleWrap">
+            <div class="tp-grid-body tp-grid-body-large">
+              <table class="tp-grid-table" id="tablaDirectoPago">
+                <thead>
+                  <tr>
+                    <th style="width: 60px">#</th>
+                    <th style="min-width: 260px">Descripción</th>
+                    <th style="width: 140px">Cantidad</th>
+                    <th style="width: 160px">P. unitario</th>
+                    <th style="width: 160px">Subtotal</th>
+                    <th style="min-width: 220px">Observación</th>
+                    <th style="width: 70px" class="text-center">Quitar</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyDirectoPago"></tbody>
+              </table>
+            </div>
+            <div class="tp-grid-foot">
+              <div class="tp-modal-footer-note"></div>
+              <div class="tp-total-pack">
+                <span class="tp-total-chip">
+                  <span>Ítems</span>
+                  <strong id="totalDirectRows">0</strong>
+                </span>
+                <span class="tp-total-chip tp-total-chip-main">
+                  <span>Total directo</span>
+                  <strong class="tp-money" id="totalDirectMonto">0.00</strong>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="panelModoCompromiso" class="tp-hidden">
+          <div class="tp-grid-body">
+            <table class="tp-grid-table" id="tablaCompromisosSeleccionados">
+              <thead>
+                <tr>
+                  <th style="min-width: 160px">Compromiso</th>
+                  <th style="min-width: 180px">Proveedor</th>
+                  <th style="min-width: 170px">Unidad</th>
+                  <th style="width: 150px">Vencimiento</th>
+                  <th style="width: 140px">Cuenta</th>
+                  <th style="width: 150px">Monto</th>
+                  <th style="width: 70px" class="text-center">Quitar</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyCompromisosSeleccionados"></tbody>
+            </table>
+          </div>
+          <div class="tp-grid-foot">
+            <div class="tp-modal-footer-note"></div>
+            <div class="tp-total-pack">
+              <span class="tp-total-chip">
+                <span>Cuotas</span>
+                <strong id="totalCompromisoRows">0</strong>
+              </span>
+              <span class="tp-total-chip tp-total-chip-main">
+                <span>Total compromiso</span>
+                <strong class="tp-money" id="totalCompromisoMonto">0.00</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tp-summary-card">
+        <div class="tp-block-title mb-3">Resumen del documento</div>
+        <div class="tp-summary-grid">
+          <div class="tp-summary-item">
+            <div class="tp-summary-label">Origen</div>
+            <div class="tp-summary-value" id="resumenOrigenPago">Directo</div>
+            <div class="tp-summary-small" id="resumenOrigenTextoPago">
+              Pago libre con detalle de ítems
+            </div>
+          </div>
+          <div class="tp-summary-item">
+            <div class="tp-summary-label">Cantidad de líneas</div>
+            <div class="tp-summary-value" id="resumenLineasPago">0</div>
+            <div class="tp-summary-small">Líneas vigentes en el documento</div>
+          </div>
+          <div class="tp-summary-item">
+            <div class="tp-summary-label">Total del pago</div>
+            <div class="tp-summary-value tp-money" id="resumenTotalPago">
+              0.00
+            </div>
+            <div class="tp-summary-small" id="resumenMonedaPago">BOB</div>
+          </div>
+          <div class="tp-summary-item">
+            <div class="tp-summary-label">Unidad de negocio</div>
+            <div class="tp-summary-value" id="resumenUnidadNegocioPago">—</div>
+            <div class="tp-summary-small" id="resumenUnidadNegocioTextoPago">Selecciona la unidad operativa del pago
+            </div>
+          </div>
+          <div class="tp-summary-item">
+            <div class="tp-summary-label">Rubro</div>
+            <div class="tp-summary-value tp-summary-code" id="resumenRubroPago">—</div>
+            <div class="tp-summary-small" id="resumenRubroTextoPago">Sin rubro operativo</div>
+          </div>
+          <div class="tp-summary-item">
+            <div class="tp-summary-label">Elemento publicitario</div>
+            <div class="tp-summary-value tp-summary-code" id="resumenElementoPago">—</div>
+            <div class="tp-summary-small" id="resumenVigenciaPago">Sin vigencia registrada</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="modal fade" id="modalCompromisosPago" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content" style="border-radius: 18px; border: 1px solid var(--dxt-border, #e5e7eb)">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title mb-1">Seleccionar cuotas de compromiso</h5>
+          <div class="tp-muted">
+            Busca por código, nombre, proveedor o cuenta. Las filas
+            seleccionadas se resaltan claramente.
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body pt-3">
+        <div class="tp-modal-search mb-3">
+          <input type="text" id="buscarCompromisosPago" class="form-control" maxlength="120"
+            placeholder="Buscar por código, nombre, proveedor o cuenta" />
+          <button type="button" class="btn btn-outline-secondary" id="btnRecargarCompromisos">
+            <i class="fas fa-rotate me-1"></i> Actualizar
+          </button>
+        </div>
+
+        <div class="tp-grid-card">
+          <div class="tp-grid-body tp-grid-body-large">
+            <table class="tp-grid-table" id="tablaPendientesPago">
+              <thead>
+                <tr>
+                  <th style="width: 64px" class="text-center">Sel.</th>
+                  <th style="min-width: 150px">Compromiso</th>
+                  <th style="min-width: 180px">Proveedor</th>
+                  <th style="min-width: 170px">Unidad</th>
+                  <th style="width: 145px">Vencimiento</th>
+                  <th style="width: 140px">Cuenta</th>
+                  <th style="width: 145px">Monto</th>
+                  <th style="width: 130px">Estado</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyPendientesPago">
+                <tr>
+                  <td colspan="8" class="text-center py-4 tp-muted">
+                    Cargando cuotas pendientes...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="tp-grid-foot">
+            <div class="tp-modal-footer-note">
+              Puedes seleccionar varias cuotas siempre que sean compatibles
+              entre sí.
+            </div>
+            <div class="tp-total-pack">
+              <span class="tp-total-chip">
+                <span>Seleccionadas</span>
+                <strong id="modalTotalSeleccionadasPago">0</strong>
+              </span>
+              <span class="tp-total-chip tp-total-chip-main">
+                <span>Total</span>
+                <strong class="tp-money" id="modalTotalMontoPago">0.00</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span class="tp-modal-footer-note me-auto">Las cuotas ya confirmadas o reservadas por otro usuario no se
+          muestran.</span>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% set pagos_bootstrap = { 'mode': mode, 'pagoId': (pago_data.id if pago_data
+else None), 'puedeEditar': puede_editar, 'pago': pago_data, 'lineas':
+lineas_data, 'tipoCambio': tipo_cambio_data, 'tipoCambioUrlBase':
+catalogs.tipo_cambio_url_base, 'urls': { 'publicidadElementos':
+url_for('tesoreria_pagos.api_publicidad_elementos') }, 'currentElemento': ({
+'id': pago_data.publicidad_ref_key, 'text': (pago_data.publicidad_elemento_etiqueta
+or pago_data.publicidad_elemento_codigo_ref), 'codigo_gamlp':
+pago_data.publicidad_elemento_codigo_ref, 'unidad_negocio_id': pago_data.unidad_negocio_id } if pago_data and
+(pago_data.publicidad_ref_key or pago_data.publicidad_elemento_codigo_ref) else None) } %}
+
+<script id="tesoreriaPagosBootstrap" type="application/json">
+  {{ pagos_bootstrap | tojson }}
+</script>
+{% endblock %} {% block extra_js %}
+<script>
+  (function () {
+    "use strict";
+
+    const bootEl = document.getElementById("tesoreriaPagosBootstrap");
+    const page = document.getElementById("pagoEditorPage");
+    if (!bootEl || !page) return;
+
+    const boot = JSON.parse(bootEl.textContent || "{}");
+    const pagoId = boot.pagoId || null;
+    const puedeEditar = Boolean(boot.puedeEditar);
+    const pagoData = boot.pago || null;
+    const initialLines = Array.isArray(boot.lineas) ? boot.lineas : [];
+    const tcBaseUrl = boot.tipoCambioUrlBase || "/tipo-cambio/gestion";
+    const pagosBaseUrl = `{{ url_for('tesoreria_pagos.index') }}`.replace(
+      /\/$/,
+      "",
+    );
+
+    const state = {
+      origen: (pagoData && pagoData.origen_operacion) || "DIRECTO",
+      directRows: [],
+      useDirectDetail: false,
+      selectedCommitments: new Map(),
+      pendingCommitments: [],
+      tc: {
+        existe: Boolean(boot.tipoCambio && boot.tipoCambio.existe),
+        usd: Number((boot.tipoCambio && boot.tipoCambio.usd_paralelo) || 1),
+        ufv: Number((boot.tipoCambio && boot.tipoCambio.ufv) || 1),
+      },
+    };
+
+    const refs = {
+      unidadNegocio: document.getElementById("pagoUnidadNegocio"),
+      fecha: document.getElementById("pagoFecha"),
+      medio: document.getElementById("pagoMedio"),
+      caja: document.getElementById("pagoCaja"),
+      banco: document.getElementById("pagoBanco"),
+      moneda: document.getElementById("pagoMoneda"),
+      tcAplicado: document.getElementById("pagoTipoCambio"),
+      tcUsd: document.getElementById("pagoTcUsd"),
+      tcUfv: document.getElementById("pagoTcUfv"),
+      btnAbrirTipoCambio: document.getElementById("btnAbrirTipoCambio"),
+      proveedor: document.getElementById("pagoProveedor"),
+      contraCuenta: document.getElementById("pagoContraCuenta"),
+      rubro: document.getElementById("pagoRubro"),
+      panelPublicidad: document.getElementById("panelPublicidadPago"),
+      elementoId: document.getElementById("pagoElementoId"),
+      elementoSelector: document.getElementById("pagoElementoSelector"),
+      elementoCodigo: document.getElementById("pagoElementoCodigo"),
+      vigenciaDesde: document.getElementById("pagoVigenciaDesde"),
+      vigenciaHasta: document.getElementById("pagoVigenciaHasta"),
+      referencia: document.getElementById("pagoReferencia"),
+      glosa: document.getElementById("pagoGlosa"),
+      wrapDirectModeCard: document.getElementById("wrapDirectModeCard"),
+      wrapMontoManual: document.getElementById("wrapMontoManualPago"),
+      montoManual: document.getElementById("pagoMontoManual"),
+      btnOrigenDirecto: document.getElementById("btnOrigenDirecto"),
+      btnOrigenCompromiso: document.getElementById("btnOrigenCompromiso"),
+      wrapCaja: document.getElementById("wrapCajaPago"),
+      wrapBanco: document.getElementById("wrapBancoPago"),
+      panelTitulo: document.getElementById("panelTituloPago"),
+      panelSubtitulo: document.getElementById("panelSubtituloPago"),
+      panelDirecto: document.getElementById("panelModoDirecto"),
+      panelDirectoSimple: document.getElementById("panelDirectoSimple"),
+      panelDirectoDetalleWrap: document.getElementById(
+        "panelDirectoDetalleWrap",
+      ),
+      panelCompromiso: document.getElementById("panelModoCompromiso"),
+      btnAgregarFilaDirecta: document.getElementById("btnAgregarFilaDirecta"),
+      btnAbrirModalCompromisos: document.getElementById(
+        "btnAbrirModalCompromisos",
+      ),
+      tbodyDirecto: document.getElementById("tbodyDirectoPago"),
+      tbodyCompromisos: document.getElementById(
+        "tbodyCompromisosSeleccionados",
+      ),
+      totalDirectRows: document.getElementById("totalDirectRows"),
+      totalDirectMonto: document.getElementById("totalDirectMonto"),
+      totalCompromisoRows: document.getElementById("totalCompromisoRows"),
+      totalCompromisoMonto: document.getElementById("totalCompromisoMonto"),
+      resumenOrigen: document.getElementById("resumenOrigenPago"),
+      resumenOrigenTexto: document.getElementById("resumenOrigenTextoPago"),
+      resumenLineas: document.getElementById("resumenLineasPago"),
+      resumenTotal: document.getElementById("resumenTotalPago"),
+      resumenMoneda: document.getElementById("resumenMonedaPago"),
+      resumenUnidadNegocio: document.getElementById("resumenUnidadNegocioPago"),
+      resumenUnidadNegocioTexto: document.getElementById("resumenUnidadNegocioTextoPago"),
+      resumenRubro: document.getElementById("resumenRubroPago"),
+      resumenRubroTexto: document.getElementById("resumenRubroTextoPago"),
+      resumenElemento: document.getElementById("resumenElementoPago"),
+      resumenVigencia: document.getElementById("resumenVigenciaPago"),
+      btnGuardarTop: document.getElementById("btnGuardarPagoTop"),
+      btnConfirmarTop: document.getElementById("btnConfirmarPagoTop"),
+      btnEliminarTop: document.getElementById("btnEliminarPagoTop"),
+      modalBuscar: document.getElementById("buscarCompromisosPago"),
+      btnRecargarCompromisos: document.getElementById("btnRecargarCompromisos"),
+      tbodyPendientes: document.getElementById("tbodyPendientesPago"),
+      modalTotalSeleccionadas: document.getElementById(
+        "modalTotalSeleccionadasPago",
+      ),
+      modalTotalMonto: document.getElementById("modalTotalMontoPago"),
+    };
+
+    const modalElement = document.getElementById("modalCompromisosPago");
+    const modalCompromisos = modalElement
+      ? new bootstrap.Modal(modalElement)
+      : null;
+    const $proveedor = window.jQuery ? window.jQuery(refs.proveedor) : null;
+    const $contraCuenta = window.jQuery
+      ? window.jQuery(refs.contraCuenta)
+      : null;
+    const $elementoPublicidad = window.jQuery
+      ? window.jQuery(refs.elementoSelector)
+      : null;
+    let loadPendingTimer = null;
+    let syncingUnidadFromElemento = false;
+
+    function money(value) {
+      return Number(value || 0).toLocaleString("es-BO", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    function num4(value) {
+      return Number(value || 0).toLocaleString("es-BO", {
+        minimumFractionDigits: 4,
+        maximumFractionDigits: 4,
+      });
+    }
+
+    function num6(value) {
+      return Number(value || 0).toFixed(6);
+    }
+
+    function todayISO() {
+      if (
+        window.DXTBase &&
+        typeof window.DXTBase.todayLocalISO === "function"
+      ) {
+        return window.DXTBase.todayLocalISO();
+      }
+      const now = new Date();
+      const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+      return local.toISOString().slice(0, 10);
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function dateShort(value) {
+      return window.DXTBase &&
+        typeof window.DXTBase.formatDateShortEs === "function"
+        ? window.DXTBase.formatDateShortEs(value)
+        : value || "—";
+    }
+
+    function isReadonly() {
+      return !puedeEditar || (pagoData && pagoData.estado !== "BORRADOR");
+    }
+
+    function selectedSelect2Data($element) {
+      if (!$element || !$element.length) return null;
+      const option = $element.find("option:selected");
+      if (!option.length || !option.val()) return null;
+      return { id: option.val(), text: option.text() };
+    }
+
+    function setSelect2Option($element, value, text) {
+      if (!$element || !$element.length) return;
+      if (!value) {
+        $element.val(null).trigger("change.select2");
+        return;
+      }
+      const option = new Option(text || value, value, true, true);
+      $element.find("option").remove();
+      $element.append(option).trigger("change.select2");
+    }
+
+    function currentUnidadNegocioId() {
+      return refs.unidadNegocio && refs.unidadNegocio.value
+        ? String(refs.unidadNegocio.value)
+        : "";
+    }
+
+    function currentUnidadNegocioLabel() {
+      if (!refs.unidadNegocio) return "—";
+      const option = refs.unidadNegocio.options[refs.unidadNegocio.selectedIndex];
+      return option && option.value ? option.textContent.trim() : "—";
+    }
+
+    function currentRubroLabel() {
+      if (!refs.rubro) return "—";
+      const option = refs.rubro.options[refs.rubro.selectedIndex];
+      return option && option.value ? option.textContent.trim() : "—";
+    }
+
+
+    function clearElementoPublicidad() {
+      if (refs.elementoId) refs.elementoId.value = "";
+      if (refs.elementoCodigo) refs.elementoCodigo.value = "";
+      if ($elementoPublicidad && $elementoPublicidad.length) {
+        $elementoPublicidad.val(null).trigger("change.select2");
+      }
+    }
+
+    function syncElementoPublicidadSeleccionado() {
+      if (!refs.elementoSelector) return;
+      const option = refs.elementoSelector.options[refs.elementoSelector.selectedIndex];
+      const row = option && option.value
+        ? {
+          id: option.value,
+          codigo_gamlp: option.dataset.codigoGamlp || "",
+          unidad_negocio_id: option.dataset.unidadId || "",
+        }
+        : null;
+
+      if (!row || !row.id) {
+        if (refs.elementoId) refs.elementoId.value = "";
+        if (refs.elementoCodigo) refs.elementoCodigo.value = "";
+        syncSummary();
+        return;
+      }
+
+      if (refs.elementoId) refs.elementoId.value = row.id || "";
+      if (refs.elementoCodigo) refs.elementoCodigo.value = row.codigo_gamlp || "";
+
+      if (
+        refs.unidadNegocio &&
+        row.unidad_negocio_id &&
+        String(refs.unidadNegocio.value || "") !== String(row.unidad_negocio_id)
+      ) {
+        syncingUnidadFromElemento = true;
+        refs.unidadNegocio.value = String(row.unidad_negocio_id);
+        refs.unidadNegocio.dispatchEvent(new Event("change"));
+        syncingUnidadFromElemento = false;
+      }
+
+      syncSummary();
+    }
+
+    function syncRubroUI() {
+      const hasRubro = Boolean(refs.rubro && refs.rubro.value);
+      if (refs.panelPublicidad) {
+        refs.panelPublicidad.classList.toggle("tp-hidden", !hasRubro);
+      }
+      if (!hasRubro) {
+        clearElementoPublicidad();
+        if (refs.vigenciaDesde) refs.vigenciaDesde.value = "";
+        if (refs.vigenciaHasta) refs.vigenciaHasta.value = "";
+      }
+    }
+
+    function filterOptionsByUnidad(selectEl) {
+      if (!selectEl) return;
+      const unidadId = currentUnidadNegocioId();
+      const options = Array.from(selectEl.options || []);
+      options.forEach((option, index) => {
+        if (index === 0) {
+          option.hidden = false;
+          option.disabled = false;
+          return;
+        }
+        const optionUnidad = String(option.dataset.unidadId || "");
+        const match = !unidadId || !optionUnidad || optionUnidad === unidadId;
+        option.hidden = !match;
+        option.disabled = !match;
+      });
+      const selected = selectEl.options[selectEl.selectedIndex];
+      if (selected && selected.value && selected.disabled) {
+        selectEl.value = "";
+      }
+    }
+
+    function applyUnidadFilters(options = {}) {
+      const reloadPendientes = Boolean(options.reloadPendientes);
+
+      filterOptionsByUnidad(refs.elementoSelector);
+      syncElementoPublicidadSeleccionado();
+
+      if (state.selectedCommitments.size) {
+        const unidadId = currentUnidadNegocioId();
+        const filtradas = Array.from(state.selectedCommitments.entries()).filter(
+          ([, row]) => !unidadId || String(row.unidad_negocio_id || "") === unidadId,
+        );
+        if (filtradas.length !== state.selectedCommitments.size) {
+          state.selectedCommitments = new Map(filtradas);
+          renderSelectedCommitments();
+        }
+      }
+
+      if (reloadPendientes && state.origen === "COMPROMISO") {
+        loadPendingCommitments(false);
+      }
+      syncSummary();
+    }
+
+    function setReadonlyFieldsByOrigin() {
+      const lockHeaderByCommitment = state.origen === "COMPROMISO";
+      if ($proveedor) {
+        $proveedor
+          .prop("disabled", isReadonly() || lockHeaderByCommitment)
+          .trigger("change.select2");
+      }
+      if ($contraCuenta) {
+        $contraCuenta
+          .prop("disabled", isReadonly() || lockHeaderByCommitment)
+          .trigger("change.select2");
+      }
+      if (refs.montoManual)
+        refs.montoManual.disabled =
+          isReadonly() || state.origen !== "DIRECTO" || directRowsForPayload().length > 0;
+      if (refs.rubro) refs.rubro.disabled = isReadonly();
+      if ($elementoPublicidad && $elementoPublicidad.length) {
+        $elementoPublicidad.prop("disabled", isReadonly()).trigger("change.select2");
+      }
+      if (refs.elementoCodigo) refs.elementoCodigo.disabled = true;
+      if (refs.vigenciaDesde) refs.vigenciaDesde.disabled = isReadonly();
+      if (refs.vigenciaHasta) refs.vigenciaHasta.disabled = isReadonly();
+    }
+
+    function syncMedioUI() {
+      const medio = (refs.medio.value || "").toUpperCase();
+      refs.wrapCaja.classList.toggle("tp-hidden", medio !== "CAJA");
+      refs.wrapBanco.classList.toggle("tp-hidden", medio !== "BANCO");
+      if (medio === "CAJA") refs.banco.value = "";
+      if (medio === "BANCO") refs.caja.value = "";
+    }
+
+    function syncTcApplied() {
+      const moneda = (refs.moneda.value || "BOB").toUpperCase();
+      let tc = 1;
+      if (moneda === "USD") tc = Number(state.tc.usd || 1);
+      else if (moneda === "UFV") tc = Number(state.tc.ufv || 1);
+      refs.tcAplicado.value = num6(tc);
+      refs.resumenMoneda.textContent = moneda;
+    }
+
+    function updateTcVisual(showAlert) {
+      refs.tcUsd.value = num6(state.tc.usd);
+      refs.tcUfv.value = num6(state.tc.ufv);
+      syncTcApplied();
+
+      [refs.tcAplicado, refs.tcUsd, refs.tcUfv].forEach((input) => {
+        input && input.classList.toggle("tp-input-alert", !state.tc.existe);
+      });
+
+      if (!state.tc.existe && showAlert) {
+        Swal.fire({
+          icon: "warning",
+          title: "Tipo de cambio pendiente",
+          text: "No existe tipo de cambio para la fecha seleccionada. Se aplicó valor 1 mientras lo completas.",
+        });
+      }
+    }
+
+    async function refreshTipoCambio(showAlert) {
+      const fecha = refs.fecha.value;
+      if (!fecha) return;
+      try {
+        const response = await fetch(
+          `{{ url_for('tesoreria_pagos.api_tipo_cambio_fecha', fecha='__FECHA__') }}`.replace(
+            "__FECHA__",
+            fecha,
+          ) + `?moneda=${encodeURIComponent(refs.moneda.value || "BOB")}`,
+          {
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+          },
+        );
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message || "No se pudo consultar el tipo de cambio.",
+          );
+        }
+        state.tc = {
+          existe: Boolean(data.existe),
+          usd: Number(data.usd_paralelo || 1),
+          ufv: Number(data.ufv || 1),
+        };
+        updateTcVisual(showAlert);
+      } catch (error) {
+        state.tc = { existe: false, usd: 1, ufv: 1 };
+        updateTcVisual(false);
+        if (showAlert) {
+          Swal.fire({
+            icon: "error",
+            title: "No se pudo consultar el tipo de cambio",
+            text:
+              error.message ||
+              "Ocurrió un problema al consultar el tipo de cambio.",
+          });
+        }
+      }
+    }
+
+    function commitmentRowTotal(row) {
+      return Number(row.monto_programado || row.subtotal || 0);
+    }
+
+    function directRowsForPayload() {
+      return state.directRows
+        .map((row) => ({
+          descripcion: String(row.descripcion || "").trim(),
+          cantidad: Number(row.cantidad || 0),
+          precio_unitario: Number(row.precio_unitario || 0),
+          observacion: String(row.observacion || "").trim(),
+        }))
+        .filter(
+          (row) =>
+            row.descripcion ||
+            row.cantidad ||
+            row.precio_unitario ||
+            row.observacion,
+        );
+    }
+
+    function directTotal() {
+      return directRowsForPayload().reduce(
+        (sum, row) =>
+          sum + Number(row.cantidad || 0) * Number(row.precio_unitario || 0),
+        0,
+      );
+    }
+
+    function manualDirectTotal() {
+      return Number(
+        refs.montoManual && refs.montoManual.value ? refs.montoManual.value : 0,
+      );
+    }
+
+    function commitmentTotal() {
+      return Array.from(state.selectedCommitments.values()).reduce(
+        (sum, row) => sum + commitmentRowTotal(row),
+        0,
+      );
+    }
+
+    function currentLineCount() {
+      return state.origen === "DIRECTO"
+        ? directRowsForPayload().length
+        : state.selectedCommitments.size;
+    }
+
+    function currentTotal() {
+      if (state.origen === "DIRECTO") {
+        const rows = directRowsForPayload();
+        return rows.length ? directTotal() : manualDirectTotal();
+      }
+      return commitmentTotal();
+    }
+
+    function syncSummary() {
+      const total = currentTotal();
+      const lineCount = currentLineCount();
+      refs.totalDirectRows.textContent = String(directRowsForPayload().length);
+      refs.totalDirectMonto.textContent = money(directTotal());
+      refs.totalCompromisoRows.textContent = String(
+        state.selectedCommitments.size,
+      );
+      refs.totalCompromisoMonto.textContent = money(commitmentTotal());
+      refs.modalTotalSeleccionadas.textContent = String(
+        state.selectedCommitments.size,
+      );
+      refs.modalTotalMonto.textContent = money(commitmentTotal());
+
+      refs.resumenOrigen.textContent =
+        state.origen === "COMPROMISO" ? "Compromiso" : "Directo";
+      refs.resumenOrigenTexto.textContent =
+        state.origen === "COMPROMISO"
+          ? "Cuotas seleccionadas desde programación"
+          : directRowsForPayload().length
+            ? "Pago directo con detalle por ítems"
+            : "Pago directo simple";
+      refs.resumenLineas.textContent = String(lineCount);
+      refs.resumenTotal.textContent = money(total);
+      if (state.origen === "DIRECTO" && refs.montoManual) {
+        const totalDirecto = directTotal();
+        if (directRowsForPayload().length) {
+          refs.montoManual.value = totalDirecto.toFixed(2);
+        }
+      }
+      if (refs.resumenUnidadNegocio) {
+        refs.resumenUnidadNegocio.textContent = currentUnidadNegocioId()
+          ? currentUnidadNegocioLabel().split("·")[0].trim()
+          : "—";
+      }
+      if (refs.resumenUnidadNegocioTexto) {
+        refs.resumenUnidadNegocioTexto.textContent = currentUnidadNegocioId()
+          ? currentUnidadNegocioLabel()
+          : "Selecciona la unidad operativa del pago";
+      }
+      if (refs.resumenRubro) {
+        refs.resumenRubro.textContent = refs.rubro && refs.rubro.value
+          ? currentRubroLabel().split("·")[0].trim()
+          : "—";
+      }
+      if (refs.resumenRubroTexto) {
+        refs.resumenRubroTexto.textContent = refs.rubro && refs.rubro.value
+          ? currentRubroLabel()
+          : "Sin rubro operativo";
+      }
+      if (refs.resumenElemento) {
+        const selected = $elementoPublicidad && $elementoPublicidad.length ? $elementoPublicidad.select2("data") : [];
+        const row = selected && selected.length ? selected[0] : null;
+        refs.resumenElemento.textContent = row && row.text
+          ? row.text
+          : ((refs.elementoCodigo && refs.elementoCodigo.value.trim()) || "—");
+      }
+      if (refs.resumenVigencia) {
+        const desde = refs.vigenciaDesde && refs.vigenciaDesde.value ? dateShort(refs.vigenciaDesde.value) : "";
+        const hasta = refs.vigenciaHasta && refs.vigenciaHasta.value ? dateShort(refs.vigenciaHasta.value) : "";
+        refs.resumenVigencia.textContent = desde && hasta ? `${desde} → ${hasta}` : "Sin vigencia registrada";
+      }
+
+      if (state.origen === "COMPROMISO" && state.selectedCommitments.size) {
+        const first = Array.from(state.selectedCommitments.values())[0];
+        setSelect2Option(
+          $proveedor,
+          first.auxiliar_id,
+          first.auxiliar_nombre || `Auxiliar #${first.auxiliar_id}`,
+        );
+        setSelect2Option(
+          $contraCuenta,
+          first.cuenta_contable,
+          first.cuenta_contable,
+        );
+      }
+    }
+
+    function renderDirectRows() {
+      const rows = state.directRows;
+      if (!rows.length) {
+        refs.tbodyDirecto.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center py-4 tp-muted">Todavía no agregaste ítems al pago.</td>
+        </tr>
+      `;
+        syncSummary();
+        return;
+      }
+
+      refs.tbodyDirecto.innerHTML = rows
+        .map((row, index) => {
+          const subtotal =
+            Number(row.cantidad || 0) * Number(row.precio_unitario || 0);
+          return `
+        <tr data-index="${index}">
+          <td class="text-center"><strong>${index + 1}</strong></td>
+          <td>
+            <input type="text" class="tp-inline-input js-direct-desc" maxlength="300"
+                   value="${escapeHtml(row.descripcion || "")}" placeholder="Nombre del producto o concepto">
+          </td>
+          <td>
+            <input type="number" class="tp-inline-input tp-input-number js-direct-cantidad" step="0.0001" min="0.0001"
+                   value="${row.cantidad != null ? escapeHtml(row.cantidad) : "1.0000"}">
+          </td>
+          <td>
+            <input type="number" class="tp-inline-input tp-input-number js-direct-precio" step="0.01" min="0"
+                   value="${row.precio_unitario != null ? escapeHtml(row.precio_unitario) : "0.00"}">
+          </td>
+          <td class="text-end">
+            <strong class="tp-money js-direct-subtotal">${money(subtotal)}</strong>
+          </td>
+          <td>
+            <input type="text" class="tp-inline-input js-direct-obs" maxlength="300"
+                   value="${escapeHtml(row.observacion || "")}" placeholder="Dato adicional opcional">
+          </td>
+          <td class="text-center">
+            <button type="button" class="tp-btn-icon tp-btn-icon-danger js-remove-direct" title="Quitar fila">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+        })
+        .join("");
+      syncSummary();
+    }
+
+    function renderSelectedCommitments() {
+      const rows = Array.from(state.selectedCommitments.values()).sort(
+        (a, b) =>
+          String(a.fecha_vencimiento || "").localeCompare(
+            String(b.fecha_vencimiento || ""),
+          ) || Number(a.id) - Number(b.id),
+      );
+      if (!rows.length) {
+        refs.tbodyCompromisos.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center py-4 tp-muted">Todavía no seleccionaste cuotas para este pago.</td>
+        </tr>
+      `;
+        syncSummary();
+        renderPendingCommitments();
+        return;
+      }
+
+      refs.tbodyCompromisos.innerHTML = rows
+        .map(
+          (row) => `
+      <tr data-id="${row.id}">
+        <td>
+          <div class="tp-entity">
+            <strong>${escapeHtml(row.compromiso_codigo)}</strong>
+            <small>${escapeHtml(row.compromiso_nombre || "")}</small>
+          </div>
+        </td>
+        <td>${escapeHtml(row.auxiliar_nombre || "Sin proveedor")}</td>
+        <td><span class="tp-badge-soft">${escapeHtml(row.unidad_negocio_codigo || "—")} · ${escapeHtml(row.unidad_negocio_nombre || "Sin unidad")}</span></td>
+        <td><span class="tp-badge-soft">${dateShort(row.fecha_vencimiento)}</span></td>
+        <td><span class="tp-badge-soft">${escapeHtml(row.cuenta_contable || "—")}</span></td>
+        <td class="text-end"><strong class="tp-money">${money(commitmentRowTotal(row))}</strong></td>
+        <td class="text-center">
+          <button type="button" class="tp-btn-icon tp-btn-icon-danger js-remove-commitment" title="Quitar cuota">
+            <i class="fas fa-xmark"></i>
+          </button>
+        </td>
+      </tr>
+    `,
+        )
+        .join("");
+
+      syncSummary();
+      renderPendingCommitments();
+    }
+
+    function syncDirectModeUI() {
+      const direct = state.origen === "DIRECTO";
+      const hasRows = directRowsForPayload().length > 0;
+      if (refs.wrapDirectModeCard)
+        refs.wrapDirectModeCard.classList.toggle("tp-hidden", true);
+      if (refs.wrapMontoManual)
+        refs.wrapMontoManual.classList.toggle("tp-hidden", !direct);
+      if (refs.btnAgregarFilaDirecta)
+        refs.btnAgregarFilaDirecta.classList.toggle("tp-hidden", !direct);
+      if (refs.panelDirectoSimple)
+        refs.panelDirectoSimple.classList.toggle("tp-hidden-soft", true);
+      if (refs.panelDirectoDetalleWrap)
+        refs.panelDirectoDetalleWrap.classList.toggle("tp-hidden-soft", !direct);
+      if (refs.montoManual)
+        refs.montoManual.disabled = isReadonly() || !direct || hasRows;
+    }
+    function applyOriginVisual() {
+      const direct = state.origen === "DIRECTO";
+      const compromiso = state.origen === "COMPROMISO";
+
+      if (refs.btnOrigenDirecto) {
+        refs.btnOrigenDirecto.classList.toggle("active", direct);
+        refs.btnOrigenDirecto.classList.toggle("disabled", isReadonly() && !direct);
+        refs.btnOrigenDirecto.setAttribute("aria-pressed", direct ? "true" : "false");
+      }
+
+      if (refs.btnOrigenCompromiso) {
+        refs.btnOrigenCompromiso.classList.toggle("active", compromiso);
+        refs.btnOrigenCompromiso.classList.toggle("disabled", isReadonly() && !compromiso);
+        refs.btnOrigenCompromiso.setAttribute("aria-pressed", compromiso ? "true" : "false");
+      }
+
+      if (refs.panelDirecto) {
+        refs.panelDirecto.classList.toggle("tp-hidden", !direct);
+      }
+
+      if (refs.panelCompromiso) {
+        refs.panelCompromiso.classList.toggle("tp-hidden", !compromiso);
+      }
+
+      if (refs.btnAbrirModalCompromisos) {
+        refs.btnAbrirModalCompromisos.classList.toggle("tp-hidden", !compromiso);
+      }
+
+      if (refs.btnAgregarFilaDirecta) {
+        refs.btnAgregarFilaDirecta.classList.toggle(
+          "tp-hidden",
+          !direct || !state.useDirectDetail || isReadonly(),
+        );
+      }
+
+      if (refs.panelTitulo) {
+        refs.panelTitulo.textContent = direct ? "Detalle del pago" : "Cuotas del compromiso";
+      }
+
+      if (refs.panelSubtitulo) {
+        refs.panelSubtitulo.textContent = direct
+          ? "Registra ítems directos dentro del mismo documento."
+          : "Selecciona cuotas programadas del compromiso sin salir del documento.";
+      }
+
+      syncDirectModeUI();
+      syncMedioUI();
+      syncRubroUI();
+      setReadonlyFieldsByOrigin();
+      syncSummary();
+    }
+    function rowCompatible(candidate) {
+      const rows = Array.from(state.selectedCommitments.values());
+      if (!rows.length) return true;
+      const first = rows[0];
+      return (
+        Number(first.auxiliar_id || 0) === Number(candidate.auxiliar_id || 0) &&
+        String(first.cuenta_contable || "") ===
+        String(candidate.cuenta_contable || "") &&
+        String(first.unidad_negocio_id || "") === String(candidate.unidad_negocio_id || "")
+      );
+    }
+
+    function pendingBadge(row) {
+      if (row.seleccionado_actual)
+        return '<span class="tp-badge-soft tp-badge-success">Seleccionado</span>';
+      if (row.reservado_en_otro_borrador)
+        return '<span class="tp-badge-soft tp-badge-warning">Reservado</span>';
+      return '<span class="tp-badge-soft">Disponible</span>';
+    }
+
+    function renderPendingCommitments() {
+      const rows = state.pendingCommitments;
+      if (!rows.length) {
+        refs.tbodyPendientes.innerHTML = `
+        <tr><td colspan="8" class="text-center py-4 tp-muted">No se encontraron cuotas disponibles.</td></tr>
+      `;
+        syncSummary();
+        return;
+      }
+
+      refs.tbodyPendientes.innerHTML = rows
+        .map((row) => {
+          const selected = state.selectedCommitments.has(Number(row.id));
+          const compatible = selected || rowCompatible(row);
+          return `
+        <tr class="${selected ? "tp-row-selected" : ""} ${!compatible ? "tp-row-muted" : ""}" data-id="${row.id}">
+          <td class="text-center">
+            <input type="checkbox" class="form-check-input js-check-commitment" value="${row.id}" ${selected ? "checked" : ""} ${!compatible ? "disabled" : ""}>
+          </td>
+          <td>
+            <div class="tp-entity">
+              <strong>${escapeHtml(row.compromiso_codigo)}</strong>
+              <small>${escapeHtml(row.compromiso_nombre || "")}</small>
+            </div>
+          </td>
+          <td>${escapeHtml(row.auxiliar_nombre || "Sin proveedor")}</td>
+          <td><span class="tp-badge-soft">${escapeHtml(row.unidad_negocio_codigo || "—")} · ${escapeHtml(row.unidad_negocio_nombre || "Sin unidad")}</span></td>
+          <td><span class="tp-badge-soft">${dateShort(row.fecha_vencimiento)}</span></td>
+          <td><span class="tp-badge-soft">${escapeHtml(row.cuenta_contable || "—")}</span></td>
+          <td class="text-end"><strong class="tp-money">${money(row.monto_programado || 0)}</strong></td>
+          <td>${pendingBadge(row)}</td>
+        </tr>
+      `;
+        })
+        .join("");
+      syncSummary();
+    }
+
+    function addBlankDirectRow() {
+      state.directRows.push({
+        descripcion: "",
+        cantidad: 1,
+        precio_unitario: 0,
+        observacion: "",
+      });
+      syncDirectModeUI();
+      renderDirectRows();
+      if (typeof syncSummary === 'function') { syncSummary(); }
+    }
+
+    function seedInitialState() {
+      const hasCommitments = initialLines.some(
+        (row) => row.tipo_linea === "COMPROMISO",
+      );
+      const hasDirect = initialLines.some(
+        (row) => row.tipo_linea === "DIRECTO",
+      );
+
+      initialLines.forEach((row) => {
+        if (row.tipo_linea === "COMPROMISO") {
+          state.selectedCommitments.set(
+            Number(row.compromiso_detalle_id || row.id),
+            {
+              id: Number(row.compromiso_detalle_id || row.id),
+              compromiso_id: Number(row.compromiso_id || 0),
+              compromiso_codigo: row.compromiso_codigo || "",
+              compromiso_nombre: row.compromiso_nombre || "",
+              fecha_vencimiento: row.fecha_vencimiento || null,
+              monto_programado: Number(
+                row.monto_programado || row.subtotal || 0,
+              ),
+              subtotal: Number(row.subtotal || 0),
+              cuenta_contable: row.cuenta_contable || "",
+              auxiliar_id: row.auxiliar_id ? Number(row.auxiliar_id) : null,
+              auxiliar_nombre: row.auxiliar_nombre || "",
+              unidad_negocio_id: row.unidad_negocio_id ? Number(row.unidad_negocio_id) : null,
+              unidad_negocio_codigo: row.unidad_negocio_codigo || "",
+              unidad_negocio_nombre: row.unidad_negocio_nombre || "",
+            },
+          );
+        } else {
+          state.directRows.push({
+            descripcion: row.descripcion || "",
+            cantidad: Number(row.cantidad || 1),
+            precio_unitario: Number(row.precio_unitario || 0),
+            observacion: row.observacion || "",
+          });
+        }
+      });
+
+      state.useDirectDetail = hasDirect;
+      if (!pagoData && hasCommitments && !hasDirect) {
+        state.origen = "COMPROMISO";
+      }
+    }
+
+    function maybeSwitchOrigin(nextOrigin) {
+      if (isReadonly() || state.origen === nextOrigin) return;
+
+      const hasDirect = directRowsForPayload().length > 0;
+      const hasCommit = state.selectedCommitments.size > 0;
+
+      if (nextOrigin === "COMPROMISO" && hasDirect) {
+        Swal.fire({
+          icon: "question",
+          title: "Cambiar a compromiso",
+          text: "Se limpiará el detalle directo actual para trabajar con cuotas de compromiso.",
+          showCancelButton: true,
+          confirmButtonText: "Sí, cambiar",
+          cancelButtonText: "Cancelar",
+        }).then((result) => {
+          if (!result.isConfirmed) return;
+          state.directRows = [];
+          state.useDirectDetail = false;
+          state.origen = nextOrigin;
+          renderDirectRows();
+          if (typeof syncSummary === 'function') { syncSummary(); }
+          applyOriginVisual();
+        });
+        return;
+      }
+
+      if (nextOrigin === "DIRECTO" && hasCommit) {
+        Swal.fire({
+          icon: "question",
+          title: "Cambiar a directo",
+          text: "Se quitarán las cuotas seleccionadas y continuarás con un pago libre por ítems.",
+          showCancelButton: true,
+          confirmButtonText: "Sí, cambiar",
+          cancelButtonText: "Cancelar",
+        }).then((result) => {
+          if (!result.isConfirmed) return;
+          state.selectedCommitments.clear();
+          state.origen = nextOrigin;
+          renderSelectedCommitments();
+          renderDirectRows();
+          if (typeof syncSummary === 'function') { syncSummary(); }
+          applyOriginVisual();
+        });
+        return;
+      }
+
+      state.origen = nextOrigin;
+      applyOriginVisual();
+    }
+
+    async function loadPendingCommitments(showAlerts) {
+      try {
+        const params = new URLSearchParams();
+        if (pagoId) params.set("pago_id", String(pagoId));
+        if (refs.modalBuscar.value.trim())
+          params.set("q", refs.modalBuscar.value.trim());
+        if (currentUnidadNegocioId())
+          params.set("unidad_negocio_id", currentUnidadNegocioId());
+
+        const response = await fetch(
+          `{{ url_for('tesoreria_pagos.api_pendientes') }}?${params.toString()}`,
+          {
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+          },
+        );
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message || "No se pudo cargar las cuotas pendientes.",
+          );
+        }
+        state.pendingCommitments = Array.isArray(data.rows) ? data.rows : [];
+        renderPendingCommitments();
+      } catch (error) {
+        refs.tbodyPendientes.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">${escapeHtml(error.message || "No se pudo cargar las cuotas pendientes.")}</td></tr>`;
+        if (showAlerts) {
+          Swal.fire({
+            icon: "error",
+            title: "No se pudieron cargar las cuotas",
+            text: error.message || "Ocurrió un error al consultar las cuotas.",
+          });
+        }
+      }
+    }
+
+    function collectPayload() {
+      const payload = {
+        id: pagoId,
+        fecha: refs.fecha.value,
+        unidad_negocio_id: refs.unidadNegocio.value || null,
+        medio_pago: refs.medio.value,
+        caja_id: refs.caja.value || null,
+        cuenta_bancaria_id: refs.banco.value || null,
+        moneda_codigo: refs.moneda.value,
+        tipo_cambio: refs.tcAplicado.value || null,
+        proveedor_auxiliar_id: selectedSelect2Data($proveedor)?.id || null,
+        contra_cuenta_codigo: selectedSelect2Data($contraCuenta)?.id || null,
+        rubro_id: refs.rubro && refs.rubro.value ? refs.rubro.value : null,
+        publicidad_elemento_id_ref: refs.elementoSelector && refs.elementoSelector.value
+          ? String(refs.elementoSelector.value)
+          : (refs.elementoId && refs.elementoId.value ? String(refs.elementoId.value) : null),
+        publicidad_elemento_codigo_ref: refs.elementoCodigo ? (refs.elementoCodigo.value || "").trim() : null,
+        vigencia_desde: refs.vigenciaDesde && refs.vigenciaDesde.value ? refs.vigenciaDesde.value : null,
+        vigencia_hasta: refs.vigenciaHasta && refs.vigenciaHasta.value ? refs.vigenciaHasta.value : null,
+        cliente_nit_ci_ref: null,
+        cliente_nombre_ref: null,
+        referencia: (refs.referencia.value || "").trim(),
+        glosa: (refs.glosa.value || "").trim(),
+        origen_operacion: state.origen,
+      };
+
+      if (state.origen === "COMPROMISO") {
+        payload.compromiso_detalle_ids = Array.from(
+          state.selectedCommitments.keys(),
+        );
+      } else {
+        const hasDirectRows = directRowsForPayload().length > 0;
+        payload.usar_detalle_directo = hasDirectRows;
+        payload.direct_items = directRowsForPayload();
+        payload.monto_total_manual = hasDirectRows
+          ? null
+          : refs.montoManual.value || "0";
+      }
+      return payload;
+    }
+
+    function frontendValidate(payload, strictConfirm = false) {
+      if (!payload.fecha) {
+        throw new Error("Debes seleccionar la fecha del pago.");
+      }
+      if (!payload.unidad_negocio_id) {
+        throw new Error("Debes seleccionar la unidad de negocio del pago.");
+      }
+      if (payload.medio_pago === "CAJA" && !payload.caja_id) {
+        throw new Error("Debes seleccionar la caja de salida.");
+      }
+      if (payload.medio_pago === "BANCO" && !payload.cuenta_bancaria_id) {
+        throw new Error("Debes seleccionar la cuenta bancaria de salida.");
+      }
+      if (
+        state.origen === "COMPROMISO" &&
+        (!payload.compromiso_detalle_ids ||
+          !payload.compromiso_detalle_ids.length)
+      ) {
+        throw new Error("Selecciona al menos una cuota de compromiso.");
+      }
+      if (state.origen === "DIRECTO" && !payload.contra_cuenta_codigo) {
+        throw new Error("Debes seleccionar la contra cuenta del pago.");
+      }
+      if (payload.rubro_id) {
+        if (!payload.publicidad_elemento_codigo_ref) {
+          throw new Error("Debes indicar el código del elemento publicitario para el rubro seleccionado.");
+        }
+        if (!payload.vigencia_desde || !payload.vigencia_hasta) {
+          throw new Error("Debes indicar la vigencia desde y hasta para el rubro seleccionado.");
+        }
+        if (payload.vigencia_hasta < payload.vigencia_desde) {
+          throw new Error("La vigencia final no puede ser menor a la vigencia inicial.");
+        }
+      }
+      if (
+        strictConfirm &&
+        state.origen === "DIRECTO" &&
+        !directRowsForPayload().length &&
+        Number(payload.monto_total_manual || 0) <= 0
+      ) {
+        throw new Error(
+          "Debes indicar un total válido para confirmar el pago directo.",
+        );
+      }
+    }
+
+    async function saveDraft(options) {
+      const settings = Object.assign(
+        { showSuccess: false, redirectOnCreate: true },
+        options || {},
+      );
+      const payload = collectPayload();
+      frontendValidate(payload, Boolean(settings.strictConfirm));
+
+      const response = await fetch(
+        `{{ url_for('tesoreria_pagos.api_guardar') }}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "No se pudo guardar el pago.");
+      }
+
+      if (settings.showSuccess) {
+        await Swal.fire({
+          icon: "success",
+          title: "Borrador guardado",
+          text: data.message || "El pago fue guardado correctamente.",
+        });
+      }
+
+      const targetId = data.pago_id || pagoId;
+      if (
+        settings.redirectOnCreate &&
+        targetId &&
+        Number(targetId) !== Number(pagoId || 0)
+      ) {
+        window.location.href = `${pagosBaseUrl}/${targetId}/editar`;
+        return null;
+      }
+      return data;
+    }
+
+    async function confirmPayment() {
+      try {
+        const saved = await saveDraft({
+          showSuccess: false,
+          redirectOnCreate: false,
+          strictConfirm: true,
+        });
+        const finalId = saved && saved.pago_id ? saved.pago_id : pagoId;
+        const response = await fetch(
+          `{{ url_for('tesoreria_pagos.api_confirmar', pago_id=0) }}`.replace(
+            "/0/confirmar",
+            `/${finalId}/confirmar`,
+          ),
+          {
+            method: "POST",
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+          },
+        );
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "No se pudo confirmar el pago.");
+        }
+        await Swal.fire({
+          icon: "success",
+          title: "Pago confirmado",
+          text: data.message || "El pago fue confirmado correctamente.",
+        });
+        window.location.href = `${pagosBaseUrl}/${finalId}/editar`;
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "No se pudo confirmar",
+          text: error.message || "Ocurrió un error al confirmar el pago.",
+        });
+      }
+    }
+
+    async function deletePayment() {
+      if (!pagoId) return;
+      const result = await Swal.fire({
+        icon: "warning",
+        title: "¿Eliminar borrador?",
+        text: "Esta acción eliminará definitivamente el pago en borrador y liberará sus líneas asociadas.",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
+      });
+      if (!result.isConfirmed) return;
+
+      try {
+        const response = await fetch(
+          `{{ url_for('tesoreria_pagos.api_eliminar', pago_id=0) }}`.replace(
+            "/0/eliminar",
+            `/${pagoId}/eliminar`,
+          ),
+          {
+            method: "POST",
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+          },
+        );
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || "No se pudo eliminar el pago.");
+        }
+        await Swal.fire({
+          icon: "success",
+          title: "Pago eliminado",
+          text: data.message || "El pago fue eliminado correctamente.",
+        });
+        window.location.href = pagosBaseUrl;
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "No se pudo eliminar",
+          text: error.message || "Ocurrió un error al eliminar el pago.",
+        });
+      }
+    }
+
+    function updateDirectRowSubtotal(rowElement, item) {
+      if (!rowElement) return;
+      const subtotalCell = rowElement.querySelector(".js-direct-subtotal");
+      if (subtotalCell) {
+        subtotalCell.textContent = money(
+          Number(item.cantidad || 0) * Number(item.precio_unitario || 0),
+        );
+      }
+      syncSummary();
+    }
+
+    function bindDirectEvents() {
+      refs.tbodyDirecto.addEventListener("input", (event) => {
+        const row = event.target.closest("tr[data-index]");
+        if (!row) return;
+        const index = Number(row.dataset.index);
+        const item = state.directRows[index];
+        if (!item) return;
+
+        if (event.target.classList.contains("js-direct-desc")) {
+          item.descripcion = event.target.value.slice(0, 300);
+        } else if (event.target.classList.contains("js-direct-cantidad")) {
+          item.cantidad = Number(event.target.value || 0);
+        } else if (event.target.classList.contains("js-direct-precio")) {
+          item.precio_unitario = Number(event.target.value || 0);
+        } else if (event.target.classList.contains("js-direct-obs")) {
+          item.observacion = event.target.value.slice(0, 300);
+        }
+
+        updateDirectRowSubtotal(row, item);
+        syncDirectModeUI();
+        syncSummary();
+      });
+
+      refs.tbodyDirecto.addEventListener("click", (event) => {
+        const btn = event.target.closest(".js-remove-direct");
+        if (!btn) return;
+        const row = btn.closest("tr[data-index]");
+        if (!row) return;
+        const index = Number(row.dataset.index);
+        state.directRows.splice(index, 1);
+        renderDirectRows();
+        syncSummary();
+        syncDirectModeUI();
+      });
+    }
+
+    function bindCommitmentEvents() {
+      refs.tbodyCompromisos.addEventListener("click", (event) => {
+        const btn = event.target.closest(".js-remove-commitment");
+        if (!btn) return;
+        const row = btn.closest("tr[data-id]");
+        if (!row) return;
+        state.selectedCommitments.delete(Number(row.dataset.id));
+        renderSelectedCommitments();
+      });
+
+      refs.tbodyPendientes.addEventListener("change", (event) => {
+        const check = event.target.closest(".js-check-commitment");
+        if (!check) return;
+        const id = Number(check.value);
+        const row = state.pendingCommitments.find(
+          (item) => Number(item.id) === id,
+        );
+        if (!row) return;
+
+        if (check.checked) {
+          if (!rowCompatible(row)) {
+            check.checked = false;
+            Swal.fire({
+              icon: "warning",
+              title: "Cuota no compatible",
+              text: "Todas las cuotas del pago deben pertenecer al mismo proveedor y a la misma cuenta.",
+            });
+            return;
+          }
+          state.selectedCommitments.set(id, row);
+        } else {
+          state.selectedCommitments.delete(id);
+        }
+        renderSelectedCommitments();
+      });
+    }
+
+    function bindGeneralEvents() {
+      refs.btnOrigenDirecto.addEventListener("click", () =>
+        maybeSwitchOrigin("DIRECTO"),
+      );
+      refs.btnOrigenCompromiso.addEventListener("click", () =>
+        maybeSwitchOrigin("COMPROMISO"),
+      );
+      refs.medio.addEventListener("change", syncMedioUI);
+      refs.unidadNegocio &&
+        refs.unidadNegocio.addEventListener("change", () => {
+          if (!syncingUnidadFromElemento) {
+            clearElementoPublicidad();
+          }
+          applyUnidadFilters({ reloadPendientes: true });
+        });
+      refs.rubro && refs.rubro.addEventListener("change", () => {
+        syncRubroUI();
+        syncSummary();
+      });
+      if ($elementoPublicidad && $elementoPublicidad.length) {
+        $elementoPublicidad.on("change", syncElementoPublicidadSeleccionado);
+      }
+      refs.vigenciaDesde && refs.vigenciaDesde.addEventListener("change", syncSummary);
+      refs.vigenciaHasta && refs.vigenciaHasta.addEventListener("change", syncSummary);
+      refs.moneda.addEventListener("change", () => {
+        syncTcApplied();
+        refreshTipoCambio(false);
+      });
+      refs.fecha.addEventListener("change", () => refreshTipoCambio(true));
+      refs.montoManual &&
+        refs.montoManual.addEventListener("input", syncSummary);
+      refs.btnAbrirTipoCambio.addEventListener("click", () => {
+        const fecha = refs.fecha.value || todayISO();
+        window.open(`${tcBaseUrl}?fecha=${fecha}`, "_blank");
+      });
+
+      refs.btnAgregarFilaDirecta.addEventListener("click", () => {
+        if (isReadonly()) return;
+        addBlankDirectRow();
+      });
+
+      refs.btnAbrirModalCompromisos.addEventListener("click", async () => {
+        if (isReadonly()) return;
+        if (!currentUnidadNegocioId()) {
+          Swal.fire({
+            icon: "warning",
+            title: "Unidad de negocio requerida",
+            text: "Selecciona primero la unidad de negocio para filtrar correctamente las cuotas del compromiso.",
+          });
+          return;
+        }
+        refs.modalBuscar.value = "";
+        await loadPendingCommitments(false);
+        modalCompromisos && modalCompromisos.show();
+      });
+
+      refs.modalBuscar.addEventListener("input", () => {
+        clearTimeout(loadPendingTimer);
+        loadPendingTimer = setTimeout(() => loadPendingCommitments(false), 280);
+      });
+
+      refs.btnRecargarCompromisos.addEventListener("click", () =>
+        loadPendingCommitments(true),
+      );
+
+      refs.btnGuardarTop &&
+        refs.btnGuardarTop.addEventListener("click", async () => {
+          try {
+            await saveDraft({ showSuccess: true, redirectOnCreate: true });
+          } catch (error) {
+            Swal.fire({
+              icon: "error",
+              title: "No se pudo guardar",
+              text: error.message || "Ocurrió un error al guardar el pago.",
+            });
+          }
+        });
+
+      refs.btnConfirmarTop &&
+        refs.btnConfirmarTop.addEventListener("click", async () => {
+          const result = await Swal.fire({
+            icon: "question",
+            title: "¿Confirmar pago?",
+            text: "El pago quedará contabilizado y dejará de ser editable.",
+            showCancelButton: true,
+            confirmButtonText: "Sí, confirmar",
+            cancelButtonText: "Cancelar",
+          });
+          if (result.isConfirmed) {
+            confirmPayment();
+          }
+        });
+
+      refs.btnEliminarTop &&
+        refs.btnEliminarTop.addEventListener("click", deletePayment);
+    }
+
+    function initSelect2() {
+      if (
+        !$proveedor ||
+        !$contraCuenta ||
+        !$elementoPublicidad ||
+        !window.jQuery ||
+        !window.jQuery.fn ||
+        !window.jQuery.fn.select2
+      )
+        return;
+
+      $proveedor.select2({
+        width: "100%",
+        allowClear: true,
+        placeholder:
+          refs.proveedor.dataset.placeholder || "Buscar proveedor...",
+        language: "es",
+        ajax: {
+          url: `{{ url_for('tesoreria_pagos.api_auxiliares') }}`,
+          dataType: "json",
+          delay: 220,
+          data: function (params) {
+            return { q: params.term || "" };
+          },
+          processResults: function (data) {
+            const rows = (data && data.data) || [];
+            return {
+              results: rows.map((row) => ({
+                id: row.id,
+                text: row.nit_ci ? `${row.nombre} · ${row.nit_ci}` : row.nombre,
+              })),
+            };
+          },
+        },
+      });
+
+      $contraCuenta.select2({
+        width: "100%",
+        allowClear: true,
+        placeholder:
+          refs.contraCuenta.dataset.placeholder || "Buscar cuenta...",
+        language: "es",
+        ajax: {
+          url: `{{ url_for('tesoreria_pagos.api_cuentas') }}`,
+          dataType: "json",
+          delay: 220,
+          data: function (params) {
+            return { q: params.term || "" };
+          },
+          processResults: function (data) {
+            const rows = (data && data.data) || [];
+            return {
+              results: rows.map((row) => ({
+                id: row.codigo,
+                text: row.etiqueta || `${row.codigo} - ${row.nombre}`,
+              })),
+            };
+          },
+        },
+      });
+
+
+      $elementoPublicidad.select2({
+        width: "100%",
+        allowClear: true,
+        placeholder: "Buscar elemento publicitario...",
+        language: "es",
+      });
+
+      filterOptionsByUnidad(refs.elementoSelector);
+
+      if (boot.currentElemento && boot.currentElemento.id) {
+        const currentId = String(boot.currentElemento.id);
+        const exists = refs.elementoSelector && Array.from(refs.elementoSelector.options).some(
+          (opt) => String(opt.value) === currentId,
+        );
+        if (!exists && refs.elementoSelector) {
+          const option = new Option(
+            boot.currentElemento.text || boot.currentElemento.codigo_gamlp || currentId,
+            currentId,
+            true,
+            true,
+          );
+          option.dataset.codigoGamlp = boot.currentElemento.codigo_gamlp || "";
+          option.dataset.unidadId = boot.currentElemento.unidad_negocio_id || "";
+          refs.elementoSelector.append(option);
+        }
+        $elementoPublicidad.val(currentId).trigger("change.select2");
+        if (refs.elementoId) refs.elementoId.value = currentId;
+        if (refs.elementoCodigo) {
+          refs.elementoCodigo.value = boot.currentElemento.codigo_gamlp || (refs.elementoCodigo.value || "");
+        }
+      }
+
+      setReadonlyFieldsByOrigin();
+    }
+
+    function lockReadOnlyUi() {
+      if (!isReadonly()) return;
+
+      page
+        .querySelectorAll("input, select, textarea, button")
+        .forEach((element) => {
+          if (
+            element.closest(".tp-header-actions") &&
+            element.tagName === "A"
+          ) {
+            return;
+          }
+          if (element.tagName !== "A") {
+            element.disabled = true;
+          }
+        });
+    }
+
+    function init() {
+      if (!refs.fecha.value) refs.fecha.value = todayISO();
+      seedInitialState();
+      initSelect2();
+      applyUnidadFilters({ reloadPendientes: false });
+      syncMedioUI();
+      updateTcVisual(false);
+      syncDirectModeUI();
+      renderDirectRows();
+      if (typeof syncSummary === 'function') { syncSummary(); }
+      renderSelectedCommitments();
+      applyOriginVisual();
+      bindDirectEvents();
+      bindCommitmentEvents();
+      bindGeneralEvents();
+      lockReadOnlyUi();
+      refreshTipoCambio(false);
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  })();
+</script>
+{% endblock %}

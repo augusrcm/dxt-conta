@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ingreso | DXT Conta</title>
+  <meta name="description" content="DXT Conta. Sistema de gestión contable, tesorería y control operativo.">
+  <meta name="keywords" content="DXT Conta, contabilidad, tesorería, login, gestión contable">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+      background: #ffffff;
+      /* Fondo blanco liso */
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* Tarjeta con efecto glass oscuro + sombra 3D flotante */
+    .login-card {
+      max-width: 520px;
+      width: 100%;
+      background: rgba(10, 35, 55, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 48px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      /* Sombra pronunciada tipo "flotante / 3D" */
+      box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.3s ease;
+    }
+
+    .login-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 40px 60px -20px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    }
+
+    .login-header {
+      padding: 36px 32px 20px 32px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .logo-img {
+      max-width: 180px;
+      height: auto;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+    }
+
+    .login-header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff, #c0e0ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.3px;
+      margin-top: 6px;
+    }
+
+    .login-header p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9rem;
+      margin-top: 8px;
+    }
+
+    .login-body {
+      padding: 32px 36px 42px;
+    }
+
+    /* Campos */
+    .input-group {
+      margin-bottom: 22px;
+    }
+
+    .input-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 8px;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 14px 16px 14px 46px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 32px;
+      font-size: 1rem;
+      font-family: inherit;
+      color: white;
+      outline: none;
+      transition: all 0.25s;
+    }
+
+    .field-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .field-input:focus {
+      border-color: rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+    }
+
+    .input-icon-wrapper {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1.2rem;
+      pointer-events: none;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.7);
+      transition: color 0.2s;
+    }
+
+    .password-toggle:hover {
+      color: white;
+    }
+
+    .field-hint {
+      font-size: 0.7rem;
+      margin-top: 6px;
+      margin-left: 16px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Turnstile */
+    .turnstile-area {
+      margin: 22px 0 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .turnstile-card {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Placeholder temporal */
+    .turnstile-card.turnstile-placeholder {
+      width: 100%;
+      gap: 14px;
+      flex-wrap: wrap;
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.20);
+      border-radius: 40px;
+      padding: 12px 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Widget real — contenedor ajustado al tamaño del iframe de Cloudflare (300px fijo) */
+    .turnstile-card.turnstile-widget {
+      width: 100%;
+      max-width: 100%;
+      min-height: 100px;
+      padding: 0;
+      display: flex;
+      align-items: stretch;
+      justify-content: stretch;
+      background: #1d1d1d;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 32px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    .turnstile-card.turnstile-widget .cf-turnstile {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Forzar que el iframe ocupe todo el ancho del contenedor */
+    .turnstile-card.turnstile-widget .cf-turnstile iframe {
+      display: block;
+      width: 100% !important;
+      min-width: 100% !important;
+      height: 65px !important;
+      border: none;
+    }
+
+    .turnstile-check {
+      width: 22px;
+      height: 22px;
+      accent-color: #2c7da0;
+    }
+
+    .turnstile-text {
+      flex: 1;
+    }
+
+    .turnstile-main {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: white;
+    }
+
+    .turnstile-meta {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .turnstile-badge {
+      font-size: 0.7rem;
+      text-align: right;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Botones */
+    .action-buttons {
+      display: flex;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 16px;
+      font-weight: 700;
+      font-size: 1rem;
+      font-family: inherit;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: rgba(15, 61, 117, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-primary:hover {
+      background: #0f3d75;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-3px);
+    }
+
+    /* Mensaje de error */
+    .error-message {
+      background: rgba(220, 38, 38, 0.25);
+      backdrop-filter: blur(8px);
+      border-left: 5px solid #ff8888;
+      border-radius: 28px;
+      padding: 12px 20px;
+      margin-bottom: 24px;
+      font-size: 0.85rem;
+      color: #ffe0e0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .error-message.hidden {
+      display: none;
+    }
+
+    @media (max-width: 540px) {
+      .login-body {
+        padding: 24px 24px 32px;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .logo-img {
+        max-width: 130px;
+      }
+
+      .login-header h1 {
+        font-size: 1.7rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo-container">
+        <img id="loginBrandImage" src="{{ login_logo_data_uri or '' }}" alt="DXT Conta" class="logo-img" width="240"
+          height="78">
+      </div>
+      <h1>Credenciales de Acceso</h1>
+      <p>Ingresa con tu cuenta corporativa</p>
+    </div>
+
+    <div class="login-body">
+      {% set flashes = get_flashed_messages(with_categories=True) %}
+      <div id="inlineError" class="error-message {% if not error_message and not flashes %}hidden{% endif %}">
+        <span>⚠️</span>
+        <span>
+          {% if error_message %}
+          {{ error_message }}
+          {% elif flashes %}
+          {{ flashes[-1][1] }}
+          {% endif %}
+        </span>
+      </div>
+
+      <form method="post" action="{{ url_for('auth.login') }}" novalidate id="loginForm" autocomplete="off">
+        <!-- Correo / CI / NIT -->
+        <div class="input-group">
+          <div class="input-label">
+            <span>📧</span> Correo electrónico o CI/NIT
+          </div>
+          <div class="input-icon-wrapper">
+            <span class="input-icon">👤</span>
+            <input id="identifier" name="identifier" type="text"
+              class="field-input{% if identifier %} is-valid{% endif %}" value="{{ identifier or '' }}"
+              autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" required>
+          </div>
+          <div class="field-hint">Puedes escribir tu correo o número de NIT/CI.</div>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="input-group">
+          <div class="input-label">
+            <span>🔒</span> Contraseña
+          </div>
+          <div class="input-icon-wrapper">
+            <span class="input-icon">🔑</span>
+            <input id="password" name="password" type="password" class="field-input" autocomplete="off"
+              autocapitalize="none" autocorrect="off" spellcheck="false" required>
+            <button type="button" class="password-toggle" id="togglePassword"
+              aria-label="Mostrar u ocultar contraseña">👁️</button>
+          </div>
+        </div>
+
+        <!-- Turnstile (Cloudflare) -->
+        <div class="turnstile-area">
+          {% if turnstile_enabled and turnstile_mode == 'placeholder' %}
+          <div class="turnstile-card turnstile-placeholder">
+            <input id="cf_turnstile_ok" name="cf_turnstile_ok" type="checkbox" class="turnstile-check" value="1" {% if
+              captcha_checked %}checked{% endif %}>
+            <div class="turnstile-text">
+              <div class="turnstile-main">{{ turnstile_placeholder_label or 'No soy un robot (modo temporal)' }}</div>
+              <div class="turnstile-meta">Modo temporal de validación</div>
+            </div>
+            <div class="turnstile-badge">
+              <strong>CLOUDFLARE</strong><br>Placeholder
+            </div>
+          </div>
+          {% elif turnstile_enabled %}
+          <div class="turnstile-card turnstile-widget">
+            <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="dark"></div>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" type="submit">Ingresar</button>
+          <button class="btn btn-secondary" type="button" id="cancelButton">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if turnstile_enabled and turnstile_mode != 'placeholder' %}
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  {% endif %}
+
+  <script type="application/json" id="loginBootstrap">
+  {
+    "loginUrl": {{ url_for('auth.login') | tojson }},
+    "turnstileEnabled": {{ turnstile_enabled | tojson }},
+    "turnstilePlaceholderMode": {{ (turnstile_enabled and turnstile_mode == 'placeholder') | tojson }}
+  }
+</script>
+
+  <script>
+    (function () {
+      const bootEl = document.getElementById('loginBootstrap');
+      const boot = JSON.parse(bootEl.textContent || '{}');
+      const passwordInput = document.getElementById('password');
+      const togglePassword = document.getElementById('togglePassword');
+      const cancelButton = document.getElementById('cancelButton');
+      const loginForm = document.getElementById('loginForm');
+      const errorDiv = document.getElementById('inlineError');
+      const identifierInput = document.getElementById('identifier');
+      const passwordField = document.getElementById('password');
+
+      const clearError = () => errorDiv.classList.add('hidden');
+      if (identifierInput) identifierInput.addEventListener('input', clearError);
+      if (passwordField) passwordField.addEventListener('input', clearError);
+
+      if (togglePassword && passwordInput) {
+        togglePassword.addEventListener('click', function () {
+          const newType = passwordInput.type === 'password' ? 'text' : 'password';
+          passwordInput.type = newType;
+          togglePassword.textContent = newType === 'password' ? '👁️' : '🙈';
+        });
+      }
+
+      if (cancelButton) {
+        cancelButton.addEventListener('click', function () {
+          window.location.href = boot.loginUrl || '/login';
+        });
+      }
+
+      if (loginForm) {
+        loginForm.addEventListener('submit', function (e) {
+          let errorMsg = '';
+          const identifierVal = identifierInput?.value.trim();
+          const passwordVal = passwordField?.value;
+
+          if (!identifierVal) {
+            errorMsg = 'El correo o NIT es obligatorio.';
+            identifierInput?.focus();
+          } else if (!passwordVal) {
+            errorMsg = 'La contraseña es obligatoria.';
+            passwordField?.focus();
+          }
+
+          if (!errorMsg && boot.turnstileEnabled && boot.turnstilePlaceholderMode) {
+            const turnstileCheck = document.getElementById('cf_turnstile_ok');
+            if (turnstileCheck && !turnstileCheck.checked) {
+              errorMsg = 'Debes confirmar que no eres un robot (marca el captcha temporal).';
+            }
+          }
+
+          if (errorMsg) {
+            e.preventDefault();
+            errorDiv.classList.remove('hidden');
+            const errorSpan = errorDiv.querySelector('span:last-child');
+            if (errorSpan) errorSpan.innerText = errorMsg;
+          } else {
+            errorDiv.classList.add('hidden');
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+
+</html>

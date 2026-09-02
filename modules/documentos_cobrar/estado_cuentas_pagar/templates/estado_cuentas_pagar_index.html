@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+{% block title %}Reportes Especiales · Estado de CxP{% endblock title %}
+{% block page_help_url %}{{ url_for('estado_cuentas_pagar.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .ecxp-page{display:grid;gap:1rem}.ecxp-header{background:linear-gradient(135deg,#0f2340,#17406f);border-radius:1.15rem;box-shadow:0 18px 38px rgba(15,35,64,.18);color:#fff;padding:1.15rem 1.3rem}.ecxp-header-kicker{align-items:center;color:rgba(255,255,255,.82);display:flex;font-size:.78rem;font-weight:800;gap:.45rem;letter-spacing:.06em;text-transform:uppercase}.ecxp-header-title{font-size:clamp(1.35rem,2vw,2rem);font-weight:850;margin:.35rem 0 0}.ecxp-card{background:#fff;border:1px solid #dfe7f1;border-radius:1.15rem;box-shadow:0 14px 34px rgba(15,35,64,.08)}.ecxp-filter-card{padding:1rem}.ecxp-filter-grid{align-items:end;display:grid;gap:.85rem;grid-template-columns:.9fr 1.15fr 1.3fr .85fr 1.15fr auto}.ecxp-field label{color:#334155;font-size:.78rem;font-weight:800;margin-bottom:.3rem}.ecxp-field .form-control,.ecxp-field .form-select{border-color:#d5deea;border-radius:.8rem;min-height:40px}.ecxp-actions{display:flex;gap:.45rem;justify-content:flex-end}.ecxp-action-btn{align-items:center;border-radius:.85rem;display:inline-flex;font-weight:800;gap:.45rem;min-height:40px;padding-inline:.9rem;white-space:nowrap}.ecxp-summary{display:grid;gap:.75rem;grid-template-columns:repeat(5,minmax(0,1fr))}.ecxp-summary-card{border-left:5px solid #8aa1bd;padding:.95rem 1rem}.ecxp-summary-card.is-primary{border-left-color:#2563eb}.ecxp-summary-card.is-success{border-left-color:#0f766e}.ecxp-summary-card.is-warning{border-left-color:#f97316}.ecxp-summary-card.is-danger{border-left-color:#dc2626}.ecxp-summary-label{color:#64748b;font-size:.74rem;font-weight:850;letter-spacing:.04em;text-transform:uppercase}.ecxp-summary-value{color:#0f2340;font-size:1.16rem;font-weight:900;line-height:1.15;margin-top:.2rem}.ecxp-summary-note{color:#64748b;font-size:.74rem;margin-top:.1rem}.ecxp-table-card{overflow:hidden}.ecxp-table-toolbar{align-items:center;border-bottom:1px solid #dfe7f1;display:flex;justify-content:space-between;padding:.9rem 1rem}.ecxp-table-title{color:#0f2340;font-weight:900;margin:0}.ecxp-table-note{color:#64748b;font-size:.78rem;margin:.15rem 0 0}.ecxp-table-wrap{padding:1rem}.ecxp-table{width:100%}.ecxp-table thead th{background:#eef3f8;color:#0f2340;font-size:.72rem;letter-spacing:.03em;text-transform:uppercase;vertical-align:middle}.ecxp-table td{vertical-align:middle}.ecxp-main-text{color:#0f2340;display:block;font-weight:850}.ecxp-sub-text{color:#64748b;display:block;font-size:.76rem;line-height:1.2}.ecxp-money{font-feature-settings:"tnum";font-weight:850;text-align:right;white-space:nowrap}.ecxp-money.is-pending{color:#b42318}.ecxp-empty{color:#64748b;padding:2rem 1rem;text-align:center}.ecxp-detail-button{border-radius:.75rem;font-weight:800;min-width:38px}@media(max-width:1350px){.ecxp-filter-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.ecxp-actions{grid-column:1/-1;justify-content:flex-start}}@media(max-width:900px){.ecxp-filter-grid,.ecxp-summary{grid-template-columns:1fr}.ecxp-table-toolbar{align-items:flex-start;flex-direction:column;gap:.75rem}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ecxp-page">
+  <section class="ecxp-header">
+    <div class="ecxp-header-kicker"><i class="fas fa-hand-holding-dollar"></i> Reportes Especiales · Proveedores</div>
+    <h1 class="ecxp-header-title">Estado de Cuentas por Pagar</h1>
+  </section>
+
+  {% if error %}<div class="alert alert-danger mb-0"><i class="fas fa-triangle-exclamation me-2"></i>{{ error }}</div>{% endif %}
+
+  <section class="ecxp-card ecxp-filter-card">
+    <form method="get" autocomplete="off">
+      <div class="ecxp-filter-grid">
+        <div class="ecxp-field"><label for="fecha_corte">Fecha de corte</label><input type="date" class="form-control" id="fecha_corte" name="fecha_corte" value="{{ filtros.fecha_corte.isoformat() }}"></div>
+        <div class="ecxp-field"><label for="unidad_negocio_id">Unidad</label><select class="form-select" id="unidad_negocio_id" name="unidad_negocio_id"><option value="">Todas</option>{% for unidad in unidades %}<option value="{{ unidad.id }}" {% if filtros.unidad_negocio_id == unidad.id %}selected{% endif %}>{{ unidad.codigo }} · {{ unidad.nombre }}</option>{% endfor %}</select></div>
+        <div class="ecxp-field"><label for="auxiliar_id">Proveedor</label><select class="form-select" id="auxiliar_id" name="auxiliar_id"><option value="">Todos</option><option value="0" {% if filtros.auxiliar_id == 0 %}selected{% endif %}>Sin auxiliar asignado</option>{% for aux in auxiliares %}<option value="{{ aux.id }}" {% if filtros.auxiliar_id == aux.id %}selected{% endif %}>{{ aux.nombre }}{% if aux.nit_ci %} · {{ aux.nit_ci }}{% endif %}</option>{% endfor %}</select></div>
+        <div class="ecxp-field"><label for="estado">Estado</label><select class="form-select" id="estado" name="estado">{% for key, label in estados.items() %}<option value="{{ key }}" {% if filtros.estado == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div class="ecxp-field"><label for="texto">Buscar</label><input type="search" class="form-control" id="texto" name="texto" value="{{ filtros.texto }}" placeholder="Proveedor, código, glosa"></div>
+        <div class="ecxp-actions"><button class="btn btn-primary ecxp-action-btn" type="submit"><i class="fas fa-filter"></i> Filtrar</button><a class="btn btn-outline-secondary ecxp-action-btn" href="{{ url_for('estado_cuentas_pagar.index') }}"><i class="fas fa-eraser"></i></a></div>
+      </div>
+    </form>
+  </section>
+
+  <section class="ecxp-summary">
+    <div class="ecxp-card ecxp-summary-card is-primary"><div class="ecxp-summary-label">Proveedores</div><div class="ecxp-summary-value">{{ resumen.cantidad_auxiliares }}</div></div>
+    <div class="ecxp-card ecxp-summary-card is-success"><div class="ecxp-summary-label">Registrado</div><div class="ecxp-summary-value">{{ resumen.total_registrado_label }}</div><div class="ecxp-summary-note">{{ resumen.moneda_label }}</div></div>
+    <div class="ecxp-card ecxp-summary-card is-warning"><div class="ecxp-summary-label">Pagado</div><div class="ecxp-summary-value">{{ resumen.total_pagado_label }}</div><div class="ecxp-summary-note">{{ resumen.moneda_label }}</div></div>
+    <div class="ecxp-card ecxp-summary-card is-danger"><div class="ecxp-summary-label">Pendiente</div><div class="ecxp-summary-value">{{ resumen.saldo_pendiente_label }}</div><div class="ecxp-summary-note">{{ resumen.moneda_label }}</div></div>
+    <div class="ecxp-card ecxp-summary-card"><div class="ecxp-summary-label">Parciales</div><div class="ecxp-summary-value">{{ resumen.cantidad_parciales }}</div><div class="ecxp-summary-note">{{ resumen.cantidad_vencimientos }} venc.</div></div>
+  </section>
+
+  <section class="ecxp-card ecxp-table-card">
+    <div class="ecxp-table-toolbar">
+      <div><h2 class="h6 ecxp-table-title mb-0">Estado por proveedor</h2><p class="ecxp-table-note">{{ periodo_label }}</p></div>
+      <a class="btn btn-outline-danger ecxp-action-btn" target="_blank" href="{{ url_for('estado_cuentas_pagar.pdf', **query_args) }}"><i class="fas fa-file-pdf"></i> PDF</a>
+    </div>
+    <div class="ecxp-table-wrap table-responsive">
+      <table class="table table-hover align-middle ecxp-table">
+        <thead><tr><th>#</th><th>Estado</th><th>Proveedor</th><th>Documento</th><th class="text-center">Comp.</th><th class="text-center">Venc.</th><th class="text-center">Parc.</th><th class="text-end">Registrado</th><th class="text-end">Pagado</th><th class="text-end">Pendiente</th><th class="text-center">Primer venc.</th><th class="text-center">Último pago</th><th class="text-center">Detalle</th></tr></thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td class="text-center">{{ loop.index }}</td>
+            <td><span class="badge text-bg-{{ row.estado_badge }}">{{ row.estado_label }}</span></td>
+            <td><span class="ecxp-main-text">{{ row.auxiliar }}</span><span class="ecxp-sub-text">{{ row.cantidad_vencimientos }} vencimiento(s)</span></td>
+            <td>{{ row.documento or '—' }}</td>
+            <td class="text-center fw-bold">{{ row.cantidad_documentos }}</td>
+            <td class="text-center">{{ row.cantidad_vencimientos }}</td>
+            <td class="text-center">{{ row.cantidad_parciales }}</td>
+            <td class="ecxp-money">{{ row.total_registrado_label }}</td>
+            <td class="ecxp-money">{{ row.total_pagado_label }}</td>
+            <td class="ecxp-money is-pending">{{ row.saldo_pendiente_label }}</td>
+            <td class="text-center">{{ row.primer_vencimiento_pendiente_label or '—' }}</td>
+            <td class="text-center">{{ row.ultimo_pago_label or '—' }}</td>
+            <td class="text-center"><a class="btn btn-sm btn-outline-primary ecxp-detail-button" title="Ver detalle" href="{{ url_for('estado_cuentas_pagar.detalle', fecha_corte=filtros.fecha_corte.isoformat(), unidad_negocio_id=filtros.unidad_negocio_id or '', auxiliar_id=row.auxiliar_id, estado=filtros.estado, texto=filtros.texto) }}"><i class="fas fa-eye"></i></a></td>
+          </tr>
+          {% else %}
+          <tr><td colspan="13" class="ecxp-empty">No existen cuentas por pagar según los filtros seleccionados.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    {% if error %}
+    if (window.Swal) {
+      Swal.fire({ icon: 'warning', title: 'Estado de CxP', text: {{ error|tojson }}, timer: 2200, showConfirmButton: false });
+    }
+    {% endif %}
+  });
+</script>
+{% endblock %}

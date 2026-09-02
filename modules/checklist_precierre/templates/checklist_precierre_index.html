@@ -1,0 +1,693 @@
+{% extends "layout.html" %}
+{% block title %}Checklist Pre-Cierre{% endblock title %}
+{% block page_help_url %}{{ url_for('checklist_precierre.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .cpc-page {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .cpc-header {
+    background: linear-gradient(135deg, #0f2340, #173b68);
+    border-radius: 1.15rem;
+    box-shadow: 0 18px 38px rgba(15, 35, 64, 0.18);
+    color: #fff;
+    padding: 1.2rem 1.35rem;
+  }
+
+  .cpc-kicker {
+    align-items: center;
+    color: rgba(255, 255, 255, 0.82);
+    display: flex;
+    font-size: 0.78rem;
+    font-weight: 850;
+    gap: 0.45rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .cpc-title {
+    font-size: clamp(1.35rem, 2vw, 2rem);
+    font-weight: 900;
+    margin: 0.35rem 0 0.1rem;
+  }
+
+  .cpc-subtitle {
+    color: rgba(255, 255, 255, 0.76);
+    margin: 0;
+    max-width: 900px;
+  }
+
+  .cpc-card {
+    background: #fff;
+    border: 1px solid #dfe7f1;
+    border-radius: 1.15rem;
+    box-shadow: 0 14px 34px rgba(15, 35, 64, 0.08);
+  }
+
+  .cpc-filter-card {
+    padding: 1rem;
+  }
+
+  .cpc-filter-grid {
+    align-items: end;
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: 1fr auto auto auto;
+  }
+
+  .cpc-field label {
+    color: #334155;
+    font-size: 0.78rem;
+    font-weight: 850;
+    margin-bottom: 0.3rem;
+  }
+
+  .cpc-field .form-select {
+    border-color: #d5deea;
+    border-radius: 0.8rem;
+    min-height: 40px;
+  }
+
+  .cpc-action-btn {
+    align-items: center;
+    border-radius: 0.85rem;
+    display: inline-flex;
+    font-weight: 850;
+    gap: 0.45rem;
+    min-height: 40px;
+    padding-inline: 1rem;
+  }
+
+  .cpc-summary {
+    display: grid;
+    gap: 0.85rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .cpc-summary-card {
+    padding: 0.95rem 1rem;
+  }
+
+  .cpc-summary-card.is-critical {
+    border-left: 5px solid #dc2626;
+  }
+
+  .cpc-summary-card.is-medium {
+    border-left: 5px solid #f59e0b;
+  }
+
+  .cpc-summary-card.is-low {
+    border-left: 5px solid #16a34a;
+  }
+
+  .cpc-summary-card.is-group {
+    border-left: 5px solid #2563eb;
+  }
+
+  .cpc-summary-label {
+    color: #64748b;
+    font-size: 0.76rem;
+    font-weight: 850;
+    text-transform: uppercase;
+  }
+
+  .cpc-summary-value {
+    color: #0f2340;
+    font-size: 1.35rem;
+    font-weight: 900;
+    line-height: 1.15;
+    margin-top: 0.25rem;
+  }
+
+  .cpc-summary-note {
+    color: #64748b;
+    font-size: 0.78rem;
+    margin-top: 0.25rem;
+  }
+
+  .cpc-results-card {
+    overflow: hidden;
+    position: relative;
+  }
+
+  .cpc-loader {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.82);
+    display: none;
+    inset: 0;
+    justify-content: center;
+    position: absolute;
+    z-index: 5;
+  }
+
+  .cpc-loader.is-visible {
+    display: flex;
+  }
+
+  .cpc-loader-card {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #dfe7f1;
+    border-radius: 1rem;
+    box-shadow: 0 14px 34px rgba(15, 35, 64, 0.12);
+    color: #0f2340;
+    display: inline-flex;
+    font-weight: 850;
+    gap: 0.65rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .cpc-results-toolbar {
+    align-items: center;
+    border-bottom: 1px solid #e5edf6;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.05rem;
+  }
+
+  .cpc-results-title {
+    color: #0f2340;
+    font-size: 1rem;
+    font-weight: 900;
+    margin: 0;
+  }
+
+  .cpc-results-meta {
+    color: #64748b;
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+  }
+
+  .cpc-grid-tools {
+    align-items: center;
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .cpc-page-size {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .cpc-page-size label {
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 850;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .cpc-page-size .form-select {
+    border-radius: 0.75rem;
+    min-width: 84px;
+  }
+
+  .cpc-table-wrap {
+    max-height: 520px;
+    overflow: auto;
+  }
+
+  .cpc-table {
+    margin: 0;
+    min-width: 1180px;
+  }
+
+  .cpc-table thead th {
+    background: #eef3f8;
+    color: #0f2340;
+    font-size: 0.74rem;
+    font-weight: 900;
+    position: sticky;
+    text-transform: uppercase;
+    top: 0;
+    z-index: 2;
+  }
+
+  .cpc-table td {
+    color: #243447;
+    font-size: 0.82rem;
+    vertical-align: top;
+  }
+
+  .cpc-badge {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 0.72rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 0.38rem 0.55rem;
+    white-space: nowrap;
+  }
+
+  .cpc-badge-critical {
+    background: #fde2e2;
+    color: #991b1b;
+  }
+
+  .cpc-badge-high,
+  .cpc-badge-medium {
+    background: #fff0d6;
+    color: #92400e;
+  }
+
+  .cpc-badge-low,
+  .cpc-badge-ok {
+    background: #eaf6ef;
+    color: #166534;
+  }
+
+  .cpc-badge-default {
+    background: #e5edf6;
+    color: #334155;
+  }
+
+  .cpc-empty {
+    color: #64748b;
+    display: none;
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+
+  .cpc-empty.is-visible {
+    display: block;
+  }
+
+  .cpc-empty i {
+    color: #16a34a;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .cpc-empty h3 {
+    color: #0f2340;
+    font-size: 1rem;
+    font-weight: 900;
+    margin: 0;
+  }
+
+  .cpc-pagination-bar {
+    align-items: center;
+    border-top: 1px solid #e5edf6;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1.05rem;
+  }
+
+  .cpc-pagination-info {
+    color: #64748b;
+    font-size: 0.8rem;
+    font-weight: 800;
+  }
+
+  .cpc-pagination-actions {
+    align-items: center;
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .cpc-page-btn {
+    align-items: center;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    font-weight: 850;
+    justify-content: center;
+    min-height: 36px;
+    min-width: 40px;
+  }
+
+  .cpc-page-indicator {
+    color: #0f2340;
+    font-size: 0.82rem;
+    font-weight: 900;
+    padding-inline: 0.35rem;
+    white-space: nowrap;
+  }
+
+  .cpc-footer-note {
+    color: #64748b;
+    font-size: 0.78rem;
+    padding: 0.75rem 1.05rem 1rem;
+  }
+
+  @media (max-width: 980px) {
+    .cpc-filter-grid,
+    .cpc-summary {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .cpc-filter-grid,
+    .cpc-summary {
+      grid-template-columns: 1fr;
+    }
+
+    .cpc-results-toolbar,
+    .cpc-pagination-bar {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    .cpc-grid-tools,
+    .cpc-pagination-actions {
+      justify-content: stretch;
+    }
+
+    .cpc-page-size,
+    .cpc-page-size .form-select,
+    .cpc-action-btn {
+      justify-content: center;
+      width: 100%;
+    }
+  }
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="cpc-page">
+  <section class="cpc-header">
+    <div class="cpc-kicker">
+      <i class="fas fa-clipboard-check"></i>
+      <span>Herramientas</span>
+    </div>
+    <h1 class="cpc-title">Checklist Pre-Cierre</h1>
+    <p class="cpc-subtitle">Verificación previa para detectar bloqueos y observaciones antes de ejecutar el cierre global de gestión.</p>
+  </section>
+
+  <section class="cpc-card cpc-filter-card">
+    <div class="cpc-filter-grid">
+      <div class="cpc-field">
+        <label for="gestion">Gestión</label>
+        <select id="gestion" class="form-select">
+          {% for gestion in gestiones %}
+          <option value="{{ gestion }}" {% if gestion == gestion_preferida %}selected{% endif %}>{{ gestion }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button id="btnActualizar" type="button" class="btn btn-primary cpc-action-btn">
+        <i class="fas fa-rotate"></i>
+        <span>Actualizar</span>
+      </button>
+
+      <a id="btnExcel" class="btn btn-success cpc-action-btn" href="#" role="button">
+        <i class="fas fa-file-excel"></i>
+        <span>Excel</span>
+      </a>
+
+      <a id="btnPdf" class="btn btn-danger cpc-action-btn" href="#" role="button" target="_blank" rel="noopener">
+        <i class="fas fa-file-pdf"></i>
+        <span>PDF</span>
+      </a>
+    </div>
+  </section>
+
+  <section id="summaryGrid" class="cpc-summary" aria-label="Resumen del checklist pre-cierre"></section>
+
+  <section class="cpc-card cpc-results-card">
+    <div class="cpc-loader" id="loaderResultados">
+      <div class="cpc-loader-card">
+        <i class="fas fa-circle-notch fa-spin"></i>
+        <span>Verificando gestión</span>
+      </div>
+    </div>
+
+    <div class="cpc-results-toolbar">
+      <div>
+        <h2 class="cpc-results-title">Validaciones del checklist</h2>
+        <div id="resultadoMeta" class="cpc-results-meta">Cargando verificación...</div>
+      </div>
+      <div class="cpc-grid-tools" aria-label="Controles del listado">
+        <div class="cpc-page-size">
+          <label for="pageSize">Filas por página</label>
+          <select id="pageSize" class="form-select">
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="cpc-table-wrap">
+      <table class="table table-hover cpc-table">
+        <thead>
+          <tr id="resultadosHead"></tr>
+        </thead>
+        <tbody id="resultadosBody"></tbody>
+      </table>
+      <div id="emptyState" class="cpc-empty">
+        <i id="emptyIcon" class="fas fa-clipboard-check"></i>
+        <h3 id="emptyTitle">No se generaron resultados para la gestión seleccionada</h3>
+      </div>
+    </div>
+
+    <div id="paginationBar" class="cpc-pagination-bar" aria-label="Paginación de validaciones">
+      <div id="paginationInfo" class="cpc-pagination-info">0 registros</div>
+      <div class="cpc-pagination-actions">
+        <button id="btnFirstPage" type="button" class="btn btn-outline-secondary btn-sm cpc-page-btn" aria-label="Primera página">
+          <i class="fas fa-angles-left"></i>
+        </button>
+        <button id="btnPrevPage" type="button" class="btn btn-outline-secondary btn-sm cpc-page-btn" aria-label="Página anterior">
+          <i class="fas fa-angle-left"></i>
+        </button>
+        <span id="pageIndicator" class="cpc-page-indicator">Página 1 de 1</span>
+        <button id="btnNextPage" type="button" class="btn btn-outline-secondary btn-sm cpc-page-btn" aria-label="Página siguiente">
+          <i class="fas fa-angle-right"></i>
+        </button>
+        <button id="btnLastPage" type="button" class="btn btn-outline-secondary btn-sm cpc-page-btn" aria-label="Última página">
+          <i class="fas fa-angles-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="footerNote" class="cpc-footer-note"></div>
+  </section>
+</div>
+
+<script type="application/json" id="checklistPreCierreBootstrap">
+  {{ {
+    'urls': {
+      'api': url_for('checklist_precierre.api_checklist'),
+      'excel': url_for('checklist_precierre.excel_checklist'),
+      'pdf': url_for('checklist_precierre.pdf_checklist')
+    }
+  } | tojson }}
+</script>
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const bootEl = document.getElementById("checklistPreCierreBootstrap");
+    const boot = JSON.parse(bootEl.textContent || "{}");
+
+    const el = {
+      gestion: document.getElementById("gestion"),
+      pageSize: document.getElementById("pageSize"),
+      btnActualizar: document.getElementById("btnActualizar"),
+      btnExcel: document.getElementById("btnExcel"),
+      btnPdf: document.getElementById("btnPdf"),
+      btnFirstPage: document.getElementById("btnFirstPage"),
+      btnPrevPage: document.getElementById("btnPrevPage"),
+      btnNextPage: document.getElementById("btnNextPage"),
+      btnLastPage: document.getElementById("btnLastPage"),
+      summaryGrid: document.getElementById("summaryGrid"),
+      resultadosHead: document.getElementById("resultadosHead"),
+      resultadosBody: document.getElementById("resultadosBody"),
+      resultadoMeta: document.getElementById("resultadoMeta"),
+      emptyState: document.getElementById("emptyState"),
+      emptyTitle: document.getElementById("emptyTitle"),
+      emptyIcon: document.getElementById("emptyIcon"),
+      footerNote: document.getElementById("footerNote"),
+      paginationInfo: document.getElementById("paginationInfo"),
+      pageIndicator: document.getElementById("pageIndicator"),
+      paginationBar: document.getElementById("paginationBar"),
+      loader: document.getElementById("loaderResultados"),
+    };
+
+    let currentRows = [];
+    let currentColumns = [];
+    let currentPage = 1;
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function params() {
+      const data = new URLSearchParams();
+      data.set("gestion", el.gestion.value || "");
+      return data;
+    }
+
+    function updateExportLinks() {
+      const query = params().toString();
+      el.btnExcel.href = `${boot.urls.excel}?${query}`;
+      el.btnPdf.href = `${boot.urls.pdf}?${query}`;
+    }
+
+    function badgeClass(code) {
+      const normalized = String(code || "").toUpperCase();
+      if (normalized === "CRITICA" || normalized === "BLOQUEANTE") return "cpc-badge-critical";
+      if (normalized === "ALTA") return "cpc-badge-high";
+      if (normalized === "MEDIA") return "cpc-badge-medium";
+      if (normalized === "BAJA") return "cpc-badge-low";
+      if (normalized === "OK") return "cpc-badge-ok";
+      return "cpc-badge-default";
+    }
+
+    function renderSummary(cards) {
+      el.summaryGrid.innerHTML = "";
+      (cards || []).forEach((card) => {
+        const item = document.createElement("article");
+        item.className = `cpc-card cpc-summary-card is-${escapeHtml(card.kind || "group")}`;
+        item.innerHTML = `
+          <div class="cpc-summary-label">${escapeHtml(card.label)}</div>
+          <div class="cpc-summary-value">${escapeHtml(card.value)}</div>
+          <div class="cpc-summary-note">${escapeHtml(card.note || "")}</div>
+        `;
+        el.summaryGrid.appendChild(item);
+      });
+    }
+
+    function renderHead(columns) {
+      el.resultadosHead.innerHTML = "";
+      columns.forEach((column) => {
+        const th = document.createElement("th");
+        th.textContent = column.label || column.field;
+        el.resultadosHead.appendChild(th);
+      });
+    }
+
+    function cellValue(row, field) {
+      if (field === "prioridad") {
+        return `<span class="cpc-badge ${badgeClass(row.prioridad_codigo)}">${escapeHtml(row.prioridad)}</span>`;
+      }
+      if (field === "resultado") {
+        return `<strong>${escapeHtml(row.resultado || "")}</strong>`;
+      }
+      return escapeHtml(row[field] ?? "");
+    }
+
+    function pageSize() {
+      const parsed = Number.parseInt(el.pageSize.value || "10", 10);
+      return [10, 20, 50].includes(parsed) ? parsed : 10;
+    }
+
+    function totalPages() {
+      return Math.max(1, Math.ceil(currentRows.length / pageSize()));
+    }
+
+    function clampPage() {
+      currentPage = Math.min(Math.max(1, currentPage), totalPages());
+    }
+
+    function renderRows() {
+      clampPage();
+      el.resultadosBody.innerHTML = "";
+      const size = pageSize();
+      const start = (currentPage - 1) * size;
+      const rows = currentRows.slice(start, start + size);
+
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = currentColumns.map((column) => `<td>${cellValue(row, column.field)}</td>`).join("");
+        el.resultadosBody.appendChild(tr);
+      });
+
+      const hasRows = currentRows.length > 0;
+      el.emptyState.classList.toggle("is-visible", !hasRows);
+      el.paginationBar.style.display = hasRows ? "flex" : "none";
+
+      const from = hasRows ? start + 1 : 0;
+      const to = Math.min(start + size, currentRows.length);
+      el.paginationInfo.textContent = `${from}-${to} de ${currentRows.length} registros`;
+      el.pageIndicator.textContent = `Página ${currentPage} de ${totalPages()}`;
+
+      el.btnFirstPage.disabled = currentPage <= 1;
+      el.btnPrevPage.disabled = currentPage <= 1;
+      el.btnNextPage.disabled = currentPage >= totalPages();
+      el.btnLastPage.disabled = currentPage >= totalPages();
+    }
+
+    function setLoading(isLoading) {
+      el.loader.classList.toggle("is-visible", isLoading);
+      el.btnActualizar.disabled = isLoading;
+    }
+
+    async function loadData() {
+      updateExportLinks();
+      setLoading(true);
+      try {
+        const response = await fetch(`${boot.urls.api}?${params().toString()}`, {
+          headers: { "Accept": "application/json" },
+        });
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error(data.msg || "No se pudo generar el checklist.");
+        }
+
+        currentRows = data.rows || [];
+        currentColumns = data.columns || [];
+        currentPage = 1;
+        renderSummary(data.summary_cards || []);
+        renderHead(currentColumns);
+        renderRows();
+        el.resultadoMeta.textContent = `${data.descripcion_periodo || ""} · ${data.summary?.estado_general || ""}`;
+        el.footerNote.textContent = data.criterio_reporte || "";
+        el.emptyTitle.textContent = data.empty_title || "No se generaron resultados";
+        el.emptyIcon.className = data.empty_icon || "fas fa-clipboard-check";
+      } catch (error) {
+        currentRows = [];
+        currentColumns = [];
+        renderSummary([]);
+        renderHead([]);
+        renderRows();
+        el.resultadoMeta.textContent = error.message;
+        if (window.Swal) {
+          Swal.fire({ icon: "error", title: "No se pudo cargar", text: error.message });
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    el.btnActualizar.addEventListener("click", loadData);
+    el.gestion.addEventListener("change", loadData);
+    el.pageSize.addEventListener("change", () => {
+      currentPage = 1;
+      renderRows();
+    });
+    el.btnFirstPage.addEventListener("click", () => {
+      currentPage = 1;
+      renderRows();
+    });
+    el.btnPrevPage.addEventListener("click", () => {
+      currentPage -= 1;
+      renderRows();
+    });
+    el.btnNextPage.addEventListener("click", () => {
+      currentPage += 1;
+      renderRows();
+    });
+    el.btnLastPage.addEventListener("click", () => {
+      currentPage = totalPages();
+      renderRows();
+    });
+
+    updateExportLinks();
+    loadData();
+  });
+</script>
+{% endblock extra_js %}

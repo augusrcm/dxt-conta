@@ -1,0 +1,963 @@
+{% extends "layout.html" %}
+{% block title %}Configuración inicial{% endblock %}
+{% block page_help_url %}{{ url_for('configuracion_inicial.help') }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ══════════════════════════════════════════════════════════════
+     VARIABLES & BASE
+  ══════════════════════════════════════════════════════════════ */
+  #ciPage {
+    --ci-navy: #0c1e35;
+    --ci-blue: #1a4d8f;
+    --ci-blue-mid: #2266b3;
+    --ci-blue-light: #3a8ee0;
+    --ci-border: #dde6f0;
+    --ci-surface: #f3f7fc;
+    --ci-surface-2: #fafcff;
+    --ci-text: #1c2b3a;
+    --ci-muted: #7389a0;
+    --ci-success: #12845a;
+    --ci-success-bg: #e8f7f0;
+    --ci-success-bd: #b8e5d0;
+    --ci-warning: #b07a10;
+    --ci-warning-bg: #fef7e6;
+    --ci-warning-bd: #f0d88a;
+    --ci-danger: #b01f2b;
+    --ci-radius: 18px;
+    color: var(--ci-text);
+    margin-bottom: 90px;
+    font-size: 0.925rem;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     HERO
+  ══════════════════════════════════════════════════════════════ */
+  #ciPage .ci-hero {
+    background: linear-gradient(130deg, var(--ci-navy) 0%, #1a3f70 55%, #1f5da8 100%);
+    border-radius: var(--ci-radius);
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 18px 42px rgba(12, 30, 53, 0.20);
+    margin-bottom: 1.1rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Decoración de fondo sutil */
+  #ciPage .ci-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 80% at 90% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 70%),
+      radial-gradient(ellipse 35% 50% at 10% 20%, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  #ciPage .ci-hero-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+  }
+
+  #ciPage .ci-hero-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  #ciPage .ci-title {
+    color: #fff;
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  #ciPage .ci-hero-side {
+    display: flex;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    align-items: center;
+    position: relative;
+  }
+
+  /* Badges semánticos en el hero */
+  #ciPage .ci-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    padding: 0.46rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  #ciPage .ci-pill.ok {
+    background: rgba(18, 132, 90, 0.30);
+    border-color: rgba(18, 132, 90, 0.45);
+  }
+
+  #ciPage .ci-pill.warn {
+    background: rgba(176, 122, 16, 0.30);
+    border-color: rgba(176, 122, 16, 0.45);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     CARDS
+  ══════════════════════════════════════════════════════════════ */
+  #ciPage .ci-card {
+    background: #fff;
+    border: 1px solid var(--ci-border);
+    border-radius: var(--ci-radius);
+    box-shadow: 0 4px 18px rgba(12, 30, 53, 0.055);
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  #ciPage .ci-card-head {
+    padding: 0.88rem 1.15rem;
+    border-bottom: 1px solid var(--ci-border);
+    background: linear-gradient(180deg, #fafcff 0%, #f4f8fc 100%);
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  #ciPage .ci-card-title {
+    display: flex;
+    gap: 0.7rem;
+    align-items: center;
+    color: var(--ci-navy);
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+
+  #ciPage .ci-card-title .ci-card-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--ci-blue) 0%, var(--ci-blue-mid) 100%);
+    color: #fff;
+    font-size: 0.82rem;
+    flex-shrink: 0;
+  }
+
+  #ciPage .ci-card-badge {
+    margin-left: 0.4rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.22rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  #ciPage .ci-card-badge.req {
+    background: #fef0e6;
+    border: 1px solid #f3c89a;
+    color: #b05a10;
+  }
+
+  #ciPage .ci-card-body {
+    padding: 1.1rem 1.15rem 1.25rem;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     GRIDS
+  ══════════════════════════════════════════════════════════════ */
+  #ciPage .ci-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.1rem;
+  }
+
+  #ciPage .ci-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     SUMMARY BOXES
+  ══════════════════════════════════════════════════════════════ */
+  #ciPage .ci-summary-box {
+    background: #fff;
+    border: 1px solid var(--ci-border);
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    border-left: 4px solid var(--ci-border);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  #ciPage .ci-summary-box.ok {
+    border-left-color: var(--ci-success);
+    background: var(--ci-success-bg);
+    border-color: var(--ci-success-bd);
+  }
+
+  #ciPage .ci-summary-box.warn {
+    border-left-color: var(--ci-warning);
+    background: var(--ci-warning-bg);
+    border-color: var(--ci-warning-bd);
+  }
+
+  #ciPage .ci-summary-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.88rem;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.06);
+  }
+
+  #ciPage .ci-summary-box.ok .ci-summary-icon {
+    background: rgba(18, 132, 90, 0.14);
+    color: var(--ci-success);
+  }
+
+  #ciPage .ci-summary-box.warn .ci-summary-icon {
+    background: rgba(176, 122, 16, 0.14);
+    color: var(--ci-warning);
+  }
+
+  #ciPage .ci-summary-content {
+    min-width: 0;
+  }
+
+  #ciPage .ci-summary-label {
+    font-size: 0.7rem;
+    color: var(--ci-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 0.2rem;
+  }
+
+  #ciPage .ci-summary-value {
+    color: var(--ci-navy);
+    font-weight: 700;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     ALERTS
+  ══════════════════════════════════════════════════════════════ */
+  #ciPage .ci-alert {
+    border: 1px solid var(--ci-border);
+    border-radius: 13px;
+    padding: 0.82rem 1rem;
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    font-size: 0.87rem;
+    font-weight: 500;
+  }
+
+  #ciPage .ci-alert.warn {
+    background: var(--ci-warning-bg);
+    border-color: var(--ci-warning-bd);
+    color: #7a510e;
+  }
+
+  #ciPage .ci-alert.warn i {
+    color: var(--ci-warning);
+    flex-shrink: 0;
+  }
+
+  #ciPage .ci-alert.ok {
+    background: var(--ci-success-bg);
+    border-color: var(--ci-success-bd);
+    color: #0e6444;
+  }
+
+  #ciPage .ci-alert.ok i {
+    color: var(--ci-success);
+    flex-shrink: 0;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     CHECK GRID
+  ══════════════════════════════════════════════════════════════ */
+  #ciPage .ci-check-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+
+  #ciPage .ci-check-card {
+    border: 1px solid var(--ci-border);
+    border-radius: 14px;
+    padding: 1rem 1.1rem;
+    background: linear-gradient(180deg, #fff 0%, #fafcff 100%);
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+
+  #ciPage .ci-check-card:has(.form-check-input:checked) {
+    border-color: #9cbfe8;
+    background: linear-gradient(180deg, #f4f9ff 0%, #edf4ff 100%);
+    box-shadow: 0 2px 10px rgba(34, 102, 179, 0.09);
+  }
+
+  #ciPage .ci-check-card .form-check {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  #ciPage .ci-check-card .form-check-label {
+    font-weight: 700;
+    color: var(--ci-navy);
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  #ciPage .ci-check-card .form-check-input {
+    width: 2.8em;
+    height: 1.5em;
+    border-radius: 999px;
+    cursor: pointer;
+    margin-top: 0;
+  }
+
+  #ciPage .ci-check-card .form-check-input:checked {
+    background-color: var(--ci-blue-mid);
+    border-color: var(--ci-blue-mid);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     FORM CONTROLS
+  ══════════════════════════════════════════════════════════════ */
+  #ciPage .form-label {
+    color: var(--ci-navy);
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+    font-size: 0.87rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  #ciPage .form-control,
+  #ciPage .form-select,
+  #ciPage .select2-container--default .select2-selection--single {
+    min-height: 42px;
+    border-radius: 11px;
+    border: 1px solid #d0dcea;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    font-size: 0.9rem;
+    transition: border-color 0.18s, box-shadow 0.18s;
+  }
+
+  #ciPage .form-control:focus,
+  #ciPage .form-select:focus {
+    border-color: var(--ci-blue-light);
+    box-shadow: 0 0 0 3px rgba(58, 142, 224, 0.16);
+  }
+
+  #ciPage .form-control:disabled,
+  #ciPage .form-select:disabled {
+    background: var(--ci-surface);
+    color: var(--ci-muted);
+    cursor: not-allowed;
+  }
+
+  #ciPage .select2-container {
+    width: 100% !important;
+  }
+
+  #ciPage .select2-container--default .select2-selection--single {
+    display: flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+  }
+
+  #ciPage .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: var(--ci-text);
+    line-height: 1.5;
+    padding-left: 0;
+    font-size: 0.9rem;
+  }
+
+  #ciPage .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 40px;
+    right: 8px;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     FIELD GROUPS con separador visual
+  ══════════════════════════════════════════════════════════════ */
+  #ciPage .ci-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     DIVIDER LABEL entre secciones del form
+  ══════════════════════════════════════════════════════════════ */
+  #ciPage .ci-section-sep {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.2rem 0 0.9rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ci-muted);
+  }
+
+  #ciPage .ci-section-sep::before,
+  #ciPage .ci-section-sep::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--ci-border);
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     STICKY ACTION BAR
+  ══════════════════════════════════════════════════════════════ */
+  .ci-sticky-bar {
+    position: sticky;
+    bottom: 16px;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid #d5e2f0;
+    border-radius: 16px;
+    box-shadow:
+      0 -2px 12px rgba(12, 30, 53, 0.08),
+      0 6px 20px rgba(12, 30, 53, 0.07);
+    padding: 0.78rem 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+  }
+
+  .ci-sticky-bar .ci-bar-readonly {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    background: var(--ci-surface);
+    border: 1px solid var(--ci-border);
+    color: var(--ci-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     BOTONES
+  ══════════════════════════════════════════════════════════════ */
+  .btn-ci-primary {
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2d7dd2 0%, var(--ci-blue-mid) 100%);
+    color: #fff !important;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.68rem 1.45rem;
+    box-shadow: 0 6px 18px rgba(34, 102, 179, 0.28);
+    transition: transform 0.14s, box-shadow 0.14s, background 0.14s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .btn-ci-primary:hover,
+  .btn-ci-primary:focus-visible {
+    color: #fff !important;
+    background: linear-gradient(135deg, #3a8ee0 0%, #2d7dd2 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(34, 102, 179, 0.36);
+    outline: none;
+  }
+
+  .btn-ci-primary:active {
+    color: #fff !important;
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(34, 102, 179, 0.24);
+  }
+
+  .btn-ci-light {
+    border-radius: 12px;
+    padding: 0.68rem 1.1rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: 1px solid var(--ci-border);
+    color: var(--ci-text) !important;
+    background: #fff;
+    white-space: nowrap;
+    transition: background 0.14s, border-color 0.14s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .btn-ci-light:hover,
+  .btn-ci-light:focus-visible {
+    color: var(--ci-navy) !important;
+    background: #eef4fb;
+    border-color: #b0c8e4;
+    outline: none;
+  }
+
+  .btn-ci-light:active {
+    background: #dde9f6;
+    border-color: #9abcda;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     READONLY OVERLAY
+  ══════════════════════════════════════════════════════════════ */
+  #ciPage .ci-readonly-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.78rem 1rem;
+    background: #fff4e6;
+    border: 1px solid #f3c89a;
+    border-radius: 13px;
+    font-size: 0.87rem;
+    font-weight: 600;
+    color: #8a4a10;
+    margin-top: 1rem;
+  }
+
+  #ciPage .ci-readonly-banner i {
+    color: #c07010;
+    flex-shrink: 0;
+    font-size: 1rem;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     RESPONSIVE
+  ══════════════════════════════════════════════════════════════ */
+  @media (max-width: 991.98px) {
+
+    #ciPage .ci-grid-2,
+    #ciPage .ci-grid-3,
+    #ciPage .ci-check-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .ci-sticky-bar {
+      justify-content: stretch;
+      flex-direction: column;
+      padding: 0.75rem 1rem;
+      border-radius: 14px;
+    }
+
+    .btn-ci-primary,
+    .btn-ci-light {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div id="ciPage">
+
+  <!-- ── Hero ── -->
+  <section class="ci-hero">
+    <div class="ci-hero-main">
+      <div class="ci-hero-icon">
+        <i class="fas fa-rocket"></i>
+      </div>
+      <div>
+        <h1 class="ci-title">Configuración inicial · DXT-Conta</h1>
+      </div>
+    </div>
+    <div class="ci-hero-side">
+      <span class="ci-pill">
+        <i class="fas fa-layer-group"></i> Gestión {{ gestion_sugerida }}
+      </span>
+      {% if estado_inicializacion.initialized %}
+      <span class="ci-pill ok">
+        <i class="fas fa-circle-check"></i> Sistema inicializado
+      </span>
+      {% else %}
+      <span class="ci-pill warn">
+        <i class="fas fa-triangle-exclamation"></i> Configuración pendiente
+      </span>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ── Estado detectado ── -->
+  <div class="ci-card">
+    <div class="ci-card-head">
+      <div class="ci-card-title">
+        <div class="ci-card-icon"><i class="fas fa-list-check"></i></div>
+        Estado del sistema
+      </div>
+    </div>
+    <div class="ci-card-body">
+      <div class="ci-grid-3">
+
+        <div class="ci-summary-box {% if estado_inicializacion.configuracion %}ok{% else %}warn{% endif %}">
+          <div class="ci-summary-icon">
+            <i
+              class="fas {% if estado_inicializacion.configuracion %}fa-circle-check{% else %}fa-circle-xmark{% endif %}"></i>
+          </div>
+          <div class="ci-summary-content">
+            <div class="ci-summary-label">Configuración</div>
+            <div class="ci-summary-value">
+              {% if estado_inicializacion.configuracion %}Disponible{% else %}Pendiente{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="ci-summary-box {% if estado_inicializacion.gestion_abierta %}ok{% else %}warn{% endif %}">
+          <div class="ci-summary-icon">
+            <i
+              class="fas {% if estado_inicializacion.gestion_abierta %}fa-calendar-check{% else %}fa-calendar-xmark{% endif %}"></i>
+          </div>
+          <div class="ci-summary-content">
+            <div class="ci-summary-label">Gestión operativa</div>
+            <div class="ci-summary-value">
+              {% if estado_inicializacion.gestion_abierta %}
+              {{ estado_inicializacion.gestion_abierta.gestion }} · ABIERTA
+              {% else %}
+              Pendiente
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="ci-summary-box {% if estado_inicializacion.initialized %}ok{% else %}warn{% endif %}">
+          <div class="ci-summary-icon">
+            <i
+              class="fas {% if estado_inicializacion.initialized %}fa-shield-check{% else %}fa-shield-exclamation{% endif %}"></i>
+          </div>
+          <div class="ci-summary-content">
+            <div class="ci-summary-label">Resultado</div>
+            <div class="ci-summary-value">
+              {% if estado_inicializacion.initialized %}Sistema listo{% else %}Requiere configuración{% endif %}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="mt-3">
+        {% if estado_inicializacion.initialized %}
+        <div class="ci-alert ok">
+          <i class="fas fa-circle-check"></i>
+          <div>Configuración operativa activa. Puedes revisar o ajustar los parámetros desde esta pantalla.</div>
+        </div>
+        {% else %}
+        <div class="ci-alert warn">
+          <i class="fas fa-triangle-exclamation"></i>
+          <div>El sistema no tiene base operativa completa. Guarda la configuración para habilitar la operación.</div>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if estado_inicializacion.faltantes and (
+      estado_inicializacion.faltantes.plan_cuentas or
+      estado_inicializacion.faltantes.tipo_cambio or
+      estado_inicializacion.faltantes.moneda_base
+      ) %}
+      <div class="mt-3">
+        <div class="ci-alert warn">
+          <i class="fas fa-triangle-exclamation"></i>
+          <div>
+            {% if estado_inicializacion.faltantes.plan_cuentas %}
+            <strong>Plan de cuentas incompleto.</strong> Se requiere al menos una cuenta postable activa.
+            {% endif %}
+            {% if estado_inicializacion.faltantes.tipo_cambio %}
+            <strong>Tipo de cambio sin registrar.</strong> Registra SUS y UFV antes de operar.
+            {% endif %}
+            {% if estado_inicializacion.faltantes.moneda_base %}
+            <strong>Moneda base no configurada.</strong>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <!-- ── Formulario ── -->
+  <form method="post" action="{{ url_for('configuracion_inicial.guardar') }}" id="configuracionInicialForm" novalidate>
+
+    {% if estado_inicializacion.faltantes.unidad_negocio %}
+    <!-- Primera unidad de negocio -->
+    <div class="ci-card">
+      <div class="ci-card-head">
+        <div class="ci-card-title">
+          <div class="ci-card-icon"><i class="fas fa-building"></i></div>
+          Primera unidad de negocio
+          <span class="ci-card-badge req"><i class="fas fa-asterisk" style="font-size:0.6rem"></i> Requerido</span>
+        </div>
+      </div>
+      <div class="ci-card-body">
+        <div class="ci-grid-2">
+          <div class="ci-field-group">
+            <label class="form-label" for="unidadNegocioNombre">
+              <i class="fas fa-tag" style="color:var(--ci-muted);font-size:0.8rem"></i>
+              Nombre de la unidad de negocio
+            </label>
+            <input class="form-control" type="text" maxlength="150" name="unidad_negocio_nombre"
+              id="unidadNegocioNombre" autocomplete="off" {% if not puede_editar %}disabled{% endif %} />
+          </div>
+          <div class="ci-field-group">
+            <label class="form-label" for="unidadNegocioNit">
+              <i class="fas fa-id-card" style="color:var(--ci-muted);font-size:0.8rem"></i>
+              NIT
+              <span style="font-weight:500;color:var(--ci-muted);font-size:0.78rem">(opcional)</span>
+            </label>
+            <input class="form-control" type="text" maxlength="50" name="unidad_negocio_nit" id="unidadNegocioNit"
+              autocomplete="off" {% if not puede_editar %}disabled{% endif %} />
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Parámetros operativos -->
+    <div class="ci-card">
+      <div class="ci-card-head">
+        <div class="ci-card-title">
+          <div class="ci-card-icon"><i class="fas fa-sliders"></i></div>
+          Parámetros operativos
+        </div>
+      </div>
+      <div class="ci-card-body">
+
+        <div class="ci-section-sep">Gestión y cuenta patrimonial</div>
+
+        <div class="ci-grid-2" style="margin-bottom:1.1rem">
+          <div class="ci-field-group">
+            <label class="form-label" for="gestionInicial">
+              <i class="fas fa-calendar-alt" style="color:var(--ci-muted);font-size:0.8rem"></i>
+              Gestión inicial
+            </label>
+            <input class="form-control" type="number" min="2000" step="1" name="gestion_inicial" id="gestionInicial"
+              value="{{ gestion_sugerida }}" {% if not puede_editar %}disabled{% endif %} />
+          </div>
+          <div class="ci-field-group">
+            <label class="form-label" for="cuentaResultadoEjercicio">
+              <i class="fas fa-landmark" style="color:var(--ci-muted);font-size:0.8rem"></i>
+              Cuenta patrimonial del resultado
+            </label>
+            <select class="form-select" name="cuenta_resultado_ejercicio_codigo" id="cuentaResultadoEjercicio" {% if not
+              puede_editar %}disabled{% endif %}></select>
+          </div>
+        </div>
+
+        <div class="ci-section-sep">Glosas contables</div>
+
+        <div class="ci-grid-2">
+          <div class="ci-field-group">
+            <label class="form-label" for="glosaCierre">
+              <i class="fas fa-door-closed" style="color:var(--ci-muted);font-size:0.8rem"></i>
+              Glosa de cierre
+            </label>
+            <input class="form-control" type="text" maxlength="250" name="glosa_cierre" id="glosaCierre"
+              value="{{ configuracion.glosa_cierre or 'CIERRE DE GESTIÓN' }}" {% if not puede_editar %}disabled{% endif
+              %} />
+          </div>
+          <div class="ci-field-group">
+            <label class="form-label" for="glosaApertura">
+              <i class="fas fa-door-open" style="color:var(--ci-muted);font-size:0.8rem"></i>
+              Glosa de apertura
+            </label>
+            <input class="form-control" type="text" maxlength="250" name="glosa_apertura" id="glosaApertura"
+              value="{{ configuracion.glosa_apertura or 'APERTURA DE GESTIÓN' }}" {% if not puede_editar %}disabled{%
+              endif %} />
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Reglas de operación -->
+    <div class="ci-card">
+      <div class="ci-card-head">
+        <div class="ci-card-title">
+          <div class="ci-card-icon"><i class="fas fa-shield-halved"></i></div>
+          Reglas de operación
+        </div>
+      </div>
+      <div class="ci-card-body">
+        <div class="ci-check-grid">
+
+          <div class="ci-check-card">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" role="switch" id="permitirReapertura"
+                name="permitir_reapertura" {% if configuracion.permitir_reapertura %}checked{% endif %} {% if not
+                puede_editar %}disabled{% endif %} />
+              <label class="form-check-label" for="permitirReapertura">
+                Permitir reapertura
+              </label>
+            </div>
+          </div>
+
+          <div class="ci-check-card">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" role="switch" id="bloquearBorradores"
+                name="bloquear_si_hay_borradores" {% if configuracion.bloquear_si_hay_borradores %}checked{% endif %} {%
+                if not puede_editar %}disabled{% endif %} />
+              <label class="form-check-label" for="bloquearBorradores">
+                Bloquear si hay borradores
+              </label>
+            </div>
+          </div>
+
+          <div class="ci-check-card">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" role="switch" id="bloquearMovimientosDestino"
+                name="bloquear_si_hay_movimientos_destino" {% if configuracion.bloquear_si_hay_movimientos_destino
+                %}checked{% endif %} {% if not puede_editar %}disabled{% endif %} />
+              <label class="form-check-label" for="bloquearMovimientosDestino">
+                Bloquear si hay movimientos en destino
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+        {% if not puede_editar %}
+        <div class="ci-readonly-banner mt-3">
+          <i class="fas fa-lock"></i>
+          Sin permisos para modificar la configuración inicial del sistema.
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+  </form>
+
+  {# ── Action bar sticky ── #}
+  {% if puede_editar %}
+  <div class="ci-sticky-bar" id="ciStickyBar">
+    <a class="btn btn-ci-light" href="{{ url_for('dashboard.index') }}">
+      <i class="fas fa-arrow-left"></i>Volver al dashboard
+    </a>
+    <button class="btn btn-ci-primary" type="submit" form="configuracionInicialForm">
+      <i class="fas fa-floppy-disk"></i>Guardar e iniciar sistema
+    </button>
+  </div>
+  {% else %}
+  <div class="ci-sticky-bar" id="ciStickyBar">
+    <span class="ci-bar-readonly">
+      <i class="fas fa-lock"></i> Solo lectura
+    </span>
+    <a class="btn btn-ci-light" href="{{ url_for('dashboard.index') }}">
+      <i class="fas fa-arrow-left"></i>Volver al dashboard
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="application/json" id="configuracionInicialBootstrap">
+  {{
+    {
+      "cuentasUrl": url_for('configuracion_inicial.api_cuentas_patrimoniales'),
+      "puedeEditar": puede_editar,
+      "cuentaActual": (
+        {
+          "id": cuenta_actual.codigo,
+          "text": cuenta_actual.codigo ~ " - " ~ cuenta_actual.nombre
+        } if cuenta_actual else None
+      )
+    } | tojson
+  }}
+</script>
+
+<script>
+  (function () {
+    "use strict";
+
+    const bootEl = document.getElementById("configuracionInicialBootstrap");
+    const boot = JSON.parse((bootEl && bootEl.textContent) || "{}");
+
+    const $cuenta = $("#cuentaResultadoEjercicio");
+    if (!$cuenta.length) {
+      return;
+    }
+
+    $cuenta.select2({
+      width: "100%",
+      placeholder: "Seleccione una cuenta patrimonial",
+      allowClear: true,
+      language: "es",
+      dropdownAutoWidth: true,
+      ajax: {
+        url: boot.cuentasUrl,
+        dataType: "json",
+        delay: 250,
+        data: function (params) {
+          return { q: params.term || "" };
+        },
+        processResults: function (data) {
+          return { results: Array.isArray(data.results) ? data.results : [] };
+        },
+        cache: true
+      }
+    });
+
+    if (boot.cuentaActual && boot.cuentaActual.id) {
+      const option = new Option(boot.cuentaActual.text, boot.cuentaActual.id, true, true);
+      $cuenta.append(option).trigger("change");
+    }
+
+    if (!boot.puedeEditar) {
+      $cuenta.prop("disabled", true).trigger("change.select2");
+    }
+  })();
+</script>
+{% endblock %}
